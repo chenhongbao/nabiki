@@ -31,6 +31,7 @@ package com.nabiki.iop;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -79,8 +80,18 @@ public class SystemStream extends PrintStream {
     }
 
     private static void ensure(File file) throws IOException {
-        if (!file.exists())
+        if (!file.exists()) {
+            ensureDir(file.getParent());
             file.createNewFile();
+        }
+    }
+
+    private static void ensureDir(String dir) throws IOException {
+        if (dir == null || dir.trim().length() == 0)
+            return;
+        var parent = Path.of(dir);
+        if (!Files.exists(parent))
+            Files.createDirectories(parent);
     }
 
     private static String format(LocalDateTime timeStamp) {
