@@ -28,7 +28,12 @@
 
 package com.nabiki.iop;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 public interface IOPClient {
+    void connect(InetSocketAddress address) throws IOException;
+
     void setSessionAdaptor(ClientSessionAdaptor adaptor);
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor);

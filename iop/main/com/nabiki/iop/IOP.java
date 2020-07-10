@@ -32,29 +32,25 @@ import com.nabiki.iop.internal.IOPClientImpl;
 import com.nabiki.iop.internal.IOPServerImpl;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 public class IOP {
     /**
      * Create a server bound to the specified address and talking the IOP frame.
      *
-     * @param bindAddress {@link InetSocketAddress} to bind to
      * @return server instance
-     * @throws IOException if fail binding the address
      */
-    public static IOPServer createServer(InetSocketAddress bindAddress)
+    public static IOPServer createServer()
             throws IOException {
-        return new IOPServerImpl(bindAddress);
+        return new IOPServerImpl();
     }
 
     /**
      * Create a client connected to the specified address and talking the IOP frame.
      *
-     * @param connectAddress {@link InetSocketAddress} to connect to
      * @return client instance
      */
-    public static IOPClient createClient(InetSocketAddress connectAddress)
+    public static IOPClient createClient()
             throws IOException {
-        return new IOPClientImpl(connectAddress);
+        return new IOPClientImpl();
     }
 }

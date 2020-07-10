@@ -29,8 +29,8 @@
 package com.nabiki.iop.internal;
 
 import com.nabiki.iop.AdaptorChain;
-import com.nabiki.iop.IOPLoginManager;
 import com.nabiki.iop.IOPServer;
+import com.nabiki.iop.LoginManager;
 import com.nabiki.iop.ServerSessionAdaptor;
 import com.nabiki.iop.frame.FrameParser;
 import com.nabiki.iop.x.OP;
@@ -49,11 +49,10 @@ public class IOPServerImpl implements IOPServer {
     private final IoAcceptor acceptor = new NioSocketAcceptor();
     private final ServerFrameHandler frameHnd = new ServerFrameHandler();
 
-    public IOPServerImpl(InetSocketAddress bindAddress) throws IOException {
-        io();
+    public IOPServerImpl() {
     }
 
-    private void io() throws IOException {
+    private void io(InetSocketAddress address) throws IOException {
         var chain = this.acceptor.getFilterChain();
         chain.addLast(OP.randomString(), new LoggingFilter());
         chain.addLast(OP.randomString(), new ProtocolCodecFilter(
@@ -65,7 +64,12 @@ public class IOPServerImpl implements IOPServer {
         config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
         config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
         // Bind address.
-        this.acceptor.bind(new InetSocketAddress(11));
+        this.acceptor.bind(address);
+    }
+
+    @Override
+    public void bind(InetSocketAddress address) throws IOException {
+        io(address);
     }
 
     @Override
@@ -74,7 +78,7 @@ public class IOPServerImpl implements IOPServer {
     }
 
     @Override
-    public void setLoginManager(IOPLoginManager manager) {
+    public void setLoginManager(LoginManager manager) {
         this.frameHnd.setLoginManager(manager);
     }
 

@@ -41,8 +41,6 @@ public abstract class ClientMessageAdaptor {
 
     public void doRspQryPosition(Message message) {}
 
-    public void doRspQryUserExec(Message message) {}
-
     public void doRspSubscribeMarketData(Message message) {}
 
     public void doRspDepthMarketData(Message message) {}

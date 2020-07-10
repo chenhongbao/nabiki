@@ -28,7 +28,7 @@
 
 package com.nabiki.iop;
 
-public abstract class IOPLoginManager {
+public abstract class LoginManager {
     public boolean doLogin(ServerSession session, Message message) {
         return false;
     }

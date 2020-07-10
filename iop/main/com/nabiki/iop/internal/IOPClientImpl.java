@@ -48,14 +48,13 @@ public class IOPClientImpl implements IOPClient {
 
     private final NioSocketConnector connector = new NioSocketConnector();
     private final ClientFrameHandler frameHnd = new ClientFrameHandler();
-    private final ClientSessionImpl session;
+    private ClientSessionImpl session;
 
-    public IOPClientImpl(InetSocketAddress connectAddress) throws IOException {
-        // Construct session.
-        this.session = new ClientSessionImpl(io(connectAddress));
+    public IOPClientImpl() throws IOException {
     }
 
     private IoSession io(InetSocketAddress connectAddress) throws IOException {
+        System.out.println("client connect()");
         this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
         // Set filters.
         var chain = this.connector.getFilterChain();
@@ -74,6 +73,12 @@ public class IOPClientImpl implements IOPClient {
             throw new IOException("wait interrupted");
         }
         return future.getSession();
+    }
+
+    @Override
+    public void connect(InetSocketAddress address) throws IOException {
+        // Construct session.
+        this.session = ClientSessionImpl.from(io(address));
     }
 
     @Override

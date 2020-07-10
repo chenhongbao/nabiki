@@ -28,10 +28,15 @@
 
 package com.nabiki.iop;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 public interface IOPServer {
+    void bind(InetSocketAddress address) throws IOException;
+
     void setSessionAdaptor(ServerSessionAdaptor adaptor);
 
-    void setLoginManager(IOPLoginManager manager);
+    void setLoginManager(LoginManager manager);
 
     AdaptorChain getAdaptorChain();
 }

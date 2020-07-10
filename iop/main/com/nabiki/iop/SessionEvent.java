@@ -29,5 +29,14 @@
 package com.nabiki.iop;
 
 public enum SessionEvent {
-    CREATED, OPENED, CLOSED, INPUT_CLOSED, IDLE, ERROR, MISS_HEARTBEAT
+    CREATED,
+    OPENED,
+    CLOSED,
+    INPUT_CLOSED,
+    IDLE,
+    ERROR,
+    MISS_HEARTBEAT,
+    MESSAGE_NOT_DONE,
+    STRANGE_MESSAGE,
+    BROKEN_BODY
 }

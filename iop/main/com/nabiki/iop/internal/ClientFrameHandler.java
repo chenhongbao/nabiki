@@ -66,9 +66,6 @@ public class ClientFrameHandler implements IoHandler {
 
     private void handleResponse(Message message) throws IOException {
         switch (message.Type) {
-            case RSP_REQ_LOGIN:
-                this.clientAdaptor.doRspReqLogin(message);
-                break;
             case RSP_QRY_ORDER:
                 this.clientAdaptor.doRspQryOrder(message);
                 break;
@@ -100,7 +97,9 @@ public class ClientFrameHandler implements IoHandler {
     }
 
     private void handleLogin(ClientSession session, Message message) {
-        session.setAttribute(IOP_ISLOGIN_KEY, message.RspInfo != null && message.RspInfo.ErrorID == 0);
+        session.setAttribute(IOP_ISLOGIN_KEY,
+                message.RspInfo != null && message.RspInfo.ErrorID == 0);
+        this.clientAdaptor.doRspReqLogin(message);
     }
 
     private boolean isLogin(IoSession session) {
@@ -112,7 +111,11 @@ public class ClientFrameHandler implements IoHandler {
     }
 
     private Message toMessage(Body body) throws IOException {
-        return MessageImpl.toMessage(body);
+        try {
+            return MessageImpl.toMessage(body);
+        } catch (Throwable th) {
+            throw new IOException("message not properly handled", th);
+        }
     }
 
     private void handleHeartbeat(ClientSessionImpl session, Message message) {
@@ -157,23 +160,32 @@ public class ClientFrameHandler implements IoHandler {
     public void messageReceived(IoSession session, Object message) throws Exception {
         if (!(message instanceof Frame))
             throw new IllegalStateException("message is not frame");
+        Body body = null;
+        Message iopMessage = null;
+        ClientSessionImpl iopSession = ClientSessionImpl.from(session);
         var frame = (Frame) message;
-        var body = OP.fromJson(new String(frame.Body, StandardCharsets.UTF_8),
-                Body.class);
-        switch (frame.Type) {
-            case FrameType.RESPONSE:
-                if (isLogin(session))
-                    handleResponse(toMessage(body));
-                break;
-            case FrameType.LOGIN:
-                handleLogin(ClientSessionImpl.from(session), toMessage(body));
-                break;
-            case FrameType.HEARTBEAT:
-                handleHeartbeat(ClientSessionImpl.from(session),
-                        toMessage(body));
-                break;
-            default:
-                throw new IllegalStateException("unknown frame type");
+        try {
+            body = OP.fromJson(new String(
+                    frame.Body, StandardCharsets.UTF_8), Body.class);
+            iopMessage = toMessage(body);
+            switch (frame.Type) {
+                case FrameType.RESPONSE:
+                    if (isLogin(session))
+                        handleResponse(toMessage(body));
+                    break;
+                case FrameType.LOGIN:
+                    handleLogin(ClientSessionImpl.from(session), toMessage(body));
+                    break;
+                case FrameType.HEARTBEAT:
+                    handleHeartbeat(ClientSessionImpl.from(session),
+                            toMessage(body));
+                    break;
+                default:
+                    throw new IllegalStateException("unknown frame type");
+            }
+        } catch (IOException e) {
+            this.clientSessionAdaptor.doEvent(
+                    iopSession, SessionEvent.BROKEN_BODY, body);
         }
     }
 

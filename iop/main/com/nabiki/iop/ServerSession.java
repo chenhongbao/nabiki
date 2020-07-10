@@ -28,8 +28,6 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.iop.frame.Body;
-
 import java.util.UUID;
 
 public interface ServerSession {
@@ -41,7 +39,9 @@ public interface ServerSession {
 
     void fix();
 
-    void sendResponse(Body message);
+    void sendLogin(Message message);
+
+    void sendResponse(Message message);
 
     void sendHeartbeat(UUID heartbeatID);
 

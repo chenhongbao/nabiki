@@ -34,23 +34,31 @@ import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SessionImpl {
-    public static final String IOP_SESSION_KEY = "iop.session";
+    private static final String IOP_SESSION_KEY = "iop.session";
 
     private final IoSession session;
+    static AtomicInteger countX = new AtomicInteger(0);
 
     protected SessionImpl(IoSession ioSession) {
         if (ioSession == null)
             throw new NullPointerException("io session null");
-        if (ioSession.getAttribute(IOP_SESSION_KEY) != null)
+        if (findSelf(ioSession) != null)
             throw new IllegalStateException(
                     "reused io session could cause inconsistency");
         ioSession.setAttribute(IOP_SESSION_KEY, this);
         this.session = ioSession;
     }
 
-    void close() {
+   protected static Object findSelf(IoSession session) {
+        if (session == null)
+            throw new NullPointerException("io session null");
+        return session.getAttribute(IOP_SESSION_KEY);
+    }
+
+    protected void close() {
         synchronized (this) {
             if (this.session != null && this.session.isConnected()) {
                 var future = this.session.closeNow();
@@ -59,11 +67,11 @@ public class SessionImpl {
         }
     }
 
-    boolean isClosed() {
+    protected boolean isClosed() {
         return this.session.isClosing();
     }
 
-    public void fix() {
+    protected void fix() {
         if (this.session.isClosing())
             throw new IllegalStateException("can't fix a closed session");
         if (this.session.isWriteSuspended())
@@ -72,7 +80,7 @@ public class SessionImpl {
             this.session.resumeRead();
     }
 
-    void send(Body message, int type) {
+    protected void send(Body message, int type) {
         if (message == null)
             throw new NullPointerException("message null");
         synchronized (this) {
@@ -90,15 +98,15 @@ public class SessionImpl {
         }
     }
 
-    void setAttribute(String key, Object attribute) {
+    protected void setAttribute(String key, Object attribute) {
         this.session.setAttribute(key, attribute);
     }
 
-    void removeAttribute(String key) {
+    protected void removeAttribute(String key) {
         this.session.setAttribute(key, null);
     }
 
-    Object getAttribute(String key) {
+    protected Object getAttribute(String key) {
         return this.session.getAttribute(key);
     }
 }

@@ -28,6 +28,10 @@
 
 package com.nabiki.iop.internal;
 
+import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorMessage;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcRspUserLoginField;
 import com.nabiki.iop.*;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.Frame;
@@ -40,6 +44,7 @@ import org.apache.mina.filter.FilterEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class ServerFrameHandler implements IoHandler {
     /*
@@ -48,7 +53,7 @@ public class ServerFrameHandler implements IoHandler {
     static class DefaultServerSessionAdaptor extends ServerSessionAdaptor {
     }
 
-    static class DefaultLoginManager extends IOPLoginManager {
+    static class DefaultLoginManager extends LoginManager {
     }
 
     private static final String IOP_ISLOGIN_KEY = "iop.islogin";
@@ -57,9 +62,9 @@ public class ServerFrameHandler implements IoHandler {
 
     private ServerSessionAdaptor serverSessionAdaptor
             = new DefaultServerSessionAdaptor();
-    private IOPLoginManager loginManager = new DefaultLoginManager();
+    private LoginManager loginManager = new DefaultLoginManager();
 
-    void setLoginManager(IOPLoginManager manager) {
+    void setLoginManager(LoginManager manager) {
         this.loginManager = manager;
     }
 
@@ -73,9 +78,31 @@ public class ServerFrameHandler implements IoHandler {
     }
 
     private void handleLogin(ServerSession session, Message message) {
-        if (message.Type == MessageType.REQ_LOGIN)
-            session.setAttribute(IOP_ISLOGIN_KEY,
-                    this.loginManager.doLogin(session, message));
+        if (message.Type == MessageType.REQ_LOGIN) {
+            var login = this.loginManager.doLogin(session, message);
+            session.setAttribute(IOP_ISLOGIN_KEY, login);
+            // Send rsp.
+            sendLoginRsp(login, session, message);
+        }
+    }
+
+    private void sendLoginRsp(boolean login, ServerSession session, Message message) {
+        Message rsp = new Message();
+        rsp.Type = MessageType.RSP_REQ_LOGIN;
+        rsp.CurrentCount = 1;
+        rsp.TotalCount = 1;
+        rsp.RequestID = message.RequestID;
+        rsp.ResponseID = UUID.randomUUID();
+        rsp.Body = new CThostFtdcRspUserLoginField();
+        rsp.RspInfo = new CThostFtdcRspInfoField();
+        if (login) {
+            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+            rsp.RspInfo.ErrorMsg = TThostFtdcErrorMessage.NONE;
+        } else {
+            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.INVALID_LOGIN;
+            rsp.RspInfo.ErrorMsg = TThostFtdcErrorMessage.INVALID_LOGIN;
+        }
+        session.sendLogin(rsp);
     }
 
     private void sendHeartbeat(ServerSession session, Message message) {
@@ -91,7 +118,11 @@ public class ServerFrameHandler implements IoHandler {
     }
 
     private Message toMessage(Body body) throws IOException {
-        return MessageImpl.toMessage(body);
+        try {
+            return MessageImpl.toMessage(body);
+        } catch (Throwable th) {
+            throw new IOException("frame body broken", th);
+        }
     }
 
     @Override
@@ -131,23 +162,32 @@ public class ServerFrameHandler implements IoHandler {
             throws Exception {
         if (!(message instanceof Frame))
             throw new IllegalStateException("message is not frame");
+        Body body = null;
+        Message iopMessage = null;
+        ServerSessionImpl iopSession = ServerSessionImpl.from(session);
         var frame = (Frame) message;
-        var body = OP.fromJson(new String(frame.Body, StandardCharsets.UTF_8),
-                Body.class);
-        switch (frame.Type) {
-            case FrameType.REQUEST:
-                if (isLogin(session))
-                    this.chain.invoke(ServerSessionImpl.from(session),
-                            toMessage(body));
-                break;
-            case FrameType.HEARTBEAT:
-                sendHeartbeat(ServerSessionImpl.from(session), toMessage(body));
-                break;
-            case FrameType.LOGIN:
-                handleLogin(ServerSessionImpl.from(session), toMessage(body));
-                break;
-            default:
-                throw new IllegalStateException("unknown frame type " + frame.Type);
+        try {
+            body = OP.fromJson(new String(
+                    frame.Body, StandardCharsets.UTF_8), Body.class);
+            iopMessage = toMessage(body);
+            switch (frame.Type) {
+                case FrameType.REQUEST:
+                    if (isLogin(session))
+                        this.chain.invoke(iopSession, iopMessage);
+                    break;
+                case FrameType.HEARTBEAT:
+                    sendHeartbeat(iopSession, iopMessage);
+                    break;
+                case FrameType.LOGIN:
+                    handleLogin(iopSession, iopMessage);
+                    break;
+                default:
+                    throw new IllegalStateException(
+                            "unknown frame type " + frame.Type);
+            }
+        } catch (IOException e) {
+            this.serverSessionAdaptor.doEvent(
+                    iopSession, SessionEvent.BROKEN_BODY, body);
         }
     }
 

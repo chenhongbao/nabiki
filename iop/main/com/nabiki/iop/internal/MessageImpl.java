@@ -42,68 +42,76 @@ public class MessageImpl extends Message {
     static Message toMessage(Body body) throws IOException {
         var msg = new Message();
         // Decode object.
-        switch (msg.Type) {
-            case HEARTBEAT:
-                msg.Body = null;
-                break;
-            case SUB_MD:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcSubMarketDataField.class);
-                break;
-            case RSP_SUB_MD:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcSpecificInstrumentField.class);
-                break;
-            case FLOW_DEPTH:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcDepthMarketDataField.class);
-                break;
-            case FLOW_CANDLE:
-                msg.Body = OP.fromJson(body.Body, CThostFtdcCandleField.class);
-                break;
-            case REQ_LOGIN:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcReqUserLoginField.class);
-                break;
-            case RSP_REQ_LOGIN:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcRspUserLoginField.class);
-                break;
-            case REQ_ORDER_INSERT:
-            case RSP_REQ_ORDER_INSERT:
-                msg.Body = OP.fromJson(body.Body, CThostFtdcInputOrderField.class);
-                break;
-            case REQ_ORDER_ACTION:
-            case RSP_REQ_ORDER_ACTION:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcInputOrderActionField.class);
-                break;
-            case QRY_ACCOUNT:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcQryTradingAccountField.class);
-                break;
-            case RSP_QRY_ACCOUNT:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcTradingAccountField.class);
-                break;
-            case QRY_ORDER:
-                msg.Body = OP.fromJson(body.Body, CThostFtdcOrderUuidField.class);
-                break;
-            case RSP_QRY_ORDER:
-                msg.Body = OP.fromJson(body.Body, CThostFtdcOrderField.class);
-                break;
-            case QRY_POSITION:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcQryInvestorPositionField.class);
-                break;
-            case RSP_QRY_POSITION:
-                msg.Body = OP.fromJson(body.Body,
-                        CThostFtdcInvestorPositionField.class);
-                break;
-            default:
-                throw new IOException("unknown message type " + body.Type);
+        if (body.Body != null && body.Body.length() > 0) {
+            switch (body.Type) {
+                case HEARTBEAT:
+                    msg.Body = null;
+                    break;
+                case SUB_MD:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcSubMarketDataField.class);
+                    break;
+                case RSP_SUB_MD:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcSpecificInstrumentField.class);
+                    break;
+                case FLOW_DEPTH:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcDepthMarketDataField.class);
+                    break;
+                case FLOW_CANDLE:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcCandleField.class);
+                    break;
+                case REQ_LOGIN:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcReqUserLoginField.class);
+                    break;
+                case RSP_REQ_LOGIN:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcRspUserLoginField.class);
+                    break;
+                case REQ_ORDER_INSERT:
+                case RSP_REQ_ORDER_INSERT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInputOrderField.class);
+                    break;
+                case REQ_ORDER_ACTION:
+                case RSP_REQ_ORDER_ACTION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInputOrderActionField.class);
+                    break;
+                case QRY_ACCOUNT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryTradingAccountField.class);
+                    break;
+                case RSP_QRY_ACCOUNT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcTradingAccountField.class);
+                    break;
+                case QRY_ORDER:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderUuidField.class);
+                    break;
+                case RSP_QRY_ORDER:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderField.class);
+                    break;
+                case QRY_POSITION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryInvestorPositionField.class);
+                    break;
+                case RSP_QRY_POSITION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInvestorPositionField.class);
+                    break;
+                default:
+                    throw new IOException("unknown message type " + body.Type);
+            }
         }
-        msg.RspInfo = OP.fromJson(body.RspInfo, CThostFtdcRspInfoField.class);
+        if (body.RspInfo != null && body.RspInfo.length() > 0)
+            msg.RspInfo = OP.fromJson(body.RspInfo,
+                    CThostFtdcRspInfoField.class);
         // Copy other info.
         msg.Type = body.Type;
         msg.RequestID = body.RequestID;

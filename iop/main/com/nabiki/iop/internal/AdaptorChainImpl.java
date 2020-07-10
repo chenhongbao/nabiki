@@ -83,14 +83,15 @@ public class AdaptorChainImpl implements AdaptorChain {
                         break;
                     default:
                         session.setResponseState(SessionResponseState.ERROR);
-                        whenError(session, SessionEvent.ERROR,
-                                new Throwable(message.Type.toString()));
+                        whenError(session, SessionEvent.STRANGE_MESSAGE, message);
                         break;
                 }
             } catch (Throwable th) {
                 whenError(session, SessionEvent.ERROR, th);
             }
         }
+        // The message goes through all adaptors and not done yet.
+        whenError(session, SessionEvent.MESSAGE_NOT_DONE, message);
     }
 
     void whenError(ServerSessionImpl session, SessionEvent event, Object obj) {

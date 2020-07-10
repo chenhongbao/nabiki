@@ -29,17 +29,19 @@
 package com.nabiki.iop.internal;
 
 import com.nabiki.iop.ClientSession;
+import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.FrameType;
+import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
 import java.util.UUID;
 
 public class ClientSessionImpl extends SessionImpl implements ClientSession {
-    public static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
+    private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
 
-    protected ClientSessionImpl(IoSession ioSession) {
+    private ClientSessionImpl(IoSession ioSession) {
         super(ioSession);
     }
 
@@ -47,8 +49,8 @@ public class ClientSessionImpl extends SessionImpl implements ClientSession {
     Retrieve and return an iop session from the specified io session, or create
     a new one when no session nothing found.
     */
-    static ClientSessionImpl from(IoSession ioSession) {
-        var iop = ioSession.getAttribute(IOP_SESSION_KEY);
+    static synchronized ClientSessionImpl from(IoSession ioSession) {
+        var iop = findSelf(ioSession);
         if (iop == null)
             iop = new ClientSessionImpl(ioSession);
         return (ClientSessionImpl) iop;
@@ -73,8 +75,34 @@ public class ClientSessionImpl extends SessionImpl implements ClientSession {
     }
 
     @Override
-    public void sendRequest(Body message) {
-        super.send(message, FrameType.REQUEST);
+    public void fix() {
+        super.fix();
+    }
+
+    @Override
+    public void sendLogin(Message message) {
+        message.Type = MessageType.REQ_LOGIN;
+        super.send(toBody(message), FrameType.LOGIN);
+    }
+
+    private Body toBody(Message message) {
+        var body = new Body();
+        body.Type = message.Type;
+        body.RequestID = message.RequestID;
+        body.ResponseID = message.ResponseID;
+        body.CurrentCount = message.CurrentCount;
+        body.TotalCount = message.TotalCount;
+        if (message.Body != null)
+            body.Body = OP.toJson(message.Body);
+        if (message.RspInfo != null)
+            body.RspInfo = OP.toJson(message.RspInfo);
+        return body;
+    }
+
+    @Override
+    public void sendRequest(Message message) {
+        // Send message and set response state.
+        super.send(toBody(message), FrameType.REQUEST);
     }
 
     @Override
