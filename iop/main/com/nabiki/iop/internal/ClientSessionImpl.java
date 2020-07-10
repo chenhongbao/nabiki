@@ -38,7 +38,7 @@ import org.apache.mina.core.session.IoSession;
 
 import java.util.UUID;
 
-public class ClientSessionImpl extends SessionImpl implements ClientSession {
+class ClientSessionImpl extends SessionImpl implements ClientSession {
     private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
 
     private ClientSessionImpl(IoSession ioSession) {

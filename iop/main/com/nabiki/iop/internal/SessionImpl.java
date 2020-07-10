@@ -36,7 +36,7 @@ import org.apache.mina.core.session.IoSession;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SessionImpl {
+class SessionImpl {
     private static final String IOP_SESSION_KEY = "iop.session";
 
     private final IoSession session;

@@ -38,7 +38,7 @@ import org.apache.mina.core.session.IoSession;
 
 import java.util.UUID;
 
-public class ServerSessionImpl extends SessionImpl implements ServerSession {
+class ServerSessionImpl extends SessionImpl implements ServerSession {
     private SessionResponseState responseState;
 
     /*

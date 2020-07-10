@@ -36,7 +36,7 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 import java.nio.ByteOrder;
 
-public class FrameEncoder extends ProtocolEncoderAdapter {
+class FrameEncoder extends ProtocolEncoderAdapter {
     @Override
     public void encode(IoSession session, Object message, ProtocolEncoderOutput out)
             throws Exception {

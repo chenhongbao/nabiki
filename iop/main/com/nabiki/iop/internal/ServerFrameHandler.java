@@ -46,7 +46,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-public class ServerFrameHandler implements IoHandler {
+class ServerFrameHandler implements IoHandler {
     /*
     Default adaptors. The adaptors can be override by setter.
      */

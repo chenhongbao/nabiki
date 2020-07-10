@@ -33,7 +33,7 @@ import com.nabiki.iop.*;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class AdaptorChainImpl implements AdaptorChain {
+class AdaptorChainImpl implements AdaptorChain {
     private final Queue<ServerMessageAdaptor> adaptors
             = new ConcurrentLinkedQueue<>();
     private ServerSessionAdaptor sessionAdaptor;

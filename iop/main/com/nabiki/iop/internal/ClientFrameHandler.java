@@ -41,7 +41,7 @@ import org.apache.mina.filter.FilterEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class ClientFrameHandler implements IoHandler {
+class ClientFrameHandler implements IoHandler {
     /*
     Default adaptors. The adaptors can be override by setter.
      */

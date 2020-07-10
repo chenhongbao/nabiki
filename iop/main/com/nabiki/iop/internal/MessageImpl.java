@@ -35,7 +35,7 @@ import com.nabiki.iop.x.OP;
 
 import java.io.IOException;
 
-public class MessageImpl extends Message {
+class MessageImpl extends Message {
     protected MessageImpl() {
     }
 

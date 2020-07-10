@@ -35,7 +35,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-public class FrameDecoder extends CumulativeProtocolDecoder {
+class FrameDecoder extends CumulativeProtocolDecoder {
     private static final String PARSER_ATTR = OP.randomString();
 
     @Override
