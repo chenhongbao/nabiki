@@ -121,7 +121,7 @@ public class OP {
     public static <T> T fromJson(String json, Class<T> clz) throws IOException {
         try {
             return gson.fromJson(json, clz);
-        } catch (com.google.gson.JsonSyntaxException e) {
+        } catch (Throwable e) {
             throw new IOException("parse JSON string", e);
         }
     }

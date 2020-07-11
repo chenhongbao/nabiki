@@ -31,16 +31,13 @@ package com.nabiki.iop;
 import com.nabiki.iop.internal.IOPClientImpl;
 import com.nabiki.iop.internal.IOPServerImpl;
 
-import java.io.IOException;
-
 public class IOP {
     /**
      * Create a server bound to the specified address and talking the IOP frame.
      *
      * @return server instance
      */
-    public static IOPServer createServer()
-            throws IOException {
+    public static IOPServer createServer() {
         return new IOPServerImpl();
     }
 
@@ -49,8 +46,7 @@ public class IOP {
      *
      * @return client instance
      */
-    public static IOPClient createClient()
-            throws IOException {
+    public static IOPClient createClient() {
         return new IOPClientImpl();
     }
 }

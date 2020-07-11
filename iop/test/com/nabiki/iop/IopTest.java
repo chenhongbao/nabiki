@@ -268,7 +268,7 @@ public class IopTest {
                 System.out.println(OP.toJson(message.RspInfo));
             assertEquals(message.Type, MessageType.REQ_ORDER_INSERT);
             // Send response.
-            send(session, new CThostFtdcRspUserLoginField(),
+            send(session, new CThostFtdcInputOrderField(),
                     MessageType.RSP_REQ_ORDER_INSERT, 1, 1);
             if (new Random().nextDouble() > 0.5)
                 session.done(); // Have a chance the message is not done.
@@ -443,6 +443,8 @@ public class IopTest {
                     assertTrue(entry.getKey() + " missed",
                             entry.getValue());
             }
+
+            client.disconnect();
             System.out.println("EXIT");
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

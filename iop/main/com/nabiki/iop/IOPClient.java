@@ -34,6 +34,8 @@ import java.net.InetSocketAddress;
 public interface IOPClient {
     void connect(InetSocketAddress address) throws IOException;
 
+    void disconnect();
+
     void setSessionAdaptor(ClientSessionAdaptor adaptor);
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor);

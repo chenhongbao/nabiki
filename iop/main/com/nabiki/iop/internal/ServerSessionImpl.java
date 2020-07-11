@@ -104,6 +104,7 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
 
     @Override
     public void sendLogin(Message message) {
+        message.Type = MessageType.RSP_REQ_LOGIN;
         super.send(toBody(message), FrameType.LOGIN);
     }
 

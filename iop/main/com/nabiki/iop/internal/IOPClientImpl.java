@@ -32,8 +32,10 @@ import com.nabiki.iop.ClientMessageAdaptor;
 import com.nabiki.iop.ClientSession;
 import com.nabiki.iop.ClientSessionAdaptor;
 import com.nabiki.iop.IOPClient;
+import com.nabiki.iop.frame.FrameParser;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
@@ -44,13 +46,14 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 public class IOPClientImpl implements IOPClient {
-    public static int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+    private static final int DEFAULT_IDLE_SEC = 60;
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
 
     private final NioSocketConnector connector = new NioSocketConnector();
     private final ClientFrameHandler frameHnd = new ClientFrameHandler();
     private ClientSessionImpl session;
 
-    public IOPClientImpl() throws IOException {
+    public IOPClientImpl() {
     }
 
     private IoSession io(InetSocketAddress connectAddress) throws IOException {
@@ -63,6 +66,10 @@ public class IOPClientImpl implements IOPClient {
                 new FrameCodecFactory()));
         // Set handler.
         this.connector.setHandler(this.frameHnd);
+        // Configure the session.
+        var config = this.connector.getSessionConfig();
+        config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
+        config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
         // Connect and construct session.
         ConnectFuture future = connector.connect(connectAddress);
         try {
@@ -79,6 +86,12 @@ public class IOPClientImpl implements IOPClient {
     public void connect(InetSocketAddress address) throws IOException {
         // Construct session.
         this.session = ClientSessionImpl.from(io(address));
+    }
+
+    @Override
+    public void disconnect() {
+        this.session.close();
+        this.connector.dispose();
     }
 
     @Override

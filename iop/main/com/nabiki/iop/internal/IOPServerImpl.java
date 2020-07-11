@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class IOPServerImpl implements IOPServer {
-    public static int DEFAULT_IDLE_SEC = 60 * 30;
+    private static final int DEFAULT_IDLE_SEC = 60;
 
     private final IoAcceptor acceptor = new NioSocketAcceptor();
     private final ServerFrameHandler frameHnd = new ServerFrameHandler();
