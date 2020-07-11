@@ -33,6 +33,7 @@ import com.nabiki.client.ResponseConsumer;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -87,7 +88,8 @@ public class ResponseImpl<T> implements Response<T> {
 
     @Override
     public T poll() {
-        return null;
+        return Objects.requireNonNull(
+                this.responses.poll(), "response null").Response;
     }
 
     @Override

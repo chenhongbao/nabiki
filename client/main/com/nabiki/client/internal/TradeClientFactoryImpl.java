@@ -35,16 +35,18 @@ public class TradeClientFactoryImpl
         extends ServiceCounter implements TradeClientFactory {
     @Override
     public TradeClient get() {
-        return null;
+        var r = new TradeClientImpl();
+        super.add(r);
+        return r;
     }
 
     @Override
     public void unget(TradeClient client) {
-
+        super.remove(client);
     }
 
     @Override
     public void release() {
-
+        super.forEach(client -> { client.close(); });
     }
 }

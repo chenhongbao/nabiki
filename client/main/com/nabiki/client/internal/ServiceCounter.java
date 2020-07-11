@@ -28,8 +28,10 @@
 
 package com.nabiki.client.internal;
 
-import java.util.HashSet;
+import com.nabiki.client.TradeClient;
 
-public abstract class ServiceCounter extends HashSet<Object> {
+import java.util.concurrent.ConcurrentSkipListSet;
+
+public abstract class ServiceCounter extends ConcurrentSkipListSet<TradeClient> {
     public abstract void release();
 }
