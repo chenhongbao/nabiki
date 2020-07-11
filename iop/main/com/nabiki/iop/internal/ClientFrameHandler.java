@@ -40,6 +40,7 @@ import org.apache.mina.filter.FilterEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 class ClientFrameHandler implements IoHandler {
     /*
@@ -146,8 +147,10 @@ class ClientFrameHandler implements IoHandler {
 
     @Override
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.IDLE, status);
+        var clientSession = ClientSessionImpl.from(session);
+        this.clientSessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
+        // If client detects idle, send heartbeat.
+        clientSession.sendHeartbeat(UUID.randomUUID());
     }
 
     @Override
@@ -171,14 +174,13 @@ class ClientFrameHandler implements IoHandler {
             switch (frame.Type) {
                 case FrameType.RESPONSE:
                     if (isLogin(session))
-                        handleResponse(toMessage(body));
+                        handleResponse(iopMessage);
                     break;
                 case FrameType.LOGIN:
-                    handleLogin(ClientSessionImpl.from(session), toMessage(body));
+                    handleLogin(iopSession, iopMessage);
                     break;
                 case FrameType.HEARTBEAT:
-                    handleHeartbeat(ClientSessionImpl.from(session),
-                            toMessage(body));
+                    handleHeartbeat(iopSession, iopMessage);
                     break;
                 default:
                     throw new IllegalStateException("unknown frame type");
