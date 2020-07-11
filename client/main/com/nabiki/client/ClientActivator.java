@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ *
+ * Licensed under the  GNU Affero General Public License v3.0 and you may not use
+ * this file except in compliance with the  License. You may obtain a copy of the
+ * License at
+ *
+ *                    https://www.gnu.org/licenses/agpl-3.0.txt
+ *
+ * Permission is hereby  granted, free of charge, to any  person obtaining a copy
+ * of this software and associated  documentation files (the "Software"), to deal
+ * in the Software  without restriction, including without  limitation the rights
+ * to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
+ * copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
+ * IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
+ * FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
+ * AUTHORS  OR COPYRIGHT  HOLDERS  BE  LIABLE FOR  ANY  CLAIM,  DAMAGES OR  OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package com.nabiki.client;
+
+import com.nabiki.client.internal.DataPersistenceFactoryImpl;
+import com.nabiki.client.internal.LoggerFactoryImpl;
+import com.nabiki.client.internal.TradeClientFactoryImpl;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+public class ClientActivator implements BundleActivator {
+    private final TradeClientFactoryImpl tradeFac;
+    private final DataPersistenceFactoryImpl dataFac;
+    private final LoggerFactoryImpl logFac;
+
+    public ClientActivator() {
+        this.tradeFac  = new TradeClientFactoryImpl();
+        this.dataFac = new DataPersistenceFactoryImpl();
+        this.logFac  = new LoggerFactoryImpl();
+    }
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        context.registerService(TradeClientFactory.class.getName(),
+                this.tradeFac, null);
+        context.registerService(DataPersistenceFactory.class.getName(),
+                this.dataFac, null);
+        context.registerService(LoggerFactory.class.getName(),
+                this.logFac, null);
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (this.tradeFac.size() > 0) {
+            System.err.println(this.tradeFac.size() +
+                    " trade clients are working when factory is destroyed");
+            this.tradeFac.release();
+        }
+        if (this.dataFac.size() > 0) {
+            System.err.println(this.dataFac.size() +
+                    " data persistence are working when factory is destroyed");
+            this.dataFac.release();
+        }
+        if (this.logFac.size() > 0) {
+            System.err.println(this.logFac.size() +
+                    " loggers are working when factory is destroyed");
+            this.logFac.release();
+        }
+    }
+}
