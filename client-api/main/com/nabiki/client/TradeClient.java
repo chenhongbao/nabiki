@@ -35,7 +35,9 @@ import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public interface TradeClient {
-    void setListener(TradeClientListener listener);
+    void setListener(TradeClientListener clientListener);
+
+    void setListener(MarketDataListener listener);
 
     void open(InetSocketAddress address) throws IOException;
 

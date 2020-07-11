@@ -34,17 +34,33 @@ import com.nabiki.iop.ClientSessionAdaptor;
 import com.nabiki.iop.SessionEvent;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 class TradeClientSessionAdaptor extends ClientSessionAdaptor {
-    private final AtomicBoolean closed = new AtomicBoolean(true);
-    private final TradeClientListener listener;
+    private class DefaultClientListener implements TradeClientListener {
+        @Override
+        public void onError(Throwable th) {
+        }
 
-    TradeClientSessionAdaptor(TradeClientListener listener) {
-        this.listener = listener;
+        @Override
+        public void onClose() {
+        }
+
+        @Override
+        public void onOpen() {
+        }
     }
 
-    boolean isClosed() {
-        return this.closed.get();
+    private final AtomicBoolean closed = new AtomicBoolean(true);
+    private final AtomicReference<TradeClientListener> listener
+            = new AtomicReference<>(new DefaultClientListener());
+
+    TradeClientSessionAdaptor() {
+    }
+
+    void setListener(TradeClientListener listener) {
+        if (listener != null)
+            this.listener.set(listener);
     }
 
     @Override
@@ -54,20 +70,20 @@ class TradeClientSessionAdaptor extends ClientSessionAdaptor {
             case OPENED:
                 this.closed.set(false);
                 try {
-                    this.listener.onOpen();
+                    this.listener.get().onOpen();
                 } catch (Throwable ignored) {
                 }
                 break;
             case CLOSED:
                 this.closed.set(true);
                 try {
-                    this.listener.onClose();
+                    this.listener.get().onClose();
                 } catch (Throwable ignored) {
                 }
                 break;
             case ERROR:
                 try {
-                    this.listener.onError((Throwable) eventObject);
+                    this.listener.get().onError((Throwable) eventObject);
                 } catch (Throwable ignored) {
                 }
             default:

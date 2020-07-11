@@ -28,6 +28,7 @@
 
 package com.nabiki.client.internal;
 
+import com.nabiki.client.MarketDataListener;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.ClientMessageAdaptor;
 import com.nabiki.iop.Message;
@@ -36,9 +37,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 class TradeClientAdaptor extends ClientMessageAdaptor {
+    private class DefaultDepthListener implements MarketDataListener {
+        @Override
+        public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
+        }
+
+        @Override
+        public void onCandle(CThostFtdcCandleField candle) {
+        }
+    }
+
     private final Map<UUID, ResponseImpl<?>> responses = new ConcurrentHashMap<>();
+    private final AtomicReference<MarketDataListener> listener
+            = new AtomicReference<>(new DefaultDepthListener());
 
     TradeClientAdaptor() {}
 
@@ -48,6 +62,11 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
         if (this.responses.containsKey(requestID))
             throw new IllegalArgumentException("duplicated request ID");
         this.responses.put(requestID, response);
+    }
+
+    void setListener(MarketDataListener listener) {
+        if (listener != null)
+            this.listener.set(listener);
     }
 
     private void checkCompletion(ResponseImpl<?> response, UUID requestID) {
@@ -115,11 +134,16 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspDepthMarketData(Message message) {
-        doRsp(message, CThostFtdcDepthMarketDataField.class);
+        Objects.requireNonNull(message, "message null");
+        Objects.requireNonNull(message.Body, "depth market data body null");
+        this.listener.get().onDepthMarketData(
+                (CThostFtdcDepthMarketDataField)message.Body);
     }
 
     @Override
     public void doRspCandle(Message message) {
-        doRsp(message, CThostFtdcCandleField.class);
+        Objects.requireNonNull(message, "message null");
+        Objects.requireNonNull(message.Body, "candle body null");
+        this.listener.get().onCandle((CThostFtdcCandleField)message.Body);
     }
 }

@@ -26,21 +26,13 @@
  * SOFTWARE.
  */
 
-package com.nabiki.ctp4j.jni.struct;
+package com.nabiki.client;
 
-public class CThostFtdcCandleField implements java.io.Serializable {
-    public String InstrumentID;
-    public double OpenPrice;
-    public double HighestPrice;
-    public double LowestPrice;
-    public double ClosePrice;
-    public double AveragePrice;
-    public double OpenInterest;
-    public int Volume;
-    public int minute;
-    public String TradingDay;
-    public String ActionDay;
-    public String UpdateTime;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 
-    public CThostFtdcCandleField() {}
+public interface MarketDataListener {
+    void onDepthMarketData(CThostFtdcDepthMarketDataField depth);
+
+    void onCandle(CThostFtdcCandleField candle);
 }

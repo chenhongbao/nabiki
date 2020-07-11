@@ -28,6 +28,7 @@
 
 package com.nabiki.client.internal;
 
+import com.nabiki.client.MarketDataListener;
 import com.nabiki.client.Response;
 import com.nabiki.client.TradeClient;
 import com.nabiki.client.TradeClientListener;
@@ -40,23 +41,12 @@ import java.util.Objects;
 import java.util.UUID;
 
 class TradeClientImpl implements TradeClient {
-    private class DefaultListener implements TradeClientListener {
-        @Override
-        public void onError(Throwable th) {
-        }
 
-        @Override
-        public void onClose() {
-        }
-
-        @Override
-        public void onOpen() {
-        }
-    }
 
     private final IOPClient client = IOP.createClient();
-    private final TradeClientAdaptor adaptor = new TradeClientAdaptor();
-    private TradeClientListener listener = new DefaultListener();
+    private final TradeClientAdaptor clientAdaptor = new TradeClientAdaptor();
+    private final TradeClientSessionAdaptor sessionAdaptor
+            = new TradeClientSessionAdaptor();
 
     public TradeClientImpl() {
     }
@@ -83,7 +73,7 @@ class TradeClientImpl implements TradeClient {
 
     private <T, V> Response<T> send(V request, UUID requestID, Class<T> clz) {
         var rsp = new ResponseImpl<T>();
-        this.adaptor.setResponse(rsp, requestID);
+        this.clientAdaptor.setResponse(rsp, requestID);
         getSession().sendRequest(toMessage(request, requestID));
         return rsp;
     }
@@ -97,13 +87,19 @@ class TradeClientImpl implements TradeClient {
     @Override
     public void setListener(TradeClientListener listener) {
         if (listener != null)
-            this.listener = listener;
+            this.sessionAdaptor.setListener(listener);
+    }
+
+    @Override
+    public void setListener(MarketDataListener listener) {
+        if (listener != null)
+            this.clientAdaptor.setListener(listener);
     }
 
     @Override
     public void open(InetSocketAddress address) throws IOException {
-        this.client.setMessageAdaptor(this.adaptor);
-        this.client.setSessionAdaptor(new TradeClientSessionAdaptor(this.listener));
+        this.client.setMessageAdaptor(this.clientAdaptor);
+        this.client.setSessionAdaptor(this.sessionAdaptor);
         this.client.connect(address);
     }
 
