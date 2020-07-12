@@ -31,9 +31,9 @@ package com.nabiki.client;
 import java.io.Serializable;
 
 public interface DataPersistence {
-    boolean put(Object key, Serializable data);
+    boolean put(String key, Serializable data);
 
-    boolean remove(Object key);
+    boolean remove(String key);
 
-    Object get(Object key);
+    Object get(String key);
 }

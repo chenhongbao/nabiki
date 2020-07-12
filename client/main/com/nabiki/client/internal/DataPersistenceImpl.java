@@ -31,20 +31,28 @@ package com.nabiki.client.internal;
 import com.nabiki.client.DataPersistence;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 class DataPersistenceImpl implements DataPersistence {
-    @Override
-    public boolean put(Object key, Serializable data) {
-        return false;
+    private final DataPersistenceAccess access;
+
+    DataPersistenceImpl(DataPersistenceAccess access) {
+        Objects.requireNonNull(access, "data persistence writer null");
+        this.access = access;
     }
 
     @Override
-    public boolean remove(Object key) {
-        return false;
+    public boolean put(String key, Serializable data) {
+        return this.access.write(key, data);
     }
 
     @Override
-    public Object get(Object key) {
-        return null;
+    public boolean remove(String key) {
+        return this.access.remove(key);
+    }
+
+    @Override
+    public Object get(String key) {
+        return this.access.read(key);
     }
 }

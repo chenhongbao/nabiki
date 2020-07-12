@@ -33,20 +33,24 @@ import com.nabiki.client.DataPersistenceFactory;
 
 public class DataPersistenceFactoryImpl
         extends ServiceCounter implements DataPersistenceFactory {
+    private final static DataPersistenceAccess access = new DataPersistenceAccess();
+
     public DataPersistenceFactoryImpl() {}
 
     @Override
     public DataPersistence get() {
-        return null;
+        var o = new DataPersistenceImpl(access);
+        super.add(o);
+        return o;
     }
 
     @Override
     public void unget(DataPersistence object) {
-
+        super.remove(object);
     }
 
     @Override
     public void release() {
-
+        access.flush();
     }
 }

@@ -28,10 +28,8 @@
 
 package com.nabiki.client.internal;
 
-import com.nabiki.client.TradeClient;
-
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public abstract class ServiceCounter extends ConcurrentSkipListSet<TradeClient> {
+public abstract class ServiceCounter extends ConcurrentSkipListSet<Object> {
     public abstract void release();
 }

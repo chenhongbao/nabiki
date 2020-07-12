@@ -31,7 +31,7 @@ package com.nabiki.client;
 import java.util.logging.Logger;
 
 public interface LoggerFactory {
-    Logger get(Object name);
+    Logger get(String name);
 
     void unget(Logger logger);
 }

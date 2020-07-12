@@ -47,6 +47,10 @@ public class TradeClientFactoryImpl
 
     @Override
     public void release() {
-        super.forEach(client -> { client.close(); });
+        super.forEach(client -> {
+            if (client instanceof TradeClient)
+                ((TradeClient) client).close();
+        });
+        super.clear();
     }
 }
