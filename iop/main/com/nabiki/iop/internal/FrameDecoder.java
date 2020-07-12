@@ -29,14 +29,15 @@
 package com.nabiki.iop.internal;
 
 import com.nabiki.iop.frame.FrameParser;
-import com.nabiki.iop.x.OP;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
+import java.util.UUID;
+
 class FrameDecoder extends CumulativeProtocolDecoder {
-    private static final String PARSER_ATTR = OP.randomString();
+    private static final String PARSER_ATTR = UUID.randomUUID().toString();
 
     @Override
     protected boolean doDecode(IoSession session, IoBuffer in,
