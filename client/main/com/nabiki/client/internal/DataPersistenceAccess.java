@@ -114,7 +114,6 @@ class DataPersistenceAccess {
         try {
             BufferedReader br = new BufferedReader(new FileReader(index));
             String key, value;
-            key = getLine(br);
             while ((key = getLine(br)) != null) {
                 value = getLine(br);
                 if (value == null)

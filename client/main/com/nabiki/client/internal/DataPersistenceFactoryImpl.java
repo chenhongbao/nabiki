@@ -40,13 +40,17 @@ public class DataPersistenceFactoryImpl
     @Override
     public DataPersistence get() {
         var o = new DataPersistenceImpl(access);
-        super.add(o);
+        synchronized (this) {
+            super.add(o);
+        }
         return o;
     }
 
     @Override
     public void unget(DataPersistence object) {
-        super.remove(object);
+        synchronized (this) {
+            super.remove(object);
+        }
     }
 
     @Override
