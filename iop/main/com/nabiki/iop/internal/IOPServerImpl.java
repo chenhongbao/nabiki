@@ -33,7 +33,6 @@ import com.nabiki.iop.IOPServer;
 import com.nabiki.iop.LoginManager;
 import com.nabiki.iop.ServerSessionAdaptor;
 import com.nabiki.iop.frame.FrameParser;
-import com.nabiki.iop.x.OP;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -42,6 +41,7 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 public class IOPServerImpl implements IOPServer {
     private static final int DEFAULT_IDLE_SEC = 60;
@@ -54,8 +54,8 @@ public class IOPServerImpl implements IOPServer {
 
     private void io(InetSocketAddress address) throws IOException {
         var chain = this.acceptor.getFilterChain();
-        chain.addLast(OP.randomString(), new LoggingFilter());
-        chain.addLast(OP.randomString(), new ProtocolCodecFilter(
+        chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
+        chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
                 new FrameCodecFactory()));
         // Frame handler.
         this.acceptor.setHandler(frameHnd);

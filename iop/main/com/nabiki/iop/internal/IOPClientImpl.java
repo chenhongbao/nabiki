@@ -33,7 +33,6 @@ import com.nabiki.iop.ClientSession;
 import com.nabiki.iop.ClientSessionAdaptor;
 import com.nabiki.iop.IOPClient;
 import com.nabiki.iop.frame.FrameParser;
-import com.nabiki.iop.x.OP;
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -43,6 +42,7 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class IOPClientImpl implements IOPClient {
@@ -61,8 +61,8 @@ public class IOPClientImpl implements IOPClient {
         this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
         // Set filters.
         var chain = this.connector.getFilterChain();
-        chain.addLast(OP.randomString(), new LoggingFilter());
-        chain.addLast(OP.randomString(), new ProtocolCodecFilter(
+        chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
+        chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
                 new FrameCodecFactory()));
         // Set handler.
         this.connector.setHandler(this.frameHnd);
