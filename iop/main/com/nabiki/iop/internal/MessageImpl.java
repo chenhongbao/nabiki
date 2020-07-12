@@ -52,8 +52,13 @@ class MessageImpl extends Message {
                             CThostFtdcSubMarketDataField.class);
                     break;
                 case RSP_SUB_MD:
+                case RSP_UNSUB_MD:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcSpecificInstrumentField.class);
+                    break;
+                case UNSUB_MD:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcUnsubMarketDataField.class);
                     break;
                 case FLOW_DEPTH:
                     msg.Body = OP.fromJson(body.Body,
@@ -63,6 +68,10 @@ class MessageImpl extends Message {
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcCandleField.class);
                     break;
+                case REQ_AUTHENTICATE:
+                    break;
+                case RSP_REQ_AUTHENTICATE:
+                    break;
                 case REQ_LOGIN:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcReqUserLoginField.class);
@@ -70,6 +79,19 @@ class MessageImpl extends Message {
                 case RSP_REQ_LOGIN:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcRspUserLoginField.class);
+                    break;
+                case REQ_LOGOUT:
+                case RSP_REQ_LOGOUT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcUserLogoutField.class);
+                    break;
+                case REQ_SETTLEMENT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcReqAuthenticateField.class);
+                    break;
+                case RSP_REQ_SETTLEMENT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcSettlementInfoConfirmField.class);
                     break;
                 case REQ_ORDER_INSERT:
                 case RSP_REQ_ORDER_INSERT:
@@ -104,6 +126,38 @@ class MessageImpl extends Message {
                 case RSP_QRY_POSITION:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInvestorPositionField.class);
+                    break;
+                case QRY_POSI_DETAIL:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryInvestorPositionDetailField.class);
+                    break;
+                case RSP_REQ_POSI_DETAIL:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInvestorPositionDetailField.class);
+                    break;
+                case QRY_INSTRUMENT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryInstrumentField.class);
+                    break;
+                case RSP_QRY_INSTRUMENT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInstrumentField.class);
+                    break;
+                case QRY_COMMISSION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryInstrumentCommissionRateField.class);
+                    break;
+                case RSP_QRY_COMMISSION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInstrumentCommissionRateField.class);
+                    break;
+                case QRY_MARGIN:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcQryInstrumentMarginRateField.class);
+                    break;
+                case RSP_QRY_MARGIN:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInstrumentMarginRateField.class);
                     break;
                 default:
                     throw new IOException("unknown message type " + body.Type);

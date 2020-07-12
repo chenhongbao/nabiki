@@ -26,40 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.ctp4j.jni.struct;
 
-public enum MessageType implements java.io.Serializable {
-    HEARTBEAT,
-    SUB_MD,
-    RSP_SUB_MD,
-    UNSUB_MD,
-    RSP_UNSUB_MD,
-    FLOW_DEPTH,
-    FLOW_CANDLE,
-    REQ_AUTHENTICATE,
-    RSP_REQ_AUTHENTICATE,
-    REQ_LOGIN,
-    RSP_REQ_LOGIN,
-    REQ_LOGOUT,
-    RSP_REQ_LOGOUT,
-    REQ_SETTLEMENT,
-    RSP_REQ_SETTLEMENT,
-    REQ_ORDER_INSERT,
-    RSP_REQ_ORDER_INSERT,
-    REQ_ORDER_ACTION,
-    RSP_REQ_ORDER_ACTION,
-    QRY_ACCOUNT,
-    RSP_QRY_ACCOUNT,
-    QRY_ORDER,
-    RSP_QRY_ORDER,
-    QRY_POSITION,
-    RSP_QRY_POSITION,
-    QRY_POSI_DETAIL,
-    RSP_REQ_POSI_DETAIL,
-    QRY_INSTRUMENT,
-    RSP_QRY_INSTRUMENT,
-    QRY_COMMISSION,
-    RSP_QRY_COMMISSION,
-    QRY_MARGIN,
-    RSP_QRY_MARGIN
+public class CThostFtdcUnsubMarketDataField {
+    public String[] InstrumentID;
+
+    public CThostFtdcUnsubMarketDataField() {}
 }
