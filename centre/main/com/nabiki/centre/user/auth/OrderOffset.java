@@ -26,12 +26,8 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre.user.auth;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-
-public abstract class LoginManager {
-    public int doLogin(ServerSession session, Message message) {
-        return TThostFtdcErrorCode.INVALID_LOGIN;
-    }
+public enum OrderOffset {
+    OPEN_CLOSE, ONLY_CLOSE, NEITHER
 }

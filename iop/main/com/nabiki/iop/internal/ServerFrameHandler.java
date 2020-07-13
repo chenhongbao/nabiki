@@ -29,7 +29,6 @@
 package com.nabiki.iop.internal;
 
 import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorMessage;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcRspUserLoginField;
 import com.nabiki.iop.*;
@@ -57,7 +56,6 @@ class ServerFrameHandler implements IoHandler {
     }
 
     private static final String IOP_ISLOGIN_KEY = "iop.islogin";
-
     private final AdaptorChainImpl chain = new AdaptorChainImpl();
 
     private ServerSessionAdaptor serverSessionAdaptor
@@ -79,29 +77,25 @@ class ServerFrameHandler implements IoHandler {
 
     private void handleLogin(ServerSession session, Message message) {
         if (message.Type == MessageType.REQ_LOGIN) {
-            var login = this.loginManager.doLogin(session, message);
-            session.setAttribute(IOP_ISLOGIN_KEY, login);
+            var code = this.loginManager.doLogin(session, message);
+            session.setAttribute(IOP_ISLOGIN_KEY,
+                    code == TThostFtdcErrorCode.NONE);
             // Send rsp.
-            sendLoginRsp(login, session, message);
+            sendLoginRsp(code, session, message);
         }
     }
 
-    private void sendLoginRsp(boolean login, ServerSession session, Message message) {
+    private void sendLoginRsp(int code, ServerSession session, Message message) {
         Message rsp = new Message();
         rsp.Type = MessageType.RSP_REQ_LOGIN;
         rsp.CurrentCount = 1;
         rsp.TotalCount = 1;
         rsp.RequestID = message.RequestID;
         rsp.ResponseID = UUID.randomUUID();
-        rsp.Body = new CThostFtdcRspUserLoginField();
+        rsp.Body = new CThostFtdcRspUserLoginField(); /* No need to repeat */
         rsp.RspInfo = new CThostFtdcRspInfoField();
-        if (login) {
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
-            rsp.RspInfo.ErrorMsg = TThostFtdcErrorMessage.NONE;
-        } else {
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.INVALID_LOGIN;
-            rsp.RspInfo.ErrorMsg = TThostFtdcErrorMessage.INVALID_LOGIN;
-        }
+        rsp.RspInfo.ErrorID = code;
+        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(code);
         session.sendLogin(rsp);
     }
 

@@ -26,12 +26,20 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre.user.auth;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
+import java.util.List;
 
-public abstract class LoginManager {
-    public int doLogin(ServerSession session, Message message) {
-        return TThostFtdcErrorCode.INVALID_LOGIN;
+public class UserAuthProfile {
+    public class InstrumentAuth {
+        public String InstrumentID;
+        OrderOffset AllowOffset;
     }
+
+    public String UserID;
+    public String Password;
+    public boolean CanLogin;
+    public List<InstrumentAuth> InstrumentAuths;
+
+    public UserAuthProfile() {}
 }

@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
+public interface Renewable {
+    void renew() throws Exception;
 
-public abstract class LoginManager {
-    public int doLogin(ServerSession session, Message message) {
-        return TThostFtdcErrorCode.INVALID_LOGIN;
-    }
+    void settle() throws Exception;
 }

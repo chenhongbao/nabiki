@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre.front;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-
-public abstract class LoginManager {
-    public int doLogin(ServerSession session, Message message) {
-        return TThostFtdcErrorCode.INVALID_LOGIN;
+public class ActiveUserManager {
+    public ActiveUser getActiveUser(String userID) {
+        return null;
     }
 }
