@@ -34,7 +34,7 @@ public class CThostFtdcInvestorPositionField {
     public String InvestorID;
     public byte PosiDirection;
     public byte HedgeFlag;
-    public String PositionDate;
+    public byte PositionDate;
     public int YdPosition;
     public int Position;
     public int LongFrozen;

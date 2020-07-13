@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.ctp4j.jni.struct;
+package com.nabiki.ctp4j.jni.flag;
 
 public class TThostFtdcPosiDirectionType {
     public static final char NET = '1';

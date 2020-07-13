@@ -35,10 +35,9 @@ import com.nabiki.centre.user.plain.InstrumentInfoSet;
 import com.nabiki.centre.user.plain.SettlementPrices;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
 import com.nabiki.ctp4j.jni.struct.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class ActiveUser {
@@ -200,14 +199,10 @@ public class ActiveUser {
         // Add to result set.
         if (lp != null) {
             lp.TradingDay = this.config.getTradingDay();
-            lp.PositionDate = LocalDate.now().format(
-                    DateTimeFormatter.ofPattern("yyyyMMdd"));
             ret.add(lp);
         }
         if (sp != null) {
             sp.TradingDay = this.config.getTradingDay();
-            sp.PositionDate = LocalDate.now().format(
-                    DateTimeFormatter.ofPattern("yyyyMMdd"));
             ret.add(sp);
         }
         return ret;

@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.iop.x;
 
 import java.io.*;
 import java.nio.charset.Charset;

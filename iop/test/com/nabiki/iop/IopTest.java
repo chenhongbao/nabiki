@@ -31,6 +31,7 @@ package com.nabiki.iop;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.x.OP;
+import com.nabiki.iop.x.SystemStream;
 import org.apache.mina.core.session.IdleStatus;
 import org.junit.Test;
 
@@ -137,8 +138,24 @@ public class IopTest {
     static Map<MessageType, Boolean> hit;
     static {
         hit = new ConcurrentHashMap<>();
-        for (var type : MessageType.values())
-            hit.put(type, false);
+        // Responses.
+        hit.put(MessageType.RSP_REQ_LOGIN, false);
+        hit.put(MessageType.RSP_REQ_ORDER_INSERT, false);
+        hit.put(MessageType.RSP_REQ_ORDER_ACTION, false);
+        hit.put(MessageType.RSP_QRY_ACCOUNT, false);
+        hit.put(MessageType.RSP_QRY_ORDER, false);
+        hit.put(MessageType.RSP_QRY_POSITION, false);
+        hit.put(MessageType.RSP_SUB_MD, false);
+        hit.put(MessageType.FLOW_DEPTH, false);
+        hit.put(MessageType.FLOW_CANDLE, false);
+        // Requests.
+        hit.put(MessageType.REQ_LOGIN, false);
+        hit.put(MessageType.REQ_ORDER_INSERT, false);
+        hit.put(MessageType.REQ_ORDER_ACTION, false);
+        hit.put(MessageType.QRY_ACCOUNT, false);
+        hit.put(MessageType.QRY_ORDER, false);
+        hit.put(MessageType.QRY_POSITION, false);
+        hit.put(MessageType.SUB_MD, false);
     }
 
     private void hit(MessageType type) {

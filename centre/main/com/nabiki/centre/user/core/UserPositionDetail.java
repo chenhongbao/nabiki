@@ -30,9 +30,9 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionField;
-import com.nabiki.ctp4j.jni.struct.TThostFtdcPosiDirectionType;
 
 import java.util.LinkedList;
 import java.util.List;
