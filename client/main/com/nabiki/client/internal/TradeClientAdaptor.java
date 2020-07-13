@@ -104,12 +104,12 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspReqOrderInsert(Message message) {
-        doRsp(message, CThostFtdcInputOrderField.class);
+        doRsp(message, CThostFtdcOrderField.class);
     }
 
     @Override
     public void doRspReqOrderAction(Message message) {
-        doRsp(message, CThostFtdcInputOrderActionField.class);
+        doRsp(message, CThostFtdcOrderActionField.class);
     }
 
     @Override

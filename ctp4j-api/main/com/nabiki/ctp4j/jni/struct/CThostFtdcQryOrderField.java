@@ -26,17 +26,17 @@
  * SOFTWARE.
  */
 
-package com.nabiki.ctp4j.internal;
+package com.nabiki.ctp4j.jni.struct;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcUserLogoutField;
+public class CThostFtdcQryOrderField {
+    public String BrokerID;
+    public String InvestorID;
+    public String InstrumentID;
+    public String ExchangeID;
+    public String OrderSysID;
+    public String InsertTimeStart;
+    public String InsertTimeEnd;
+    public String InvestUnitID;
 
-public class RspUserLogout {
-	public CThostFtdcUserLogoutField UserLogout;
-	public CThostFtdcRspInfoField RspInfo;
-	public int RequestId;
-	public boolean IsLast;
-
-	public RspUserLogout() {
-	}
+    public CThostFtdcQryOrderField() {}
 }

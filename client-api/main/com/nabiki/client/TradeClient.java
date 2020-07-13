@@ -45,15 +45,15 @@ public interface TradeClient {
 
     Response<CThostFtdcRspUserLoginField> login(CThostFtdcReqUserLoginField request, UUID requestID);
 
-    Response<CThostFtdcInputOrderField> orderInsert(CThostFtdcInputOrderField order, UUID requestID);
+    Response<CThostFtdcOrderField> orderInsert(CThostFtdcInputOrderField order, UUID requestID);
 
-    Response<CThostFtdcInputOrderActionField> orderAction(CThostFtdcInputOrderActionField action, UUID requestID);
+    Response<CThostFtdcOrderActionField> orderAction(CThostFtdcInputOrderActionField action, UUID requestID);
 
     Response<CThostFtdcInvestorPositionField> queryPosition(CThostFtdcQryInvestorPositionField query, UUID requestID);
 
     Response<CThostFtdcTradingAccountField> queryAccount(CThostFtdcQryTradingAccountField query, UUID requestID);
 
-    Response<CThostFtdcOrderField> queryOrder(CThostFtdcOrderUuidField uuid, UUID requestID);
+    Response<CThostFtdcOrderField> queryOrder(CThostFtdcQryOrderField query, UUID requestID);
 
     Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(CThostFtdcSubMarketDataField subscription, UUID requestID);
 }

@@ -69,8 +69,12 @@ class MessageImpl extends Message {
                             CThostFtdcCandleField.class);
                     break;
                 case REQ_AUTHENTICATE:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcReqAuthenticateField.class);
                     break;
                 case RSP_REQ_AUTHENTICATE:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcRspAuthenticateField.class);
                     break;
                 case REQ_LOGIN:
                     msg.Body = OP.fromJson(body.Body,
@@ -87,21 +91,27 @@ class MessageImpl extends Message {
                     break;
                 case REQ_SETTLEMENT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcReqAuthenticateField.class);
+                            CThostFtdcSettlementInfoConfirmField.class);
                     break;
                 case RSP_REQ_SETTLEMENT:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcSettlementInfoConfirmField.class);
                     break;
                 case REQ_ORDER_INSERT:
-                case RSP_REQ_ORDER_INSERT:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInputOrderField.class);
                     break;
+                case RSP_REQ_ORDER_INSERT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderField.class);
+                    break;
                 case REQ_ORDER_ACTION:
-                case RSP_REQ_ORDER_ACTION:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInputOrderActionField.class);
+                    break;
+                case RSP_REQ_ORDER_ACTION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderActionField.class);
                     break;
                 case QRY_ACCOUNT:
                     msg.Body = OP.fromJson(body.Body,
@@ -113,7 +123,7 @@ class MessageImpl extends Message {
                     break;
                 case QRY_ORDER:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderUuidField.class);
+                            CThostFtdcQryOrderField.class);
                     break;
                 case RSP_QRY_ORDER:
                     msg.Body = OP.fromJson(body.Body,

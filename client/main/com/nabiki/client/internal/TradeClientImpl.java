@@ -109,15 +109,15 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
-    public Response<CThostFtdcInputOrderField> orderInsert(
+    public Response<CThostFtdcOrderField> orderInsert(
             CThostFtdcInputOrderField order, UUID requestID) {
-        return send(order, requestID, CThostFtdcInputOrderField.class);
+        return send(order, requestID, CThostFtdcOrderField.class);
     }
 
     @Override
-    public Response<CThostFtdcInputOrderActionField> orderAction(
+    public Response<CThostFtdcOrderActionField> orderAction(
             CThostFtdcInputOrderActionField action, UUID requestID) {
-        return send(action, requestID, CThostFtdcInputOrderActionField.class);
+        return send(action, requestID, CThostFtdcOrderActionField.class);
     }
 
     @Override
@@ -134,8 +134,8 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CThostFtdcOrderField> queryOrder(
-            CThostFtdcOrderUuidField uuid, UUID requestID) {
-        return send(uuid, requestID, CThostFtdcOrderField.class);
+            CThostFtdcQryOrderField query, UUID requestID) {
+        return send(query, requestID, CThostFtdcOrderField.class);
     }
 
     @Override

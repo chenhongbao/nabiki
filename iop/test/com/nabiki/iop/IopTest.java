@@ -178,7 +178,7 @@ public class IopTest {
         @Override
         public void doRspReqOrderInsert(Message message) {
             if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcInputOrderField);
+                assertTrue(message.Body instanceof CThostFtdcOrderField);
                 System.out.println(OP.toJson(message.Body));
             }
             if (message.RspInfo != null)
@@ -190,7 +190,7 @@ public class IopTest {
         @Override
         public void doRspReqOrderAction(Message message) {
             if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcInputOrderActionField);
+                assertTrue(message.Body instanceof CThostFtdcOrderActionField);
                 System.out.println(OP.toJson(message.Body));
             }
             if (message.RspInfo != null)
@@ -285,7 +285,7 @@ public class IopTest {
                 System.out.println(OP.toJson(message.RspInfo));
             assertEquals(message.Type, MessageType.REQ_ORDER_INSERT);
             // Send response.
-            send(session, new CThostFtdcInputOrderField(),
+            send(session, new CThostFtdcOrderField(),
                     MessageType.RSP_REQ_ORDER_INSERT, 1, 1);
             if (new Random().nextDouble() > 0.5)
                 session.done(); // Have a chance the message is not done.
@@ -329,7 +329,7 @@ public class IopTest {
         @Override
         public void doQryOrder(ServerSession session, Message message) {
             if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcOrderUuidField);
+                assertTrue(message.Body instanceof CThostFtdcQryOrderField);
                 System.out.println(OP.toJson(message.Body));
             }
             if (message.RspInfo != null)
@@ -444,7 +444,7 @@ public class IopTest {
             send(session, new CThostFtdcQryTradingAccountField(),
                     MessageType.QRY_ACCOUNT,1, 1);
             // Test query order.
-            send(session, new CThostFtdcOrderUuidField(),
+            send(session, new CThostFtdcQryOrderField(),
                     MessageType.QRY_ORDER, 1, 1);
             // Test query position.
             send(session, new CThostFtdcQryInvestorPositionField(),
