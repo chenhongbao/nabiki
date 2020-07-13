@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.front;
+package com.nabiki.centre.active;
 
 public class ActiveUserManager {
     public ActiveUser getActiveUser(String userID) {

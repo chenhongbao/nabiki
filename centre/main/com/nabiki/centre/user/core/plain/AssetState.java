@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.user.plain;
+package com.nabiki.centre.user.core.plain;
 
 public enum AssetState {
    ONGOING, CANCELED

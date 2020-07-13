@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
-import com.nabiki.centre.front.ActiveRequest;
+import com.nabiki.centre.active.ActiveRequest;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Utils;

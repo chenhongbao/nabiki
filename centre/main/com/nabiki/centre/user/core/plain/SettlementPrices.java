@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.user.plain;
+package com.nabiki.centre.user.core.plain;
 
 import java.util.HashMap;
 import java.util.Map;

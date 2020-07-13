@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.user.plain;
+package com.nabiki.centre.user.core.plain;
 
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;

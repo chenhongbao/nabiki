@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.user.plain.AssetState;
+import com.nabiki.centre.user.core.plain.AssetState;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
