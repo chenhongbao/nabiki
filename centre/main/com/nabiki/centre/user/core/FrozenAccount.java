@@ -28,24 +28,24 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.user.core.plain.AssetState;
+import com.nabiki.centre.user.core.plain.AccountFrozenCash;
+import com.nabiki.centre.user.core.plain.ProcessStage;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
 
 public class FrozenAccount {
-    private final CThostFtdcTradingAccountField frozenShare;
-    private final long totalShareCount;
+    private final AccountFrozenCash singleFrzCash;
+    private final long totalFrozenCount;
     private final UserAccount parent;
 
-    private AssetState state = AssetState.ONGOING;
+    private ProcessStage stage = ProcessStage.ONGOING;
     private long tradedShareCount = 0;
 
-    public FrozenAccount(UserAccount parent, CThostFtdcTradingAccountField share, long shareCount) {
+    public FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
         this.parent = parent;
-        this.frozenShare = share;
-        this.totalShareCount = shareCount;
+        this.singleFrzCash = single;
+        this.totalFrozenCount = frzCount;
     }
 
     /**
@@ -57,21 +57,21 @@ public class FrozenAccount {
     }
 
     double getFrozenVolume() {
-        if (this.state == AssetState.CANCELED)
+        if (this.stage == ProcessStage.CANCELED)
             return 0;
         else
-            return this.totalShareCount - this.tradedShareCount;
+            return this.totalFrozenCount - this.tradedShareCount;
     }
 
-    CThostFtdcTradingAccountField getSingleFrozen() {
-        return this.frozenShare;
+    AccountFrozenCash getSingleFrozenCash() {
+        return this.singleFrzCash;
     }
 
     /**
      * Cancel an open order whose frozen account is also canceled.
      */
     public void cancel() {
-        this.state = AssetState.CANCELED;
+        this.stage = ProcessStage.CANCELED;
     }
 
     /**
@@ -81,15 +81,15 @@ public class FrozenAccount {
      * @param instr instrument
      * @param comm commission
      */
-    public void updateOpenTrade(CThostFtdcTradeField trade,
-                                CThostFtdcInstrumentField instr,
-                                CThostFtdcInstrumentCommissionRateField comm) {
+    public void applyOpenTrade(CThostFtdcTradeField trade,
+                               CThostFtdcInstrumentField instr,
+                               CThostFtdcInstrumentCommissionRateField comm) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
         if (getFrozenVolume() < trade.Volume)
             throw new IllegalStateException("not enough frozen shares");
         this.tradedShareCount -= trade.Volume;
         // Update parent.
-        this.parent.addShareCommission(trade, instr, comm);
+        this.parent.applyTrade(trade, instr, comm);
     }
 }

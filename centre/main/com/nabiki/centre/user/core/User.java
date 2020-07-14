@@ -28,21 +28,27 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.user.core.plain.InstrumentInfoSet;
-import com.nabiki.centre.user.core.plain.SettlementPrices;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
 
+import java.util.List;
+import java.util.Map;
+
 public class User {
-    private UserPosition position;
-    private UserAccount account;
-    private UserState state = UserState.RENEW;
+    private final UserPosition userPosition;
+    private final UserAccount userAccount;
     private final String userID;
     private final CThostFtdcRspInfoField panicReason = new CThostFtdcRspInfoField();
 
-    public User(String userID) {
-        this.userID  = userID;
+    private UserState state = UserState.RENEW;
+
+    public User(CThostFtdcTradingAccountField rawAccount,
+                Map<String, List<UserPositionDetail>> positions) {
+        this.userID  = rawAccount.AccountID;
+        this.userAccount = new UserAccount(rawAccount, this);
+        this.userPosition = new UserPosition(positions, this);
     }
 
     public String getUserID() {
@@ -55,19 +61,19 @@ public class User {
      *
      * @return current trading account.
      */
-    public CThostFtdcTradingAccountField getTradingAccount() {
-        var total = this.account.getRaw();
+    public CThostFtdcTradingAccountField getFeaturedAccount() {
+        var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
-        var posCurrAcc = this.position.getCurrAccount();
-        var posCurrPos = this.position.getCurrPD();
-        var accCurr = this.account.getCurrAccount();
+        var posFrzCash = this.userPosition.getPositionFrozenCash();
+        var posSettle = this.userPosition.getTotalTradedCash();
+        var accFrzCash = this.userAccount.getAccountFrozenCash();
         // Summarize.
-        total.FrozenCash = accCurr.FrozenCash;
-        total.FrozenCommission = accCurr.FrozenCommission
-                + posCurrAcc.FrozenCommission;
-        total.FrozenMargin = posCurrPos.Margin;
+        total.FrozenCash = accFrzCash.FrozenCash;
+        total.FrozenCommission = accFrzCash.FrozenCommission
+                + posFrzCash.FrozenCommission;
+        total.FrozenMargin = posSettle.Margin;
         total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
-                + posCurrPos.CloseProfitByDate - total.Commission;
+                + posSettle.CloseProfitByDate - total.Commission;
         total.Available = total.Balance - total.FrozenMargin
                 - total.FrozenCommission - total.FrozenCash;
         return total;
@@ -79,7 +85,7 @@ public class User {
         this.panicReason.ErrorMsg = msg;
     }
 
-    CThostFtdcRspInfoField getPanicReason() {
+    CThostFtdcRspInfoField getRspInfo() {
         return this.panicReason;
     }
 
@@ -87,31 +93,19 @@ public class User {
         return this.state;
     }
 
-    public UserPosition getPosition() {
-        return this.position;
+    public UserPosition getUserPosition() {
+        return this.userPosition;
     }
 
-    public UserAccount getAccount() {
-        return this.account;
-    }
-
-    public void settle(SettlementPrices prices, InstrumentInfoSet info,
-                       String tradingDay) {
-        // First position, then account.
-        this.position.settle(prices, info, tradingDay);
-        this.account.settle(this.position.getCurrPD(), tradingDay);
-        this.state = UserState.SETTLED;
-    }
-
-    public void setAccount(UserAccount usrAccount) {
-        this.account = usrAccount;
-    }
-
-    public void setPosition(UserPosition usrPosition) {
-        this.position = usrPosition;
+    public UserAccount getUserAccount() {
+        return this.userAccount;
     }
 
     public void settle(SettlementPreparation prep) {
-        // TODO ...
+        // First position, then account.
+        this.userPosition.settle(prep);
+        this.userAccount.settle(this.userPosition.getTotalTradedCash(),
+                prep.getTradingDay());
+        this.state = UserState.SETTLED;
     }
 }

@@ -29,6 +29,7 @@
 package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.Renewable;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
@@ -103,12 +104,7 @@ public class UserManager implements Renewable {
                 return false;
             }
         });
-        var user = new User(account[0].AccountID);
-        var userAccount = new UserAccount(account[0], user);
-        var userPosition = new UserPosition(positions, user);
-        user.setAccount(userAccount);
-        user.setPosition(userPosition);
-        return user;
+        return new User(account[0], positions);
     }
 
     private void write(Path dir) throws IOException {
@@ -121,7 +117,7 @@ public class UserManager implements Renewable {
     private void writeUser(Path userDir, User user) throws IOException {
         Utils.createFile(userDir, true);
         // Write trading account.
-        var account = user.getAccount().getRaw();
+        var account = user.getUserAccount().copyRawAccount();
         var path = Path.of(userDir.toString(),
                 "account." + account.AccountID + ".json");
         Utils.createFile(path, false);
@@ -130,13 +126,13 @@ public class UserManager implements Renewable {
                 StandardCharsets.UTF_8, false);
         // Write positions.
         int count = 0;
-        for (var positions : user.getPosition().getAllPD().values()) {
+        for (var positions : user.getUserPosition().getPositionMap().values()) {
             for (var pos : positions) {
                 if (pos.getAvailableVolume() > 0) {
                     path = Path.of(userDir.toString(),
                             "position." + (++count) + ".json");
                     Utils.writeText(OP.toJson(
-                            pos.getRaw()),
+                            pos.copyRawPosition()),
                             Utils.createFile(path, false),
                             StandardCharsets.UTF_8,
                             false);

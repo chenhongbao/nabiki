@@ -28,43 +28,16 @@
 
 package com.nabiki.centre.user.core.plain;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentMarginRateField;
+public class PositionTradedCash {
+    public String InstrumentID;
+    public double ExchMargin;
+    public double Margin;
+    public double CloseAmount;
+    public int CloseVolume;
+    public double CloseProfitByTrade;
+    public double CloseProfitByDate;
+    public double PositionProfitByTrade;
+    public double PositionProfitByDate;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class InstrumentInfoSet {
-    private final Map<String, CThostFtdcInstrumentField> instr = new HashMap<>();
-    private final Map<String, CThostFtdcInstrumentMarginRateField> margin = new HashMap<>();
-    private final Map<String, CThostFtdcInstrumentCommissionRateField> commission = new HashMap<>();
-
-    public void setMargin(String instrID,
-                          CThostFtdcInstrumentMarginRateField margin) {
-        this.margin.put(instrID, margin);
-    }
-
-    public void setInstrument(String instrID, CThostFtdcInstrumentField in) {
-        this.instr.put(instrID, in);
-    }
-
-    public void setCommission(String instrID,
-                              CThostFtdcInstrumentCommissionRateField comm) {
-        this.commission.put(instrID, comm);
-    }
-
-    public CThostFtdcInstrumentMarginRateField getMargin(String instrID) {
-        return this.margin.get(instrID);
-    }
-
-    public CThostFtdcInstrumentField getInstrument(String instrID) {
-        return this.instr.get(instrID);
-    }
-
-    public CThostFtdcInstrumentCommissionRateField getCommission(String instrID) {
-        return this.commission.get(instrID);
-    }
-
-    public InstrumentInfoSet() {}
+    public PositionTradedCash() {}
 }

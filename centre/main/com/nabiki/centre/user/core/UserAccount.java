@@ -28,6 +28,9 @@
 
 package com.nabiki.centre.user.core;
 
+import com.nabiki.centre.user.core.plain.AccountFrozenCash;
+import com.nabiki.centre.user.core.plain.AccountTradedCash;
+import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
@@ -40,7 +43,7 @@ import java.util.Objects;
 public class UserAccount {
     private final User parent;
     private final CThostFtdcTradingAccountField raw;
-    private final List<FrozenAccount> frozenAcc = new LinkedList<>();
+    private final List<FrozenAccount> frozenAccount = new LinkedList<>();
 
     public UserAccount(CThostFtdcTradingAccountField raw, User parent) {
         this.raw = raw;
@@ -56,7 +59,7 @@ public class UserAccount {
         return this.parent;
     }
 
-    public CThostFtdcTradingAccountField getRaw() {
+    public CThostFtdcTradingAccountField copyRawAccount() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -67,10 +70,10 @@ public class UserAccount {
      * @param instr instrument
      * @param comm commission
      */
-    public void addShareCommission(CThostFtdcTradeField trade,
-                                   CThostFtdcInstrumentField instr,
-                                   CThostFtdcInstrumentCommissionRateField comm) {
-        var share = toTradeCommission(trade, instr, comm);
+    public void applyTrade(CThostFtdcTradeField trade,
+                           CThostFtdcInstrumentField instr,
+                           CThostFtdcInstrumentCommissionRateField comm) {
+        var share = toTradedCash(trade, instr, comm);
         this.raw.Commission += share.Commission * trade.Volume;
     }
 
@@ -78,18 +81,18 @@ public class UserAccount {
      * Cancel an open order and release all frozen cashes and commission.
      */
     public void cancel() {
-        for (var acc : this.frozenAcc)
+        for (var acc : this.frozenAccount)
             acc.cancel();
     }
 
-    CThostFtdcTradingAccountField getCurrAccount() {
-        var r = new CThostFtdcTradingAccountField();
+    AccountFrozenCash getAccountFrozenCash() {
+        var r = new com.nabiki.centre.user.core.plain.AccountFrozenCash();
         r.FrozenCash = 0;
         r.FrozenCommission = 0;
-        for (var c : this.frozenAcc) {
-            r.FrozenCash += c.getFrozenVolume() * c.getSingleFrozen().FrozenCash;
+        for (var c : this.frozenAccount) {
+            r.FrozenCash += c.getFrozenVolume() * c.getSingleFrozenCash().FrozenCash;
             r.FrozenCommission += c.getFrozenVolume()
-                    * c.getSingleFrozen().FrozenCommission;
+                    * c.getSingleFrozenCash().FrozenCommission;
         }
         return r;
     }
@@ -100,10 +103,10 @@ public class UserAccount {
      * @param frz new frozen account
      */
     public void addFrozenAccount(FrozenAccount frz) {
-        this.frozenAcc.add(frz);
+        this.frozenAccount.add(frz);
     }
 
-    public FrozenAccount getOpenFrozen(
+    public FrozenAccount getOpenFrozenAccount(
             CThostFtdcInputOrderField order, CThostFtdcInstrumentField instr,
             CThostFtdcInstrumentMarginRateField margin,
             CThostFtdcInstrumentCommissionRateField comm) {
@@ -111,7 +114,7 @@ public class UserAccount {
         Objects.requireNonNull(margin, "margin null");
         Objects.requireNonNull(comm, "commission null");
         // Calculate commission, cash.
-        var c = new CThostFtdcTradingAccountField();
+        var c = new AccountFrozenCash();
         if (order.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
             if (margin.LongMarginRatioByMoney > 0)
                 c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
@@ -132,21 +135,20 @@ public class UserAccount {
             c.FrozenCommission = comm.OpenRatioByVolume;
         // Check if available money is enough.
         var needMoney = c.FrozenCash + c.FrozenCommission;
-        var account = this.parent.getTradingAccount();
+        var account = this.parent.getFeaturedAccount();
         if (account.Available < needMoney)
             return null;
         else
             return new FrozenAccount(this, c, order.VolumeTotalOriginal);
     }
 
-    public void settle(CThostFtdcInvestorPositionDetailField settledPD,
-                       String tradingDay) {
+    public void settle(PositionTradedCash settlement, String tradingDay) {
         // Unset frozen account.
         cancel();
         // Calculate fields.
-        this.raw.CurrMargin = settledPD.Margin;
-        this.raw.CloseProfit = settledPD.CloseProfitByDate;
-        this.raw.PositionProfit = settledPD.PositionProfitByDate;
+        this.raw.CurrMargin = settlement.Margin;
+        this.raw.CloseProfit = settlement.CloseProfitByDate;
+        this.raw.PositionProfit = settlement.PositionProfitByDate;
         this.raw.Balance = this.raw.PreBalance + (this.raw.Deposit - this.raw.Withdraw)
                 + (this.raw.CloseProfit + this.raw.PositionProfit) - this.raw.Commission;
         this.raw.Available = this.raw.Balance - this.raw.CurrMargin;
@@ -155,12 +157,12 @@ public class UserAccount {
     }
 
     // Only calculate commission.
-    private CThostFtdcTradingAccountField toTradeCommission(
+    private AccountTradedCash toTradedCash(
             CThostFtdcTradeField trade, CThostFtdcInstrumentField instr,
             CThostFtdcInstrumentCommissionRateField comm) {
         Objects.requireNonNull(comm, "commission null");
         Objects.requireNonNull(instr, "instrument null");
-        var r = new CThostFtdcTradingAccountField();
+        var r = new AccountTradedCash();
         if (trade.OffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN) {
             if (comm.OpenRatioByMoney > 0)
                 r.Commission = comm.OpenRatioByMoney * instr.VolumeMultiple

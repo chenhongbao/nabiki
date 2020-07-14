@@ -28,6 +28,9 @@
 
 package com.nabiki.centre.user.core.plain;
 
-public enum AssetState {
-   ONGOING, CANCELED
+public class PositionFrozenCash {
+    public double FrozenCommission;
+    public double FrozenMargin;
+
+    public PositionFrozenCash() {}
 }

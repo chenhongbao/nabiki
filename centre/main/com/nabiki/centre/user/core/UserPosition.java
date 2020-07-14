@@ -28,8 +28,10 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.user.core.plain.InstrumentInfoSet;
-import com.nabiki.centre.user.core.plain.SettlementPrices;
+import com.nabiki.centre.user.core.plain.AccountFrozenCash;
+import com.nabiki.centre.user.core.plain.PositionFrozenCash;
+import com.nabiki.centre.user.core.plain.PositionTradedCash;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.struct.*;
@@ -39,10 +41,10 @@ import java.util.*;
 public class UserPosition {
     private final User parent;
     // Instrument ID -> Position detail.
-    private final Map<String, List<UserPositionDetail>> userPD = new HashMap<>();
+    private final Map<String, List<UserPositionDetail>> positionMap = new HashMap<>();
 
-    public UserPosition(Map<String, List<UserPositionDetail>> pd, User parent) {
-        this.userPD.putAll(pd);
+    public UserPosition(Map<String, List<UserPositionDetail>> map, User parent) {
+        this.positionMap.putAll(map);
         this.parent = parent;
     }
 
@@ -57,19 +59,19 @@ public class UserPosition {
      * @param instrID instrument ID
      * @return position details of the instrument
      */
-    public List<UserPositionDetail> getUserPD(String instrID) {
-        return this.userPD.get(instrID);
+    public List<UserPositionDetail> getSpecificPosition(String instrID) {
+        return this.positionMap.get(instrID);
     }
 
-    public Map<String, List<UserPositionDetail>> getAllPD() {
-        return this.userPD;
+    public Map<String, List<UserPositionDetail>> getPositionMap() {
+        return this.positionMap;
     }
 
-    CThostFtdcTradingAccountField getCurrAccount() {
-        var r = new CThostFtdcTradingAccountField();
+    PositionFrozenCash getPositionFrozenCash() {
+        var r = new PositionFrozenCash();
         r.FrozenCommission = 0;
         r.FrozenMargin = 0;
-        for (var lst : this.userPD.values())
+        for (var lst : this.positionMap.values())
             for (var p : lst) {
                 r.FrozenCommission = p.getFrozenCommission();
                 r.FrozenMargin += p.getFrozenMargin();
@@ -77,16 +79,16 @@ public class UserPosition {
         return r;
     }
 
-    public CThostFtdcInvestorPositionDetailField getCurrPD() {
-        var r = new CThostFtdcInvestorPositionDetailField();
+    public PositionTradedCash getTotalTradedCash() {
+        var r = new PositionTradedCash();
         r.Margin = 0.;
         r.CloseProfitByTrade = 0.;
         r.CloseProfitByDate = 0;
         r.PositionProfitByTrade = 0;
         r.PositionProfitByDate = 0;
-        for (var lst : this.userPD.values())
+        for (var lst : this.positionMap.values())
             for (var c : lst) {
-                var p = c.getRaw();
+                var p = c.copyRawPosition();
                 r.Margin += p.Margin;
                 r.CloseProfitByDate += p.CloseProfitByDate;
                 r.CloseProfitByTrade += p.CloseProfitByTrade;
@@ -96,13 +98,13 @@ public class UserPosition {
         return r;
     }
 
-    public void updateOpenTrade(CThostFtdcTradeField trade,
-                                CThostFtdcInstrumentField instr,
-                                CThostFtdcInstrumentMarginRateField margin,
-                                CThostFtdcInstrumentCommissionRateField comm,
-                                double preSettlementPrice) {
-        getUserPD(trade.InstrumentID).add(toUserPosition(trade, instr, margin, comm,
-                preSettlementPrice));
+    public void applyOpenTrade(CThostFtdcTradeField trade,
+                               CThostFtdcInstrumentField instr,
+                               CThostFtdcInstrumentMarginRateField margin,
+                               CThostFtdcInstrumentCommissionRateField comm,
+                               double preSettlementPrice) {
+        getSpecificPosition(trade.InstrumentID)
+                .add(toUserPosition(trade, instr, margin, comm, preSettlementPrice));
     }
 
     /**
@@ -120,7 +122,7 @@ public class UserPosition {
             CThostFtdcInputOrderField order, CThostFtdcInstrumentField instr,
             CThostFtdcInstrumentCommissionRateField comm, String tradingDay) {
         // Get position details.
-        var avail = getUserPD(order.InstrumentID);
+        var avail = getSpecificPosition(order.InstrumentID);
         Objects.requireNonNull(avail, "user position null");
         // Trading day not null.
         Objects.requireNonNull(tradingDay, "trading day null");
@@ -132,13 +134,13 @@ public class UserPosition {
             // Calculate shares.
             // No need to calculate close profits and amount. They will be updated
             // on return trade.
-            var sharePos = a.getRaw();
-            sharePos.ExchMargin /= 1.0D * sharePos.Volume;
-            sharePos.Margin /= 1.0D * sharePos.Volume;
-            sharePos.CloseVolume = 1;
+            var totalPosition = a.copyRawPosition();
+            totalPosition.ExchMargin /= 1.0D * totalPosition.Volume;
+            totalPosition.Margin /= 1.0D * totalPosition.Volume;
+            totalPosition.CloseVolume = 1;
             // Commission.
-            var shareCash = new CThostFtdcTradingAccountField();
-            if (sharePos.TradingDay.compareTo(tradingDay) == 0) {
+            var shareCash = new AccountFrozenCash();
+            if (totalPosition.TradingDay.compareTo(tradingDay) == 0) {
                 // Today position.
                 if (comm.CloseTodayRatioByMoney > 0)
                     shareCash.FrozenCommission = order.LimitPrice
@@ -154,7 +156,7 @@ public class UserPosition {
                     shareCash.FrozenCommission = comm.CloseRatioByVolume;
             }
             // Keep frozen position.
-            var frz = new FrozenPositionDetail(a, sharePos, shareCash, vol);
+            var frz = new FrozenPositionDetail(a, totalPosition, shareCash, vol);
             r.add(frz);
             // Reduce volume to zero.
             if ((volume -= vol) <= 0)
@@ -173,33 +175,34 @@ public class UserPosition {
      * @param info instrument info set
      * @param tradingDay trading day
      */
-    public void settle(SettlementPrices prices, InstrumentInfoSet info,
-                       String tradingDay) {
-        if (this.userPD.size() == 0)
+    public void settle(SettlementPreparation prep) {
+        if (this.positionMap.size() == 0)
             return;
-        // Keep settled position.
+        // Place to keep the settled position.
         var settledPos = new HashMap<String, List<UserPositionDetail>>();
         // Settle all positions.
-        for (var entry : this.userPD.entrySet()) {
+        for (var entry : this.positionMap.entrySet()) {
             var id = entry.getKey();
-            var settlementPrice = prices.get(id);
-            Objects.requireNonNull(settledPos, "settlement price null");
+            // Acquire settlement price.
+            var depthSettle = prep.getDepth(id);
+            Objects.requireNonNull(depthSettle, "depth settlement null");
+            var settlementPrice = depthSettle.SettlementPrice;
             if (!Utils.validPrice(settlementPrice))
-                throw new IllegalArgumentException(
-                        "no settlement price for " + id);
-            var instr = info.getInstrument(id);
-            var margin = info.getMargin(id);
+                throw new IllegalStateException("no settlement price for " + id);
+            // Get information.
+            var instr = prep.getInstrument(id);
+            var margin = prep.getMargin(id);
             Objects.requireNonNull(instr, "instrument null");
             Objects.requireNonNull(margin, "margin null");
-            // Create active settlement.
-            var r = settleInstr(entry.getValue(), settlementPrice, instr, margin,
-                    tradingDay);
+            // Settle specific instrument.
+            var r = settleSpecificInstrument(entry.getValue(), settlementPrice,
+                    instr, margin, prep.getTradingDay());
             // Only keep the non-zero position.
             if (r.size() > 0)
                 settledPos.put(id, r);
         }
-        this.userPD.clear();
-        this.userPD.putAll(settledPos);
+        this.positionMap.clear();
+        this.positionMap.putAll(settledPos);
     }
 
     /**
@@ -207,14 +210,16 @@ public class UserPosition {
      *
      * @return set of instrument ID
      */
-    public Set<String> getAllInstrID() {
-        return this.userPD.keySet();
+    public Set<String> getPositionInstrID() {
+        return this.positionMap.keySet();
     }
 
-    private List<UserPositionDetail> settleInstr(
-            Collection<UserPositionDetail> position, double settlementPrice,
+    private List<UserPositionDetail> settleSpecificInstrument(
+            Collection<UserPositionDetail> position,
+            double settlementPrice,
             CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentMarginRateField margin, String tradingDay) {
+            CThostFtdcInstrumentMarginRateField margin,
+            String tradingDay) {
         // Settled position to bre return.
         var settledPosition =  new LinkedList<UserPositionDetail>();
         for (var p : position) {
@@ -229,7 +234,7 @@ public class UserPosition {
             3. close amount = 0;
             4/ close profits = 0;
              */
-            var origin = p.getRaw();
+            var origin = p.copyRawPosition();
             origin.SettlementPrice = settlementPrice;
             if (origin.Volume == 0)
                 continue;

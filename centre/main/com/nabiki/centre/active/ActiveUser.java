@@ -32,8 +32,7 @@ import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.FrozenAccount;
 import com.nabiki.centre.user.core.FrozenPositionDetail;
 import com.nabiki.centre.user.core.User;
-import com.nabiki.centre.user.core.plain.InstrumentInfoSet;
-import com.nabiki.centre.user.core.plain.SettlementPrices;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
@@ -55,30 +54,29 @@ public class ActiveUser {
 
     public void settle() {
         // Prepare settlement prices.
-        var prices = new SettlementPrices();
-        for (var instr : this.user.getPosition().getAllInstrID()) {
+        var prep = new SettlementPreparation();
+        for (var instr : this.user.getUserPosition().getPositionInstrID()) {
             var depth = this.config.getDepthMarketData(instr);
             if (depth == null)
                 throw new NullPointerException("depth market data null");
             if (!Utils.validPrice(depth.SettlementPrice))
                 throw new IllegalArgumentException(
                         "no settlement price for " + instr);
-            prices.set(instr, depth.SettlementPrice);
+            prep.prepare(depth);
         }
         // Prepare instrument info set.
-        var infoSet = new InstrumentInfoSet();
-        for (var instr : this.user.getPosition().getAllInstrID()) {
+        for (var instr : this.user.getUserPosition().getPositionInstrID()) {
             var instrInfo = this.config.getInstrInfo(instr);
             Objects.requireNonNull(instrInfo, "instr info null");
             Objects.requireNonNull(instrInfo.instrument, "instrument null");
             Objects.requireNonNull(instrInfo.margin, "margin null");
             Objects.requireNonNull(instrInfo.commission, "commission null");
             // Set info.
-            infoSet.setInstrument(instr, instrInfo.instrument);
-            infoSet.setMargin(instr, instrInfo.margin);
-            infoSet.setCommission(instr, instrInfo.commission);
+            prep.prepare(instrInfo.instrument);
+            prep.prepare(instrInfo.margin);
+            prep.prepare(instrInfo.commission);
         }
-        this.user.settle(prices, infoSet, this.config.getTradingDay());
+        this.user.settle(prep);
     }
 
     public CThostFtdcRspInfoField getExecRsp(UUID uuid) {
@@ -157,13 +155,13 @@ public class ActiveUser {
     }
 
     public CThostFtdcTradingAccountField getTradingAccount() {
-        return this.user.getTradingAccount();
+        return this.user.getFeaturedAccount();
     }
 
     public List<CThostFtdcInvestorPositionField> getPosition(String instrID) {
         if (instrID == null || instrID.length() == 0) {
             var ret = new LinkedList<CThostFtdcInvestorPositionField>();
-            for (var instr : this.user.getPosition().getAllPD().keySet())
+            for (var instr : this.user.getUserPosition().getPositionMap().keySet())
                 ret.addAll(getInstrPosition(instr));
             return ret;
         } else
@@ -174,7 +172,7 @@ public class ActiveUser {
         var ret = new LinkedList<CThostFtdcInvestorPositionField>();
         if (instrID == null || instrID.length() == 0)
             return ret;
-        var usrPos = this.user.getPosition().getUserPD(instrID);
+        var usrPos = this.user.getUserPosition().getSpecificPosition(instrID);
         if (usrPos == null || usrPos.size() == 0)
             return ret;
         var tradingDay = this.config.getTradingDay();
@@ -182,7 +180,7 @@ public class ActiveUser {
             throw new IllegalArgumentException("trading day null");
         CThostFtdcInvestorPositionField lp = null, sp = null;
         for (var p : usrPos) {
-            var sum = p.getSummarizedPosition(tradingDay);
+            var sum = p.getInvestorPosition(tradingDay);
             if (sum.PosiDirection == TThostFtdcPosiDirectionType.LONG) {
                 // Long position.
                 if (lp  == null)

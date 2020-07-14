@@ -61,8 +61,8 @@ public class ActiveRequest {
 
     ActiveRequest(CThostFtdcInputOrderField order, User user, OrderProvider mgr,
                   Config cfg) {
-        this.userAccount = user.getAccount();
-        this.userPos = user.getPosition();
+        this.userAccount = user.getUserAccount();
+        this.userPos = user.getUserPosition();
         this.orderProvider = mgr;
         this.config = cfg;
         this.order = order;
@@ -71,8 +71,8 @@ public class ActiveRequest {
 
     ActiveRequest(CThostFtdcInputOrderActionField action, User user,
                   OrderProvider mgr, Config cfg) {
-        this.userAccount = user.getAccount();
-        this.userPos = user.getPosition();
+        this.userAccount = user.getUserAccount();
+        this.userPos = user.getUserPosition();
         this.orderProvider = mgr;
         this.config = cfg;
         this.order = null;
@@ -166,7 +166,7 @@ public class ActiveRequest {
         Objects.requireNonNull(instrInfo.instrument, "instrument null");
         Objects.requireNonNull(instrInfo.margin, "margin null");
         Objects.requireNonNull(instrInfo.commission, "commission null");
-        this.frozenAccount = this.userAccount.getOpenFrozen(this.order,
+        this.frozenAccount = this.userAccount.getOpenFrozenAccount(this.order,
                 instrInfo.instrument, instrInfo.margin, instrInfo.commission);
         if (this.frozenAccount == null) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.INSUFFICIENT_MONEY;
@@ -224,8 +224,8 @@ public class ActiveRequest {
     private CThostFtdcInputOrderField toCloseOrder(FrozenPositionDetail pd) {
         var cls = Utils.deepCopy(getOriginOrder());
         Objects.requireNonNull(cls, "failed deep copy");
-        cls.VolumeTotalOriginal = (int) pd.getFrozenShareCount();
-        if (pd.getFrozenSharePD().TradingDay
+        cls.VolumeTotalOriginal = (int) pd.getFrozenCount();
+        if (pd.getSingleFrozenPosition().TradingDay
                 .compareTo(this.config.getTradingDay()) != 0) {
             // Yesterday.
             cls.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY;
@@ -318,9 +318,9 @@ public class ActiveRequest {
             Objects.requireNonNull(depth, "depth market data null");
             // Update frozen account, user account and user position.
             // The frozen account handles the update of user account.
-            this.frozenAccount.updateOpenTrade(trade, instrInfo.instrument,
+            this.frozenAccount.applyOpenTrade(trade, instrInfo.instrument,
                     instrInfo.commission);
-            this.userPos.updateOpenTrade(trade, instrInfo.instrument,
+            this.userPos.applyOpenTrade(trade, instrInfo.instrument,
                     instrInfo.margin, instrInfo.commission,
                     depth.PreSettlementPrice);
         } else {
@@ -346,7 +346,7 @@ public class ActiveRequest {
                         "frozen position not found for order ref");
                 return;
             }
-            if (p.getFrozenShareCount() < trade.Volume) {
+            if (p.getFrozenCount() < trade.Volume) {
                 this.config.getLogger().severe(
                         Utils.formatLog("not enough frozen position",
                                 trade.OrderRef, null, null));
@@ -356,8 +356,8 @@ public class ActiveRequest {
                 return;
             }
             // Check the frozen position OK, here won't throw exception.
-            p.updateCloseTrade(trade, instrInfo.instrument);
-            this.userAccount.addShareCommission(trade, instrInfo.instrument,
+            p.applyCloseTrade(trade, instrInfo.instrument);
+            this.userAccount.applyTrade(trade, instrInfo.instrument,
                     instrInfo.commission);
         }
     }

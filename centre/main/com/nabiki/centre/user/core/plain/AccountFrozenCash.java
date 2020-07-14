@@ -28,19 +28,9 @@
 
 package com.nabiki.centre.user.core.plain;
 
-import java.util.HashMap;
-import java.util.Map;
+public class AccountFrozenCash {
+    public double FrozenCash;
+    public double FrozenCommission;
 
-public class SettlementPrices {
-    private final Map<String, Double> prices = new HashMap<>();
-
-    public void set(String instrID, double price) {
-        this.prices.put(instrID, price);
-    }
-
-    public double get(String instrID) {
-        return this.prices.get(instrID);
-    }
-
-    public SettlementPrices() {}
+    public AccountFrozenCash() {}
 }

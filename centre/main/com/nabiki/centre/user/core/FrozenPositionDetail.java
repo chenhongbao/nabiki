@@ -28,38 +28,39 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.user.core.plain.AssetState;
+import com.nabiki.centre.user.core.plain.AccountFrozenCash;
+import com.nabiki.centre.user.core.plain.PositionTradedCash;
+import com.nabiki.centre.user.core.plain.ProcessStage;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
 
 import java.util.Objects;
 
 public class FrozenPositionDetail {
     // The original position that own this frozen position.
     private final UserPositionDetail parent;
-    private final CThostFtdcTradingAccountField frozenShareCash;
+    private final AccountFrozenCash frozenSingleCash;
     // The share is asset change for each share before real trade happens.
     // When trade returns, use the return trade to generate another share info
     // to update the position.
     // This share info is used to calculate frozen margin or commission.
-    private final CThostFtdcInvestorPositionDetailField frozenSharePD;
+    private final CThostFtdcInvestorPositionDetailField frozenSinglePosition;
 
-    private final long totalShareCount;
-    private AssetState state = AssetState.ONGOING;
-    private long tradedShareCount = 0;
+    private final long totalFrozenCount;
+    private ProcessStage stage = ProcessStage.ONGOING;
+    private long tradedCount = 0;
 
     public FrozenPositionDetail(UserPositionDetail parent,
-                                CThostFtdcInvestorPositionDetailField frzShare,
-                                CThostFtdcTradingAccountField frzCash,
-                                long totalShareCount) {
+                                CThostFtdcInvestorPositionDetailField frzSinglePos,
+                                AccountFrozenCash frzCash,
+                                long frzCount) {
         this.parent = parent;
-        this.frozenSharePD = frzShare;
-        this.frozenShareCash = frzCash;
-        this.totalShareCount = totalShareCount;
+        this.frozenSinglePosition = frzSinglePos;
+        this.frozenSingleCash = frzCash;
+        this.totalFrozenCount = frzCount;
     }
 
     /**
@@ -67,11 +68,11 @@ public class FrozenPositionDetail {
      *
      * @return frozen volume
      */
-    public long getFrozenShareCount() {
-        if (this.state == AssetState.CANCELED)
+    public long getFrozenCount() {
+        if (this.stage == ProcessStage.CANCELED)
             return 0;
         else
-            return this.totalShareCount - tradedShareCount;
+            return this.totalFrozenCount - tradedCount;
     }
 
     /**
@@ -84,15 +85,15 @@ public class FrozenPositionDetail {
      * @param trade trade response
      * @param instr instrument
      */
-    public void updateCloseTrade(CThostFtdcTradeField trade,
-                                 CThostFtdcInstrumentField instr) {
+    public void applyCloseTrade(CThostFtdcTradeField trade,
+                                CThostFtdcInstrumentField instr) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
-        if (getFrozenShareCount() < trade.Volume)
+        if (getFrozenCount() < trade.Volume)
             throw new IllegalStateException("not enough frozen shares");
-        this.tradedShareCount -= trade.Volume;
+        this.tradedCount -= trade.Volume;
         // Update parent.
-        var share = toPositionShare(this.frozenSharePD, trade, instr);
+        var share = toTradedCash(this.frozenSinglePosition, trade, instr);
         this.parent.closePosition(share, trade.Volume);
     }
 
@@ -100,7 +101,7 @@ public class FrozenPositionDetail {
      * Cancel a close order whose frozen volume is all released.
      */
     public void cancel() {
-        this.state = AssetState.CANCELED;
+        this.stage = ProcessStage.CANCELED;
     }
 
     /**
@@ -110,8 +111,8 @@ public class FrozenPositionDetail {
      *
      * @return pre-calculated closed position detail for 1 volume.
      */
-    public CThostFtdcInvestorPositionDetailField getFrozenSharePD() {
-        return Utils.deepCopy(this.frozenSharePD);
+    public CThostFtdcInvestorPositionDetailField getSingleFrozenPosition() {
+        return Utils.deepCopy(this.frozenSinglePosition);
     }
 
     /**
@@ -122,14 +123,15 @@ public class FrozenPositionDetail {
         this.parent.addFrozenPosition(this);
     }
 
-    CThostFtdcTradingAccountField getSingleFrozen() {
-        return Utils.deepCopy(this.frozenShareCash);
+    AccountFrozenCash getSingleFrozenCash() {
+        return Utils.deepCopy(this.frozenSingleCash);
     }
 
-    private CThostFtdcInvestorPositionDetailField toPositionShare(
-            CThostFtdcInvestorPositionDetailField p, CThostFtdcTradeField trade,
+    private PositionTradedCash toTradedCash(
+            CThostFtdcInvestorPositionDetailField p,
+            CThostFtdcTradeField trade,
             CThostFtdcInstrumentField instr) {
-        var r = Utils.deepCopy(p);
+        var r = new PositionTradedCash();
         Objects.requireNonNull(r, "failed deep copy");
         // Calculate position detail.
         r.CloseAmount = trade.Price * instr.VolumeMultiple;

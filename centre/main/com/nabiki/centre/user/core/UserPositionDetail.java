@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.user.core;
 
+import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
@@ -39,7 +40,7 @@ import java.util.List;
 
 public class UserPositionDetail {
     private final CThostFtdcInvestorPositionDetailField raw;
-    private final List<FrozenPositionDetail> frozenPD = new LinkedList<>();
+    private final List<FrozenPositionDetail> frozenPosition = new LinkedList<>();
 
     public UserPositionDetail(CThostFtdcInvestorPositionDetailField raw) {
         this.raw = raw;
@@ -52,7 +53,7 @@ public class UserPositionDetail {
      * @param share close info for 1 volume
      * @param tradeCnt closed volume
      */
-    public void closePosition(CThostFtdcInvestorPositionDetailField share,
+    public void closePosition(PositionTradedCash share,
                               long tradeCnt) {
         this.raw.CloseAmount += share.CloseAmount * tradeCnt;
         this.raw.CloseProfitByDate += share.CloseProfitByDate * tradeCnt;
@@ -66,14 +67,14 @@ public class UserPositionDetail {
      * Cancel an close order whose frozen volume is released.
      */
     public void cancel() {
-        for (var frz : this.frozenPD)
+        for (var frz : this.frozenPosition)
             frz.cancel();
     }
 
     public int getFrozenVolume() {
         int frozen = 0;
-        for (var pd : frozenPD)
-            frozen += pd.getFrozenShareCount();
+        for (var pd : frozenPosition)
+            frozen += pd.getFrozenCount();
         return frozen;
     }
 
@@ -88,15 +89,15 @@ public class UserPositionDetail {
 
     double getFrozenMargin() {
         double frz = 0.0D;
-        for (var c : this.frozenPD)
-            frz += c.getFrozenShareCount() * c.getFrozenSharePD().Margin;
+        for (var c : this.frozenPosition)
+            frz += c.getFrozenCount() * c.getSingleFrozenPosition().Margin;
         return frz;
     }
 
     double getFrozenCommission() {
         double frz = 0.0D;
-        for (var c : this.frozenPD)
-            frz += c.getFrozenShareCount() * c.getSingleFrozen().FrozenCommission;
+        for (var c : this.frozenPosition)
+            frz += c.getFrozenCount() * c.getSingleFrozenCash().FrozenCommission;
         return frz;
     }
 
@@ -105,7 +106,7 @@ public class UserPositionDetail {
      *
      * @return a deep copy of original position detail
      */
-    public CThostFtdcInvestorPositionDetailField getRaw() {
+    public CThostFtdcInvestorPositionDetailField copyRawPosition() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -116,7 +117,7 @@ public class UserPositionDetail {
      * @param tradingDay today's trading day
      * @return {@link CThostFtdcInvestorPositionField}
      */
-    public CThostFtdcInvestorPositionField getSummarizedPosition(String tradingDay) {
+    public CThostFtdcInvestorPositionField getInvestorPosition(String tradingDay) {
         var r = new CThostFtdcInvestorPositionField();
         // Only need the following 5 fields.
         r.YdPosition = 0;
@@ -153,9 +154,9 @@ public class UserPositionDetail {
     /**
      * Add frozen position for a close order.
      *
-     * @param frzPD new frozen position
+     * @param frzPosition new frozen position
      */
-    public void addFrozenPosition(FrozenPositionDetail frzPD) {
-        this.frozenPD.add(frzPD);
+    public void addFrozenPosition(FrozenPositionDetail frzPosition) {
+        this.frozenPosition.add(frzPosition);
     }
 }
