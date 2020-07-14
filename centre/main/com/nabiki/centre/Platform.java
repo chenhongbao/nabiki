@@ -29,4 +29,7 @@
 package com.nabiki.centre;
 
 public class Platform {
+    public static void main(String[] args) {
+
+    }
 }

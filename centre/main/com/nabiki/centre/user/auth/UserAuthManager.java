@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,10 +51,19 @@ public class UserAuthManager implements Renewable {
         this.dataDir = dataDir;
     }
 
-    private void init(Path dataDir) {
-        if (!Files.exists(dataDir) || !Files.isDirectory(dataDir))
+    private void init(Path dir) {
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
             throw new IllegalArgumentException("user profile data root not exist");
-        dataDir.toFile().listFiles(file -> {
+        dir.toFile().listFiles(file -> {
+            for (var auth : readUser(file.toPath()))
+                profiles.put(auth.UserID, auth);
+            return false;
+        });
+    }
+
+    private Collection<UserAuthProfile> readUser(Path userDir) {
+        var r = new LinkedList<UserAuthProfile>();
+        userDir.toFile().listFiles(file -> {
             var name = file.getName();
             if (name.startsWith("auth.") && name.endsWith(".json")) {
                 try {
@@ -60,7 +71,7 @@ public class UserAuthManager implements Renewable {
                             Utils.readText(file, StandardCharsets.UTF_8),
                             UserAuthProfile.class);
                     if (profile.UserID != null)
-                        profiles.put(profile.UserID, profile);
+                        r.add(profile);
                 } catch (IOException e) {
                     System.err.println("parsing user auth profile failed");
                     e.printStackTrace();
@@ -68,21 +79,24 @@ public class UserAuthManager implements Renewable {
             }
             return false;
         });
+        return r;
     }
 
-    private void write(Path dataDir) {
-        for (var entry : this.profiles.entrySet()) {
-            var file = Path.of(
-                    this.dataDir.toString(),
-                    "auth." + entry.getKey() + ".json").toFile();
-            try {
-                Utils.writeText(OP.toJson(entry.getValue()),
-                        file, StandardCharsets.UTF_8, false);
-            } catch (IOException e) {
-                System.err.println("writing user auth profile failed");
-                e.printStackTrace();
-            }
+    private void write(Path dir) throws IOException {
+        for (var user : this.profiles.values()) {
+            var userDir = Path.of(dir.toString(), user.UserID);
+            writeUser(userDir, user);
         }
+    }
+
+    private void writeUser(Path userDir, UserAuthProfile profile)
+            throws IOException {
+        var path = Path.of(userDir.toString(),
+                "auth." + profile.UserID + ".json");
+        Utils.createFile(userDir, true);
+        Utils.writeText(OP.toJson(profile),
+                Utils.createFile(path, false),
+                StandardCharsets.UTF_8, false);
     }
 
     public UserAuthProfile getAuthProfile(String userID) {
@@ -91,6 +105,7 @@ public class UserAuthManager implements Renewable {
 
     @Override
     public void renew() throws Exception {
+        this.profiles.clear();
         init(this.dataDir);
     }
 

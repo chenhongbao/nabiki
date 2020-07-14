@@ -28,6 +28,7 @@
 
 package com.nabiki.iop;
 
+import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.x.OP;
@@ -390,7 +391,7 @@ public class IopTest {
 
     class TestLoginManager extends LoginManager {
         @Override
-        public boolean doLogin(ServerSession session, Message message) {
+        public int doLogin(ServerSession session, Message message) {
             if (message.Body != null) {
                 assertTrue(message.Body instanceof CThostFtdcReqUserLoginField);
                 System.out.println(OP.toJson(message.Body));
@@ -399,7 +400,7 @@ public class IopTest {
                 System.out.println(OP.toJson(message.RspInfo));
             assertEquals(message.Type, MessageType.REQ_LOGIN);
             hit(message.Type);
-            return true;
+            return TThostFtdcErrorCode.NONE;
         }
     }
 

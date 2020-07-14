@@ -39,11 +39,11 @@ import java.util.Objects;
 
 public class UserAccount {
     private final User parent;
-    private final CThostFtdcTradingAccountField total;
+    private final CThostFtdcTradingAccountField raw;
     private final List<FrozenAccount> frozenAcc = new LinkedList<>();
 
-    public UserAccount(CThostFtdcTradingAccountField total, User parent) {
-        this.total = total;
+    public UserAccount(CThostFtdcTradingAccountField raw, User parent) {
+        this.raw = raw;
         this.parent = parent;
     }
 
@@ -56,8 +56,8 @@ public class UserAccount {
         return this.parent;
     }
 
-    public CThostFtdcTradingAccountField getDeepCopyTotal() {
-        return Utils.deepCopy(this.total);
+    public CThostFtdcTradingAccountField getRaw() {
+        return Utils.deepCopy(this.raw);
     }
 
     /**
@@ -71,7 +71,7 @@ public class UserAccount {
                                    CThostFtdcInstrumentField instr,
                                    CThostFtdcInstrumentCommissionRateField comm) {
         var share = toTradeCommission(trade, instr, comm);
-        this.total.Commission += share.Commission * trade.Volume;
+        this.raw.Commission += share.Commission * trade.Volume;
     }
 
     /**
@@ -144,14 +144,14 @@ public class UserAccount {
         // Unset frozen account.
         cancel();
         // Calculate fields.
-        this.total.CurrMargin = settledPD.Margin;
-        this.total.CloseProfit = settledPD.CloseProfitByDate;
-        this.total.PositionProfit = settledPD.PositionProfitByDate;
-        this.total.Balance = this.total.PreBalance + (this.total.Deposit - this.total.Withdraw)
-                + (this.total.CloseProfit + this.total.PositionProfit) - this.total.Commission;
-        this.total.Available = this.total.Balance - this.total.CurrMargin;
+        this.raw.CurrMargin = settledPD.Margin;
+        this.raw.CloseProfit = settledPD.CloseProfitByDate;
+        this.raw.PositionProfit = settledPD.PositionProfitByDate;
+        this.raw.Balance = this.raw.PreBalance + (this.raw.Deposit - this.raw.Withdraw)
+                + (this.raw.CloseProfit + this.raw.PositionProfit) - this.raw.Commission;
+        this.raw.Available = this.raw.Balance - this.raw.CurrMargin;
         // Trading day.
-        this.total.TradingDay = tradingDay;
+        this.raw.TradingDay = tradingDay;
     }
 
     // Only calculate commission.

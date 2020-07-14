@@ -38,11 +38,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class UserPositionDetail {
-    private final CThostFtdcInvestorPositionDetailField total;
+    private final CThostFtdcInvestorPositionDetailField raw;
     private final List<FrozenPositionDetail> frozenPD = new LinkedList<>();
 
-    public UserPositionDetail(CThostFtdcInvestorPositionDetailField total) {
-        this.total = total;
+    public UserPositionDetail(CThostFtdcInvestorPositionDetailField raw) {
+        this.raw = raw;
     }
 
     /**
@@ -54,12 +54,12 @@ public class UserPositionDetail {
      */
     public void closePosition(CThostFtdcInvestorPositionDetailField share,
                               long tradeCnt) {
-        this.total.CloseAmount += share.CloseAmount * tradeCnt;
-        this.total.CloseProfitByDate += share.CloseProfitByDate * tradeCnt;
-        this.total.CloseProfitByTrade += share.CloseProfitByTrade * tradeCnt;
-        this.total.CloseVolume += share.CloseVolume * tradeCnt;
-        this.total.ExchMargin -= share.ExchMargin * tradeCnt;
-        this.total.Margin -= share.Margin * tradeCnt;
+        this.raw.CloseAmount += share.CloseAmount * tradeCnt;
+        this.raw.CloseProfitByDate += share.CloseProfitByDate * tradeCnt;
+        this.raw.CloseProfitByTrade += share.CloseProfitByTrade * tradeCnt;
+        this.raw.CloseVolume += share.CloseVolume * tradeCnt;
+        this.raw.ExchMargin -= share.ExchMargin * tradeCnt;
+        this.raw.Margin -= share.Margin * tradeCnt;
     }
 
     /**
@@ -83,7 +83,7 @@ public class UserPositionDetail {
      * @return available volume to close
      */
     public int getAvailableVolume() {
-        return this.total.Volume - this.total.CloseVolume - getFrozenVolume();
+        return this.raw.Volume - this.raw.CloseVolume - getFrozenVolume();
     }
 
     double getFrozenMargin() {
@@ -105,8 +105,8 @@ public class UserPositionDetail {
      *
      * @return a deep copy of original position detail
      */
-    public CThostFtdcInvestorPositionDetailField getDeepCopyTotal() {
-        return Utils.deepCopy(this.total);
+    public CThostFtdcInvestorPositionDetailField getRaw() {
+        return Utils.deepCopy(this.raw);
     }
 
     /**
@@ -126,25 +126,25 @@ public class UserPositionDetail {
         r.LongFrozen = 0;
         r.ShortFrozen = 0;
         // Prepare other fields.
-        r.BrokerID = this.total.BrokerID;
-        r.ExchangeID = this.total.ExchangeID;
-        r.InvestorID = this.total.InvestorID;
-        r.PreSettlementPrice = this.total.LastSettlementPrice;
-        r.SettlementPrice = this.total.SettlementPrice;
-        r.InstrumentID = this.total.InstrumentID;
-        r.HedgeFlag = this.total.HedgeFlag;
+        r.BrokerID = this.raw.BrokerID;
+        r.ExchangeID = this.raw.ExchangeID;
+        r.InvestorID = this.raw.InvestorID;
+        r.PreSettlementPrice = this.raw.LastSettlementPrice;
+        r.SettlementPrice = this.raw.SettlementPrice;
+        r.InstrumentID = this.raw.InstrumentID;
+        r.HedgeFlag = this.raw.HedgeFlag;
         // Calculate fields.
-        if (this.total.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
+        if (this.raw.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
             r.PosiDirection = TThostFtdcPosiDirectionType.LONG;
             r.LongFrozen = getFrozenVolume();
         } else {
             r.PosiDirection = TThostFtdcPosiDirectionType.SHORT;
             r.ShortFrozen = getFrozenVolume();
         }
-        r.CloseVolume = this.total.CloseVolume;
-        r.Position = this.total.Volume - this.total.CloseVolume;
-        if (this.total.TradingDay.compareTo(tradingDay) != 0)
-            r.YdPosition = this.total.Volume;
+        r.CloseVolume = this.raw.CloseVolume;
+        r.Position = this.raw.Volume - this.raw.CloseVolume;
+        if (this.raw.TradingDay.compareTo(tradingDay) != 0)
+            r.YdPosition = this.raw.Volume;
         else
             r.TodayPosition = r.Position;
         return r;

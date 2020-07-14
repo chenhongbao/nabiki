@@ -38,9 +38,16 @@ public class User {
     private UserPosition position;
     private UserAccount account;
     private UserState state = UserState.RENEW;
+    private final String userID;
     private final CThostFtdcRspInfoField panicReason = new CThostFtdcRspInfoField();
 
-    public User() {}
+    public User(String userID) {
+        this.userID  = userID;
+    }
+
+    public String getUserID() {
+        return this.userID;
+    }
 
     /**
      * Get current trading account<b>(not settled account)</b>. The method always
@@ -49,7 +56,7 @@ public class User {
      * @return current trading account.
      */
     public CThostFtdcTradingAccountField getTradingAccount() {
-        var total = this.account.getDeepCopyTotal();
+        var total = this.account.getRaw();
         // Calculate fields from account and position.
         var posCurrAcc = this.position.getCurrAccount();
         var posCurrPos = this.position.getCurrPD();
@@ -102,5 +109,9 @@ public class User {
 
     public void setPosition(UserPosition usrPosition) {
         this.position = usrPosition;
+    }
+
+    public void settle(SettlementPreparation prep) {
+        // TODO ...
     }
 }

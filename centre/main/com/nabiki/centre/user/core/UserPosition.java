@@ -86,7 +86,7 @@ public class UserPosition {
         r.PositionProfitByDate = 0;
         for (var lst : this.userPD.values())
             for (var c : lst) {
-                var p = c.getDeepCopyTotal();
+                var p = c.getRaw();
                 r.Margin += p.Margin;
                 r.CloseProfitByDate += p.CloseProfitByDate;
                 r.CloseProfitByTrade += p.CloseProfitByTrade;
@@ -132,7 +132,7 @@ public class UserPosition {
             // Calculate shares.
             // No need to calculate close profits and amount. They will be updated
             // on return trade.
-            var sharePos = a.getDeepCopyTotal();
+            var sharePos = a.getRaw();
             sharePos.ExchMargin /= 1.0D * sharePos.Volume;
             sharePos.Margin /= 1.0D * sharePos.Volume;
             sharePos.CloseVolume = 1;
@@ -188,10 +188,8 @@ public class UserPosition {
                 throw new IllegalArgumentException(
                         "no settlement price for " + id);
             var instr = info.getInstrument(id);
-            var comm = info.getCommission(id);
             var margin = info.getMargin(id);
             Objects.requireNonNull(instr, "instrument null");
-            Objects.requireNonNull(comm, "commission null");
             Objects.requireNonNull(margin, "margin null");
             // Create active settlement.
             var r = settleInstr(entry.getValue(), settlementPrice, instr, margin,
@@ -231,7 +229,7 @@ public class UserPosition {
             3. close amount = 0;
             4/ close profits = 0;
              */
-            var origin = p.getDeepCopyTotal();
+            var origin = p.getRaw();
             origin.SettlementPrice = settlementPrice;
             if (origin.Volume == 0)
                 continue;

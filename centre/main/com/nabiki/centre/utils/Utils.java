@@ -30,6 +30,8 @@ package com.nabiki.centre.utils;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -48,7 +50,7 @@ public class Utils {
      * </p>
      *
      * @param copied the specified object to be deeply copied
-     * @param <T> generic type of a copied object
+     * @param <T>    generic type of a copied object
      * @return deep copying object
      */
     @SuppressWarnings("unchecked")
@@ -68,7 +70,7 @@ public class Utils {
      * is smaller than the {@code start} numerically, the time crosses midnight.
      *
      * @param start local time start
-     * @param end local time end
+     * @param end   local time end
      * @return duration between the specified two local times
      */
     public static Duration between(LocalTime start, LocalTime end) {
@@ -110,10 +112,10 @@ public class Utils {
     /**
      * Format log.
      *
-     * @param hint description
+     * @param hint     description
      * @param orderRef order reference if it has
-     * @param errMsg error message if it has
-     * @param errCode error code if it has
+     * @param errMsg   error message if it has
+     * @param errCode  error code if it has
      * @return log string
      */
     public static String formatLog(String hint, String orderRef, String errMsg,
@@ -140,7 +142,7 @@ public class Utils {
      * Read from the specified file and parse and content into a string using the
      * specified charset.
      *
-     * @param file file to read from
+     * @param file    file to read from
      * @param charset charset for the returned string
      * @return string parsed from the content of the specified file
      * @throws IOException fail to read the file
@@ -155,11 +157,11 @@ public class Utils {
      * Write the specified string to the specified file, encoded into binary data
      * with the specified charset.
      *
-     * @param text the string to be written
-     * @param file file to be written to
+     * @param text    the string to be written
+     * @param file    file to be written to
      * @param charset charset of the string to decode
-     * @param append if {@code true}, the content is appended to the end of the file
-     *               rather than the beginning
+     * @param append  if {@code true}, the content is appended to the end of the file
+     *                rather than the beginning
      * @throws IOException if operation failed or file not found
      */
     public static void writeText(String text, File file, Charset charset,
@@ -183,7 +185,7 @@ public class Utils {
      * Get today's string representation of the specified pattern. The pattern
      * follows the convention of {@link DateTimeFormatter}.
      *
-     * @param day {@link LocalDate} to convert
+     * @param day     {@link LocalDate} to convert
      * @param pattern pattern
      * @return today's string representation
      */
@@ -202,7 +204,7 @@ public class Utils {
      * Get now' time representation of the specified pattern. The pattern
      * follows the convention of {@link DateTimeFormatter}.
      *
-     * @param time {@link LocalTime} to convert
+     * @param time    {@link LocalTime} to convert
      * @param pattern pattern
      * @return today's string representation
      */
@@ -221,7 +223,7 @@ public class Utils {
      * Parse the specified day from string to {@link LocalDate} with the specified
      * pattern in the convention of {@link DateTimeFormatter}.
      *
-     * @param day string representation of a day
+     * @param day     string representation of a day
      * @param pattern pattern
      * @return {@link LocalDate}
      */
@@ -240,7 +242,7 @@ public class Utils {
      * Parse the specified time from string to {@link LocalTime} with the specified
      * pattern in the convention of {@link DateTimeFormatter}.
      *
-     * @param time string representation of time
+     * @param time    string representation of time
      * @param pattern pattern
      * @return {@link LocalTime}
      */
@@ -253,5 +255,34 @@ public class Utils {
             return LocalTime.parse(time, timePattern);
         else
             return LocalTime.parse(time, DateTimeFormatter.ofPattern(pattern));
+    }
+
+    /**
+     * Create file on the specified path. If the path exists but not right type,
+     * the old file is deleted then create a new file.
+     *
+     * @param path        file path
+     * @param isDirectory {@code true} to create directory, {@code false} to create
+     *                    regular file
+     * @return {@link File}
+     * @throws IOException if file or directory operation fails
+     */
+    public static File createFile(Path path, boolean isDirectory)
+            throws IOException {
+        if (isDirectory) {
+            if (!Files.exists(path) || !Files.isDirectory(path))
+                Files.createDirectories(path);
+        } else {
+            var parent = path.getParent();
+            if (!Files.exists(parent))
+                Files.createDirectories(parent);
+            if (!Files.exists(path))
+                Files.createFile(path);
+            else if (!Files.isRegularFile(path)) {
+                Files.delete(path);
+                path.toFile().createNewFile();
+            }
+        }
+        return path.toFile();
     }
 }
