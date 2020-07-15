@@ -46,7 +46,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     private final Config config;
     private final LoginConfig loginCfg;
     private final CThostFtdcMdApi mdApi;
-    private final MessageWriter flowWrt;
+    private final MessageWriter msgWriter;
     private final Set<MarketDataRouter> routers = new HashSet<>();
     private final Set<CandleEngine> engines = new HashSet<>();
 
@@ -58,7 +58,7 @@ public class TickProvider extends CThostFtdcMdSpi {
         this.config = cfg;
         this.mdApi = mdApi;
         this.loginCfg = this.config.getLoginConfigs().get("md");
-        this.flowWrt = new MessageWriter(this.config);
+        this.msgWriter = new MessageWriter(this.config);
     }
 
     public void register(CandleEngine engine) {
@@ -192,7 +192,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     @Override
     public void OnRspError(CThostFtdcRspInfoField rspInfo, int requestId,
                            boolean isLast) {
-        this.flowWrt.writeErr(rspInfo);
+        this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
                 Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
                         rspInfo.ErrorID));
@@ -210,7 +210,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.flowWrt.writeErr(rspInfo);
+            this.msgWriter.writeErr(rspInfo);
         }
     }
 
@@ -226,7 +226,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.flowWrt.writeErr(rspInfo);
+            this.msgWriter.writeErr(rspInfo);
         }
     }
 
@@ -238,7 +238,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.config.getLogger().warning(Utils.formatLog(
                     "failed subscription", specificInstrument.InstrumentID,
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.flowWrt.writeErr(rspInfo);
+            this.msgWriter.writeErr(rspInfo);
         }
     }
 
@@ -250,7 +250,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.config.getLogger().warning(Utils.formatLog(
                     "failed un-subscription", specificInstrument.InstrumentID,
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.flowWrt.writeErr(rspInfo);
+            this.msgWriter.writeErr(rspInfo);
         }
     }
 
