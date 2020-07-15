@@ -46,12 +46,12 @@ public class MessageWriter {
     private final DateTimeFormatter formatter
             = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSSSSS");
 
-    public MessageWriter(Config cfg) {
+    public MessageWriter(Config cfg, Path req, Path rtn, Path rsp, Path err) {
         this.config = cfg;
-        this.reqDir = getPath("dir.flow.req");
-        this.rtnDir = getPath("dir.flow.rtn");
-        this.rspDir = getPath("dir.flow.rsp");
-        this.errDir = getPath("dir.flow.err");
+        this.reqDir = req;
+        this.rtnDir = rtn;
+        this.rspDir = rsp;
+        this.errDir = err;
     }
 
     private Path getPath(String key) {
