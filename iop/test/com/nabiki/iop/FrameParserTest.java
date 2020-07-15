@@ -61,8 +61,8 @@ public class FrameParserTest {
     static CThostFtdcRspInfoField rspInfo;
 
     static {
-        body.RequestID = UUID.randomUUID();
-        body.ResponseID = UUID.randomUUID();
+        body.RequestID = UUID.randomUUID().toString();
+        body.ResponseID = UUID.randomUUID().toString();
         body.Type = MessageType.QRY_POSITION;
 
         msg = new TestMessage();

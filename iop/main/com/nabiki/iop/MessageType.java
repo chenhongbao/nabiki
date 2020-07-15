@@ -55,7 +55,7 @@ public enum MessageType implements java.io.Serializable {
     QRY_POSITION,
     RSP_QRY_POSITION,
     QRY_POSI_DETAIL,
-    RSP_REQ_POSI_DETAIL,
+    RSP_QRY_POSI_DETAIL,
     QRY_INSTRUMENT,
     RSP_QRY_INSTRUMENT,
     QRY_COMMISSION,

@@ -141,7 +141,7 @@ class MessageImpl extends Message {
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcQryInvestorPositionDetailField.class);
                     break;
-                case RSP_REQ_POSI_DETAIL:
+                case RSP_QRY_POSI_DETAIL:
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInvestorPositionDetailField.class);
                     break;

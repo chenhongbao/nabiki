@@ -30,21 +30,19 @@ package com.nabiki.iop.frame;
 
 import com.nabiki.iop.MessageType;
 
-import java.util.UUID;
-
 public class Body implements java.io.Serializable {
     /**
      * If the message is a request, the request ID identifies this request. If the
      * message is a response, the request ID identifies that the request that
      * it responds to.
      */
-    public UUID RequestID;
+    public String RequestID;
 
     /**
      * If the message is a response, the response ID identifies this response. Else
      * the field is set to null.
      */
-    public UUID ResponseID;
+    public String ResponseID;
 
     /**
      * Message type {@link MessageType}.

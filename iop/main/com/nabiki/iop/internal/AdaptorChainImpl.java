@@ -28,6 +28,7 @@
 
 package com.nabiki.iop.internal;
 
+import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.*;
 
 import java.util.Queue;
@@ -62,30 +63,7 @@ class AdaptorChainImpl implements AdaptorChain {
                 return;
             // Invoke adaptors.
             try {
-                switch (message.Type) {
-                    case SUB_MD:
-                        adaptor.doSubDepthMarketData(session, message);
-                        break;
-                    case REQ_ORDER_INSERT:
-                        adaptor.doReqOrderInsert(session, message);
-                        break;
-                    case REQ_ORDER_ACTION:
-                        adaptor.doReqOrderAction(session, message);
-                        break;
-                    case QRY_ACCOUNT:
-                        adaptor.doQryAccount(session, message);
-                        break;
-                    case QRY_ORDER:
-                        adaptor.doQryOrder(session, message);
-                        break;
-                    case QRY_POSITION:
-                        adaptor.doQryPosition(session, message);
-                        break;
-                    default:
-                        session.setResponseState(SessionResponseState.ERROR);
-                        whenError(session, SessionEvent.STRANGE_MESSAGE, message);
-                        break;
-                }
+                handleMessage(adaptor, session, message);
             } catch (Throwable th) {
                 whenError(session, SessionEvent.ERROR, th);
             }
@@ -94,10 +72,140 @@ class AdaptorChainImpl implements AdaptorChain {
         whenError(session, SessionEvent.MESSAGE_NOT_DONE, message);
     }
 
-    void whenError(ServerSessionImpl session, SessionEvent event, Object obj) {
+    private void whenError(ServerSessionImpl session, SessionEvent event, Object obj) {
         try {
             if (sessionAdaptor != null)
                 sessionAdaptor.doEvent(session, event, obj);
         } catch (Throwable ignored) {}
+    }
+
+    private void handleMessage(ServerMessageAdaptor adaptor,
+                               ServerSessionImpl session, Message message) {
+        switch (message.Type) {
+            case SUB_MD:
+                adaptor.doSubDepthMarketData(
+                        session,
+                        (CThostFtdcSubMarketDataField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case UNSUB_MD:
+                adaptor.doUnsubDepthMarketData(
+                        session,
+                        (CThostFtdcUnsubMarketDataField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_AUTHENTICATE:
+                adaptor.doReqAuthenticate(
+                        session,
+                        (CThostFtdcReqAuthenticateField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_LOGIN:
+                adaptor.doReqLogin(
+                        session,
+                        (CThostFtdcReqUserLoginField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_LOGOUT:
+                adaptor.doReqLogout(
+                        session,
+                        (CThostFtdcUserLogoutField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_SETTLEMENT:
+                adaptor.doReqSettlementConfirm(
+                        session,
+                        (CThostFtdcSettlementInfoConfirmField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_ORDER_INSERT:
+                adaptor.doReqOrderInsert(
+                        session,
+                        (CThostFtdcInputOrderField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case REQ_ORDER_ACTION:
+                adaptor.doReqOrderAction(
+                        session,
+                        (CThostFtdcInputOrderActionField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_ACCOUNT:
+                adaptor.doQryAccount(
+                        session,
+                        (CThostFtdcQryTradingAccountField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_ORDER:
+                adaptor.doQryOrder(
+                        session,
+                        (CThostFtdcQryOrderField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_POSITION:
+                adaptor.doQryPosition(
+                        session,
+                        (CThostFtdcQryInvestorPositionField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_POSI_DETAIL:
+                adaptor.doQryPositionDetail(
+                        session,
+                        (CThostFtdcQryInvestorPositionDetailField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_INSTRUMENT:
+                adaptor.doQryInstrument(
+                        session,
+                        (CThostFtdcQryInstrumentField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_COMMISSION:
+                adaptor.doQryCommission(
+                        session,
+                        (CThostFtdcQryInstrumentCommissionRateField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case QRY_MARGIN:
+                adaptor.doQryMargin(
+                        session,
+                        (CThostFtdcQryInstrumentMarginRateField) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            default:
+                session.setResponseState(SessionResponseState.ERROR);
+                whenError(session, SessionEvent.STRANGE_MESSAGE, message);
+                break;
+        }
     }
 }

@@ -28,22 +28,213 @@
 
 package com.nabiki.iop;
 
+import com.nabiki.ctp4j.jni.struct.*;
+
 public abstract class ClientMessageAdaptor {
-    public void doRspReqLogin(Message message) {}
+    public void doRspSubscribeMarketData(
+            CThostFtdcSpecificInstrumentField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspReqOrderInsert(Message message) {}
+    public void doRspUnsubscribeMarketData(
+            CThostFtdcSpecificInstrumentField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspReqOrderAction(Message message) {}
+    public void doRspDepthMarketData(
+            CThostFtdcDepthMarketDataField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspQryAccount(Message message) {}
+    public void doRspCandle(
+            CThostFtdcCandleField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspQryOrder(Message message) {}
+    public void doRspAuthenticate(
+            CThostFtdcRspAuthenticateField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspQryPosition(Message message) {}
+    public void doRspReqLogin(
+            CThostFtdcRspUserLoginField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspSubscribeMarketData(Message message) {}
+    public void doRspReqLogout(
+            CThostFtdcUserLogoutField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspDepthMarketData(Message message) {}
+    public void doRspReqSettlementConfirm(
+            CThostFtdcSettlementInfoConfirmField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 
-    public void doRspCandle(Message message) {}
+    public void doRspReqOrderInsert(
+            CThostFtdcOrderField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspReqOrderAction(
+            CThostFtdcOrderActionField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryAccount(
+            CThostFtdcTradingAccountField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryOrder(
+            CThostFtdcOrderField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryPosition(
+            CThostFtdcInvestorPositionField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryPositionDetail(
+            CThostFtdcInvestorPositionDetailField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryInstrument(
+            CThostFtdcInstrumentField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryCommission(
+            CThostFtdcInstrumentCommissionRateField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspQryMargin(
+            CThostFtdcInstrumentMarginRateField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRtnOrder(
+            CThostFtdcOrderField rtn,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRtnTrade(
+            CThostFtdcTradeField rtn,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRtnOrderAction(
+            CThostFtdcOrderActionField rtn,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRtnOrderInsert(
+            CThostFtdcInputOrderField rtn,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspOrderAction(
+            CThostFtdcInputOrderActionField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspOrderInsert(
+            CThostFtdcInputOrderField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 }

@@ -38,7 +38,6 @@ import com.nabiki.iop.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Objects;
-import java.util.UUID;
 
 class TradeClientImpl implements TradeClient {
 
@@ -59,7 +58,7 @@ class TradeClientImpl implements TradeClient {
             return session;
     }
 
-    private <T> Message toMessage(T object, UUID requestID) {
+    private <T> Message toMessage(T object, String requestID) {
         Objects.requireNonNull(object, "request null");
         Objects.requireNonNull(requestID, "request ID null");
         var message = new Message();
@@ -71,7 +70,7 @@ class TradeClientImpl implements TradeClient {
         return message;
     }
 
-    private <T, V> Response<T> send(V request, UUID requestID, Class<T> clz) {
+    private <T, V> Response<T> send(V request, String requestID, Class<T> clz) {
         var rsp = new ResponseImpl<T>();
         this.clientAdaptor.setResponse(rsp, requestID);
         getSession().sendRequest(toMessage(request, requestID));
@@ -80,7 +79,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CThostFtdcRspUserLoginField> login(
-            CThostFtdcReqUserLoginField request, UUID requestID) {
+            CThostFtdcReqUserLoginField request, String requestID) {
         return send(request, requestID, CThostFtdcRspUserLoginField.class);
     }
 
@@ -110,37 +109,37 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CThostFtdcOrderField> orderInsert(
-            CThostFtdcInputOrderField order, UUID requestID) {
+            CThostFtdcInputOrderField order, String requestID) {
         return send(order, requestID, CThostFtdcOrderField.class);
     }
 
     @Override
     public Response<CThostFtdcOrderActionField> orderAction(
-            CThostFtdcInputOrderActionField action, UUID requestID) {
+            CThostFtdcInputOrderActionField action, String requestID) {
         return send(action, requestID, CThostFtdcOrderActionField.class);
     }
 
     @Override
     public Response<CThostFtdcInvestorPositionField> queryPosition(
-            CThostFtdcQryInvestorPositionField query, UUID requestID) {
+            CThostFtdcQryInvestorPositionField query, String requestID) {
         return send(query, requestID, CThostFtdcInvestorPositionField.class);
     }
 
     @Override
     public Response<CThostFtdcTradingAccountField> queryAccount(
-            CThostFtdcQryTradingAccountField query, UUID requestID) {
+            CThostFtdcQryTradingAccountField query, String requestID) {
         return send(query, requestID, CThostFtdcTradingAccountField.class);
     }
 
     @Override
     public Response<CThostFtdcOrderField> queryOrder(
-            CThostFtdcQryOrderField query, UUID requestID) {
+            CThostFtdcQryOrderField query, String requestID) {
         return send(query, requestID, CThostFtdcOrderField.class);
     }
 
     @Override
     public Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(
-            CThostFtdcSubMarketDataField subscription, UUID requestID) {
+            CThostFtdcSubMarketDataField subscription, String requestID) {
         return send(subscription, requestID,
                 CThostFtdcSpecificInstrumentField.class);
     }

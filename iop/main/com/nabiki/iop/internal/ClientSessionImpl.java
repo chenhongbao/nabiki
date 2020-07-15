@@ -36,8 +36,6 @@ import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
-import java.util.UUID;
-
 class ClientSessionImpl extends SessionImpl implements ClientSession {
     private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
 
@@ -56,10 +54,10 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
         return (ClientSessionImpl) iop;
     }
 
-    UUID getHeartbeatID() {
+    String getHeartbeatID() {
         var id = getAttribute(IOP_HEARTBEAT_ID_KEY);
         if (id != null)
-            return (UUID)id;
+            return (String)id;
         else
             return null;
     }
@@ -106,7 +104,7 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     }
 
     @Override
-    public void sendHeartbeat(UUID heartbeatID) {
+    public void sendHeartbeat(String heartbeatID) {
         var body = new Body();
         body.RequestID = heartbeatID;
         body.Type = MessageType.HEARTBEAT;

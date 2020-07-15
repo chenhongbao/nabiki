@@ -36,8 +36,6 @@ import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
-import java.util.UUID;
-
 class ServerSessionImpl extends SessionImpl implements ServerSession {
     private SessionResponseState responseState;
 
@@ -116,7 +114,7 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
     }
 
     @Override
-    public void sendHeartbeat(UUID heartbeatID) {
+    public void sendHeartbeat(String heartbeatID) {
         var body = new Body();
         body.RequestID = heartbeatID;
         body.Type = MessageType.HEARTBEAT;

@@ -31,11 +31,9 @@ package com.nabiki.client.internal;
 import com.nabiki.client.MarketDataListener;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.ClientMessageAdaptor;
-import com.nabiki.iop.Message;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -50,13 +48,14 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
         }
     }
 
-    private final Map<UUID, ResponseImpl<?>> responses = new ConcurrentHashMap<>();
+    private final Map<String, ResponseImpl<?>> responses = new ConcurrentHashMap<>();
     private final AtomicReference<MarketDataListener> listener
             = new AtomicReference<>(new DefaultDepthListener());
 
-    TradeClientAdaptor() {}
+    TradeClientAdaptor() {
+    }
 
-    void setResponse(ResponseImpl<?> response, UUID requestID) {
+    void setResponse(ResponseImpl<?> response, String requestID) {
         Objects.requireNonNull(response, "response future null");
         Objects.requireNonNull(requestID, "request ID null");
         if (this.responses.containsKey(requestID))
@@ -69,81 +68,128 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
             this.listener.set(listener);
     }
 
-    private void checkCompletion(ResponseImpl<?> response, UUID requestID) {
+    private void checkCompletion(ResponseImpl<?> response, String requestID) {
         // Check the completion of response.
         if (response.getArrivalCount() == response.getTotalCount()
                 && response.getTotalCount() != 0)
             this.responses.remove(requestID);
     }
 
-    private void requireMessage(Message message) {
-        Objects.requireNonNull(message, "message null");
-        Objects.requireNonNull(message.RequestID, "request ID null");
-        if (!this.responses.containsKey(message.RequestID))
+    @SuppressWarnings("unchecked")
+    private <T> void doRsp(
+            T object,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            int current,
+            int total) {
+        if (!this.responses.containsKey(requestID))
             throw new IllegalStateException(
                     "no such request ID and response mapping");
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> void doRsp(Message message, Class<T> clz) {
-        requireMessage(message);
-        if (!(message.Body instanceof CThostFtdcRspUserLoginField))
+        if (!(object instanceof CThostFtdcRspUserLoginField))
             throw new IllegalArgumentException("wrong message body");
         // Call response.
-        var response = (ResponseImpl<T>)this.responses.get(message.RequestID);
-        response.put((T)message.Body, message.RspInfo, message.CurrentCount,
-                message.TotalCount);
+        var response = (ResponseImpl<T>) this.responses.get(requestID);
+        response.put(object, info, current, total);
         // Remove mapping if all responses arrive.
-        checkCompletion(response, message.RequestID);
+        checkCompletion(response, requestID);
     }
 
     @Override
-    public void doRspReqLogin(Message message) {
-        doRsp(message, CThostFtdcRspUserLoginField.class);
+    public void doRspReqLogin(
+            CThostFtdcRspUserLoginField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspReqOrderInsert(Message message) {
-        doRsp(message, CThostFtdcOrderField.class);
+    public void doRspReqOrderInsert(
+            CThostFtdcOrderField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspReqOrderAction(Message message) {
-        doRsp(message, CThostFtdcOrderActionField.class);
+    public void doRspReqOrderAction(
+            CThostFtdcOrderActionField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspQryAccount(Message message) {
-        doRsp(message, CThostFtdcTradingAccountField.class);
+    public void doRspQryAccount(
+            CThostFtdcTradingAccountField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspQryOrder(Message message) {
-        doRsp(message, CThostFtdcOrderField.class);
+    public void doRspQryOrder(
+            CThostFtdcOrderField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspQryPosition(Message message) {
-        doRsp(message, CThostFtdcInvestorPositionField.class);
+    public void doRspQryPosition(
+            CThostFtdcInvestorPositionField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspSubscribeMarketData(Message message) {
-        doRsp(message, CThostFtdcSpecificInstrumentField.class);
+    public void doRspSubscribeMarketData(
+            CThostFtdcSpecificInstrumentField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
     }
 
     @Override
-    public void doRspDepthMarketData(Message message) {
-        Objects.requireNonNull(message, "message null");
-        Objects.requireNonNull(message.Body, "depth market data body null");
-        this.listener.get().onDepthMarketData(
-                (CThostFtdcDepthMarketDataField)message.Body);
+    public void doRspDepthMarketData(
+            CThostFtdcDepthMarketDataField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        this.listener.get().onDepthMarketData(rsp);
     }
 
     @Override
-    public void doRspCandle(Message message) {
-        Objects.requireNonNull(message, "message null");
-        Objects.requireNonNull(message.Body, "candle body null");
-        this.listener.get().onCandle((CThostFtdcCandleField)message.Body);
+    public void doRspCandle(
+            CThostFtdcCandleField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        this.listener.get().onCandle(rsp);
     }
 }

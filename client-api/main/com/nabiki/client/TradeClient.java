@@ -32,7 +32,6 @@ import com.nabiki.ctp4j.jni.struct.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.UUID;
 
 public interface TradeClient {
     void setListener(TradeClientListener clientListener);
@@ -43,17 +42,17 @@ public interface TradeClient {
 
     void close();
 
-    Response<CThostFtdcRspUserLoginField> login(CThostFtdcReqUserLoginField request, UUID requestID);
+    Response<CThostFtdcRspUserLoginField> login(CThostFtdcReqUserLoginField request, String requestID);
 
-    Response<CThostFtdcOrderField> orderInsert(CThostFtdcInputOrderField order, UUID requestID);
+    Response<CThostFtdcOrderField> orderInsert(CThostFtdcInputOrderField order, String requestID);
 
-    Response<CThostFtdcOrderActionField> orderAction(CThostFtdcInputOrderActionField action, UUID requestID);
+    Response<CThostFtdcOrderActionField> orderAction(CThostFtdcInputOrderActionField action, String requestID);
 
-    Response<CThostFtdcInvestorPositionField> queryPosition(CThostFtdcQryInvestorPositionField query, UUID requestID);
+    Response<CThostFtdcInvestorPositionField> queryPosition(CThostFtdcQryInvestorPositionField query, String requestID);
 
-    Response<CThostFtdcTradingAccountField> queryAccount(CThostFtdcQryTradingAccountField query, UUID requestID);
+    Response<CThostFtdcTradingAccountField> queryAccount(CThostFtdcQryTradingAccountField query, String requestID);
 
-    Response<CThostFtdcOrderField> queryOrder(CThostFtdcQryOrderField query, UUID requestID);
+    Response<CThostFtdcOrderField> queryOrder(CThostFtdcQryOrderField query, String requestID);
 
-    Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(CThostFtdcSubMarketDataField subscription, UUID requestID);
+    Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(CThostFtdcSubMarketDataField subscription, String requestID);
 }

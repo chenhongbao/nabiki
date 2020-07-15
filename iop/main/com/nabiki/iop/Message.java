@@ -30,13 +30,11 @@ package com.nabiki.iop;
 
 import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 
-import java.util.UUID;
-
 public class Message implements java.io.Serializable {
     public MessageType Type;
     public Object Body;
     public CThostFtdcRspInfoField RspInfo;
-    public UUID RequestID, ResponseID;
+    public String RequestID, ResponseID;
     public int CurrentCount, TotalCount;
 
     public Message() {}

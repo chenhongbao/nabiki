@@ -46,61 +46,38 @@ class ClientFrameHandler implements IoHandler {
     /*
     Default adaptors. The adaptors can be override by setter.
      */
-    static class DefaultClientSessionAdaptor extends ClientSessionAdaptor {
+    static class EmptyClientSessionAdaptor extends ClientSessionAdaptor {
     }
 
-    static class DefaultClientMessageAdaptor extends ClientMessageAdaptor {
+    static class EmptyClientMessageHandler implements ClientMessageHandler {
+        @Override
+        public void onMessage(ClientSession session, Message message) {
+        }
     }
 
     public static final String IOP_ISLOGIN_KEY = "iop.islogin";
+    private final DefaultClientMessageHandler defaultMsgHandler
+            = new DefaultClientMessageHandler();
 
-    private ClientSessionAdaptor clientSessionAdaptor = new DefaultClientSessionAdaptor();
-    private ClientMessageAdaptor clientAdaptor = new DefaultClientMessageAdaptor();
+    private ClientSessionAdaptor sessionAdaptor = new EmptyClientSessionAdaptor();
+    private ClientMessageHandler msgHandler = new EmptyClientMessageHandler();
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor) {
-        this.clientAdaptor = adaptor;
+        this.defaultMsgHandler.setAdaptor(adaptor);
     }
 
-    void setClientSessionAdaptor(ClientSessionAdaptor adaptor) {
-        this.clientSessionAdaptor = adaptor;
+    void setSessionAdaptor(ClientSessionAdaptor adaptor) {
+        this.sessionAdaptor = adaptor;
     }
 
-    private void handleResponse(Message message) throws IOException {
-        switch (message.Type) {
-            case RSP_QRY_ORDER:
-                this.clientAdaptor.doRspQryOrder(message);
-                break;
-            case RSP_QRY_POSITION:
-                this.clientAdaptor.doRspQryPosition(message);
-                break;
-            case RSP_QRY_ACCOUNT:
-                this.clientAdaptor.doRspQryAccount(message);
-                break;
-            case RSP_REQ_ORDER_ACTION:
-                this.clientAdaptor.doRspReqOrderAction(message);
-                break;
-            case RSP_REQ_ORDER_INSERT:
-                this.clientAdaptor.doRspReqOrderInsert(message);
-                break;
-            case RSP_SUB_MD:
-                this.clientAdaptor.doRspSubscribeMarketData(message);
-                break;
-            case FLOW_DEPTH:
-                this.clientAdaptor.doRspDepthMarketData(message);
-                break;
-            case FLOW_CANDLE:
-                this.clientAdaptor.doRspCandle(message);
-                break;
-            default:
-                throw new IllegalStateException(
-                        "unknown message type " + message.Type);
-        }
+    void setMessageHandler(ClientMessageHandler handler) {
+        this.msgHandler = handler;
     }
 
     private void handleLogin(ClientSession session, Message message) {
         session.setAttribute(IOP_ISLOGIN_KEY,
                 message.RspInfo != null && message.RspInfo.ErrorID == 0);
-        this.clientAdaptor.doRspReqLogin(message);
+        this.defaultMsgHandler.onMessage(session, message);
     }
 
     private boolean isLogin(IoSession session) {
@@ -123,39 +100,39 @@ class ClientFrameHandler implements IoHandler {
         if (message.Type != MessageType.HEARTBEAT)
             return;
         if (!session.getHeartbeatID().equals(message.RequestID))
-            this.clientSessionAdaptor.doEvent(session,
+            this.sessionAdaptor.doEvent(session,
                     SessionEvent.MISS_HEARTBEAT, message.RequestID);
     }
 
     @Override
     public void sessionCreated(IoSession session) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
                 SessionEvent.CREATED, null);
     }
 
     @Override
     public void sessionOpened(IoSession session) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
                 SessionEvent.OPENED, null);
     }
 
     @Override
     public void sessionClosed(IoSession session) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
                 SessionEvent.CLOSED, null);
     }
 
     @Override
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
         var clientSession = ClientSessionImpl.from(session);
-        this.clientSessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
+        this.sessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
         // If client detects idle, send heartbeat.
-        clientSession.sendHeartbeat(UUID.randomUUID());
+        clientSession.sendHeartbeat(UUID.randomUUID().toString());
     }
 
     @Override
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
                 SessionEvent.ERROR, cause);
     }
 
@@ -171,10 +148,15 @@ class ClientFrameHandler implements IoHandler {
             body = OP.fromJson(new String(
                     frame.Body, StandardCharsets.UTF_8), Body.class);
             iopMessage = toMessage(body);
+            // First call message handler.
+            try {
+                this.msgHandler.onMessage(iopSession, iopMessage);
+            } catch (Throwable ignored) {}
+            // Then call default message handler that wraps adaptor.
             switch (frame.Type) {
                 case FrameType.RESPONSE:
                     if (isLogin(session))
-                        handleResponse(iopMessage);
+                        this.defaultMsgHandler.onMessage(iopSession, iopMessage);
                     break;
                 case FrameType.LOGIN:
                     handleLogin(iopSession, iopMessage);
@@ -186,7 +168,7 @@ class ClientFrameHandler implements IoHandler {
                     throw new IllegalStateException("unknown frame type");
             }
         } catch (IOException e) {
-            this.clientSessionAdaptor.doEvent(
+            this.sessionAdaptor.doEvent(
                     iopSession, SessionEvent.BROKEN_BODY, body);
         }
     }
@@ -198,7 +180,7 @@ class ClientFrameHandler implements IoHandler {
 
     @Override
     public void inputClosed(IoSession session) throws Exception {
-        this.clientSessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
                 SessionEvent.INPUT_CLOSED, null);
     }
 

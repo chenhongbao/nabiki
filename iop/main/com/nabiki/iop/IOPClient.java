@@ -40,5 +40,7 @@ public interface IOPClient {
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor);
 
+    void setMessageHandler(ClientMessageHandler handler);
+
     ClientSession getSession();
 }

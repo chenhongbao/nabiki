@@ -28,39 +28,6 @@
 
 package com.nabiki.iop;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.GsonBuilder;
-import com.nabiki.iop.frame.Body;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.UUID;
-
-public class BodyTest {
-    @Test
-    public void basic() {
-        var body = new Body();
-
-        body.RequestID = UUID.randomUUID().toString();
-        body.ResponseID = UUID.randomUUID().toString();
-        body.Type = MessageType.QRY_POSITION;
-        body.Body = "xxx";
-        body.RspInfo = "yyy";
-
-        var gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-                .create();
-
-        var str = gson.toJson(body);
-        System.out.println(str);
-
-        var body2 = gson.fromJson(str, Body.class);
-
-        Assert.assertEquals(body.RequestID, body2.RequestID);
-        Assert.assertEquals(body.ResponseID, body2.ResponseID);
-        Assert.assertEquals(body.Body, body2.Body);
-        Assert.assertEquals(body.RspInfo, body2.RspInfo);
-        Assert.assertEquals(body.Type,  body2.Type);
-    }
+public interface ClientMessageHandler {
+    void onMessage(ClientSession session, Message message);
 }

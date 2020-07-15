@@ -47,28 +47,38 @@ import java.util.UUID;
 
 class ServerFrameHandler implements IoHandler {
     /*
-    Default adaptors. The adaptors can be override by setter.
-     */
+        Default adaptors. The adaptors can be override by setter.
+         */
     static class DefaultServerSessionAdaptor extends ServerSessionAdaptor {
     }
 
     static class DefaultLoginManager extends LoginManager {
     }
 
+    static class DefaultServerMessageHandler implements ServerMessageHandler {
+        @Override
+        public void onMessage(ServerSession session, Message message) {
+        }
+    }
+
     private static final String IOP_ISLOGIN_KEY = "iop.islogin";
     private final AdaptorChainImpl chain = new AdaptorChainImpl();
 
-    private ServerSessionAdaptor serverSessionAdaptor
-            = new DefaultServerSessionAdaptor();
+    private ServerSessionAdaptor sessionAdaptor = new DefaultServerSessionAdaptor();
     private LoginManager loginManager = new DefaultLoginManager();
+    private ServerMessageHandler msgHandler = new DefaultServerMessageHandler();
 
     void setLoginManager(LoginManager manager) {
         this.loginManager = manager;
     }
 
-    void setServerSessionAdaptor(ServerSessionAdaptor adaptor) {
-        this.serverSessionAdaptor = adaptor;
-        this.chain.setSessionAdaptor(this.serverSessionAdaptor);
+    void setSessionAdaptor(ServerSessionAdaptor adaptor) {
+        this.sessionAdaptor = adaptor;
+        this.chain.setSessionAdaptor(this.sessionAdaptor);
+    }
+
+    void setMessageHandler(ServerMessageHandler handler) {
+        this.msgHandler = handler;
     }
 
     AdaptorChain getAdaptorChain() {
@@ -91,7 +101,7 @@ class ServerFrameHandler implements IoHandler {
         rsp.CurrentCount = 1;
         rsp.TotalCount = 1;
         rsp.RequestID = message.RequestID;
-        rsp.ResponseID = UUID.randomUUID();
+        rsp.ResponseID = UUID.randomUUID().toString();
         rsp.Body = new CThostFtdcRspUserLoginField(); /* No need to repeat */
         rsp.RspInfo = new CThostFtdcRspInfoField();
         rsp.RspInfo.ErrorID = code;
@@ -121,33 +131,33 @@ class ServerFrameHandler implements IoHandler {
 
     @Override
     public void sessionCreated(IoSession session) throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.CREATED, null);
     }
 
     @Override
     public void sessionOpened(IoSession session) throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.OPENED, null);
     }
 
     @Override
     public void sessionClosed(IoSession session) throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.CLOSED, null);
     }
 
     @Override
     public void sessionIdle(IoSession session, IdleStatus status)
             throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.IDLE, status);
     }
 
     @Override
     public void exceptionCaught(IoSession session, Throwable cause)
             throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.ERROR, cause);
     }
 
@@ -164,6 +174,11 @@ class ServerFrameHandler implements IoHandler {
             body = OP.fromJson(new String(
                     frame.Body, StandardCharsets.UTF_8), Body.class);
             iopMessage = toMessage(body);
+            // First call message handler.
+            try {
+                this.msgHandler.onMessage(iopSession, iopMessage);
+            } catch (Throwable ignored) {}
+            // Then call message adaptor chain.
             switch (frame.Type) {
                 case FrameType.REQUEST:
                     if (isLogin(session))
@@ -180,7 +195,7 @@ class ServerFrameHandler implements IoHandler {
                             "unknown frame type " + frame.Type);
             }
         } catch (IOException e) {
-            this.serverSessionAdaptor.doEvent(
+            this.sessionAdaptor.doEvent(
                     iopSession, SessionEvent.BROKEN_BODY, body);
         }
     }
@@ -192,7 +207,7 @@ class ServerFrameHandler implements IoHandler {
 
     @Override
     public void inputClosed(IoSession session) throws Exception {
-        this.serverSessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
                 SessionEvent.INPUT_CLOSED, null);
     }
 

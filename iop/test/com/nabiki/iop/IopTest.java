@@ -38,10 +38,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
@@ -59,20 +59,20 @@ public class IopTest {
     static void checkSessionEvent(SessionEvent event, Object eventObject) {
         switch (event) {
             case ERROR:
-                assertTrue(eventObject instanceof  Throwable);
-                System.out.println(((Throwable)eventObject).getMessage());
+                assertTrue(eventObject instanceof Throwable);
+                System.out.println(((Throwable) eventObject).getMessage());
                 break;
             case IDLE:
                 assertTrue(eventObject instanceof IdleStatus);
                 System.out.println(eventObject);
                 break;
             case MISS_HEARTBEAT:
-                assertTrue(eventObject instanceof UUID);
+                assertTrue(eventObject instanceof String);
                 System.out.println(eventObject);
                 break;
             case MESSAGE_NOT_DONE:
             case STRANGE_MESSAGE:
-                assertTrue(eventObject instanceof  Message);
+                assertTrue(eventObject instanceof Message);
                 System.out.println(OP.toJson(eventObject));
                 break;
             case BROKEN_BODY:
@@ -136,256 +136,476 @@ public class IopTest {
         }
     }
 
-    static Map<MessageType, Boolean> hit;
+    static Set<MessageType> hit;
+
     static {
-        hit = new ConcurrentHashMap<>();
-        // Responses.
-        hit.put(MessageType.RSP_REQ_LOGIN, false);
-        hit.put(MessageType.RSP_REQ_ORDER_INSERT, false);
-        hit.put(MessageType.RSP_REQ_ORDER_ACTION, false);
-        hit.put(MessageType.RSP_QRY_ACCOUNT, false);
-        hit.put(MessageType.RSP_QRY_ORDER, false);
-        hit.put(MessageType.RSP_QRY_POSITION, false);
-        hit.put(MessageType.RSP_SUB_MD, false);
-        hit.put(MessageType.FLOW_DEPTH, false);
-        hit.put(MessageType.FLOW_CANDLE, false);
-        // Requests.
-        hit.put(MessageType.REQ_LOGIN, false);
-        hit.put(MessageType.REQ_ORDER_INSERT, false);
-        hit.put(MessageType.REQ_ORDER_ACTION, false);
-        hit.put(MessageType.QRY_ACCOUNT, false);
-        hit.put(MessageType.QRY_ORDER, false);
-        hit.put(MessageType.QRY_POSITION, false);
-        hit.put(MessageType.SUB_MD, false);
+        hit = new HashSet<>();
     }
 
     private void hit(MessageType type) {
-        hit.put(type, true);
+        hit.add(type);
     }
 
     class TestClientMessageAdaptor extends ClientMessageAdaptor {
         @Override
-        public void doRspReqLogin(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcRspUserLoginField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_REQ_LOGIN);
-            hit(message.Type);
+        public void doRspSubscribeMarketData(
+                CThostFtdcSpecificInstrumentField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_SUB_MD);
         }
 
         @Override
-        public void doRspReqOrderInsert(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcOrderField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_REQ_ORDER_INSERT);hit(message.Type);
-            hit(message.Type);
+        public void doRspUnsubscribeMarketData(
+                CThostFtdcSpecificInstrumentField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_UNSUB_MD);
         }
 
         @Override
-        public void doRspReqOrderAction(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcOrderActionField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_REQ_ORDER_ACTION);
-            hit(message.Type);
+        public void doRspDepthMarketData(
+                CThostFtdcDepthMarketDataField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.FLOW_DEPTH);
         }
 
         @Override
-        public void doRspQryAccount(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcTradingAccountField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_QRY_ACCOUNT);
-            hit(message.Type);
+        public void doRspCandle(
+                CThostFtdcCandleField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.FLOW_CANDLE);
         }
 
         @Override
-        public void doRspQryOrder(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcOrderField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_QRY_ORDER);
-            hit(message.Type);
+        public void doRspAuthenticate(
+                CThostFtdcRspAuthenticateField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_AUTHENTICATE);
         }
 
         @Override
-        public void doRspQryPosition(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcInvestorPositionField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_QRY_POSITION);
-            assertTrue(message.CurrentCount <= message.TotalCount);
-            System.out.println(message.CurrentCount + "/" + message.TotalCount);
-            hit(message.Type);
+        public void doRspReqLogin(
+                CThostFtdcRspUserLoginField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_LOGIN);
         }
 
         @Override
-        public void doRspSubscribeMarketData(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcSpecificInstrumentField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.RSP_SUB_MD);
-            hit(message.Type);
+        public void doRspReqLogout(
+                CThostFtdcUserLogoutField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_LOGOUT);
         }
 
         @Override
-        public void doRspDepthMarketData(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcDepthMarketDataField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.FLOW_DEPTH);
-            hit(message.Type);
+        public void doRspReqSettlementConfirm(
+                CThostFtdcSettlementInfoConfirmField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_SETTLEMENT);
         }
 
         @Override
-        public void doRspCandle(Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcCandleField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.FLOW_CANDLE);
-            hit(message.Type);
+        public void doRspReqOrderInsert(
+                CThostFtdcOrderField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_ORDER_INSERT);
+        }
+
+        @Override
+        public void doRspReqOrderAction(
+                CThostFtdcOrderActionField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_REQ_ORDER_ACTION);
+        }
+
+        @Override
+        public void doRspQryAccount(
+                CThostFtdcTradingAccountField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_ACCOUNT);
+        }
+
+        @Override
+        public void doRspQryOrder(
+                CThostFtdcOrderField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_ORDER);
+        }
+
+        @Override
+        public void doRspQryPosition(
+                CThostFtdcInvestorPositionField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_POSITION);
+        }
+
+        @Override
+        public void doRspQryPositionDetail(
+                CThostFtdcInvestorPositionDetailField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_POSI_DETAIL);
+        }
+
+        @Override
+        public void doRspQryInstrument(
+                CThostFtdcInstrumentField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_INSTRUMENT);
+        }
+
+        @Override
+        public void doRspQryCommission(
+                CThostFtdcInstrumentCommissionRateField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_COMMISSION);
+        }
+
+        @Override
+        public void doRspQryMargin(
+                CThostFtdcInstrumentMarginRateField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_QRY_MARGIN);
+        }
+
+        @Override
+        public void doRtnOrder(
+                CThostFtdcOrderField rtn,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RTN_ORDER);
+        }
+
+        @Override
+        public void doRtnTrade(
+                CThostFtdcTradeField rtn,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RTN_TRADE);
+        }
+
+        @Override
+        public void doRtnOrderAction(
+                CThostFtdcOrderActionField rtn,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RTN_ORDER_ACTION);
+        }
+
+        @Override
+        public void doRtnOrderInsert(
+                CThostFtdcInputOrderField rtn,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RTN_ORDER_INSERT);
+        }
+
+        @Override
+        public void doRspOrderAction(
+                CThostFtdcInputOrderActionField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_ORDER_ACTION);
+        }
+
+        @Override
+        public void doRspOrderInsert(
+                CThostFtdcInputOrderField rsp,
+                CThostFtdcRspInfoField info,
+                String requestID,
+                String responseID,
+                int current,
+                int total) {
+            hit(MessageType.RSP_ORDER_INSERT);
         }
     }
 
     class TestServerMessageAdaptor extends ServerMessageAdaptor {
         @Override
-        public void doReqOrderInsert(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcInputOrderField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.REQ_ORDER_INSERT);
-            // Send response.
-            send(session, new CThostFtdcOrderField(),
-                    MessageType.RSP_REQ_ORDER_INSERT, 1, 1);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
-        }
-
-        @Override
-        public void doReqOrderAction(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcInputOrderActionField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.REQ_ORDER_ACTION);
-            // Send response.
-            send(session, message.Body, MessageType.RSP_REQ_ORDER_ACTION,
-                    1, 1);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
-        }
-
-        @Override
-        public void doQryAccount(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcQryTradingAccountField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.QRY_ACCOUNT);
-            // Send response.
-            send(session, new CThostFtdcTradingAccountField(),
-                    MessageType.RSP_QRY_ACCOUNT, 1, 1);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
-        }
-
-        @Override
-        public void doQryOrder(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcQryOrderField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.QRY_ORDER);
-            // Send response.
-            send(session, new CThostFtdcOrderField(), MessageType.RSP_QRY_ORDER,
-                    1, 1);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
-        }
-
-        @Override
-        public void doQryPosition(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcQryInvestorPositionField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.QRY_POSITION);
-            // Send response.
-            send(session, new CThostFtdcInvestorPositionField(),
-                    MessageType.RSP_QRY_POSITION, 1, 3);
-            send(session, new CThostFtdcInvestorPositionField(),
-                    MessageType.RSP_QRY_POSITION, 2, 3);
-            send(session, new CThostFtdcInvestorPositionField(),
-                    MessageType.RSP_QRY_POSITION, 3, 3);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
-        }
-
-        @Override
-        public void doSubDepthMarketData(ServerSession session, Message message) {
-            if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcSubMarketDataField);
-                System.out.println(OP.toJson(message.Body));
-            }
-            if (message.RspInfo != null)
-                System.out.println(OP.toJson(message.RspInfo));
-            assertEquals(message.Type, MessageType.SUB_MD);
-            // Send response.
+        public void doSubDepthMarketData(
+                ServerSession session,
+                CThostFtdcSubMarketDataField request,
+                String requestID,
+                int current,
+                int total) {
             send(session, new CThostFtdcSpecificInstrumentField(),
-                    MessageType.RSP_SUB_MD,1, 1);
-            // Send one depth market data back.
+                    MessageType.RSP_SUB_MD, 1, 1);
+            hit(MessageType.SUB_MD);
+            // Send flow.
             send(session, new CThostFtdcDepthMarketDataField(),
                     MessageType.FLOW_DEPTH, 1, 1);
-            // Send one candle.
             send(session, new CThostFtdcCandleField(),
                     MessageType.FLOW_CANDLE, 1, 1);
-            if (new Random().nextDouble() > 0.5)
-                session.done(); // Have a chance the message is not done.
-            hit(message.Type);
+        }
+
+        @Override
+        public void doUnsubDepthMarketData(
+                ServerSession session,
+                CThostFtdcUnsubMarketDataField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcSpecificInstrumentField(),
+                    MessageType.RSP_UNSUB_MD, 1, 1);
+            hit(MessageType.UNSUB_MD);
+        }
+
+        @Override
+        public void doReqAuthenticate(
+                ServerSession session,
+                CThostFtdcReqAuthenticateField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcRspAuthenticateField(),
+                    MessageType.RSP_REQ_AUTHENTICATE, 1, 1);
+            hit(MessageType.REQ_AUTHENTICATE);
+        }
+
+        @Override
+        public void doReqLogin(
+                ServerSession session,
+                CThostFtdcReqUserLoginField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcRspUserLoginField(),
+                    MessageType.RSP_REQ_LOGIN, 1, 1);
+            hit(MessageType.REQ_LOGIN);
+        }
+
+        @Override
+        public void doReqLogout(
+                ServerSession session,
+                CThostFtdcUserLogoutField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcUserLogoutField(),
+                    MessageType.RSP_REQ_LOGOUT, 1, 1);
+            hit(MessageType.REQ_LOGOUT);
+        }
+
+        @Override
+        public void doReqSettlementConfirm(
+                ServerSession session,
+                CThostFtdcSettlementInfoConfirmField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcSettlementInfoConfirmField(),
+                    MessageType.RSP_REQ_SETTLEMENT, 1, 1);
+            hit(MessageType.REQ_SETTLEMENT);
+        }
+
+        @Override
+        public void doReqOrderInsert(
+                ServerSession session,
+                CThostFtdcInputOrderField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcOrderField(),
+                    MessageType.RSP_REQ_ORDER_INSERT, 1, 2);
+            send(session, new CThostFtdcOrderField(),
+                    MessageType.RSP_REQ_ORDER_INSERT, 2, 2);
+            hit(MessageType.REQ_ORDER_INSERT);
+            // Send rtn.
+            send(session, new CThostFtdcOrderField(),
+                    MessageType.RTN_ORDER, 1, 1);
+            send(session, new CThostFtdcTradeField(),
+                    MessageType.RTN_TRADE, 1, 1);
+            // Send error.
+            send(session, new CThostFtdcInputOrderField(),
+                    MessageType.RSP_ORDER_INSERT, 1, 1);
+            send(session, new CThostFtdcInputOrderField(),
+                    MessageType.RTN_ORDER_INSERT, 1, 1);
+        }
+
+        @Override
+        public void doReqOrderAction(
+                ServerSession session,
+                CThostFtdcInputOrderActionField request,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcOrderActionField(),
+                    MessageType.RSP_REQ_ORDER_ACTION, 1, 1);
+            hit(MessageType.REQ_ORDER_ACTION);
+            // Send error.
+            send(session, new CThostFtdcInputOrderActionField(),
+                    MessageType.RSP_ORDER_ACTION, 1, 1);
+            send(session, new CThostFtdcOrderActionField(),
+                    MessageType.RTN_ORDER_ACTION, 1, 1);
+        }
+
+        @Override
+        public void doQryAccount(
+                ServerSession session,
+                CThostFtdcQryTradingAccountField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcTradingAccountField(),
+                    MessageType.RSP_QRY_ACCOUNT, 1, 1);
+            hit(MessageType.QRY_ACCOUNT);
+        }
+
+        @Override
+        public void doQryOrder(
+                ServerSession session,
+                CThostFtdcQryOrderField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcOrderField(),
+                    MessageType.RSP_QRY_ORDER, 1, 1);
+            hit(MessageType.QRY_ORDER);
+        }
+
+        @Override
+        public void doQryPosition(
+                ServerSession session,
+                CThostFtdcQryInvestorPositionField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcInvestorPositionField(),
+                    MessageType.RSP_QRY_POSITION, 1, 1);
+            hit(MessageType.QRY_POSITION);
+        }
+
+        @Override
+        public void doQryPositionDetail(
+                ServerSession session,
+                CThostFtdcQryInvestorPositionDetailField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcInvestorPositionDetailField(),
+                    MessageType.RSP_QRY_POSI_DETAIL, 1, 3);
+            send(session, new CThostFtdcInvestorPositionDetailField(),
+                    MessageType.RSP_QRY_POSI_DETAIL, 2, 3);
+            send(session, new CThostFtdcInvestorPositionDetailField(),
+                    MessageType.RSP_QRY_POSI_DETAIL, 3, 3);
+            hit(MessageType.QRY_POSI_DETAIL);
+        }
+
+        @Override
+        public void doQryInstrument(
+                ServerSession session,
+                CThostFtdcQryInstrumentField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcInstrumentField(),
+                    MessageType.RSP_QRY_INSTRUMENT, 1, 1);
+            hit(MessageType.QRY_INSTRUMENT);
+        }
+
+        @Override
+        public void doQryCommission(
+                ServerSession session,
+                CThostFtdcQryInstrumentCommissionRateField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcInstrumentCommissionRateField(),
+                    MessageType.RSP_QRY_COMMISSION, 1, 1);
+            hit(MessageType.QRY_COMMISSION);
+        }
+
+        @Override
+        public void doQryMargin(
+                ServerSession session,
+                CThostFtdcQryInstrumentMarginRateField query,
+                String requestID,
+                int current,
+                int total) {
+            send(session, new CThostFtdcInstrumentMarginRateField(),
+                    MessageType.RSP_QRY_MARGIN, 1, 1);
+            hit(MessageType.QRY_MARGIN);
         }
     }
 
@@ -432,35 +652,54 @@ public class IopTest {
             // Test client's session.
             var session = client.getSession();
             // Test heart beat.
-            session.sendHeartbeat(UUID.randomUUID());
-            // Test login request.
+            session.sendHeartbeat(UUID.randomUUID().toString());
+            // Test login.
             login(session, new CThostFtdcReqUserLoginField(), 1, 1);
+            // Test logout.
+            send(session, new CThostFtdcUserLogoutField(),
+                    MessageType.REQ_LOGOUT, 1, 1);
             // Test order insert.
             send(session, new CThostFtdcInputOrderField(),
-                    MessageType.REQ_ORDER_INSERT,1, 1);
+                    MessageType.REQ_ORDER_INSERT, 1, 1);
             // Test order action.
             send(session, new CThostFtdcInputOrderActionField(),
-                    MessageType.REQ_ORDER_ACTION,1, 1);
+                    MessageType.REQ_ORDER_ACTION, 1, 1);
             // Test query account.
             send(session, new CThostFtdcQryTradingAccountField(),
-                    MessageType.QRY_ACCOUNT,1, 1);
+                    MessageType.QRY_ACCOUNT, 1, 1);
             // Test query order.
             send(session, new CThostFtdcQryOrderField(),
                     MessageType.QRY_ORDER, 1, 1);
             // Test query position.
             send(session, new CThostFtdcQryInvestorPositionField(),
                     MessageType.QRY_POSITION, 1, 1);
-            // Test subscribe md
+            // Test subscribe/unsubscribe.
             send(session, new CThostFtdcSubMarketDataField(), MessageType.SUB_MD,
+                    1, 1);
+            send(session, new CThostFtdcUnsubMarketDataField(), MessageType.UNSUB_MD,
+                    1, 1);
+            // Test authenticate.
+            send(session, new CThostFtdcReqAuthenticateField(), MessageType.REQ_AUTHENTICATE,
+                    1, 1);
+            // Test settlement.
+            send(session, new CThostFtdcSettlementInfoConfirmField(), MessageType.REQ_SETTLEMENT,
+                    1, 1);
+            // Test query position detail.
+            send(session, new CThostFtdcQryInvestorPositionDetailField(), MessageType.QRY_POSI_DETAIL,
+                    1, 1);
+            // Test query instrument/commission/margin.
+            send(session, new CThostFtdcQryInstrumentField(), MessageType.QRY_INSTRUMENT,
+                    1, 1);
+            send(session, new CThostFtdcQryInstrumentCommissionRateField(), MessageType.QRY_COMMISSION,
+                    1, 1);
+            send(session, new CThostFtdcQryInstrumentMarginRateField(), MessageType.QRY_MARGIN,
                     1, 1);
             //.........Sleep........
             Thread.sleep(TimeUnit.SECONDS.toMillis(5));
             // Check all message types are tested.
-            for (var entry : hit.entrySet()) {
-                if (entry.getKey() != MessageType.HEARTBEAT)
-                    assertTrue(entry.getKey() + " missed",
-                            entry.getValue());
-            }
+            for (var type : MessageType.values())
+                if (type != MessageType.HEARTBEAT)
+                    assertTrue("missing " + type, hit.contains(type));
 
             client.disconnect();
             System.out.println("EXIT");

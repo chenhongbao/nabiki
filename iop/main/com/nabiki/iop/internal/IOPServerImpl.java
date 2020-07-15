@@ -28,10 +28,7 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.iop.AdaptorChain;
-import com.nabiki.iop.IOPServer;
-import com.nabiki.iop.LoginManager;
-import com.nabiki.iop.ServerSessionAdaptor;
+import com.nabiki.iop.*;
 import com.nabiki.iop.frame.FrameParser;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
@@ -47,7 +44,7 @@ public class IOPServerImpl implements IOPServer {
     private static final int DEFAULT_IDLE_SEC = 60;
 
     private final IoAcceptor acceptor = new NioSocketAcceptor();
-    private final ServerFrameHandler frameHnd = new ServerFrameHandler();
+    private final ServerFrameHandler frameHandler = new ServerFrameHandler();
 
     public IOPServerImpl() {
     }
@@ -58,7 +55,7 @@ public class IOPServerImpl implements IOPServer {
         chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
                 new FrameCodecFactory()));
         // Frame handler.
-        this.acceptor.setHandler(frameHnd);
+        this.acceptor.setHandler(frameHandler);
         // Configure the session.
         var config = this.acceptor.getSessionConfig();
         config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
@@ -74,16 +71,21 @@ public class IOPServerImpl implements IOPServer {
 
     @Override
     public void setSessionAdaptor(ServerSessionAdaptor adaptor) {
-        this.frameHnd.setServerSessionAdaptor(adaptor);
+        this.frameHandler.setSessionAdaptor(adaptor);
+    }
+
+    @Override
+    public void setMessageHandler(ServerMessageHandler handler) {
+        this.frameHandler.setMessageHandler(handler);
     }
 
     @Override
     public void setLoginManager(LoginManager manager) {
-        this.frameHnd.setLoginManager(manager);
+        this.frameHandler.setLoginManager(manager);
     }
 
     @Override
     public AdaptorChain getAdaptorChain() {
-        return this.frameHnd.getAdaptorChain();
+        return this.frameHandler.getAdaptorChain();
     }
 }

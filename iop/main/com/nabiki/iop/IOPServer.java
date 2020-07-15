@@ -36,6 +36,8 @@ public interface IOPServer {
 
     void setSessionAdaptor(ServerSessionAdaptor adaptor);
 
+    void setMessageHandler(ServerMessageHandler handler);
+
     void setLoginManager(LoginManager manager);
 
     AdaptorChain getAdaptorChain();

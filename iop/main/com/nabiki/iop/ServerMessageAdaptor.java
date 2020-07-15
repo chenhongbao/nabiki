@@ -28,16 +28,126 @@
 
 package com.nabiki.iop;
 
+import com.nabiki.ctp4j.jni.struct.*;
+
 public abstract class ServerMessageAdaptor {
-    public void doReqOrderInsert(ServerSession session, Message message) {}
+    public void doSubDepthMarketData(
+            ServerSession session,
+            CThostFtdcSubMarketDataField request,
+            String requestID,
+            int current,
+            int total) {
+    }
 
-    public void doReqOrderAction(ServerSession session, Message message) {}
+    public void doUnsubDepthMarketData(
+            ServerSession session,
+            CThostFtdcUnsubMarketDataField request,
+            String requestID,
+            int current,
+            int total) {
+    }
 
-    public void doQryAccount(ServerSession session, Message message) {}
+    public void doReqAuthenticate(
+            ServerSession session,
+            CThostFtdcReqAuthenticateField request,
+            String requestID,
+            int current,
+            int total) {
+    }
 
-    public void doQryOrder(ServerSession session, Message message) {}
+    public void doReqLogin(
+            ServerSession session,
+            CThostFtdcReqUserLoginField request,
+            String requestID,
+            int current,
+            int total) {
+    }
 
-    public void doQryPosition(ServerSession session, Message message) {}
+    public void doReqLogout(
+            ServerSession session,
+            CThostFtdcUserLogoutField request,
+            String requestID,
+            int current,
+            int total) {
+    }
 
-    public void doSubDepthMarketData(ServerSession session, Message message) {}
+    public void doReqSettlementConfirm(
+            ServerSession session,
+            CThostFtdcSettlementInfoConfirmField request,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doReqOrderInsert(
+            ServerSession session,
+            CThostFtdcInputOrderField request,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doReqOrderAction(
+            ServerSession session,
+            CThostFtdcInputOrderActionField request,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryAccount(
+            ServerSession session,
+            CThostFtdcQryTradingAccountField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryOrder(
+            ServerSession session,
+            CThostFtdcQryOrderField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryPosition(
+            ServerSession session,
+            CThostFtdcQryInvestorPositionField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryPositionDetail(
+            ServerSession session,
+            CThostFtdcQryInvestorPositionDetailField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryInstrument(
+            ServerSession session,
+            CThostFtdcQryInstrumentField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryCommission(
+            ServerSession session,
+            CThostFtdcQryInstrumentCommissionRateField query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
+    public void doQryMargin(
+            ServerSession session,
+            CThostFtdcQryInstrumentMarginRateField query,
+            String requestID,
+            int current,
+            int total) {
+    }
 }

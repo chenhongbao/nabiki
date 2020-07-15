@@ -28,10 +28,7 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.iop.ClientMessageAdaptor;
-import com.nabiki.iop.ClientSession;
-import com.nabiki.iop.ClientSessionAdaptor;
-import com.nabiki.iop.IOPClient;
+import com.nabiki.iop.*;
 import com.nabiki.iop.frame.FrameParser;
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IdleStatus;
@@ -50,7 +47,7 @@ public class IOPClientImpl implements IOPClient {
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
 
     private final NioSocketConnector connector = new NioSocketConnector();
-    private final ClientFrameHandler frameHnd = new ClientFrameHandler();
+    private final ClientFrameHandler frameHandler = new ClientFrameHandler();
     private ClientSessionImpl session;
 
     public IOPClientImpl() {
@@ -65,7 +62,7 @@ public class IOPClientImpl implements IOPClient {
         chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
                 new FrameCodecFactory()));
         // Set handler.
-        this.connector.setHandler(this.frameHnd);
+        this.connector.setHandler(this.frameHandler);
         // Configure the session.
         var config = this.connector.getSessionConfig();
         config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
@@ -96,12 +93,17 @@ public class IOPClientImpl implements IOPClient {
 
     @Override
     public void setSessionAdaptor(ClientSessionAdaptor adaptor) {
-        this.frameHnd.setClientSessionAdaptor(adaptor);
+        this.frameHandler.setSessionAdaptor(adaptor);
     }
 
     @Override
     public void setMessageAdaptor(ClientMessageAdaptor adaptor) {
-        this.frameHnd.setMessageAdaptor(adaptor);
+        this.frameHandler.setMessageAdaptor(adaptor);
+    }
+
+    @Override
+    public void setMessageHandler(ClientMessageHandler handler) {
+        this.frameHandler.setMessageHandler(handler);
     }
 
     @Override
