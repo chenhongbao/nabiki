@@ -39,9 +39,9 @@ import com.nabiki.iop.ServerSession;
 import java.util.Objects;
 
 public class UserLoginManager extends LoginManager {
-    final static String FRONT_LOGINREQ_KEY = "chain.loginreq";
-    final static String FRONT_USERAUTH_KEY = "chain.userauth";
-    final static String FRONT_ACTIVEUSR_KEY = "chain.activeusr";
+    final static String FRONT_LOGINREQ_KEY = "front.loginreq";
+    final static String FRONT_USERAUTH_KEY = "front.userauth";
+    final static String FRONT_ACTIVEUSR_KEY = "front.activeusr";
 
     private final UserAuthManager authMgr;
     private final ActiveUserManager userMgr;
@@ -72,7 +72,7 @@ public class UserLoginManager extends LoginManager {
             return TThostFtdcErrorCode.INVALID_LOGIN;
         var user = this.userMgr.getActiveUser(req.UserID);
         if (user == null)
-            return TThostFtdcErrorCode.NOT_INITED;
+            return TThostFtdcErrorCode.USER_NOT_FOUND;
         else {
             session.setAttribute(FRONT_LOGINREQ_KEY, req);
             session.setAttribute(FRONT_USERAUTH_KEY, auth);

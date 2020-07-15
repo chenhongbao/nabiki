@@ -51,12 +51,20 @@ public class UserManager implements Renewable {
     private final Map<String, User> users = new ConcurrentHashMap<>();
     private final Path dataDir;
 
+    private static UserManager singleton;
+
     // Default value.
     private SettlementPreparation prep = new SettlementPreparation();
 
-    UserManager(Path dataDir) {
+    private UserManager(Path dataDir) {
         Objects.requireNonNull(dataDir, "user data directory null");
         this.dataDir = dataDir;
+    }
+
+    public static UserManager create(Path dataDir) {
+        if (singleton == null)
+            singleton = new UserManager(dataDir);
+        return singleton;
     }
 
     private void init(Path dir) {

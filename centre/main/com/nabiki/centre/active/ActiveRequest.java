@@ -119,11 +119,15 @@ public class ActiveRequest {
             return;
         }
         var instrInfo = this.config.getInstrInfo(this.order.InstrumentID);
-        Objects.requireNonNull(instrInfo, "instr info null");
-        if (this.order.CombOffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN)
-            insertOpen(this.order, instrInfo);
-        else
-            insertClose(this.order, instrInfo);
+        if (instrInfo == null) {
+            this.execRsp.ErrorID = TThostFtdcErrorCode.INSTRUMENT_NOT_FOUND;
+            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSTRUMENT_NOT_FOUND;
+        } else {
+            if (this.order.CombOffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN)
+                insertOpen(this.order, instrInfo);
+            else
+                insertClose(this.order, instrInfo);
+        }
     }
 
     void execAction() {

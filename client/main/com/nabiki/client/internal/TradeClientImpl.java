@@ -80,7 +80,10 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcRspUserLoginField> login(
             CThostFtdcReqUserLoginField request, String requestID) {
-        return send(request, requestID, CThostFtdcRspUserLoginField.class);
+        var rsp = new ResponseImpl<CThostFtdcRspUserLoginField>();
+        this.clientAdaptor.setResponse(rsp, requestID);
+        getSession().sendLogin(toMessage(request, requestID));
+        return rsp;
     }
 
     @Override

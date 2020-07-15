@@ -79,7 +79,7 @@ public class ActiveUser {
         this.user.settle(prep);
     }
 
-    public CThostFtdcRspInfoField getExecRsp(UUID uuid) {
+    public CThostFtdcRspInfoField getExecRsp(String uuid) {
         var active = this.requests.get(uuid);
         if (active == null)
             return null;
@@ -88,7 +88,8 @@ public class ActiveUser {
     }
 
     public String insertOrder(CThostFtdcInputOrderField order) {
-        var active = new ActiveRequest(order, this.user, this.orderProvider, this.config);
+        var active = new ActiveRequest(order, this.user, this.orderProvider,
+                this.config);
         this.requests.put(active.getOrderUUID(), active);
         try {
             active.execOrder();
@@ -114,24 +115,13 @@ public class ActiveUser {
         return active.getOrderUUID();
     }
 
-    /**
-     * Get the split detail orders sent to remote server, which are a part of
-     * the specified order of the given UUID.
-     *
-     * <p>An input order from client may result in several split orders sent
-     * to remote server. Those orders are sub-orders of the original order.
-     * </p>
-     *
-     * @param uuid UUID of the original order
-     * @return set of split detail orders
-     */
-    public Set<CThostFtdcInputOrderField> getDetailOrder(String uuid) {
-        var r = new HashSet<CThostFtdcInputOrderField>();
+    public Set<CThostFtdcOrderField> getRtnOrder(String uuid) {
+        var r = new HashSet<CThostFtdcOrderField>();
         var refs = this.orderProvider.getMapper().getDetailRef(uuid);
         if (refs == null || refs.size() == 0)
             return r;
         for (var ref : refs) {
-            var o = this.orderProvider.getMapper().getDetailOrder(ref);
+            var o = this.orderProvider.getMapper().getRtnOrder(ref);
             if (o != null)
                 r.add(o);
         }

@@ -28,8 +28,52 @@
 
 package com.nabiki.centre.active;
 
-public class ActiveUserManager {
+import com.nabiki.centre.Renewable;
+import com.nabiki.centre.ctp.OrderProvider;
+import com.nabiki.centre.user.core.UserManager;
+import com.nabiki.centre.utils.Config;
+
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ActiveUserManager implements Renewable {
+    private final OrderProvider provider;
+    private final Config config;
+    private final Path dataDir;
+    private final UserManager userMgr;
+    private final Map<String, ActiveUser> users = new ConcurrentHashMap<>();
+
+    public ActiveUserManager(OrderProvider provider, Config cfg, Path dataDir) {
+        this.provider = provider;
+        this.config = cfg;
+        this.dataDir = dataDir;
+        this.userMgr = UserManager.create(dataDir);
+    }
+
+    private ActiveUser getOrCreate(String userID) {
+        ActiveUser active = this.users.get(userID);
+        if (active == null) {
+            var usr = this.userMgr.getUser(userID);
+            if (usr == null)
+                return null;
+            active = new ActiveUser(usr, this.provider, this.config);
+        }
+        return active;
+    }
+
     public ActiveUser getActiveUser(String userID) {
-        return null;
+        return getOrCreate(userID);
+    }
+
+    @Override
+    public void renew() throws Exception {
+        this.userMgr.renew();
+        this.users.clear();
+    }
+
+    @Override
+    public void settle() throws Exception {
+        this.userMgr.settle();
     }
 }
