@@ -61,5 +61,11 @@ public enum MessageType implements java.io.Serializable {
     QRY_COMMISSION,
     RSP_QRY_COMMISSION,
     QRY_MARGIN,
-    RSP_QRY_MARGIN
+    RSP_QRY_MARGIN,
+    RTN_ORDER,
+    RTN_TRADE,
+    RTN_ORDER_ACTION,
+    RTN_ORDER_INSERT,
+    RSP_ORDER_ACTION,
+    RSP_ORDER_INSERT
 }

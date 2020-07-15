@@ -169,6 +169,30 @@ class MessageImpl extends Message {
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInstrumentMarginRateField.class);
                     break;
+                case RTN_ORDER:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderField.class);
+                    break;
+                case RTN_TRADE:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcTradeField.class);
+                    break;
+                case RTN_ORDER_ACTION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcOrderActionField.class);
+                    break;
+                case RTN_ORDER_INSERT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInputOrderField.class);
+                    break;
+                case RSP_ORDER_ACTION:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInputOrderActionField.class);
+                    break;
+                case RSP_ORDER_INSERT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcInputOrderField.class);
+                    break;
                 default:
                     throw new IOException("unknown message type " + body.Type);
             }
