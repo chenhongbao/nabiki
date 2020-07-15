@@ -44,7 +44,7 @@ public class ActiveUser {
     private final User user;
     private final Config config;
     private final OrderProvider orderProvider;
-    private final Map<UUID, ActiveRequest> requests = new HashMap<>();
+    private final Map<String, ActiveRequest> requests = new HashMap<>();
 
     public ActiveUser(User user, OrderProvider orderProvider, Config cfg) {
         this.user = user;
@@ -87,7 +87,7 @@ public class ActiveUser {
             return active.getExecRsp();
     }
 
-    public UUID insertOrder(CThostFtdcInputOrderField order) {
+    public String insertOrder(CThostFtdcInputOrderField order) {
         var active = new ActiveRequest(order, this.user, this.orderProvider, this.config);
         this.requests.put(active.getOrderUUID(), active);
         try {
@@ -100,7 +100,7 @@ public class ActiveUser {
         return active.getOrderUUID();
     }
 
-    public UUID orderAction(CThostFtdcInputOrderActionField action) {
+    public String orderAction(CThostFtdcInputOrderActionField action) {
         var active = new ActiveRequest(action, this.user, this.orderProvider,
                 this.config);
         this.requests.put(active.getOrderUUID(), active);
@@ -125,7 +125,7 @@ public class ActiveUser {
      * @param uuid UUID of the original order
      * @return set of split detail orders
      */
-    public Set<CThostFtdcInputOrderField> getDetailOrder(UUID uuid) {
+    public Set<CThostFtdcInputOrderField> getDetailOrder(String uuid) {
         var r = new HashSet<CThostFtdcInputOrderField>();
         var refs = this.orderProvider.getMapper().getDetailRef(uuid);
         if (refs == null || refs.size() == 0)

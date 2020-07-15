@@ -36,14 +36,13 @@ import com.nabiki.iop.x.OP;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MessageWriter {
     private final Config config;
-    private final Path reqDir, rtnDir, rspDir, errDir, stlDir;
+    private final Path reqDir, rtnDir, rspDir, errDir;
     private final DateTimeFormatter formatter
             = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSSSSS");
 
@@ -53,7 +52,6 @@ public class MessageWriter {
         this.rtnDir = getPath("dir.flow.rtn");
         this.rspDir = getPath("dir.flow.rsp");
         this.errDir = getPath("dir.flow.err");
-        this.stlDir = getPath("dir.flow.stl");
     }
 
     private Path getPath(String key) {
@@ -75,12 +73,10 @@ public class MessageWriter {
 
     private File ensureFile(Path root, String fn) {
         try {
-            if (!Files.exists(root))
-                Files.createDirectories(root);
-            var r = Path.of(root.toAbsolutePath().toString(), fn).toFile();
-            if (!r.exists())
-                r.createNewFile();
-            return r;
+            var r = Path.of(root.toAbsolutePath().toString(), fn);
+            Utils.createFile(root, true);
+            Utils.createFile(r, false);
+            return r.toFile();
         } catch (IOException e) {
             this.config.getLogger().warning(root.toString() + "/" + fn + ". "
                     + e.getMessage());
@@ -156,43 +152,5 @@ public class MessageWriter {
         write(OP.toJson(err),
                 ensureFile(this.errDir,
                         "info." + getTimeStamp() + ".json"));
-    }
-
-    public void writeSettle(CThostFtdcTradingAccountField cash) {
-        var dir = Path.of(this.stlDir.toString(), this.config.getTradingDay(),
-                cash.AccountID);
-        try {
-            if (!dir.toFile().exists() || !dir.toFile().isDirectory())
-                Files.createDirectories(dir);
-            var file = Path.of(dir.toString(), "account.json").toFile();
-            if (!file.exists() || !file.isFile())
-                file.createNewFile();
-            Utils.writeText(OP.toJson(cash), file, StandardCharsets.UTF_8,
-                    false);
-        } catch (IOException e) {
-            this.config.getLogger().severe(Utils.formatLog(
-                    "failed settlement", cash.AccountID,
-                    e.getMessage(), null));
-        }
-    }
-
-    public void writeSettle(CThostFtdcInvestorPositionDetailField position) {
-        var dir = Path.of(this.stlDir.toString(), this.config.getTradingDay(),
-                position.InvestorID);
-        try {
-            if (!dir.toFile().exists() || !dir.toFile().isDirectory())
-                Files.createDirectories(dir);
-            var fn = "position." + position.InstrumentID + "." + System.nanoTime()
-                    + ".json";
-            var file = Path.of(dir.toString(), fn).toFile();
-            if (!file.exists() || !file.isFile())
-                file.createNewFile();
-            Utils.writeText(OP.toJson(position), file, StandardCharsets.UTF_8,
-                    false);
-        } catch (IOException e) {
-            this.config.getLogger().severe(Utils.formatLog(
-                    "failed settlement", position.InstrumentID,
-                    e.getMessage(), null));
-        }
     }
 }

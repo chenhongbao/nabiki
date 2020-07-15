@@ -36,11 +36,11 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
 import java.util.*;
 
 public class OrderMapper {
-    private final Map<String, UUID>
-            detRef2Uuid = new HashMap<>();     // Detail ref -> UUID
-    private final Map<UUID, ActiveRequest>
+    private final Map<String, ActiveRequest>
+            detRef2Active = new HashMap<>(); // Detail ref -> alive order
+    private final Map<String, ActiveRequest>
             uuid2Active = new HashMap<>();   // UUID -> alive order
-    private final Map<UUID, Set<String>>
+    private final Map<String, Set<String>>
             uuid2DetRef = new HashMap<>();     // UUID -> detail ref
     private final Map<String, CThostFtdcOrderField>
             detRef2Rtn = new HashMap<>();   // Detail ref -> detail rtn order
@@ -57,7 +57,7 @@ public class OrderMapper {
      * @param active active order that issues the detailed order
      */
     public void register(CThostFtdcInputOrderField order, ActiveRequest active) {
-        this.detRef2Uuid.put(order.OrderRef, active.getOrderUUID());
+        this.detRef2Active.put(order.OrderRef, active);
         this.uuid2Active.put(active.getOrderUUID(), active);
         this.uuid2DetRef.computeIfAbsent(active.getOrderUUID(),
                 k -> new HashSet<>());
@@ -93,7 +93,7 @@ public class OrderMapper {
      * @param uuid UUID of the alive order that issues the detail orders
      * @return {@link Set} of detail order refs
      */
-    public Set<String> getDetailRef(UUID uuid) {
+    public Set<String> getDetailRef(String uuid) {
         return Utils.deepCopy(this.uuid2DetRef.get(uuid));
     }
 
@@ -109,17 +109,10 @@ public class OrderMapper {
     }
 
     /*
-    Get alive order with the specified UUID.
-     */
-    public ActiveRequest getActiveOrder(UUID uuid) {
-        return this.uuid2Active.get(uuid);
-    }
-
-    /*
     Get alive order that issued the detail order with the specified detail order
     reference.
      */
     public ActiveRequest getActiveOrder(String detailRef) {
-        return getActiveOrder(this.detRef2Uuid.get(detailRef));
+        return this.detRef2Active.get(detailRef);
     }
 }

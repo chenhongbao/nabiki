@@ -373,11 +373,12 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             null, null));
             return;
         }
-        // Adjust user.
+        // Adjust IDs.
         rtn.BrokerID = active.getOriginOrder().BrokerID;
         rtn.UserID = active.getOriginOrder().UserID;
         rtn.InvestorID = active.getOriginOrder().InvestorID;
         rtn.AccountID = active.getOriginOrder().AccountID;
+        rtn.OrderLocalID = active.getOrderUUID();
 
         try {
             active.updateRtnOrder(rtn);
@@ -396,10 +397,11 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             null, null));
             return;
         }
-        // Adjust user.
+        // Adjust IDs.
         trade.BrokerID = active.getOriginOrder().BrokerID;
         trade.UserID = active.getOriginOrder().UserID;
         trade.InvestorID = active.getOriginOrder().InvestorID;
+        trade.OrderLocalID = active.getOrderUUID();
 
         try {
             active.updateTrade(trade);
@@ -439,23 +441,31 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     @Override
     public void OnErrRtnOrderAction(CThostFtdcOrderActionField orderAction,
                                     CThostFtdcRspInfoField rspInfo) {
-        this.msgWriter.writeErr(orderAction);
-        this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().warning(
                 Utils.formatLog("failed action", orderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
+        // Rewrite the local ID.
+        var active = this.mapper.getActiveOrder(orderAction.OrderRef);
+        if (active != null)
+            orderAction.OrderLocalID = active.getOrderUUID();
+        this.msgWriter.writeErr(orderAction);
+        this.msgWriter.writeErr(rspInfo);
     }
 
     @Override
     public void OnErrRtnOrderInsert(CThostFtdcInputOrderField inputOrder,
                                     CThostFtdcRspInfoField rspInfo) {
-        this.msgWriter.writeErr(inputOrder);
-        this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
+        var cancel = toCancelRtnOrder(inputOrder);
         doRtnOrder(toCancelRtnOrder(inputOrder));
+        // The writing follows the doXXX method because some of its fields are
+        // rewritten with local IDs.
+        this.msgWriter.writeRtn(cancel);
+        this.msgWriter.writeErr(inputOrder);
+        this.msgWriter.writeErr(rspInfo);
     }
 
     @Override
@@ -496,13 +506,17 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     public void OnRspOrderInsert(CThostFtdcInputOrderField inputOrder,
                                  CThostFtdcRspInfoField rspInfo, int requestId,
                                  boolean isLast) {
-        this.msgWriter.writeErr(inputOrder);
-        this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        doRtnOrder(toCancelRtnOrder(inputOrder));
+        var cancel = toCancelRtnOrder(inputOrder);
+        doRtnOrder(cancel);
+        // The writing follows the doXXX method because some of its fields are
+        // rewritten with local IDs.
+        this.msgWriter.writeRtn(cancel);
+        this.msgWriter.writeErr(inputOrder);
+        this.msgWriter.writeErr(rspInfo);
     }
 
     @Override
@@ -612,15 +626,19 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     @Override
     public void OnRtnOrder(CThostFtdcOrderField order) {
+        doRtnOrder(order);
+        // The codes below follow the doXXX method because the parameter's fields
+        // were rewritten by the method, with local IDs.
         this.msgWriter.writeRtn(order);
         this.mapper.register(order);
-        doRtnOrder(order);
     }
 
     @Override
     public void OnRtnTrade(CThostFtdcTradeField trade) {
-        this.msgWriter.writeRtn(trade);
         doRtnTrade(trade);
+        // The writing method must follow the doXXX method because the fields are
+        // rewritten with local IDs.
+        this.msgWriter.writeRtn(trade);
     }
 
     protected static class PendingRequest {

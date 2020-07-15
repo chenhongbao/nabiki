@@ -39,6 +39,7 @@ import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorMessage;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderStatusType;
 import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.iop.x.OP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,10 +47,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class ActiveRequest {
-    private FrozenAccount frozenAccount;
-    private Map<String, FrozenPositionDetail> frozenPD;
+    private Map<String, FrozenAccount> frozenAccount;
+    private Map<String, FrozenPositionDetail> frozenPosition;
 
-    private final UUID uuid = UUID.randomUUID();
+    private final String uuid = UUID.randomUUID().toString();
     private final UserAccount userAccount;
     private final UserPosition userPos;
     private final OrderProvider orderProvider;
@@ -92,11 +93,13 @@ public class ActiveRequest {
     }
 
     Map<String, FrozenPositionDetail> getFrozenPosition() {
-        return this.frozenPD;
+        return this.frozenPosition;
     }
 
     FrozenAccount getFrozenAccount() {
-        return this.frozenAccount;
+        if (this.frozenAccount.size() == 0)
+            return null;
+        return this.frozenAccount.values().iterator().next();
     }
 
     void execOrder() {
@@ -104,13 +107,13 @@ public class ActiveRequest {
             throw new IllegalStateException("no order to execute");
         // If the user is panic, some internal error occurred. Don't trade again.
         var usrState = this.userAccount.getParent().getState();
-        if ( usrState== UserState.PANIC) {
+        if (usrState == UserState.PANIC) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.INCONSISTENT_INFORMATION;
             this.execRsp.ErrorMsg = "internal error caused account panic";
             return;
         }
         // User is settled, but not inited for next day.
-        if ( usrState== UserState.SETTLED) {
+        if (usrState == UserState.SETTLED) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.NOT_INITED;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.NOT_INITED;
             return;
@@ -132,33 +135,37 @@ public class ActiveRequest {
             return;
         }
         var mapper = this.orderProvider.getMapper();
-        var refs = mapper.getDetailRef(UUID.fromString(this.action.OrderSysID));
+        var refs = mapper.getDetailRef(this.action.OrderSysID);
         if (refs == null || refs.size() < 1) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.ORDER_NOT_FOUND;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.ORDER_NOT_FOUND;
             return;
         }
         for (var ref : refs) {
-            var rtn = mapper.getRtnOrder(ref);
             var realAction = Utils.deepCopy(this.action);
-            if (rtn == null) {
-                // User order ref.
-                realAction.OrderSysID = null;
-                realAction.OrderRef = ref;
-            } else {
-                if (rtn.OrderStatus == TThostFtdcOrderStatusType.CANCELED
-                        || rtn.OrderStatus == TThostFtdcOrderStatusType.ALL_TRADED)
-                    continue;
-                // Use order sys ID.
-                realAction.OrderSysID = rtn.OrderSysID;
-                realAction.OrderRef = null;
-            }
-            var r = this.orderProvider.sendOrderAction(realAction, this);
-            if (r != 0) {
-                this.execRsp.ErrorID = r;
+            realAction.OrderRef = ref;
+            // Check order return.
+            var rtn = mapper.getRtnOrder(ref);
+            if (rtn != null && (rtn.OrderStatus == TThostFtdcOrderStatusType.CANCELED
+                    || rtn.OrderStatus == TThostFtdcOrderStatusType.ALL_TRADED))
+                continue;
+            if (send(this.action, this) != 0)
                 break;
-            }
         }
+    }
+
+    private int send(CThostFtdcInputOrderField order, ActiveRequest active) {
+        int r = this.orderProvider.sendDetailOrder(order, active);
+        this.execRsp.ErrorID = r;
+        this.execRsp.ErrorMsg = OP.getErrorMsg(r);
+        return r;
+    }
+
+    private int send(CThostFtdcInputOrderActionField action, ActiveRequest active) {
+        int r = this.orderProvider.sendOrderAction(action, active);
+        this.execRsp.ErrorID = r;
+        this.execRsp.ErrorMsg = OP.getErrorMsg(r);
+        return r;
     }
 
     private void insertOpen(CThostFtdcInputOrderField order,
@@ -166,19 +173,18 @@ public class ActiveRequest {
         Objects.requireNonNull(instrInfo.instrument, "instrument null");
         Objects.requireNonNull(instrInfo.margin, "margin null");
         Objects.requireNonNull(instrInfo.commission, "commission null");
-        this.frozenAccount = this.userAccount.getOpenFrozenAccount(this.order,
+        var frzAccount = this.userAccount.getOpenFrozenAccount(this.order,
                 instrInfo.instrument, instrInfo.margin, instrInfo.commission);
-        if (this.frozenAccount == null) {
+        if (frzAccount == null) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.INSUFFICIENT_MONEY;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSUFFICIENT_MONEY;
         } else {
             // Set valid order ref.
             order.OrderRef = this.orderProvider.getOrderRef();
-            this.execRsp.ErrorID
-                    = this.orderProvider.sendDetailOrder(order, this);
-            if (this.execRsp.ErrorID == 0)
-                // Apply frozen account to parent account.
-                this.frozenAccount.setFrozen();
+            this.frozenAccount.put(order.OrderRef, frzAccount);
+            // Apply frozen account to parent account.
+            if (send(order, this) == 0)
+                getFrozenAccount().setFrozen();
         }
     }
 
@@ -193,7 +199,7 @@ public class ActiveRequest {
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.OVER_CLOSE_POSITION;
             return;
         }
-        this.frozenPD = new HashMap<>();
+        this.frozenPosition = new HashMap<>();
         // Send close request.
         for (var p : pds) {
             var cls = toCloseOrder(p);
@@ -201,19 +207,16 @@ public class ActiveRequest {
             var x = this.orderProvider.sendDetailOrder(cls, this);
             if (x == 0) {
                 // Map order reference to frozen position.
-                this.frozenPD.put(cls.OrderRef, p);
+                this.frozenPosition.put(cls.OrderRef, p);
                 // Apply frozen position to parent position.
                 // Because the order has been sent, the position must be frozen to
                 // ensure no over-close position.
                 p.setFrozen();
-            } else {
-                this.execRsp.ErrorID = x;
-                break;
-            }
+            } else break;
         }
     }
 
-    public UUID getOrderUUID() {
+    public String getOrderUUID() {
         return this.uuid;
     }
 
@@ -258,9 +261,9 @@ public class ActiveRequest {
                             "frozen cash null");
                     return;
                 }
-                this.frozenAccount.cancel();
+                getFrozenAccount().cancel();
             } else {
-                if (this.frozenPD == null || this.frozenPD.size() == 0) {
+                if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen position",
                                     rtn.OrderRef, null, null));
@@ -270,7 +273,7 @@ public class ActiveRequest {
                     return;
                 }
                 // Cancel position.
-                var p = this.frozenPD.get(rtn.OrderRef);
+                var p = this.frozenPosition.get(rtn.OrderRef);
                 if (p == null) {
                     this.config.getLogger().severe(
                             Utils.formatLog("frozen position not found",
@@ -318,14 +321,14 @@ public class ActiveRequest {
             Objects.requireNonNull(depth, "depth market data null");
             // Update frozen account, user account and user position.
             // The frozen account handles the update of user account.
-            this.frozenAccount.applyOpenTrade(trade, instrInfo.instrument,
+            getFrozenAccount().applyOpenTrade(trade, instrInfo.instrument,
                     instrInfo.commission);
             this.userPos.applyOpenTrade(trade, instrInfo.instrument,
                     instrInfo.margin, instrInfo.commission,
                     depth.PreSettlementPrice);
         } else {
             // Close.
-            if (this.frozenPD == null || this.frozenPD.size() == 0) {
+            if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
                 this.config.getLogger().severe(
                         Utils.formatLog("no frozen position",
                                 trade.OrderRef, null, null));
@@ -336,7 +339,7 @@ public class ActiveRequest {
             }
             // Update user position, frozen position and user account.
             // The frozen position handles the update of user position.
-            var p = this.frozenPD.get(trade.OrderRef);
+            var p = this.frozenPosition.get(trade.OrderRef);
             if (p == null) {
                 this.config.getLogger().severe(
                         Utils.formatLog("frozen position not found",

@@ -243,6 +243,7 @@ public class ConfigLoader {
         root.setDirectory("dir.flow", ".flow");
         root.setDirectory("dir.cdl", ".cdl");
         root.setDirectory("dir.log", ".log");
+        root.setDirectory("dir.user", ".user");
 
         var cfg = root.get("dir.cfg");
         cfg.setDirectory("dir.cfg.login", ".login");
@@ -255,7 +256,6 @@ public class ConfigLoader {
         flow.setDirectory("dir.flow.rtn", ".rtn");
         flow.setDirectory("dir.flow.rsp", ".rsp");
         flow.setDirectory("dir.flow.err", ".err");
-        flow.setDirectory("dir.flow.stl", ".stl");
 
         var ctp = flow.get("dir.flow.ctp");
         ctp.setDirectory("dir.flow.ctp.trader", ".trader");

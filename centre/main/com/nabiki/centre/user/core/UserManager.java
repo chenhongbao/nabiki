@@ -36,11 +36,11 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
 import com.nabiki.iop.x.OP;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,38 +71,47 @@ public class UserManager implements Renewable {
         });
     }
 
+    private File findLatestDir(Path userDir) {
+        final File[] r = {null};
+        userDir.toFile().listFiles(file -> {
+            if (r[0] == null)
+                r[0] = file;
+            else if (file.getName().compareTo(r[0].getName()) > 0)
+                r[0] = file;
+            return false;
+        });
+        return r[0];
+    }
+
     private User readUser(Path userDir) {
         final var account = new CThostFtdcTradingAccountField[1];
         var positions = new ConcurrentHashMap<String, List<UserPositionDetail>>();
-        userDir.toFile().listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                var name = file.getName();
-                try {
-                    if (name.startsWith("account.") && name.endsWith(".json")) {
-                        if (account[0] != null)
-                            throw new IOException("ambiguous account");
-                        account[0] = OP.fromJson(
-                                Utils.readText(file, StandardCharsets.UTF_8),
-                                CThostFtdcTradingAccountField.class);
-                    }
-                    if (name.startsWith("position.") && name.endsWith(".json")) {
-                        var pos = OP.fromJson(Utils.readText(
-                                file, StandardCharsets.UTF_8),
-                                CThostFtdcInvestorPositionDetailField.class);
-                        var instrPos = positions.get(pos.InstrumentID);
-                        if (instrPos == null) {
-                            instrPos = new LinkedList<>();
-                            positions.put(pos.InstrumentID, instrPos);
-                        }
-                        instrPos.add(new UserPositionDetail((pos)));
-                    }
-                } catch (IOException e) {
-                    System.err.println(e.getMessage());
-                    e.printStackTrace();
+        findLatestDir(userDir).listFiles(file -> {
+            var name = file.getName();
+            try {
+                if (name.startsWith("account.") && name.endsWith(".json")) {
+                    if (account[0] != null)
+                        throw new IOException("ambiguous account");
+                    account[0] = OP.fromJson(
+                            Utils.readText(file, StandardCharsets.UTF_8),
+                            CThostFtdcTradingAccountField.class);
                 }
-                return false;
+                if (name.startsWith("position.") && name.endsWith(".json")) {
+                    var pos = OP.fromJson(Utils.readText(
+                            file, StandardCharsets.UTF_8),
+                            CThostFtdcInvestorPositionDetailField.class);
+                    var instrPos = positions.get(pos.InstrumentID);
+                    if (instrPos == null) {
+                        instrPos = new LinkedList<>();
+                        positions.put(pos.InstrumentID, instrPos);
+                    }
+                    instrPos.add(new UserPositionDetail((pos)));
+                }
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
             }
+            return false;
         });
         return new User(account[0], positions);
     }
@@ -115,10 +124,12 @@ public class UserManager implements Renewable {
     }
 
     private void writeUser(Path userDir, User user) throws IOException {
-        Utils.createFile(userDir, true);
+        var todayDir = Path.of(userDir.toString(),
+                Utils.getDay(LocalDate.now(), null));
+        Utils.createFile(todayDir, true);
         // Write trading account.
         var account = user.getUserAccount().copyRawAccount();
-        var path = Path.of(userDir.toString(),
+        var path = Path.of(todayDir.toString(),
                 "account." + account.AccountID + ".json");
         Utils.createFile(path, false);
         Utils.writeText(OP.toJson(account),
@@ -129,7 +140,7 @@ public class UserManager implements Renewable {
         for (var positions : user.getUserPosition().getPositionMap().values()) {
             for (var pos : positions) {
                 if (pos.getAvailableVolume() > 0) {
-                    path = Path.of(userDir.toString(),
+                    path = Path.of(todayDir.toString(),
                             "position." + (++count) + ".json");
                     Utils.writeText(OP.toJson(
                             pos.copyRawPosition()),
