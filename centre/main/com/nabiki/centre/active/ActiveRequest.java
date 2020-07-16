@@ -172,8 +172,41 @@ public class ActiveRequest {
         return r;
     }
 
+    private boolean isValidVolume(CThostFtdcInputOrderField order) {
+        int minVol, maxVol;
+        var instrInfo = this.config.getInstrInfo(order.InstrumentID);
+        if (instrInfo == null || instrInfo.instrument == null) {
+            minVol = 1;
+            maxVol = Integer.MAX_VALUE;
+        } else {
+            minVol = instrInfo.instrument.MinLimitOrderVolume;
+            maxVol = instrInfo.instrument.MaxLimitOrderVolume;
+        }
+        return minVol <= order.VolumeTotalOriginal
+                && order.VolumeTotalOriginal <= maxVol;
+    }
+
+    private boolean isValidPrice(CThostFtdcInputOrderField order) {
+        var depth = this.config.getDepthMarketData(order.InstrumentID);
+        if (depth == null)
+            return true;
+        else
+            return depth.LowerLimitPrice <= order.LimitPrice
+                    && order.LimitPrice <= depth.UpperLimitPrice;
+    }
+
+    private boolean isValidField(CThostFtdcInputOrderField order) {
+        return isValidVolume(order) && isValidPrice(order);
+    }
+
     private void insertOpen(CThostFtdcInputOrderField order,
                             InstrumentInfo instrInfo) {
+        if (!isValidField(order)) {
+            this.execRsp.ErrorID = TThostFtdcErrorCode.BAD_FIELD;
+            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.BAD_FIELD;
+            return;
+        }
+        // Check info ready.
         Objects.requireNonNull(instrInfo.instrument, "instrument null");
         Objects.requireNonNull(instrInfo.margin, "margin null");
         Objects.requireNonNull(instrInfo.commission, "commission null");

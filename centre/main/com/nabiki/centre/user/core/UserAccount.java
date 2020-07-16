@@ -68,7 +68,7 @@ public class UserAccount {
      *
      * @param trade the trade response
      * @param instr instrument
-     * @param comm commission
+     * @param comm  commission
      */
     public void applyTrade(CThostFtdcTradeField trade,
                            CThostFtdcInstrumentField instr,
@@ -134,7 +134,8 @@ public class UserAccount {
         else
             c.FrozenCommission = comm.OpenRatioByVolume;
         // Check if available money is enough.
-        var needMoney = c.FrozenCash + c.FrozenCommission;
+        var needMoney = (c.FrozenCash + c.FrozenCommission)
+                * order.VolumeTotalOriginal;
         var account = this.parent.getFeaturedAccount();
         if (account.Available < needMoney)
             return null;

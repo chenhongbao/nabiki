@@ -81,6 +81,8 @@ public class UserTest {
         instrument.ProductID = "c";
         instrument.VolumeMultiple = 10;
         instrument.PriceTick = 1.0D;
+        instrument.MaxLimitOrderVolume = 10000;
+        instrument.MinLimitOrderVolume = 1;
 
         var commission = new CThostFtdcInstrumentCommissionRateField();
         commission.InstrumentID = "c2101";
@@ -289,6 +291,49 @@ public class UserTest {
                 userAccount.Balance - userAccount.CurrMargin
                         - (frzCash + frzCommission) * order.VolumeTotalOriginal,
                 0.0);
+    }
 
+    @Test
+    public void open_fail() {
+        prepare();
+
+        var order = new CThostFtdcInputOrderField();
+        order.InstrumentID = "c2101";
+        order.BrokerID = "9999";
+        order.ExchangeID = "DCE";
+        // Test bad price.
+        order.LimitPrice = 5000;
+        order.VolumeTotalOriginal = 10;
+        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+
+        var active = new ActiveUser(user, provider, config);
+        var uuid = active.insertOrder(order);
+
+        // Check order exec state.
+        var rspInfo = active.getExecRsp(uuid);
+        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.BAD_FIELD);
+
+        // Test bad volume.
+        order.LimitPrice = 2120;
+        order.VolumeTotalOriginal = Integer.MAX_VALUE;
+
+        active = new ActiveUser(user, provider, config);
+        uuid = active.insertOrder(order);
+
+        // Check order exec state.
+        rspInfo = active.getExecRsp(uuid);
+        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.BAD_FIELD);
+
+        // Test insufficient money.
+        order.LimitPrice = 2120;
+        order.VolumeTotalOriginal = 5000;
+
+        active = new ActiveUser(user, provider, config);
+        uuid = active.insertOrder(order);
+
+        // Check order exec state.
+        rspInfo = active.getExecRsp(uuid);
+        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.INSUFFICIENT_MONEY);
     }
 }
