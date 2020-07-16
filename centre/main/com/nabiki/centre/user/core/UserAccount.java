@@ -158,7 +158,8 @@ public class UserAccount {
 
     // Only calculate commission.
     private AccountTradedCash toTradedCash(
-            CThostFtdcTradeField trade, CThostFtdcInstrumentField instr,
+            CThostFtdcTradeField trade,
+            CThostFtdcInstrumentField instr,
             CThostFtdcInstrumentCommissionRateField comm) {
         Objects.requireNonNull(comm, "commission null");
         Objects.requireNonNull(instr, "instrument null");

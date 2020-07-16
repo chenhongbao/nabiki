@@ -79,7 +79,7 @@ public class UserPosition {
         return r;
     }
 
-    public PositionTradedCash getTotalTradedCash() {
+    public PositionTradedCash getMoneyAfterTrade() {
         var r = new PositionTradedCash();
         r.Margin = 0.;
         r.CloseProfitByTrade = 0.;
@@ -101,10 +101,9 @@ public class UserPosition {
     public void applyOpenTrade(CThostFtdcTradeField trade,
                                CThostFtdcInstrumentField instr,
                                CThostFtdcInstrumentMarginRateField margin,
-                               CThostFtdcInstrumentCommissionRateField comm,
                                double preSettlementPrice) {
         getSpecificPosition(trade.InstrumentID)
-                .add(toUserPosition(trade, instr, margin, comm, preSettlementPrice));
+                .add(toUserPosition(trade, instr, margin, preSettlementPrice));
     }
 
     /**
@@ -119,8 +118,10 @@ public class UserPosition {
      * @return list of frozen position detail if the order is sent successfully
      */
     public List<FrozenPositionDetail> peakCloseFrozen(
-            CThostFtdcInputOrderField order, CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentCommissionRateField comm, String tradingDay) {
+            CThostFtdcInputOrderField order,
+            CThostFtdcInstrumentField instr,
+            CThostFtdcInstrumentCommissionRateField comm,
+            String tradingDay) {
         // Get position details.
         var avail = getSpecificPosition(order.InstrumentID);
         Objects.requireNonNull(avail, "user position null");
@@ -171,9 +172,7 @@ public class UserPosition {
     /**
      * Settle position.
      *
-     * @param prices settlement prices
-     * @param info instrument info set
-     * @param tradingDay trading day
+     * @param prep settlement information
      */
     public void settle(SettlementPreparation prep) {
         if (this.positionMap.size() == 0)
@@ -196,7 +195,7 @@ public class UserPosition {
             Objects.requireNonNull(margin, "margin null");
             // Settle specific instrument.
             var r = settleSpecificInstrument(entry.getValue(), settlementPrice,
-                    instr, margin, prep.getTradingDay());
+                    instr.VolumeMultiple, prep.getTradingDay());
             // Only keep the non-zero position.
             if (r.size() > 0)
                 settledPos.put(id, r);
@@ -217,8 +216,7 @@ public class UserPosition {
     private List<UserPositionDetail> settleSpecificInstrument(
             Collection<UserPositionDetail> position,
             double settlementPrice,
-            CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentMarginRateField margin,
+            int volumeMultiple,
             String tradingDay) {
         // Settled position to bre return.
         var settledPosition =  new LinkedList<UserPositionDetail>();
@@ -236,46 +234,46 @@ public class UserPosition {
              */
             var origin = p.copyRawPosition();
             origin.SettlementPrice = settlementPrice;
-            if (origin.Volume == 0)
+            var volume = origin.Volume - origin.CloseVolume;
+            if (volume == 0)
                 continue;
-            if (origin.Volume < 0)
+            if (volume < 0)
                 throw new IllegalStateException("position volume less than zero");
             // Calculate new position detail, the close profit/volume/amount are
             // updated on return trade, just calculate the position's fields.
             double token;
             if (origin.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
                 // Margin.
-                if (margin.LongMarginRatioByMoney > 0)
-                    origin.Margin = origin.Volume * settlementPrice
-                            * instr.VolumeMultiple * margin.LongMarginRatioByMoney;
+                if (origin.MarginRateByMoney > 0)
+                    origin.Margin = volume * origin.SettlementPrice
+                            * volumeMultiple * origin.MarginRateByMoney;
                 else
-                    origin.Margin = origin.Volume * margin.LongMarginRatioByVolume;
+                    origin.Margin = volume * origin.MarginRateByVolume;
                 // Long position, token is positive.
                 token = 1.0D;
             } else {
                 // Margin.
-                if (margin.ShortMarginRatioByMoney > 0)
-                    origin.Margin = origin.Volume * settlementPrice
-                            * instr.VolumeMultiple * margin.ShortMarginRatioByMoney;
+                if (origin.MarginRateByMoney > 0)
+                    origin.Margin = volume * origin.SettlementPrice
+                            * volumeMultiple * origin.MarginRateByMoney;
                 else
-                    origin.Margin = origin.Volume * margin.ShortMarginRatioByVolume;
+                    origin.Margin = volume * origin.MarginRateByVolume;
                 // Short position, token is negative.
                 token = -1.0D;
             }
             // ExchMargin.
             origin.ExchMargin = origin.Margin;
             // Position profit.
-            origin.PositionProfitByTrade = token * origin.Volume *
-                    (origin.SettlementPrice - origin.OpenPrice)
-                    * instr.VolumeMultiple;
+            origin.PositionProfitByTrade = token * volume *
+                    (origin.SettlementPrice - origin.OpenPrice) * volumeMultiple;
             if (origin.TradingDay.compareTo(tradingDay) == 0)
                 // Today position, open price is real open price.
                 origin.PositionProfitByDate = origin.PositionProfitByTrade;
             else
                 // History position, open price is last settlement price.
-                origin.PositionProfitByDate = token * origin.Volume *
+                origin.PositionProfitByDate = token * volume *
                         (origin.SettlementPrice - origin.LastSettlementPrice)
-                        * instr.VolumeMultiple;
+                        * volumeMultiple;
             // Save settled position.
             settledPosition.add(new UserPositionDetail(origin));
         }
@@ -286,7 +284,6 @@ public class UserPosition {
             CThostFtdcTradeField trade,
             CThostFtdcInstrumentField instr,
             CThostFtdcInstrumentMarginRateField margin,
-            CThostFtdcInstrumentCommissionRateField comm,
             double preSettlementPrice) {
         var d = new CThostFtdcInvestorPositionDetailField();
         d.InvestorID = trade.InvestorID;

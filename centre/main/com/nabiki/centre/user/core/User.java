@@ -65,16 +65,17 @@ public class User {
         var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
         var posFrzCash = this.userPosition.getPositionFrozenCash();
-        var posSettle = this.userPosition.getTotalTradedCash();
+        var mnyTrade = this.userPosition.getMoneyAfterTrade();
         var accFrzCash = this.userAccount.getAccountFrozenCash();
         // Summarize.
         total.FrozenCash = accFrzCash.FrozenCash;
         total.FrozenCommission = accFrzCash.FrozenCommission
                 + posFrzCash.FrozenCommission;
-        total.FrozenMargin = posSettle.Margin;
+        total.FrozenMargin = posFrzCash.FrozenMargin;
+        total.CurrMargin = mnyTrade.Margin;
         total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
-                + posSettle.CloseProfitByDate - total.Commission;
-        total.Available = total.Balance - total.FrozenMargin
+                + mnyTrade.CloseProfitByDate - total.Commission;
+        total.Available = total.Balance - total.FrozenMargin - total.CurrMargin
                 - total.FrozenCommission - total.FrozenCash;
         return total;
     }
@@ -104,7 +105,7 @@ public class User {
     public void settle(SettlementPreparation prep) {
         // First position, then account.
         this.userPosition.settle(prep);
-        this.userAccount.settle(this.userPosition.getTotalTradedCash(),
+        this.userAccount.settle(this.userPosition.getMoneyAfterTrade(),
                 prep.getTradingDay());
         this.state = UserState.SETTLED;
     }

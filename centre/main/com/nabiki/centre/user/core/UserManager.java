@@ -103,11 +103,15 @@ public class UserManager implements Renewable {
                     account[0] = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
                             CThostFtdcTradingAccountField.class);
+                    // Get account ready for today's trading.
+                    renewAccount(account[0]);
                 }
                 if (name.startsWith("position.") && name.endsWith(".json")) {
                     var pos = OP.fromJson(Utils.readText(
                             file, StandardCharsets.UTF_8),
                             CThostFtdcInvestorPositionDetailField.class);
+                    // Get position ready for today's trading.
+                    renewPosition(pos);
                     var instrPos = positions.get(pos.InstrumentID);
                     if (instrPos == null) {
                         instrPos = new LinkedList<>();
@@ -122,6 +126,35 @@ public class UserManager implements Renewable {
             return false;
         });
         return new User(account[0], positions);
+    }
+
+    private void renewAccount(CThostFtdcTradingAccountField account) {
+        account.PreMargin = account.CurrMargin;
+        account.CurrMargin = 0;
+        account.PreDeposit = account.Deposit;
+        account.Deposit = 0;
+        account.PreBalance = account.Balance;
+        account.Balance = 0;
+        account.PreCredit = account.Credit;
+        account.Credit = 0;
+        account.PreFundMortgageIn = account.FundMortgageIn;
+        account.FundMortgageIn = 0;
+        account.PreFundMortgageOut = account.FundMortgageOut;
+        account.FundMortgageOut = 0;
+        account.PreMortgage = account.Mortgage;
+        account.Mortgage = 0;
+    }
+
+    private void renewPosition(CThostFtdcInvestorPositionDetailField position) {
+        position.Volume -= position.CloseVolume;
+        position.CloseVolume = 0;
+        position.CloseAmount
+                = position.CloseProfitByTrade
+                = position.CloseProfitByDate
+                = position.PositionProfitByTrade
+                = position.PositionProfitByDate = 0;
+        position.LastSettlementPrice = position.SettlementPrice;
+        position.SettlementPrice = 0;
     }
 
     private void write(Path dir) throws IOException {

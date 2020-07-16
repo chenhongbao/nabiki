@@ -145,7 +145,9 @@ public class ActiveUser {
     }
 
     public CThostFtdcTradingAccountField getTradingAccount() {
-        return this.user.getFeaturedAccount();
+        var account = this.user.getFeaturedAccount();
+        account.TradingDay = this.config.getTradingDay();
+        return account;
     }
 
     public List<CThostFtdcInvestorPositionField> getPosition(String instrID) {

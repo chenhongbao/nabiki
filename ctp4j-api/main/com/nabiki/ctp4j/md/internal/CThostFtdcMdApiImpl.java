@@ -34,64 +34,68 @@ import com.nabiki.ctp4j.md.CThostFtdcMdApi;
 import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
 
 public class CThostFtdcMdApiImpl extends CThostFtdcMdApi {
-    public CThostFtdcMdApiImpl(String flowPath, boolean isUsingUdp,
-                               boolean isMulticast) {
-        throw new UnsupportedOperationException("CThostFtdcMdApi not implemented");
+    public CThostFtdcMdApiImpl(
+            String flowPath,
+            boolean isUsingUdp,
+            boolean isMulticast) {
     }
 
     @Override
     public String GetApiVersion() {
-        return null;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public String GetTradingDay() {
-        return null;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Init() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Join() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void RegisterFront(String frontAddress) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void RegisterSpi(CThostFtdcMdSpi spi) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Release() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
-    public int ReqUserLogin(CThostFtdcReqUserLoginField reqUserLoginField,
-                            int requestID) {
-        return 0;
+    public int ReqUserLogin(
+            CThostFtdcReqUserLoginField reqUserLoginField,
+            int requestID) {
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
-    public int ReqUserLogout(CThostFtdcUserLogoutField userLogout, int requestID) {
-        return 0;
+    public int ReqUserLogout(
+            CThostFtdcUserLogoutField userLogout,
+            int requestID) {
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int SubscribeMarketData(String[] instrumentID, int count) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int UnSubscribeMarketData(String[] instrumentID, int count) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 }

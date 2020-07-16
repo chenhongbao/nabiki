@@ -31,6 +31,7 @@ package com.nabiki.centre.ctp;
 import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.jni.struct.*;
@@ -264,5 +265,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             for (var e : this.engines)
                 e.update(depthMarketData);
         }
+        // Update config's depth.
+        ConfigLoader.setDepthMarketData(depthMarketData);
     }
 }

@@ -43,7 +43,7 @@ public class UserPositionDetail {
     private final List<FrozenPositionDetail> frozenPosition = new LinkedList<>();
 
     public UserPositionDetail(CThostFtdcInvestorPositionDetailField raw) {
-        this.raw = raw;
+        this.raw = Utils.deepCopy(raw);
     }
 
     /**

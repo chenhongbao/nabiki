@@ -328,8 +328,7 @@ public class ActiveRequest {
             getFrozenAccount().applyOpenTrade(trade, instrInfo.instrument,
                     instrInfo.commission);
             this.userPos.applyOpenTrade(trade, instrInfo.instrument,
-                    instrInfo.margin, instrInfo.commission,
-                    depth.PreSettlementPrice);
+                    instrInfo.margin, depth.PreSettlementPrice);
         } else {
             // Close.
             if (this.frozenPosition == null || this.frozenPosition.size() == 0) {

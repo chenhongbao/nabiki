@@ -34,107 +34,105 @@ import com.nabiki.ctp4j.trader.CThostFtdcTraderSpi;
 
 public class CThostFtdcTraderApiImpl extends CThostFtdcTraderApi {
     public CThostFtdcTraderApiImpl(String flowPath) {
-        throw new UnsupportedOperationException(
-                "CThostFtdcTraderApi not implemented");
     }
 
     @Override
     public String GetApiVersion() {
-        return null;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public String GetTradingDay() {
-        return null;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Init() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Join() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void SubscribePrivateTopic(int type) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void SubscribePublicTopic(int type) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void RegisterFront(String frontAddress) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void RegisterSpi(CThostFtdcTraderSpi spi) {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public void Release() {
-
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqAuthenticate(CThostFtdcReqAuthenticateField reqAuthenticateField, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqUserLogin(CThostFtdcReqUserLoginField reqUserLoginField, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqUserLogout(CThostFtdcUserLogoutField userLogout, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField settlementInfoConfirm, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqOrderInsert(CThostFtdcInputOrderField inputOrder, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqOrderAction(CThostFtdcInputOrderActionField inputOrderAction, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqQryInstrument(CThostFtdcQryInstrumentField qryInstrument, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqQryInstrumentCommissionRate(CThostFtdcQryInstrumentCommissionRateField qryInstrumentCommissionRate, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqQryInstrumentMarginRate(CThostFtdcQryInstrumentMarginRateField qryInstrumentMarginRate, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqQryTradingAccount(CThostFtdcQryTradingAccountField qryTradingAccount, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override
     public int ReqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField qryInvestorPositionDetail, int requestID) {
-        return 0;
+        throw new UnsupportedOperationException("not implemented");
     }
 }
