@@ -28,15 +28,19 @@
 
 package com.nabiki.centre.user.core;
 
+import com.nabiki.centre.active.ActiveUser;
 import com.nabiki.centre.ctp.OrderProvider;
+import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcCombHedgeFlagType;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
-import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -46,19 +50,25 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class UserAccountTest {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+public class UserTest {
 
     private Config config;
     private User user;
     private OrderProvider provider;
-    private final String flowDir = "C:\\Users\\chenh\\Desktop";
+    private final String flowDir = "C:\\Users\\chenh\\Desktop\\.root";
+    private CThostFtdcTradingAccountField account;
 
     private void prepare() {
+        ConfigLoader.rootPath = flowDir;
+
         try {
             this.config = ConfigLoader.load();
         } catch (IOException e) {
             e.printStackTrace();
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
 
         //
@@ -98,6 +108,10 @@ public class UserAccountTest {
         //
         // Set depth market data.
         //
+        var tradingDay = LocalDate.now();
+        if (LocalTime.now().getHour() >= 21)
+            tradingDay = tradingDay.plusDays(1);
+
         var depth = new CThostFtdcDepthMarketDataField();
         depth.InstrumentID = "c2101";
         depth.ExchangeInstID = "c2101";
@@ -116,7 +130,7 @@ public class UserAccountTest {
         depth.UpperLimitPrice = 2150;
         depth.LowerLimitPrice = 2050;
         depth.ActionDay = Utils.getDay(LocalDate.now(), null);
-        depth.TradingDay = Utils.getDay(LocalDate.now(), null);
+        depth.TradingDay = Utils.getDay(tradingDay, null);
         depth.UpdateTime = Utils.getTime(LocalTime.now(), null);
         depth.UpdateMillisec = 500;
 
@@ -192,7 +206,7 @@ public class UserAccountTest {
         //
         // Trading account.
         //
-        var account = new CThostFtdcTradingAccountField();
+        account = new CThostFtdcTradingAccountField();
         account.BrokerID = "9999";
         account.AccountID = "0001";
         account.PreBalance = 800000.0D;
@@ -211,4 +225,70 @@ public class UserAccountTest {
                 CThostFtdcTraderApi.CreateFtdcTraderApi(flowDir), config);
     }
 
+    @Test
+    public void checkInitAccount() {
+        // Prepare account.
+        prepare();
+
+        // Test user state.
+        assertEquals("user state should be renew",
+                user.getState(), UserState.RENEW);
+
+        // Test account info.
+        var userAccount = user.getFeaturedAccount();
+        assertEquals(userAccount.PreBalance, account.PreBalance, 0.0);
+        assertEquals(userAccount.PreMargin, account.PreMargin, 0.0);
+        assertEquals(userAccount.PreCredit, account.PreCredit, 0.0);
+        assertEquals(userAccount.PreDeposit, account.PreDeposit, 0.0);
+    }
+
+    @Test
+    public void open() {
+        prepare();
+
+        var order = new CThostFtdcInputOrderField();
+        order.InstrumentID = "c2101";
+        order.BrokerID = "9999";
+        order.ExchangeID = "DCE";
+        order.LimitPrice = 2120;
+        order.VolumeTotalOriginal = 10;
+        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+
+        var active = new ActiveUser(user, provider, config);
+        var uuid = active.insertOrder(order);
+
+        // Test order exec state.
+        var rspInfo = active.getExecRsp(uuid);
+        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.NONE);
+
+        // Test frozen volume.
+        var frz = active.getFrozenAccount(uuid);
+        assertEquals(frz.getFrozenVolume(), order.VolumeTotalOriginal, 0.0D);
+
+        // Test frozen cash.
+        var cash = frz.getSingleFrozenCash();
+        var frzCash = order.LimitPrice
+                * config.getInstrInfo("c2101").instrument.VolumeMultiple
+                * config.getInstrInfo("c2101").margin.ShortMarginRatioByMoney;
+        var frzCommission
+                = config.getInstrInfo("c2101").commission.OpenRatioByVolume;
+        assertEquals(cash.FrozenCash, frzCash, 0.0);
+        assertEquals(cash.FrozenCommission, frzCommission, 0.0);
+
+        // Test account.
+        var userAccount = active.getTradingAccount();
+        assertEquals(userAccount.CurrMargin, account.PreMargin, 0.0);
+        assertEquals(userAccount.FrozenCash,
+                frzCash * order.VolumeTotalOriginal, 0.0);
+        assertEquals(userAccount.FrozenCommission,
+                frzCommission * order.VolumeTotalOriginal, 0.0);
+        assertEquals(userAccount.FrozenMargin, 0.0, 0.0);
+        assertEquals(
+                userAccount.Available,
+                userAccount.Balance - userAccount.CurrMargin
+                        - (frzCash + frzCommission) * order.VolumeTotalOriginal,
+                0.0);
+
+    }
 }

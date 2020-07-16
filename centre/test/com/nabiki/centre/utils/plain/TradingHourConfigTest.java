@@ -26,8 +26,37 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.user.core;
+package com.nabiki.centre.utils.plain;
 
-public class UserPositionTest {
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.GsonBuilder;
+import org.junit.Test;
+
+import java.time.LocalTime;
+import java.util.LinkedList;
+
+public class TradingHourConfigTest {
+    @Test
+    public void basic() {
+        var cfg = new TradingHourConfig();
+
+        var hour0 = new TradingHourConfig.SingleTradingHour();
+        hour0.from = LocalTime.of(0, 0);
+        hour0.to = LocalTime.of(23,59);
+
+        cfg.name = "test case";
+        cfg.productID = new LinkedList<>();
+        cfg.productID.add("c");
+        cfg.tradingHour = new LinkedList<>();
+        cfg.tradingHour.add(hour0);
+
+        var str = new GsonBuilder()
+                .setPrettyPrinting()
+                .serializeNulls()
+                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+                .create()
+                .toJson(cfg);
+        System.out.println(str);
+    }
 
 }

@@ -75,8 +75,8 @@ public class User {
         total.CurrMargin = mnyTrade.Margin;
         total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
                 + mnyTrade.CloseProfitByDate - total.Commission;
-        total.Available = total.Balance - total.FrozenMargin - total.CurrMargin
-                - total.FrozenCommission - total.FrozenCash;
+        total.Available = total.Balance - total.CurrMargin - total.FrozenCommission
+                - total.FrozenCash;
         return total;
     }
 

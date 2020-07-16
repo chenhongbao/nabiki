@@ -161,7 +161,8 @@ public class ConfigLoader {
         for (var cfg : s) {
             cfg.file().listFiles(file -> {
                 try {
-                    if (!file.isFile() || file.length() == 0)
+                    if (!file.isFile() || file.length() == 0
+                            || !file.getName().endsWith(".json"))
                         return false;
                     var c = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
@@ -197,7 +198,7 @@ public class ConfigLoader {
         if (config.tradingHour.size() == 0) {
             var cfg = s.iterator().next();
             cfg.setFile("cfg.hour.sample", "hour.sample.json");
-            Utils.writeText(OP.toJson(new LoginConfig()),
+            Utils.writeText(OP.toJson(new TradingHourConfig()),
                     cfg.get("cfg.hour.sample").file(), StandardCharsets.UTF_8,
                     false);
         }
@@ -211,7 +212,8 @@ public class ConfigLoader {
         for (var cfg : s) {
             cfg.file().listFiles(file -> {
                 try {
-                    if (!file.isFile() || file.length() == 0)
+                    if (!file.isFile() || file.length() == 0
+                            || !file.getName().endsWith(".json"))
                         return false;
                     var c = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
@@ -248,7 +250,6 @@ public class ConfigLoader {
         var cfg = root.get("dir.cfg");
         cfg.setDirectory("dir.cfg.login", ".login");
         cfg.setDirectory("dir.cfg.hour", ".hour");
-        cfg.setDirectory("dir.cfg.jdbc", ".jdbc");
 
         var flow = root.get("dir.flow");
         flow.setDirectory("dir.flow.ctp", ".ctp");

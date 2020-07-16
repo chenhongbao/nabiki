@@ -128,7 +128,7 @@ public class ActiveUser {
         return r;
     }
 
-    public Map<String, FrozenPositionDetail> getFrozenPositionDetail(UUID uuid) {
+    public Map<String, FrozenPositionDetail> getFrozenPositionDetail(String uuid) {
         var o = this.requests.get(uuid);
         if (o != null)
             return o.getFrozenPosition();
@@ -136,7 +136,7 @@ public class ActiveUser {
             return null;
     }
 
-    public FrozenAccount getFrozenAccount(UUID uuid) {
+    public FrozenAccount getFrozenAccount(String uuid) {
         var o = this.requests.get(uuid);
         if (o != null)
             return o.getFrozenAccount();

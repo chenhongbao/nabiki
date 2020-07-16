@@ -60,11 +60,11 @@ public class ActiveRequest {
 
     private final CThostFtdcRspInfoField execRsp = new CThostFtdcRspInfoField();
 
-    ActiveRequest(CThostFtdcInputOrderField order, User user, OrderProvider mgr,
-                  Config cfg) {
+    ActiveRequest(CThostFtdcInputOrderField order, User user, OrderProvider provider,
+                         Config cfg) {
         this.userAccount = user.getUserAccount();
         this.userPos = user.getUserPosition();
-        this.orderProvider = mgr;
+        this.orderProvider = provider;
         this.config = cfg;
         this.order = order;
         this.action = null;
@@ -185,6 +185,7 @@ public class ActiveRequest {
         } else {
             // Set valid order ref.
             order.OrderRef = this.orderProvider.getOrderRef();
+            this.frozenAccount = new HashMap<>();
             this.frozenAccount.put(order.OrderRef, frzAccount);
             // Apply frozen account to parent account.
             if (send(order, this) == 0)

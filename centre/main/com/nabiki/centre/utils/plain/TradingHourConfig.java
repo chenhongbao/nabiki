@@ -39,7 +39,7 @@ public class TradingHourConfig {
     /**
      * Single trading hour, (from, to].
      */
-    public class SingleTradingHour {
+    public static class SingleTradingHour {
         public LocalTime from, to;
     }
 

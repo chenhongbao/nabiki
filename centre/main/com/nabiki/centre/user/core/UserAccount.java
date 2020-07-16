@@ -46,7 +46,7 @@ public class UserAccount {
     private final List<FrozenAccount> frozenAccount = new LinkedList<>();
 
     public UserAccount(CThostFtdcTradingAccountField raw, User parent) {
-        this.raw = raw;
+        this.raw = Utils.deepCopy(raw);
         this.parent = parent;
     }
 

@@ -34,12 +34,15 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class FrozenAccount {
     private final AccountFrozenCash singleFrzCash;
     private final long totalFrozenCount;
     private final UserAccount parent;
 
     private ProcessStage stage = ProcessStage.ONGOING;
+    private final AtomicBoolean frozenSet = new AtomicBoolean(false);
     private long tradedShareCount = 0;
 
     public FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
@@ -53,7 +56,10 @@ public class FrozenAccount {
      * calculated as frozen.
      */
     public void setFrozen() {
-        this.parent.addFrozenAccount(this);
+        if (!this.frozenSet.get()) {
+            this.parent.addFrozenAccount(this);
+            this.frozenSet.set(true);
+        }
     }
 
     double getFrozenVolume() {
