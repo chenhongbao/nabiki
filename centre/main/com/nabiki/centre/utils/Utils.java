@@ -120,7 +120,7 @@ public class Utils {
      */
     public static String formatLog(String hint, String orderRef, String errMsg,
                                    Integer errCode) {
-        return String.format("%s[%s]%s(%d)", hint, orderRef, errMsg, errCode);
+        return String.format("%s[%s], %s(%d)", hint, orderRef, errMsg, errCode);
     }
 
     /**

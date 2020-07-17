@@ -43,7 +43,7 @@ public class OP {
     private final static Gson gson;
     static {
         gson = new GsonBuilder()
-                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+                .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
                 .serializeNulls()
                 .setPrettyPrinting()
                 .create();

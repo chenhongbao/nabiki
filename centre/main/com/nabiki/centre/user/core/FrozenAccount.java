@@ -43,7 +43,7 @@ public class FrozenAccount {
 
     private ProcessStage stage = ProcessStage.ONGOING;
     private final AtomicBoolean frozenSet = new AtomicBoolean(false);
-    private long tradedShareCount = 0;
+    private long tradedCount = 0;
 
     public FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
         this.parent = parent;
@@ -66,7 +66,7 @@ public class FrozenAccount {
         if (this.stage == ProcessStage.CANCELED)
             return 0;
         else
-            return this.totalFrozenCount - this.tradedShareCount;
+            return this.totalFrozenCount - this.tradedCount;
     }
 
     AccountFrozenCash getSingleFrozenCash() {
@@ -94,7 +94,7 @@ public class FrozenAccount {
             throw new IllegalArgumentException("negative traded share count");
         if (getFrozenVolume() < trade.Volume)
             throw new IllegalStateException("not enough frozen shares");
-        this.tradedShareCount -= trade.Volume;
+        this.tradedCount += trade.Volume;
         // Update parent.
         this.parent.applyTrade(trade, instr, comm);
     }

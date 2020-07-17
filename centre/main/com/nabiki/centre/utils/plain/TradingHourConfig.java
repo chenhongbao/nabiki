@@ -40,22 +40,22 @@ public class TradingHourConfig {
      * Single trading hour, (from, to].
      */
     public static class SingleTradingHour {
-        public LocalTime from, to;
+        public LocalTime From, To;
     }
 
     /**
      * Products that share the same trading hour.
      */
-    public List<String> productID;
+    public List<String> ProductID;
 
     /**
      * Ordered trading hours in a trading day. The first trading hour has the index
      * of 0, then index of 1 and so forth.
      */
-    public List<SingleTradingHour> tradingHour;
+    public List<SingleTradingHour> TradingHour;
 
     /**
      * Name of this configuration.
      */
-    public String name;
+    public String Name;
 }

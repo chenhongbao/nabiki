@@ -28,8 +28,7 @@
 
 package com.nabiki.centre.utils.plain;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.GsonBuilder;
+import com.nabiki.iop.x.OP;
 import org.junit.Test;
 
 import java.time.LocalTime;
@@ -41,22 +40,16 @@ public class TradingHourConfigTest {
         var cfg = new TradingHourConfig();
 
         var hour0 = new TradingHourConfig.SingleTradingHour();
-        hour0.from = LocalTime.of(0, 0);
-        hour0.to = LocalTime.of(23,59);
+        hour0.From = LocalTime.of(0, 0);
+        hour0.To = LocalTime.of(23,59);
 
-        cfg.name = "test case";
-        cfg.productID = new LinkedList<>();
-        cfg.productID.add("c");
-        cfg.tradingHour = new LinkedList<>();
-        cfg.tradingHour.add(hour0);
+        cfg.Name = "test case";
+        cfg.ProductID = new LinkedList<>();
+        cfg.ProductID.add("c");
+        cfg.TradingHour = new LinkedList<>();
+        cfg.TradingHour.add(hour0);
 
-        var str = new GsonBuilder()
-                .setPrettyPrinting()
-                .serializeNulls()
-                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-                .create()
-                .toJson(cfg);
-        System.out.println(str);
+        System.out.println(OP.toJson(cfg));
     }
 
 }

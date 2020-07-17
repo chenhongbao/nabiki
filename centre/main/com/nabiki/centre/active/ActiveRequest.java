@@ -175,12 +175,12 @@ public class ActiveRequest {
     private boolean isValidVolume(CThostFtdcInputOrderField order) {
         int minVol, maxVol;
         var instrInfo = this.config.getInstrInfo(order.InstrumentID);
-        if (instrInfo == null || instrInfo.instrument == null) {
+        if (instrInfo == null || instrInfo.Instrument == null) {
             minVol = 1;
             maxVol = Integer.MAX_VALUE;
         } else {
-            minVol = instrInfo.instrument.MinLimitOrderVolume;
-            maxVol = instrInfo.instrument.MaxLimitOrderVolume;
+            minVol = instrInfo.Instrument.MinLimitOrderVolume;
+            maxVol = instrInfo.Instrument.MaxLimitOrderVolume;
         }
         return minVol <= order.VolumeTotalOriginal
                 && order.VolumeTotalOriginal <= maxVol;
@@ -207,11 +207,11 @@ public class ActiveRequest {
             return;
         }
         // Check info ready.
-        Objects.requireNonNull(instrInfo.instrument, "instrument null");
-        Objects.requireNonNull(instrInfo.margin, "margin null");
-        Objects.requireNonNull(instrInfo.commission, "commission null");
+        Objects.requireNonNull(instrInfo.Instrument, "instrument null");
+        Objects.requireNonNull(instrInfo.Margin, "margin null");
+        Objects.requireNonNull(instrInfo.Commission, "commission null");
         var frzAccount = this.userAccount.getOpenFrozenAccount(this.order,
-                instrInfo.instrument, instrInfo.margin, instrInfo.commission);
+                instrInfo.Instrument, instrInfo.Margin, instrInfo.Commission);
         if (frzAccount == null) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.INSUFFICIENT_MONEY;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSUFFICIENT_MONEY;
@@ -228,10 +228,10 @@ public class ActiveRequest {
 
     private void insertClose(CThostFtdcInputOrderField order,
                              InstrumentInfo instrInfo) {
-        Objects.requireNonNull(instrInfo.instrument, "instrument null");
-        Objects.requireNonNull(instrInfo.commission, "commission null");
-        var pds = this.userPos.peakCloseFrozen(order, instrInfo.instrument,
-                instrInfo.commission, this.config.getTradingDay());
+        Objects.requireNonNull(instrInfo.Instrument, "instrument null");
+        Objects.requireNonNull(instrInfo.Commission, "commission null");
+        var pds = this.userPos.peakCloseFrozen(order, instrInfo.Instrument,
+                instrInfo.Commission, this.config.getTradingDay());
         if (pds == null || pds.size() == 0) {
             this.execRsp.ErrorID = TThostFtdcErrorCode.OVER_CLOSE_POSITION;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.OVER_CLOSE_POSITION;
@@ -341,9 +341,9 @@ public class ActiveRequest {
             throw new NullPointerException("return trade null");
         var instrInfo = this.config.getInstrInfo(trade.InstrumentID);
         Objects.requireNonNull(instrInfo, "instr info null");
-        Objects.requireNonNull(instrInfo.instrument, "instrument null");
-        Objects.requireNonNull(instrInfo.margin, "margin null");
-        Objects.requireNonNull(instrInfo.commission, "commission null");
+        Objects.requireNonNull(instrInfo.Instrument, "instrument null");
+        Objects.requireNonNull(instrInfo.Margin, "margin null");
+        Objects.requireNonNull(instrInfo.Commission, "commission null");
         if (trade.OffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN) {
             // Open.
             if (this.frozenAccount == null) {
@@ -359,10 +359,10 @@ public class ActiveRequest {
             Objects.requireNonNull(depth, "depth market data null");
             // Update frozen account, user account and user position.
             // The frozen account handles the update of user account.
-            getFrozenAccount().applyOpenTrade(trade, instrInfo.instrument,
-                    instrInfo.commission);
-            this.userPos.applyOpenTrade(trade, instrInfo.instrument,
-                    instrInfo.margin, depth.PreSettlementPrice);
+            getFrozenAccount().applyOpenTrade(trade, instrInfo.Instrument,
+                    instrInfo.Commission);
+            this.userPos.applyOpenTrade(trade, instrInfo.Instrument,
+                    instrInfo.Margin, depth.PreSettlementPrice);
         } else {
             // Close.
             if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
@@ -396,9 +396,9 @@ public class ActiveRequest {
                 return;
             }
             // Check the frozen position OK, here won't throw exception.
-            p.applyCloseTrade(trade, instrInfo.instrument);
-            this.userAccount.applyTrade(trade, instrInfo.instrument,
-                    instrInfo.commission);
+            p.applyCloseTrade(trade, instrInfo.Instrument);
+            this.userAccount.applyTrade(trade, instrInfo.Instrument,
+                    instrInfo.Commission);
         }
     }
 }

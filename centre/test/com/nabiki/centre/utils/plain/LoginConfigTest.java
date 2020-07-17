@@ -28,25 +28,27 @@
 
 package com.nabiki.centre.utils.plain;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentMarginRateField;
+import com.nabiki.iop.x.OP;
+import org.junit.Test;
 
-public class InstrumentInfo {
-    /**
-     * Instrument.
-     */
-    public CThostFtdcInstrumentField Instrument;
+import java.util.LinkedList;
 
-    /**
-     * Commission.
-     */
-    public CThostFtdcInstrumentCommissionRateField Commission;
+public class LoginConfigTest {
+    @Test
+    public void basic() {
+        var config = new LoginConfig();
+        config.BrokerID = "9999";
+        config.UserID = "0001";
+        config.AppID = "test_appid";
+        config.AuthCode = "test_authcode";
+        config.Name = "test login config";
+        config.UserProductInfo = "test product info";
+        config.IsMulticast = false;
+        config.IsUsingUDP = false;
+        config.FrontAddresses = new LinkedList<>();
+        config.FrontAddresses.add("tcp://test.address.com:8080/");
 
-    /**
-     * Margin.
-     */
-    public CThostFtdcInstrumentMarginRateField Margin;
+        System.out.println(OP.toJson(config));
+    }
 
-    public InstrumentInfo() {}
 }

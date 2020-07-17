@@ -59,7 +59,7 @@ public class Config {
     /**
      * Get login configurations.
      *
-     * @return {@link Map} of {@link LoginConfig#name} and {@link LoginConfig}
+     * @return {@link Map} of {@link LoginConfig#Name} and {@link LoginConfig}
      */
     public Map<String, LoginConfig> getLoginConfigs() {
         synchronized (this.login) {

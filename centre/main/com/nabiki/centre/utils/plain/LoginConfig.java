@@ -45,7 +45,7 @@ public class LoginConfig {
      * <li>ssl://192.168.0.1:41205</li>
      * </ul>
      */
-    public java.util.List<String> frontAddresses;
+    public java.util.List<String> FrontAddresses;
 
     /**
      * Set the communication protocol of market data front.
@@ -54,7 +54,7 @@ public class LoginConfig {
      * <li>{@code false}: TCP</li>
      * </ul>
      */
-    public boolean isUsingUDP;
+    public boolean IsUsingUDP;
 
     /**
      * Set if the client receives multicast market data.
@@ -63,51 +63,51 @@ public class LoginConfig {
      * <li>{@code false}: normal internet connection</li>
      * </ul>
      */
-    public boolean isMulticast;
+    public boolean IsMulticast;
 
     /**
      * Broker ID of the brokerage service provider.
      */
-    public String brokerID;
+    public String BrokerID;
 
     /**
      * User ID of the login user.
      */
-    public String userID;
+    public String UserID;
 
     /**
      * Password.
      */
-    public String password;
+    public String Password;
 
     /**
      * Application ID of the software. User needs to contact his or her broker for
      * this ID.
      */
-    public String appID;
+    public String AppID;
 
     /**
-     * Authentication code comes with the application ID {@link #appID}.
+     * Authentication code comes with the application ID {@link #AppID}.
      */
-    public String authCode;
+    public String AuthCode;
 
     /**
      * Description of the software. It is usually combination of few words. Overflow
      * letters are truncated.
      */
-    public String userProductInfo;
+    public String UserProductInfo;
 
     /**
      * Valid directory to keep flow information during data transmission between
      * client and server.
      */
-    public String flowDirectory;
+    public String FlowDirectory;
 
     /**
      * Name of this configuration. The field is used to name the different login
      * configurations.
      */
-    public String name;
+    public String Name;
 
     public LoginConfig() {}
 }

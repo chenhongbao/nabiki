@@ -101,7 +101,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     }
     public void initialize() {
         this.mdApi.RegisterSpi(this);
-        for (var addr : this.loginCfg.frontAddresses)
+        for (var addr : this.loginCfg.FrontAddresses)
             this.mdApi.RegisterFront(addr);
         this.mdApi.Init();
     }
@@ -140,9 +140,9 @@ public class TickProvider extends CThostFtdcMdSpi {
 
     private void doLogin() {
         var req = new CThostFtdcReqUserLoginField();
-        req.BrokerID = this.loginCfg.brokerID;
-        req.UserID = this.loginCfg.userID;
-        req.Password = this.loginCfg.password;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.UserID = this.loginCfg.UserID;
+        req.Password = this.loginCfg.Password;
         var r = this.mdApi.ReqUserLogin(req, Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
@@ -152,8 +152,8 @@ public class TickProvider extends CThostFtdcMdSpi {
 
     private void doLogout() {
         var req = new CThostFtdcUserLogoutField();
-        req.BrokerID = this.loginCfg.brokerID;
-        req.UserID = this.loginCfg.userID;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.UserID = this.loginCfg.UserID;
         var r = this.mdApi.ReqUserLogout(req, Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().warning(

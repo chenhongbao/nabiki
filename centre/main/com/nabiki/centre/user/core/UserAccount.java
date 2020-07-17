@@ -73,8 +73,8 @@ public class UserAccount {
     public void applyTrade(CThostFtdcTradeField trade,
                            CThostFtdcInstrumentField instr,
                            CThostFtdcInstrumentCommissionRateField comm) {
-        var share = toTradedCash(trade, instr, comm);
-        this.raw.Commission += share.Commission * trade.Volume;
+        var cash = toTradedCash(trade, instr, comm);
+        this.raw.Commission += cash.Commission;
     }
 
     /**

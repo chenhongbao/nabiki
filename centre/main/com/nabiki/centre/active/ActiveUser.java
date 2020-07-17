@@ -68,13 +68,13 @@ public class ActiveUser {
         for (var instr : this.user.getUserPosition().getPositionInstrID()) {
             var instrInfo = this.config.getInstrInfo(instr);
             Objects.requireNonNull(instrInfo, "instr info null");
-            Objects.requireNonNull(instrInfo.instrument, "instrument null");
-            Objects.requireNonNull(instrInfo.margin, "margin null");
-            Objects.requireNonNull(instrInfo.commission, "commission null");
+            Objects.requireNonNull(instrInfo.Instrument, "instrument null");
+            Objects.requireNonNull(instrInfo.Margin, "margin null");
+            Objects.requireNonNull(instrInfo.Commission, "commission null");
             // Set info.
-            prep.prepare(instrInfo.instrument);
-            prep.prepare(instrInfo.margin);
-            prep.prepare(instrInfo.commission);
+            prep.prepare(instrInfo.Instrument);
+            prep.prepare(instrInfo.Margin);
+            prep.prepare(instrInfo.Commission);
         }
         this.user.settle(prep);
     }

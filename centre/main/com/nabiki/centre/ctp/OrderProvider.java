@@ -93,7 +93,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void configTrader() {
-        for (var fa : this.loginCfg.frontAddresses)
+        for (var fa : this.loginCfg.FrontAddresses)
             this.traderApi.RegisterFront(fa);
         this.traderApi.SubscribePrivateTopic(ThostTeResumeType.THOST_TERT_RESUME);
         this.traderApi.SubscribePublicTopic(ThostTeResumeType.THOST_TERT_RESUME);
@@ -268,9 +268,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected void doLogin() {
         var req = new CThostFtdcReqUserLoginField();
-        req.BrokerID = this.loginCfg.brokerID;
-        req.UserID = this.loginCfg.userID;
-        req.Password = this.loginCfg.password;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.UserID = this.loginCfg.UserID;
+        req.Password = this.loginCfg.Password;
         var r = this.traderApi.ReqUserLogin(req, Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
@@ -280,8 +280,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected void doLogout() {
         var req = new CThostFtdcUserLogoutField();
-        req.BrokerID = this.loginCfg.brokerID;
-        req.UserID = this.loginCfg.userID;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.UserID = this.loginCfg.UserID;
         var r = this.traderApi.ReqUserLogout(req, Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().warning(
@@ -291,11 +291,11 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected void doAuthentication() {
         var req = new CThostFtdcReqAuthenticateField();
-        req.AppID = this.loginCfg.appID;
-        req.AuthCode = this.loginCfg.authCode;
-        req.BrokerID = this.loginCfg.brokerID;
-        req.UserID = this.loginCfg.userID;
-        req.UserProductInfo = this.loginCfg.userProductInfo;
+        req.AppID = this.loginCfg.AppID;
+        req.AuthCode = this.loginCfg.AuthCode;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.UserID = this.loginCfg.UserID;
+        req.UserProductInfo = this.loginCfg.UserProductInfo;
         var r = this.traderApi.ReqAuthenticate(req, Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
@@ -305,9 +305,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected void doSettlement() {
         var req = new CThostFtdcSettlementInfoConfirmField();
-        req.BrokerID = this.loginCfg.brokerID;
-        req.AccountID = this.loginCfg.userID;
-        req.InvestorID = this.loginCfg.userID;
+        req.BrokerID = this.loginCfg.BrokerID;
+        req.AccountID = this.loginCfg.UserID;
+        req.InvestorID = this.loginCfg.UserID;
         req.CurrencyID = "CNY";
         var r = this.traderApi.ReqSettlementInfoConfirm(req, Utils.getIncrementID());
         if (r != 0)
@@ -661,55 +661,21 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected class RequestDaemon implements Runnable {
         protected final int MAX_REQ_PER_SEC = 5;
+        protected int sendCnt = 0;
+        protected long threshold = TimeUnit.SECONDS.toMillis(1);
+        protected long timeStamp = System.currentTimeMillis();
 
         @Override
         public void run() {
-            int sendCnt = 0;
-            long threshold = TimeUnit.SECONDS.toMillis(1);
-            long timeStamp = System.currentTimeMillis();
+
             while (!Thread.interrupted()) {
                 try {
-                    PendingRequest pend = null;
-                    while (pend == null)
-                        pend = pendingReqs.poll(1, TimeUnit.DAYS);
-                    // Await time out, or notified by new request.
-                    // Instrument not trading.
-                    if (!isTrading(getInstrID(pend)))
-                        continue;
-                    int r = 0;
-                    // Send order or action.
-                    // Fill and send order at first place so its fields are filled.
-                    if (pend.action != null) {
-                        r = fillAndSendAction(pend.action);
-                        if (r == 0)
-                            msgWriter.writeReq(pend.action);
-                    } else if (pend.order != null) {
-                        r = fillAndSendOrder(pend.order);
-                        if (r == 0) {
-                            msgWriter.writeReq(pend.order);
-                            mapper.register(pend.order, pend.active);
-                        }
-                    }
-                    // Check send ret code.
-                    // If fail sending the request, add it back to queue and sleep
-                    // for some time.
-                    if (r != 0) {
-                        warn(r, pend);
-                        pendingReqs.offer(pend);
+                    var pend = trySendRequest();
+                    // Pending request is not sent, enqueue the request for next
+                    // loop.
+                    if (pend != null) {
                         Thread.sleep(threshold);
-                    }
-                    // Flow control.
-                    long curTimeStamp = System.currentTimeMillis();
-                    long diffTimeStamp = threshold - (curTimeStamp - timeStamp);
-                    if (diffTimeStamp > 0) {
-                        ++sendCnt;
-                        if (sendCnt > MAX_REQ_PER_SEC) {
-                            Thread.sleep(diffTimeStamp);
-                            timeStamp = System.currentTimeMillis();
-                        }
-                    } else {
-                        sendCnt = 0;
-                        timeStamp = System.currentTimeMillis();
+                        pendingReqs.offer(pend);
                     }
                 } catch (InterruptedException e) {
                     if (workingState == WorkingState.STOPPING
@@ -722,6 +688,54 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                                         null));
                 }
             }
+        }
+
+        private PendingRequest trySendRequest() throws InterruptedException {
+            PendingRequest pend = null;
+            while (pend == null)
+                pend = pendingReqs.poll(1, TimeUnit.DAYS);
+            // Await time out, or notified by new request.
+            // Instrument not trading.
+            if (!isTrading(getInstrID(pend))) {
+                return pend;
+            }
+            int r = 0;
+            // Send order or action.
+            // Fill and send order at first place so its fields are filled.
+            if (pend.action != null) {
+                r = fillAndSendAction(pend.action);
+                if (r == 0)
+                    msgWriter.writeReq(pend.action);
+            } else if (pend.order != null) {
+                r = fillAndSendOrder(pend.order);
+                if (r == 0) {
+                    msgWriter.writeReq(pend.order);
+                    mapper.register(pend.order, pend.active);
+                }
+            }
+            // Check send ret code.
+            // If fail sending the request, add it back to queue and sleep
+            // for some time.
+            if (r != 0) {
+                warn(r, pend);
+                return pend;
+            }
+            // Flow control.
+            long curTimeStamp = System.currentTimeMillis();
+            long diffTimeStamp = threshold - (curTimeStamp - timeStamp);
+            if (diffTimeStamp > 0) {
+                ++sendCnt;
+                if (sendCnt > MAX_REQ_PER_SEC) {
+                    Thread.sleep(diffTimeStamp);
+                    timeStamp = System.currentTimeMillis();
+                }
+            } else {
+                sendCnt = 0;
+                timeStamp = System.currentTimeMillis();
+            }
+            // Return null, indicates the request has been sent.
+            // Otherwise, enqueue the request and wait.
+            return null;
         }
 
         protected int fillAndSendOrder(CThostFtdcInputOrderField detail) {
@@ -757,8 +771,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 action.OrderRef = null;
                 action.FrontID = 0;
                 action.SessionID = 0;
-                action.ExchangeID = (instrInfo.instrument != null)
-                        ? instrInfo.instrument.ExchangeID : null;
+                action.ExchangeID = (instrInfo.Instrument != null)
+                        ? instrInfo.Instrument.ExchangeID : null;
             } else {
                 action.BrokerID = rspLogin.BrokerID;
                 action.InvestorID = rspLogin.UserID;
@@ -771,8 +785,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 action.ActionFlag = TThostFtdcActionFlagType.DELETE;
                 // Adjust other info.
                 action.OrderSysID = null;
-                action.ExchangeID = (instrInfo.instrument != null)
-                        ? instrInfo.instrument.ExchangeID : null;
+                action.ExchangeID = (instrInfo.Instrument != null)
+                        ? instrInfo.Instrument.ExchangeID : null;
             }
             return traderApi.ReqOrderAction(action, Utils.getIncrementID());
         }
@@ -823,8 +837,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             String ins = randomGet();
             // Query.
             var req = new CThostFtdcQryInstrumentMarginRateField();
-            req.BrokerID = loginCfg.brokerID;
-            req.InvestorID = loginCfg.userID;
+            req.BrokerID = loginCfg.BrokerID;
+            req.InvestorID = loginCfg.UserID;
             req.HedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
             req.InstrumentID = ins;
             int r = traderApi.ReqQryInstrumentMarginRate(req,
@@ -843,8 +857,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             }
 
             var req0 = new CThostFtdcQryInstrumentCommissionRateField();
-            req0.BrokerID = loginCfg.brokerID;
-            req0.InvestorID = loginCfg.userID;
+            req0.BrokerID = loginCfg.BrokerID;
+            req0.InvestorID = loginCfg.UserID;
             req0.InstrumentID = ins;
             r = traderApi.ReqQryInstrumentCommissionRate(req0,
                     Utils.getIncrementID());

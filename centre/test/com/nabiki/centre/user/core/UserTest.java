@@ -34,10 +34,7 @@ import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombHedgeFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
+import com.nabiki.ctp4j.jni.flag.*;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
 import org.junit.Test;
@@ -50,8 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class UserTest {
 
@@ -60,6 +56,8 @@ public class UserTest {
     private OrderProvider provider;
     private final String flowDir = "C:\\Users\\chenh\\Desktop\\.root";
     private CThostFtdcTradingAccountField account;
+    private LocalDate tradingDay;
+    private CThostFtdcRspUserLoginField rspLogin;
 
     private void prepare() {
         ConfigLoader.rootPath = flowDir;
@@ -108,12 +106,17 @@ public class UserTest {
         ConfigLoader.setInstrConfig(margin);
 
         //
-        // Set depth market data.
+        // Set trading day.
         //
-        var tradingDay = LocalDate.now();
+        tradingDay = LocalDate.now();
         if (LocalTime.now().getHour() >= 21)
             tradingDay = tradingDay.plusDays(1);
 
+        ConfigLoader.setTradingDay(Utils.getDay(tradingDay, null));
+
+        //
+        // Set depth market data.
+        //
         var depth = new CThostFtdcDepthMarketDataField();
         depth.InstrumentID = "c2101";
         depth.ExchangeInstID = "c2101";
@@ -225,6 +228,24 @@ public class UserTest {
         //
         provider = new OrderProvider(
                 CThostFtdcTraderApi.CreateFtdcTraderApi(flowDir), config);
+        var rspInfo = new CThostFtdcRspInfoField();
+        rspInfo.ErrorID = 0;
+        provider.OnRspSettlementInfoConfirm(
+                new CThostFtdcSettlementInfoConfirmField(),
+                rspInfo,
+                0,
+                true);
+
+        // Fake login.
+        rspLogin = new CThostFtdcRspUserLoginField();
+        rspLogin.UserID = "0001";
+        rspLogin.BrokerID = "9999";
+        rspLogin.MaxOrderRef = "0";
+        rspLogin.TradingDay = Utils.getDay(tradingDay, null);
+        rspLogin.LoginTime = Utils.getTime(LocalTime.now(), null);
+        rspLogin.SessionID = 2;
+        rspLogin.FrontID = 1;
+        provider.OnRspUserLogin(rspLogin, rspInfo, 1, true);
     }
 
     @Test
@@ -271,10 +292,10 @@ public class UserTest {
         // Test frozen cash.
         var cash = frz.getSingleFrozenCash();
         var frzCash = order.LimitPrice
-                * config.getInstrInfo("c2101").instrument.VolumeMultiple
-                * config.getInstrInfo("c2101").margin.ShortMarginRatioByMoney;
+                * config.getInstrInfo("c2101").Instrument.VolumeMultiple
+                * config.getInstrInfo("c2101").Margin.ShortMarginRatioByMoney;
         var frzCommission
-                = config.getInstrInfo("c2101").commission.OpenRatioByVolume;
+                = config.getInstrInfo("c2101").Commission.OpenRatioByVolume;
         assertEquals(cash.FrozenCash, frzCash, 0.0);
         assertEquals(cash.FrozenCommission, frzCommission, 0.0);
 
@@ -335,5 +356,187 @@ public class UserTest {
         // Check order exec state.
         rspInfo = active.getExecRsp(uuid);
         assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.INSUFFICIENT_MONEY);
+    }
+
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void open_rtn() {
+        prepare();
+
+        var order = new CThostFtdcInputOrderField();
+        order.InstrumentID = "c2101";
+        order.BrokerID = "9999";
+        order.ExchangeID = "DCE";
+        order.LimitPrice = 2120;
+        order.VolumeTotalOriginal = 10;
+        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
+        order.CombHedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+
+        var active = new ActiveUser(user, provider, config);
+        var uuid = active.insertOrder(order);
+
+        // Sleep and wait for the thread to take request.
+        sleep(1000);
+
+        var orderRefs = provider.getMapper().getDetailRef(uuid);
+        assertEquals(orderRefs.size(), 1);
+
+        // Get order ref.
+        var orderRef = orderRefs.iterator().next();
+
+        // Construct rtn order.
+        var rtnOrder = new CThostFtdcOrderField();
+        rtnOrder.InstrumentID = "c2101";
+        rtnOrder.ExchangeInstID = "c2101";
+        rtnOrder.ExchangeID = "DCE";
+        rtnOrder.OrderRef = orderRef;
+        rtnOrder.OrderLocalID = "test_order_local_id";
+        rtnOrder.OrderSysID = "test_order_sys_id";
+        rtnOrder.LimitPrice = order.LimitPrice;
+        rtnOrder.VolumeTotalOriginal = order.VolumeTotalOriginal;
+        rtnOrder.VolumeTraded = 0;
+        rtnOrder.VolumeTotal = rtnOrder.VolumeTotalOriginal;
+        rtnOrder.Direction = order.Direction;
+        rtnOrder.CombOffsetFlag = order.CombOffsetFlag;
+        rtnOrder.CombHedgeFlag = order.CombHedgeFlag;
+        rtnOrder.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
+        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.NO_TRADE_QUEUEING;
+        rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
+        rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
+        rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
+        rtnOrder.TradingDay = config.getTradingDay();
+
+        // Update rtn order.
+        provider.OnRtnOrder(rtnOrder);
+
+        // Construct a traded return order.
+        rtnOrder.VolumeTraded = 3;
+        rtnOrder.VolumeTotal = rtnOrder.VolumeTotalOriginal - rtnOrder.VolumeTraded;
+        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.PART_TRADED_QUEUEING;
+        rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
+
+        // Update order again.
+        provider.OnRtnOrder(rtnOrder);
+
+        // Check rtn order.
+        assertEquals(active.getRtnOrder(uuid).size(), 1);
+
+        var rtnOrder0 = active.getRtnOrder(uuid).iterator().next();
+        assertNotNull(rtnOrder0);
+        assertEquals(rtnOrder0.UpdateTime, rtnOrder.UpdateTime);
+
+        // Construct rtn trade.
+        var rtnTrade = new CThostFtdcTradeField();
+        rtnTrade.InstrumentID = "c2101";
+        rtnTrade.ExchangeInstID = "c2101";
+        rtnTrade.ExchangeID = "DCE";
+        rtnTrade.OrderRef = orderRef;
+        rtnTrade.OrderLocalID = "test_order_local_id";
+        rtnTrade.OrderSysID = "test_order_sys_id";
+        rtnTrade.Price = order.LimitPrice;
+        rtnTrade.Volume = 3;
+        rtnTrade.Direction = order.Direction;
+        rtnTrade.OffsetFlag = order.CombOffsetFlag;
+        rtnTrade.HedgeFlag = order.CombHedgeFlag;
+        rtnTrade.TradingDay = Utils.getDay(tradingDay, null);
+        rtnTrade.TradeTime = Utils.getTime(LocalTime.now(), null);
+        rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
+
+        // Update rtn trade.
+        provider.OnRtnTrade(rtnTrade);
+
+        // Check rtn trade.
+        // Test frozen volume.
+        var frz = active.getFrozenAccount(uuid);
+        assertEquals(frz.getFrozenVolume(), rtnOrder.VolumeTotal, 0.0D);
+
+        var userAccount = active.getTradingAccount();
+
+        // Test frozen cash.
+        var frzCash = order.LimitPrice
+                * config.getInstrInfo("c2101").Instrument.VolumeMultiple
+                * config.getInstrInfo("c2101").Margin.ShortMarginRatioByMoney;
+        var frzCommission
+                = config.getInstrInfo("c2101").Commission.OpenRatioByVolume;
+
+        // Calculate used margin for new open position.
+        var settlePrice = config.getDepthMarketData("c2101").PreSettlementPrice;
+        var volumeMultiple = config.getInstrInfo("c2101").Instrument.VolumeMultiple;
+        var marginRate = config.getInstrInfo("c2101").Margin.ShortMarginRatioByMoney;
+        var singleMargin = settlePrice * volumeMultiple * marginRate;
+
+        // Check fields.
+        assertEquals(userAccount.FrozenCash,
+                frzCash * rtnOrder.VolumeTotal, 0.0);
+        assertEquals(userAccount.FrozenCommission,
+                frzCommission * rtnOrder.VolumeTotal, 0.0);
+        assertEquals(userAccount.FrozenMargin, 0.0, 0.0);
+        assertEquals(userAccount.CurrMargin,
+                singleMargin * rtnOrder.VolumeTraded + userAccount.PreMargin,
+                0.0);
+        assertEquals(
+                userAccount.Available,
+                userAccount.Balance - userAccount.CurrMargin
+                        - (frzCash + frzCommission) * rtnOrder.VolumeTotal,
+                0.0);
+
+        // Complete trades.
+        // Construct a traded return order.
+        rtnOrder.VolumeTraded = rtnOrder.VolumeTotalOriginal;
+        rtnOrder.VolumeTotal = 0;
+        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.ALL_TRADED;
+        rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
+
+        // Update order again.
+        provider.OnRtnOrder(rtnOrder);
+
+        // Check rtn order.
+        assertEquals(active.getRtnOrder(uuid).size(), 1);
+
+        rtnOrder0 = active.getRtnOrder(uuid).iterator().next();
+        assertNotNull(rtnOrder0);
+        assertEquals(rtnOrder0.VolumeTraded, rtnOrder.VolumeTotalOriginal);
+
+        // Construct trade.
+        rtnTrade.Volume = rtnOrder.VolumeTotalOriginal - rtnTrade.Volume;
+        rtnTrade.TradeTime = Utils.getTime(LocalTime.now(), null);
+        rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
+
+        // Update trade.
+        provider.OnRtnTrade(rtnTrade);
+
+        // Test frozen volume.
+        frz = active.getFrozenAccount(uuid);
+        assertEquals(frz.getFrozenVolume(), 0, 0.0D);
+
+        userAccount = active.getTradingAccount();
+
+        // Test frozen cash.
+        assertEquals(userAccount.FrozenCash, 0, 0.0);
+        assertEquals(userAccount.FrozenCommission, 0, 0.0);
+        assertEquals(userAccount.FrozenMargin, 0.0, 0.0);
+        assertEquals(userAccount.CurrMargin,
+                singleMargin * order.VolumeTotalOriginal + userAccount.PreMargin,
+                0.0);
+        assertEquals(userAccount.Commission, frzCommission * order.VolumeTotalOriginal, 0.0);
+        assertEquals(
+                userAccount.Available,
+                userAccount.Balance - userAccount.CurrMargin,
+                0.0);
+
+        // Suppose exception.
+        try {
+            provider.OnRtnTrade(rtnTrade);
+            fail("should throw exception");
+        } catch (Throwable ignored) {
+        }
     }
 }

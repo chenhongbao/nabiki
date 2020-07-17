@@ -90,7 +90,7 @@ public class ConfigLoader {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(instr.InstrumentID))
                 config.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(instr.InstrumentID).instrument = instr;
+            config.instrInfo.get(instr.InstrumentID).Instrument = instr;
         }
     }
 
@@ -99,7 +99,7 @@ public class ConfigLoader {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(margin.InstrumentID))
                 config.instrInfo.put(margin.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(margin.InstrumentID).margin = margin;
+            config.instrInfo.get(margin.InstrumentID).Margin = margin;
         }
     }
 
@@ -108,7 +108,7 @@ public class ConfigLoader {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(commission.InstrumentID))
                 config.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(commission.InstrumentID).commission = commission;
+            config.instrInfo.get(commission.InstrumentID).Commission = commission;
         }
     }
 
@@ -169,22 +169,22 @@ public class ConfigLoader {
                             TradingHourConfig.class);
                     // Not null.
                     Objects.requireNonNull(c);
-                    Objects.requireNonNull(c.tradingHour);
-                    Objects.requireNonNull(c.productID);
+                    Objects.requireNonNull(c.TradingHour);
+                    Objects.requireNonNull(c.ProductID);
                     // Empty config.
-                    if (c.tradingHour.size() == 0 || c.productID.size() == 0)
+                    if (c.TradingHour.size() == 0 || c.ProductID.size() == 0)
                         return false;
                     // Prepare parameters to construct keeper.
                     var index = 0;
                     var hours = new TradingHourKeeper
-                            .TradingHour[c.tradingHour.size()];
-                    for (var hour : c.tradingHour)
+                            .TradingHour[c.TradingHour.size()];
+                    for (var hour : c.TradingHour)
                         hours[index++] = new TradingHourKeeper
-                                .TradingHour(hour.from, hour.to);
+                                .TradingHour(hour.From, hour.To);
                     var h = new TradingHourKeeper(hours);
                     // Save mapping into config.
                     // All product IDs are lower case.
-                    for (var p : c.productID)
+                    for (var p : c.ProductID)
                         config.tradingHour.put(p.toLowerCase(), h);
                 } catch (IOException | NullPointerException e) {
                     config.getLogger().warning(
@@ -218,7 +218,7 @@ public class ConfigLoader {
                     var c = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
                             LoginConfig.class);
-                    config.login.put(c.name, c);
+                    config.login.put(c.Name, c);
                 } catch (IOException e) {
                     config.getLogger().warning(
                             Utils.formatLog("failed login config",
