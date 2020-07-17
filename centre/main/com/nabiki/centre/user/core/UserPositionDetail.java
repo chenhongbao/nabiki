@@ -50,17 +50,30 @@ public class UserPositionDetail {
      * Close frozen position. The method updates the fields in original position
      * mainly the closeXXXX info and margin.
      *
-     * @param share close info for 1 volume
+     * @param single close info for 1 volume
      * @param tradeCnt closed volume
      */
-    public void closePosition(PositionTradedCash share,
+    public void closePosition(PositionTradedCash single,
                               long tradeCnt) {
-        this.raw.CloseAmount += share.CloseAmount * tradeCnt;
-        this.raw.CloseProfitByDate += share.CloseProfitByDate * tradeCnt;
-        this.raw.CloseProfitByTrade += share.CloseProfitByTrade * tradeCnt;
-        this.raw.CloseVolume += share.CloseVolume * tradeCnt;
-        this.raw.ExchMargin -= share.ExchMargin * tradeCnt;
-        this.raw.Margin -= share.Margin * tradeCnt;
+        this.raw.CloseAmount += single.CloseAmount * tradeCnt;
+        this.raw.CloseProfitByDate += single.CloseProfitByDate * tradeCnt;
+        this.raw.CloseProfitByTrade += single.CloseProfitByTrade * tradeCnt;
+        this.raw.CloseVolume += single.CloseVolume * tradeCnt;
+        // Reduce margin.
+        this.raw.ExchMargin -= getSingleExchMargin() * tradeCnt;
+        this.raw.Margin -= getSingleMargin() * tradeCnt;
+    }
+
+    private double getSingleMargin() {
+        if (this.frozenPosition.size() == 0)
+            throw new IllegalStateException("no frozen position to close");
+        return this.frozenPosition.iterator().next().getSingleFrozenPosition().Margin;
+    }
+
+    private double getSingleExchMargin() {
+        if (this.frozenPosition.size() == 0)
+            throw new IllegalStateException("no frozen position to close");
+        return this.frozenPosition.iterator().next().getSingleFrozenPosition().ExchMargin;
     }
 
     /**
@@ -74,7 +87,7 @@ public class UserPositionDetail {
     public int getFrozenVolume() {
         int frozen = 0;
         for (var pd : frozenPosition)
-            frozen += pd.getFrozenCount();
+            frozen += pd.getFrozenVolume();
         return frozen;
     }
 
@@ -90,14 +103,14 @@ public class UserPositionDetail {
     double getFrozenMargin() {
         double frz = 0.0D;
         for (var c : this.frozenPosition)
-            frz += c.getFrozenCount() * c.getSingleFrozenPosition().Margin;
+            frz += c.getFrozenVolume() * c.getSingleFrozenPosition().Margin;
         return frz;
     }
 
     double getFrozenCommission() {
         double frz = 0.0D;
         for (var c : this.frozenPosition)
-            frz += c.getFrozenCount() * c.getSingleFrozenCash().FrozenCommission;
+            frz += c.getFrozenVolume() * c.getSingleFrozenCash().FrozenCommission;
         return frz;
     }
 

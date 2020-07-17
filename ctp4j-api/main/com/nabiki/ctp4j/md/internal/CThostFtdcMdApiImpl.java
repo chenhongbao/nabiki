@@ -42,60 +42,56 @@ public class CThostFtdcMdApiImpl extends CThostFtdcMdApi {
 
     @Override
     public String GetApiVersion() {
-        throw new UnsupportedOperationException("not implemented");
+        return null;
     }
 
     @Override
     public String GetTradingDay() {
-        throw new UnsupportedOperationException("not implemented");
+        return null;
     }
 
     @Override
     public void Init() {
-        throw new UnsupportedOperationException("not implemented");
+
     }
 
     @Override
     public void Join() {
-        throw new UnsupportedOperationException("not implemented");
+
     }
 
     @Override
     public void RegisterFront(String frontAddress) {
-        throw new UnsupportedOperationException("not implemented");
+
     }
 
     @Override
     public void RegisterSpi(CThostFtdcMdSpi spi) {
-        throw new UnsupportedOperationException("not implemented");
+
     }
 
     @Override
     public void Release() {
-        throw new UnsupportedOperationException("not implemented");
+
     }
 
     @Override
-    public int ReqUserLogin(
-            CThostFtdcReqUserLoginField reqUserLoginField,
-            int requestID) {
-        throw new UnsupportedOperationException("not implemented");
+    public int ReqUserLogin(CThostFtdcReqUserLoginField reqUserLoginField, int requestID) {
+        return 0;
     }
 
     @Override
-    public int ReqUserLogout(
-            CThostFtdcUserLogoutField userLogout,
-            int requestID) {
-        throw new UnsupportedOperationException("not implemented");
+    public int ReqUserLogout(CThostFtdcUserLogoutField userLogout, int requestID) {
+        return 0;
     }
 
     @Override
     public int SubscribeMarketData(String[] instrumentID, int count) {
-        throw new UnsupportedOperationException("not implemented");
+        return 0;
     }
 
     @Override
     public int UnSubscribeMarketData(String[] instrumentID, int count) {
-        throw new UnsupportedOperationException("not implemented");
+        return 0;
     }
 }

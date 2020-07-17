@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.user.core.plain;
 
-public class PositionTradedCash {
+public class PositionTradedCash implements java.io.Serializable {
     public String InstrumentID;
     public double ExchMargin;
     public double Margin;

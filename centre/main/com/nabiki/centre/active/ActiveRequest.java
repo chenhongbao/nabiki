@@ -47,8 +47,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class ActiveRequest {
-    private Map<String, FrozenAccount> frozenAccount;
-    private Map<String, FrozenPositionDetail> frozenPosition;
+    private final Map<String, FrozenAccount> frozenAccount = new HashMap<>();
+    private final Map<String, FrozenPositionDetail> frozenPosition  = new HashMap<>();
 
     private final String uuid = UUID.randomUUID().toString();
     private final UserAccount userAccount;
@@ -218,7 +218,6 @@ public class ActiveRequest {
         } else {
             // Set valid order ref.
             order.OrderRef = this.orderProvider.getOrderRef();
-            this.frozenAccount = new HashMap<>();
             this.frozenAccount.put(order.OrderRef, frzAccount);
             // Apply frozen account to parent account.
             if (send(order, this) == 0)
@@ -237,7 +236,6 @@ public class ActiveRequest {
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.OVER_CLOSE_POSITION;
             return;
         }
-        this.frozenPosition = new HashMap<>();
         // Send close request.
         for (var p : pds) {
             var cls = toCloseOrder(p);
@@ -265,7 +263,7 @@ public class ActiveRequest {
     private CThostFtdcInputOrderField toCloseOrder(FrozenPositionDetail pd) {
         var cls = Utils.deepCopy(getOriginOrder());
         Objects.requireNonNull(cls, "failed deep copy");
-        cls.VolumeTotalOriginal = (int) pd.getFrozenCount();
+        cls.VolumeTotalOriginal = (int) pd.getFrozenVolume();
         if (pd.getSingleFrozenPosition().TradingDay
                 .compareTo(this.config.getTradingDay()) != 0) {
             // Yesterday.
@@ -386,7 +384,7 @@ public class ActiveRequest {
                         "frozen position not found for order ref");
                 return;
             }
-            if (p.getFrozenCount() < trade.Volume) {
+            if (p.getFrozenVolume() < trade.Volume) {
                 this.config.getLogger().severe(
                         Utils.formatLog("not enough frozen position",
                                 trade.OrderRef, null, null));

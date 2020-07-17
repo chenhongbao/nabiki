@@ -28,7 +28,7 @@
 
 package com.nabiki.ctp4j.jni.struct;
 
-public class CThostFtdcInvestorPositionField {
+public class CThostFtdcInvestorPositionField implements java.io.Serializable {
     public String InstrumentID;
     public String BrokerID;
     public String InvestorID;

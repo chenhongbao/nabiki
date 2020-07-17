@@ -28,7 +28,7 @@
 
 package com.nabiki.ctp4j.jni.struct;
 
-public class CThostFtdcUnsubMarketDataField {
+public class CThostFtdcUnsubMarketDataField implements java.io.Serializable {
     public String[] InstrumentID;
 
     public CThostFtdcUnsubMarketDataField() {}

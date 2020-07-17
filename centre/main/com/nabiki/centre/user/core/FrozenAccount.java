@@ -92,6 +92,8 @@ public class FrozenAccount {
                                CThostFtdcInstrumentCommissionRateField comm) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
+        if (this.stage == ProcessStage.CANCELED)
+            throw new IllegalStateException("trade on canceled order");
         if (getFrozenVolume() < trade.Volume)
             throw new IllegalStateException("not enough frozen shares");
         this.tradedCount += trade.Volume;

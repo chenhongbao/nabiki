@@ -28,6 +28,6 @@
 
 package com.nabiki.centre.user.core.plain;
 
-public enum UserState {
+public enum UserState implements java.io.Serializable {
     SETTLED, RENEW, PANIC
 }

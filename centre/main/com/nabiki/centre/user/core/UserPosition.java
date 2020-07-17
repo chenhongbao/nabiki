@@ -131,33 +131,38 @@ public class UserPosition {
         int volume = order.VolumeTotalOriginal;
         var r = new LinkedList<FrozenPositionDetail>();
         for (var a : avail) {
-            long vol = Math.min(a.getAvailableVolume(), volume);
             // Calculate shares.
             // No need to calculate close profits and amount. They will be updated
             // on return trade.
-            var totalPosition = a.copyRawPosition();
-            totalPosition.ExchMargin /= 1.0D * totalPosition.Volume;
-            totalPosition.Margin /= 1.0D * totalPosition.Volume;
-            totalPosition.CloseVolume = 1;
+            var rawPos = a.copyRawPosition();
+            if (rawPos.Direction == order.Direction)
+                continue;
+            // Buy open -> sell close, sell open -> buy close.
+            // The directions must be different.
+            rawPos.ExchMargin /= 1.0D * rawPos.Volume;
+            rawPos.Margin /= 1.0D * rawPos.Volume;
+            rawPos.Volume
+                    = rawPos.CloseVolume = 1;
             // Commission.
-            var shareCash = new AccountFrozenCash();
-            if (totalPosition.TradingDay.compareTo(tradingDay) == 0) {
+            var frzCash = new AccountFrozenCash();
+            if (rawPos.TradingDay.compareTo(tradingDay) == 0) {
                 // Today position.
                 if (comm.CloseTodayRatioByMoney > 0)
-                    shareCash.FrozenCommission = order.LimitPrice
+                    frzCash.FrozenCommission = order.LimitPrice
                             * instr.VolumeMultiple * comm.CloseTodayRatioByMoney;
                 else
-                    shareCash.FrozenCommission = comm.CloseTodayRatioByVolume;
+                    frzCash.FrozenCommission = comm.CloseTodayRatioByVolume;
             } else {
                 // YD position.
                 if (comm.CloseRatioByMoney > 0)
-                    shareCash.FrozenCommission = order.LimitPrice
+                    frzCash.FrozenCommission = order.LimitPrice
                             * instr.VolumeMultiple * comm.CloseRatioByMoney;
                 else
-                    shareCash.FrozenCommission = comm.CloseRatioByVolume;
+                    frzCash.FrozenCommission = comm.CloseRatioByVolume;
             }
             // Keep frozen position.
-            var frz = new FrozenPositionDetail(a, totalPosition, shareCash, vol);
+            long vol = Math.min(a.getAvailableVolume(), volume);
+            var frz = new FrozenPositionDetail(a, rawPos, frzCash, vol);
             r.add(frz);
             // Reduce volume to zero.
             if ((volume -= vol) <= 0)

@@ -68,7 +68,7 @@ public class FrozenPositionDetail {
      *
      * @return frozen volume
      */
-    public long getFrozenCount() {
+    public long getFrozenVolume() {
         if (this.stage == ProcessStage.CANCELED)
             return 0;
         else
@@ -89,12 +89,12 @@ public class FrozenPositionDetail {
                                 CThostFtdcInstrumentField instr) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
-        if (getFrozenCount() < trade.Volume)
+        if (getFrozenVolume() < trade.Volume)
             throw new IllegalStateException("not enough frozen shares");
-        this.tradedCount -= trade.Volume;
+        this.tradedCount += trade.Volume;
         // Update parent.
-        var share = toTradedCash(this.frozenSinglePosition, trade, instr);
-        this.parent.closePosition(share, trade.Volume);
+        var single = toSingleTradedCash(this.frozenSinglePosition, trade, instr);
+        this.parent.closePosition(single, trade.Volume);
     }
 
     /**
@@ -127,7 +127,7 @@ public class FrozenPositionDetail {
         return Utils.deepCopy(this.frozenSingleCash);
     }
 
-    private PositionTradedCash toTradedCash(
+    private PositionTradedCash toSingleTradedCash(
             CThostFtdcInvestorPositionDetailField p,
             CThostFtdcTradeField trade,
             CThostFtdcInstrumentField instr) {
@@ -135,6 +135,7 @@ public class FrozenPositionDetail {
         Objects.requireNonNull(r, "failed deep copy");
         // Calculate position detail.
         r.CloseAmount = trade.Price * instr.VolumeMultiple;
+        r.CloseVolume = 1;
         double token;
         if (p.Direction == TThostFtdcDirectionType.DIRECTION_BUY)
             token = 1.0D;   // Long position.

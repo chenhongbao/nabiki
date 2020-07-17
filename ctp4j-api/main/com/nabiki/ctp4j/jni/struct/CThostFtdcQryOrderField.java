@@ -28,7 +28,7 @@
 
 package com.nabiki.ctp4j.jni.struct;
 
-public class CThostFtdcQryOrderField {
+public class CThostFtdcQryOrderField implements java.io.Serializable {
     public String BrokerID;
     public String InvestorID;
     public String InstrumentID;
