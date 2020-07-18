@@ -33,6 +33,7 @@ import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -108,5 +109,9 @@ class SessionImpl {
 
     protected Object getAttribute(String key) {
         return this.session.getAttribute(key);
+    }
+
+    protected InetSocketAddress getRemoteAddress() {
+        return (InetSocketAddress)this.session.getRemoteAddress();
     }
 }

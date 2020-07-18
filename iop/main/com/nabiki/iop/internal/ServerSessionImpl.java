@@ -36,6 +36,8 @@ import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
+import java.net.InetSocketAddress;
+
 class ServerSessionImpl extends SessionImpl implements ServerSession {
     private SessionResponseState responseState;
 
@@ -134,5 +136,10 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
     @Override
     public Object getAttribute(String key) {
         return super.getAttribute(key);
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return super.getRemoteAddress();
     }
 }

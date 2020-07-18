@@ -35,7 +35,6 @@ import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcCombHedgeFlagType;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -232,8 +231,7 @@ public class UserSuperTest {
         //
         // Create provider.
         //
-        provider = new OrderProvider(
-                CThostFtdcTraderApi.CreateFtdcTraderApi(flowDir), config);
+        provider = new OrderProvider(config);
         var rspInfo = new CThostFtdcRspInfoField();
         rspInfo.ErrorID = 0;
         provider.OnRspSettlementInfoConfirm(

@@ -28,23 +28,13 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.active.ActiveUser;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderStatusType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderSubmitStatusType;
-import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.iop.Message;
-import com.nabiki.iop.MessageType;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderActionField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderActionField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
 import com.nabiki.iop.ServerMessageAdaptor;
-import com.nabiki.iop.ServerSession;
-import com.nabiki.iop.x.OP;
 
-import java.util.UUID;
-
-public class RequestAdaptor extends ServerMessageAdaptor {
-    RequestAdaptor() {
-    }
-
+public class RequestSuper extends ServerMessageAdaptor {
     CThostFtdcOrderField toRtnOrder(CThostFtdcInputOrderField rtn) {
         var r = new CThostFtdcOrderField();
         r.AccountID = rtn.AccountID;
@@ -100,71 +90,5 @@ public class RequestAdaptor extends ServerMessageAdaptor {
         r.UserID = action.UserID;
         r.VolumeChange = action.VolumeChange;
         return r;
-    }
-
-    @Override
-    public void doReqOrderInsert(
-            ServerSession session,
-            CThostFtdcInputOrderField request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-        Message rsp = new Message();
-        rsp.Type = MessageType.RSP_REQ_ORDER_INSERT;
-        rsp.RequestID = requestID;
-        rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.CurrentCount = 1;
-        rsp.TotalCount = 1;
-        if (attr == null) {
-            rsp.Body = new CThostFtdcOrderField();
-            rsp.RspInfo = new CThostFtdcRspInfoField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
-            rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
-        } else {
-            var activeUser = (ActiveUser)attr;
-            var uuid = activeUser.insertOrder(request);
-            // Build response.
-            var o = toRtnOrder(request);
-            o.OrderLocalID = uuid;
-            o.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
-            o.OrderStatus = TThostFtdcOrderStatusType.UNKNOWN;
-            rsp.Body = o;
-            rsp.RspInfo = activeUser.getExecRsp(uuid);
-        }
-        session.sendResponse(rsp);
-        session.done();
-    }
-
-    @Override
-    public void doReqOrderAction(
-            ServerSession session,
-            CThostFtdcInputOrderActionField request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-        Message rsp = new Message();
-        rsp.Type = MessageType.RSP_REQ_ORDER_ACTION;
-        rsp.RequestID = requestID;
-        rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.CurrentCount = 1;
-        rsp.TotalCount = 1;
-        if (attr == null) {
-            rsp.Body = new CThostFtdcOrderActionField();
-            rsp.RspInfo = new CThostFtdcRspInfoField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
-            rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
-        } else {
-            var activeUser = (ActiveUser)attr;
-            var uuid = activeUser.orderAction(request);
-            // Build response.
-            var o = toOrderAction(request);
-            o.OrderLocalID = uuid;
-            rsp.Body = o;
-            rsp.RspInfo = activeUser.getExecRsp(uuid);
-        }
-        session.sendResponse(rsp);
-        session.done();
     }
 }

@@ -33,7 +33,7 @@ import java.util.List;
 public class UserAuthProfile {
     public class InstrumentAuth {
         public String InstrumentID;
-        OrderOffset AllowOffset;
+        public OrderOffset AllowOffset;
     }
 
     public String UserID;

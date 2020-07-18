@@ -42,6 +42,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TickProvider extends CThostFtdcMdSpi {
     private final Config config;
@@ -55,10 +57,16 @@ public class TickProvider extends CThostFtdcMdSpi {
             isLogin = false;
     private WorkingState workingState = WorkingState.STOPPED;
 
-    public TickProvider(CThostFtdcMdApi mdApi, Config cfg) {
+    protected ReentrantLock lock = new ReentrantLock();
+    protected Condition cond = lock.newCondition();
+
+    public TickProvider(Config cfg) {
         this.config = cfg;
-        this.mdApi = mdApi;
         this.loginCfg = this.config.getLoginConfigs().get("md");
+        this.mdApi = CThostFtdcMdApi.CreateFtdcMdApi(
+                this.loginCfg.FlowDirectory,
+                this.loginCfg.IsUsingUDP,
+                this.loginCfg.IsMulticast);
         this.msgWriter = new MessageWriter(this.config);
     }
 
@@ -99,6 +107,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             }
         }
     }
+
     public void initialize() {
         this.mdApi.RegisterSpi(this);
         for (var addr : this.loginCfg.FrontAddresses)
@@ -132,6 +141,26 @@ public class TickProvider extends CThostFtdcMdSpi {
 
     public WorkingState getWorkingState() {
         return this.workingState;
+    }
+
+    public boolean waitLogin(long millis) {
+        this.lock.lock();
+        try {
+            this.cond.wait(millis);
+        } catch (InterruptedException ignored) {
+        } finally {
+            this.lock.unlock();
+        }
+        return this.isLogin;
+    }
+
+    private void signalLogin() {
+        this.lock.lock();
+        try {
+            this.cond.signal();
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private void subscribeBatch(String[] instr, int count) {
@@ -207,6 +236,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.isLogin = true;
             this.workingState = WorkingState.STARTED;
             setWorking(true);
+            signalLogin();
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,

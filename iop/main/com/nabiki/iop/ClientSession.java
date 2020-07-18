@@ -28,22 +28,8 @@
 
 package com.nabiki.iop;
 
-public interface ClientSession {
-    void close();
-
-    boolean isClosed();
-
-    void fix();
-
-    void sendLogin(Message message);
+public interface ClientSession extends IOPSession {
 
     void sendRequest(Message message);
 
-    void sendHeartbeat(String heartbeatID);
-
-    void setAttribute(String key, Object attribute);
-
-    void removeAttribute(String key);
-
-    Object getAttribute(String key);
 }

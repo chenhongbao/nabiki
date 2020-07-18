@@ -36,6 +36,8 @@ import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
+import java.net.InetSocketAddress;
+
 class ClientSessionImpl extends SessionImpl implements ClientSession {
     private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
 
@@ -126,5 +128,10 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     @Override
     public Object getAttribute(String key) {
         return super.getAttribute(key);
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return super.getRemoteAddress();
     }
 }

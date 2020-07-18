@@ -46,6 +46,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * {@code AliveOrderManager} keeps the status of all alive orders, interacts with
@@ -68,13 +70,18 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             qryInstrLast = false;
     protected CThostFtdcRspUserLoginField rspLogin;
 
+    // Wait last instrument.
+    protected ReentrantLock lock = new ReentrantLock();
+    protected Condition cond = lock.newCondition();
+
     // State.
     protected WorkingState workingState = WorkingState.STOPPED;
 
-    public OrderProvider(CThostFtdcTraderApi traderApi, Config cfg) {
+    public OrderProvider(Config cfg) {
         this.config = cfg;
-        this.traderApi = traderApi;
         this.loginCfg = this.config.getLoginConfigs().get("trader");
+        this.traderApi = CThostFtdcTraderApi
+                .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
         this.msgWriter = new MessageWriter(this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
         // Start query timer task.
@@ -154,6 +161,26 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     public WorkingState getWorkingState() {
         return this.workingState;
+    }
+
+    public boolean waitLastInstrument(long millis) {
+        this.lock.lock();
+        try {
+            this.cond.wait(millis);
+        } catch (InterruptedException ignored) {
+        } finally {
+            this.lock.unlock();
+        }
+        return this.qryInstrLast;
+    }
+
+    private void signalLastInstrument() {
+        this.lock.lock();
+        try {
+            this.cond.signal();
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     /**
@@ -539,6 +566,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        if (isLast)
+            signalLastInstrument();
     }
 
     @Override

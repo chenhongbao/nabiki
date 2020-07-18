@@ -46,7 +46,7 @@ public class UserAuthManager implements Renewable {
     private final Map<String, UserAuthProfile> profiles = new ConcurrentHashMap<>();
     private final Path dataDir;
 
-    UserAuthManager(Path dataDir) {
+    public UserAuthManager(Path dataDir) {
         Objects.requireNonNull(dataDir, "user profile data root null");
         this.dataDir = dataDir;
     }

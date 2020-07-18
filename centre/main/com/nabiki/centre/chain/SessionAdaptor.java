@@ -46,8 +46,10 @@ public class SessionAdaptor extends ServerSessionAdaptor {
     }
 
     @Override
-    public void doEvent(ServerSession session, SessionEvent event,
-                        Object eventObject) {
+    public void doEvent(
+            ServerSession session,
+            SessionEvent event,
+            Object eventObject) {
         switch (event) {
             case ERROR:
                 this.config.getLogger().warning(
@@ -71,14 +73,15 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                 if (recv != null)
                     this.router.removeReceiver((MarketDataReceiver) recv);
                 this.config.getLogger().info(
-                        "session closed(" +session.hashCode() + ")");
+                        "session closed(" + session.getRemoteAddress() + ")");
                 break;
             case CREATED:
             case OPENED:
                 this.config.getLogger().info(
-                        "session created(" +session.hashCode() + ")");
+                        "session created(" + session.getRemoteAddress() + ")");
                 break;
-            default: break;
+            default:
+                break;
         }
     }
 }

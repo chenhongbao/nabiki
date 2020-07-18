@@ -26,11 +26,37 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre.chain;
 
-public interface ServerSession extends IOPSession {
-    void done();
+import com.nabiki.centre.active.ActiveUserManager;
+import com.nabiki.centre.md.MarketDataRouter;
+import com.nabiki.centre.user.auth.UserAuthManager;
+import com.nabiki.centre.utils.Config;
+import com.nabiki.iop.IOPServer;
 
-    void sendResponse(Message message);
+import java.util.Objects;
 
+public class StaticChainInstaller {
+    public static void install(
+            IOPServer server,
+            UserAuthManager auth,
+            ActiveUserManager user,
+            MarketDataRouter router,
+            Config cfg) {
+        Objects.requireNonNull(server, "iop server null");
+        Objects.requireNonNull(auth, "user auth manager null");
+        Objects.requireNonNull(user, "active user manager null");
+        Objects.requireNonNull(router, "md router null");
+        Objects.requireNonNull(router, "md router null");
+        // Install login manager.
+        server.setLoginManager(new UserLoginManager(auth, user));
+        // Install session adaptor.
+        server.setSessionAdaptor(new SessionAdaptor(router, cfg));
+        // Install adaptors.
+        var chain = server.getAdaptorChain();
+        chain.addAdaptor(new RequestValidator());
+        chain.addAdaptor(new RequestExecutor());
+        chain.addAdaptor(new SubscriptionAdaptor(router));
+        chain.addAdaptor(new QueryAdaptor());
+    }
 }

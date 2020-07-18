@@ -80,10 +80,16 @@ public class CandleEngine extends TimerTask {
      *
      * @param instrID instrument ID
      */
-    public void registerInstr(String instrID) {
+    public void addInstrument(String instrID) {
         if (instrID == null || instrID.length() == 0)
             throw new IllegalArgumentException("illegal instr ID");
         ensureProduct(Utils.getProductID(instrID)).registerInstr(instrID);
+    }
+
+    public void removeInstrument(String instrID) {
+        if (instrID == null || instrID.length() == 0)
+            throw new IllegalArgumentException("illegal instr ID");
+        ensureProduct(Utils.getProductID(instrID)).unregisterInstr(instrID);
     }
 
     private Product ensureProduct(String product) {
@@ -145,6 +151,10 @@ public class CandleEngine extends TimerTask {
         public void registerInstr(String instrID) {
             if (!this.candles.containsKey(instrID))
                 this.candles.put(instrID, new SingleCandle(instrID));
+        }
+
+        public void unregisterInstr(String instrID) {
+            this.candles.remove(instrID);
         }
 
         public void registerDuration(Duration du) {

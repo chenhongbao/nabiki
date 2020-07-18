@@ -28,9 +28,24 @@
 
 package com.nabiki.iop;
 
-public interface ServerSession extends IOPSession {
-    void done();
+import java.net.InetSocketAddress;
 
-    void sendResponse(Message message);
+public interface IOPSession {
+    void close();
 
+    boolean isClosed();
+
+    void fix();
+
+    void sendLogin(Message message);
+
+    void sendHeartbeat(String heartbeatID);
+
+    void setAttribute(String key, Object attribute);
+
+    void removeAttribute(String key);
+
+    Object getAttribute(String key);
+
+    InetSocketAddress getRemoteAddress();
 }
