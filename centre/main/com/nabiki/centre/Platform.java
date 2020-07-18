@@ -115,16 +115,7 @@ public class Platform {
         server.bind(InetSocketAddress.createUnresolved(host, port));
     }
 
-    private void managers() throws IOException {
-        // Set system's output and error output.
-        var logDir = this.config.getRootDirectory()
-                .recursiveGet("dir.log")
-                .iterator()
-                .next();
-        logDir.setFile("file.log.system.err");
-        logDir.setFile("file.log.system.out");
-        SystemStream.setErr(logDir.get("file.log.system.err").file());
-        SystemStream.setOut(logDir.get("file.log.system.out").file());
+    private void managers() {
         // Set auth/user manager.
         var userDir = config.getRootDirectory()
                 .recursiveGet("dir.user")
@@ -138,10 +129,23 @@ public class Platform {
                 userDir);
     }
 
+    private void system() throws IOException {
+        // Set system's output and error output.
+        var dir = this.config.getRootDirectory()
+                .recursiveGet("dir.log")
+                .iterator()
+                .next();
+        SystemStream.setErr(dir.setFile(
+                "file.log.err", "system.err.log").file());
+        SystemStream.setOut(dir.setFile
+                ("file.log.out", "system.out.log").file());
+    }
+
     public void start(String[] args) throws IOException {
         // Set config.
         ConfigLoader.rootPath = getArgument(args, "--root");
         this.config = ConfigLoader.load();
+        system();
         providers();
         managers();
         server(getArgument(args, "--host"),

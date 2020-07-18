@@ -178,11 +178,12 @@ public class EasyFile {
      */
     public EasyFile setDirectory(String key, String... relPath) throws IOException {
         checkDir();
-        this.files.put(key, new EasyFile(
+        var r = new EasyFile(
                 Path.of(this.path, relPath).toAbsolutePath().toString(),
-                false));
+                false);
+        this.files.put(key, r);
         writeIndex(key, concatPath(relPath));
-        return this;
+        return r;
     }
 
     /**
@@ -197,11 +198,12 @@ public class EasyFile {
      */
     public EasyFile setFile(String key, String... relPath) throws IOException {
         checkDir();
-        this.files.put(key, new EasyFile(
+        var r = new EasyFile(
                 Path.of(this.path, relPath).toAbsolutePath().toString(),
-                true));
+                true);
+        this.files.put(key, r);
         writeIndex(key, concatPath(relPath));
-        return this;
+        return r;
     }
 
     /**
