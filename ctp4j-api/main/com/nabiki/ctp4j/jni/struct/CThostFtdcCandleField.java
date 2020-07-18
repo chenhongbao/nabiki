@@ -37,7 +37,7 @@ public class CThostFtdcCandleField implements java.io.Serializable {
     public double AveragePrice;
     public double OpenInterest;
     public int Volume;
-    public int minute;
+    public int Minute;
     public String TradingDay;
     public String ActionDay;
     public String UpdateTime;
