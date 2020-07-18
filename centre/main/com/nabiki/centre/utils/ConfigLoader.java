@@ -60,20 +60,12 @@ public class ConfigLoader {
      * @throws IOException fail to read or process configuration files, or content
      *                     in the configuration file is corrupted or invalid
      */
-    public static Config load() throws IOException {
+    public static Config config() throws IOException {
         synchronized (config) {
             // Clear old config.
             if (configLoaded.get())
                 clearConfig();
-            // First create dirs, then logger.
-            setDirectories();
-            setConfigLogger();
-            // Config below uses logger to keep error info.
-            setLoginConfig();
-            setTradingHourConfig();
-            setInstrConfig();
-            // Set mark.
-            configLoaded.set(true);
+            loadConfig();
         }
         return config;
     }
@@ -147,10 +139,20 @@ public class ConfigLoader {
      clear them.
      */
     private static void clearConfig() {
-        config.rootDirectory = null;
-        config.tradingDay = null;
         config.tradingHour.clear();
         config.login.clear();
+    }
+
+    private static void loadConfig() throws IOException {
+        // First create dirs, then logger.
+        setDirectories();
+        setLogger();
+        // Config below uses logger to keep error info.
+        setLoginConfig();
+        setTradingHourConfig();
+        setInstrConfig();
+        // Set mark.
+        configLoaded.set(true);
     }
 
     private static void setTradingHourConfig() throws IOException {
@@ -266,7 +268,7 @@ public class ConfigLoader {
         config.rootDirectory = root;
     }
 
-    private static void setConfigLogger() {
+    private static void setLogger() {
         if (Config.logger == null) {
             // Get logging directory.
             String fp;

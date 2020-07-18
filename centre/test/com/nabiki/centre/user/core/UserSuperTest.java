@@ -68,7 +68,7 @@ public class UserSuperTest {
         ConfigLoader.rootPath = flowDir;
 
         try {
-            this.config = ConfigLoader.load();
+            this.config = ConfigLoader.config();
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());

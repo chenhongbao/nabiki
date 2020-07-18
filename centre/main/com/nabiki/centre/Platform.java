@@ -34,9 +34,9 @@ import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.ctp.TickProvider;
 import com.nabiki.centre.ctp.WorkingState;
 import com.nabiki.centre.md.CandleEngine;
-import com.nabiki.centre.md.CandleWriter;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
+import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.iop.IOP;
@@ -144,7 +144,7 @@ public class Platform {
     public void start(String[] args) throws IOException {
         // Set config.
         ConfigLoader.rootPath = getArgument(args, "--root");
-        this.config = ConfigLoader.load();
+        this.config = ConfigLoader.config();
         system();
         providers();
         managers();
@@ -154,36 +154,33 @@ public class Platform {
 
     public void task() {
         this.timer.scheduleAtFixedRate(
-                new PlatformTask(
-                        this.orderProvider,
-                        this.tickProvider,
-                        new CandleWriter(this.config),
-                        this.config),
+                new PlatformTask(),
                 MILLIS - System.currentTimeMillis() % MILLIS,
                 MILLIS);
     }
 
-    private static class PlatformTask extends TimerTask {
-        private final OrderProvider order;
-        private final TickProvider tick;
-        private final CandleWriter writer;
-        private final Config config;
+    private class PlatformTask extends TimerTask {
         private final LocalTime start0 = LocalTime.of(20, 30),
                 start1 = LocalTime.of(8, 30),
                 stop0 = LocalTime.of(3, 0),
                 stop1 = LocalTime.of(15, 45);
+        private final LocalTime renewTime = LocalTime.of(20, 0),
+                settleTime = LocalTime.of(16, 0);
 
-        private final WorkingState state = WorkingState.STOPPED;
+        private WorkingState workingState = WorkingState.STOPPED;
+        private UserState userState = UserState.SETTLED;
 
-        PlatformTask(
-                OrderProvider order,
-                TickProvider tick,
-                CandleWriter writer,
-                Config cfg) {
-            this.order = order;
-            this.tick = tick;
-            this.writer = writer;
-            this.config = cfg;
+        PlatformTask() {
+        }
+
+        private boolean needRenew() {
+            return this.workingState == WorkingState.STARTED
+                    && this.userState == UserState.SETTLED;
+        }
+
+        private boolean needSettle() {
+            return this.workingState == WorkingState.STOPPED
+                    && this.userState == UserState.RENEW;
         }
 
         private boolean needStart() {
@@ -193,52 +190,77 @@ public class Platform {
                 return false;
             return ((time.isAfter(this.start0) || time.isBefore(this.stop0)) ||
                     (time.isAfter(this.start1) && time.isBefore(stop1)))
-                    && this.state == WorkingState.STOPPED;
+                    && this.workingState == WorkingState.STOPPED;
         }
 
         private boolean needStop() {
             var time = LocalTime.now();
             return ((time.isAfter(this.stop0) && time.isBefore(this.start1)) ||
                     (time.isAfter(this.stop1) && time.isBefore(this.start0)))
-                    && this.state == WorkingState.STARTED;
+                    && this.workingState == WorkingState.STARTED;
+        }
+
+        private void renew() {
+            try {
+                authManager.renew();
+                userManager.renew();
+                ConfigLoader.config();
+                this.userState = UserState.RENEW;
+            } catch (Exception e) {
+                config.getLogger().severe("renew failed");
+            }
+        }
+
+        private void settle() {
+            try {
+                authManager.settle();
+                userManager.settle();
+                this.userState = UserState.SETTLED;
+            } catch (Exception e) {
+                config.getLogger().severe("settle failed");
+            }
         }
 
         private void start() {
+            this.workingState = WorkingState.STARTING;
             // Trader logins.
-            this.order.login();
+            orderProvider.login();
             int count = 0;
-            while (!this.order.waitLastInstrument(
+            while (!orderProvider.waitLastInstrument(
                     TimeUnit.MINUTES.toMillis(1)) && ++count <= 10) {
-                this.config.getLogger()
+                config.getLogger()
                         .info("wait query instrument(" + count + ")");
             }
-            if (this.order.getWorkingState() != WorkingState.STARTED) {
-                this.config.getLogger().severe(
+            if (orderProvider.getWorkingState() != WorkingState.STARTED) {
+                config.getLogger().severe(
                         "trader didn't start up");
                 return;
             }
             if (count > 10)
-                this.config.getLogger().warning(
+                config.getLogger().warning(
                         "trader didn't finish querying instruments");
             // Md logins.
-            this.tick.login();
+            tickProvider.login();
             count = 0;
-            while (!this.tick.waitLogin(
+            while (!tickProvider.waitLogin(
                     TimeUnit.MINUTES.toMillis(1)) && count++ < 10) {
-                this.config.getLogger().info(
+                config.getLogger().info(
                         "wait md login(" + count + ")");
             }
-            if (this.tick.getWorkingState() != WorkingState.STARTED) {
-                this.config.getLogger().severe(
+            if (tickProvider.getWorkingState() != WorkingState.STARTED) {
+                config.getLogger().severe(
                         "market data didn't start up");
                 return;
             }
-            this.tick.subscribe(this.order.getInstruments());
+            tickProvider.subscribe(orderProvider.getInstruments());
+            this.workingState = WorkingState.STARTED;
         }
 
         private void stop() {
-            this.order.logout();
-            this.tick.logout();
+            this.workingState = WorkingState.STOPPING;
+            orderProvider.logout();
+            tickProvider.logout();
+            this.workingState = WorkingState.STOPPED;
         }
 
         @Override
@@ -247,6 +269,10 @@ public class Platform {
                 start();
             if (needStop())
                 stop();
+            if (needRenew())
+                renew();
+            if (needSettle())
+                settle();
         }
     }
 
