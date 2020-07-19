@@ -551,13 +551,17 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                                    CThostFtdcRspInfoField rspInfo, int requestId,
                                    boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.msgWriter.writeRsp(instrument);
-            ConfigLoader.setInstrConfig(instrument);
+            var accepted = InstrumentFilter.accept(instrument.InstrumentID);
+            if (accepted) {
+                this.msgWriter.writeRsp(instrument);
+                ConfigLoader.setInstrConfig(instrument);
+            }
             // Sync on instrument set.
             synchronized (this.instruments) {
                 if (this.qryInstrLast)
                     this.instruments.clear();
-                this.instruments.add(instrument.InstrumentID);
+                if (accepted)
+                    this.instruments.add(instrument.InstrumentID);
                 this.qryInstrLast = isLast;
             }
         } else {
