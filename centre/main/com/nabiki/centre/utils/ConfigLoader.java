@@ -260,10 +260,6 @@ public class ConfigLoader {
         flow.setDirectory("dir.flow.rsp", ".rsp");
         flow.setDirectory("dir.flow.err", ".err");
 
-        var ctp = flow.get("dir.flow.ctp");
-        ctp.setDirectory("dir.flow.ctp.trader", ".trader");
-        ctp.setDirectory("dir.flow.ctp.md", ".md");
-
         // Set config.
         config.rootDirectory = root;
     }
