@@ -58,22 +58,26 @@ class TradeClientImpl implements TradeClient {
             return session;
     }
 
-    private <T> Message toMessage(T object, String requestID) {
+    private <T> Message toMessage(MessageType type, T object, String requestID) {
         Objects.requireNonNull(object, "request null");
         Objects.requireNonNull(requestID, "request ID null");
         var message = new Message();
-        message.Type =  MessageType.REQ_ORDER_INSERT;
+        message.Type = type;
         message.Body = object;
         message.RequestID = requestID;
-        message.CurrentCount  = 1;
+        message.CurrentCount = 1;
         message.TotalCount = 1;
         return message;
     }
 
-    private <T, V> Response<T> send(V request, String requestID, Class<T> clz) {
+    private <T, V> Response<T> send(
+            MessageType type,
+            V request,
+            String requestID,
+            Class<T> clz) {
         var rsp = new ResponseImpl<T>();
         this.clientAdaptor.setResponse(rsp, requestID);
-        getSession().sendRequest(toMessage(request, requestID));
+        getSession().sendRequest(toMessage(type, request, requestID));
         return rsp;
     }
 
@@ -82,7 +86,8 @@ class TradeClientImpl implements TradeClient {
             CThostFtdcReqUserLoginField request, String requestID) {
         var rsp = new ResponseImpl<CThostFtdcRspUserLoginField>();
         this.clientAdaptor.setResponse(rsp, requestID);
-        getSession().sendLogin(toMessage(request, requestID));
+        getSession().sendLogin(
+                toMessage(MessageType.REQ_LOGIN, request, requestID));
         return rsp;
     }
 
@@ -113,37 +118,60 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcOrderField> orderInsert(
             CThostFtdcInputOrderField order, String requestID) {
-        return send(order, requestID, CThostFtdcOrderField.class);
+        return send(
+                MessageType.REQ_ORDER_INSERT,
+                order,
+                requestID,
+                CThostFtdcOrderField.class);
     }
 
     @Override
     public Response<CThostFtdcOrderActionField> orderAction(
             CThostFtdcInputOrderActionField action, String requestID) {
-        return send(action, requestID, CThostFtdcOrderActionField.class);
+        return send(
+                MessageType.REQ_ORDER_ACTION,
+                action,
+                requestID,
+                CThostFtdcOrderActionField.class);
     }
 
     @Override
     public Response<CThostFtdcInvestorPositionField> queryPosition(
             CThostFtdcQryInvestorPositionField query, String requestID) {
-        return send(query, requestID, CThostFtdcInvestorPositionField.class);
+        return send(
+                MessageType.QRY_POSITION,
+                query,
+                requestID,
+                CThostFtdcInvestorPositionField.class);
     }
 
     @Override
     public Response<CThostFtdcTradingAccountField> queryAccount(
             CThostFtdcQryTradingAccountField query, String requestID) {
-        return send(query, requestID, CThostFtdcTradingAccountField.class);
+        return send(
+                MessageType.QRY_ACCOUNT,
+                query,
+                requestID,
+                CThostFtdcTradingAccountField.class);
     }
 
     @Override
     public Response<CThostFtdcOrderField> queryOrder(
             CThostFtdcQryOrderField query, String requestID) {
-        return send(query, requestID, CThostFtdcOrderField.class);
+        return send(
+                MessageType.QRY_ORDER,
+                query,
+                requestID,
+                CThostFtdcOrderField.class);
     }
 
     @Override
     public Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(
             CThostFtdcSubMarketDataField subscription, String requestID) {
-        return send(subscription, requestID,
+        return send(
+                MessageType.SUB_MD,
+                subscription,
+                requestID,
                 CThostFtdcSpecificInstrumentField.class);
     }
 }

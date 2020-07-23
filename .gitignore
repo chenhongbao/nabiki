@@ -11,6 +11,6 @@ hs_err_pid*
 *.iml
 
 # Compiled output
-/out
-/bundles
-/.idea
+out/
+bundles/
+.idea/
