@@ -237,4 +237,31 @@ public abstract class ClientMessageAdaptor {
             int current,
             int total) {
     }
+
+    public void doRspError(
+            CThostFtdcRspInfoField rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspConnect(
+            CThostFtdcConnect rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
+    public void doRspDisconnect(
+            CThostFtdcDisconnect rsp,
+            CThostFtdcRspInfoField info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
 }

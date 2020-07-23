@@ -193,6 +193,18 @@ class MessageImpl extends Message {
                     msg.Body = OP.fromJson(body.Body,
                             CThostFtdcInputOrderField.class);
                     break;
+                case RSP_ERROR:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcRspInfoField.class);
+                    break;
+                case RSP_CONNECT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcConnect.class);
+                    break;
+                case RSP_DISCONNECT:
+                    msg.Body = OP.fromJson(body.Body,
+                            CThostFtdcDisconnect.class);
+                    break;
                 default:
                     throw new IOException("unknown message type " + body.Type);
             }

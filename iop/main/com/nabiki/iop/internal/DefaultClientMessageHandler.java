@@ -40,7 +40,8 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
 
     private ClientMessageAdaptor msgAdaptor = new DefaultClientMessageAdaptor();
 
-    DefaultClientMessageHandler() {}
+    DefaultClientMessageHandler() {
+    }
 
     void setAdaptor(ClientMessageAdaptor adaptor) {
         this.msgAdaptor = adaptor;
@@ -254,6 +255,33 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
             case RSP_ORDER_INSERT:
                 adaptor.doRspOrderInsert(
                         (CThostFtdcInputOrderField) message.Body,
+                        message.RspInfo,
+                        message.RequestID,
+                        message.ResponseID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case RSP_ERROR:
+                adaptor.doRspError(
+                        (CThostFtdcRspInfoField) message.Body,
+                        message.RspInfo,
+                        message.RequestID,
+                        message.ResponseID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case RSP_CONNECT:
+                adaptor.doRspConnect(
+                        (CThostFtdcConnect) message.Body,
+                        message.RspInfo,
+                        message.RequestID,
+                        message.ResponseID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
+            case RSP_DISCONNECT:
+                adaptor.doRspDisconnect(
+                        (CThostFtdcDisconnect) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
