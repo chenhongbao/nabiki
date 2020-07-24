@@ -54,7 +54,6 @@ public class IOPClientImpl implements IOPClient {
     }
 
     private IoSession io(InetSocketAddress connectAddress) throws IOException {
-        System.out.println("client connect()");
         this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
         // Set filters.
         var chain = this.connector.getFilterChain();
