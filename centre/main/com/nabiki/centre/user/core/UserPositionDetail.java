@@ -39,6 +39,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class UserPositionDetail {
+    /**
+     * The CTP decreases {@code Volume} and increases {@code CloseVolume} as the
+     * position is closed so that the original volume is
+     * {@code Volume + CloseVolume}. The {@code Margin} is decreased with the
+     * {@code Volume}.
+     */
     private final CThostFtdcInvestorPositionDetailField raw;
     private final List<FrozenPositionDetail> frozenPosition = new LinkedList<>();
 
@@ -59,7 +65,8 @@ public class UserPositionDetail {
         this.raw.CloseProfitByDate += single.CloseProfitByDate * tradeCnt;
         this.raw.CloseProfitByTrade += single.CloseProfitByTrade * tradeCnt;
         this.raw.CloseVolume += single.CloseVolume * tradeCnt;
-        // Reduce margin.
+        // Reduce margin and volume.
+        this.raw.Volume -= single.CloseVolume * tradeCnt;
         this.raw.ExchMargin -= getSingleExchMargin() * tradeCnt;
         this.raw.Margin -= getSingleMargin() * tradeCnt;
     }
@@ -97,7 +104,7 @@ public class UserPositionDetail {
      * @return available volume to close
      */
     public int getAvailableVolume() {
-        return this.raw.Volume - this.raw.CloseVolume - getFrozenVolume();
+        return this.raw.Volume - getFrozenVolume();
     }
 
     double getFrozenMargin() {
@@ -156,9 +163,9 @@ public class UserPositionDetail {
             r.ShortFrozen = getFrozenVolume();
         }
         r.CloseVolume = this.raw.CloseVolume;
-        r.Position = this.raw.Volume - this.raw.CloseVolume;
+        r.Position = this.raw.Volume;
         if (this.raw.TradingDay.compareTo(tradingDay) != 0)
-            r.YdPosition = this.raw.Volume;
+            r.YdPosition = this.raw.Volume + this.raw.CloseVolume;
         else
             r.TodayPosition = r.Position;
         return r;

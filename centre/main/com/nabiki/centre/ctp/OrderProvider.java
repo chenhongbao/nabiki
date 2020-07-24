@@ -804,8 +804,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 action.OrderRef = null;
                 action.FrontID = 0;
                 action.SessionID = 0;
-                action.ExchangeID = (instrInfo.Instrument != null)
-                        ? instrInfo.Instrument.ExchangeID : null;
+                // Must need exchange id.
+                action.ExchangeID = rtn.ExchangeID;
             } else {
                 action.BrokerID = rspLogin.BrokerID;
                 action.InvestorID = rspLogin.UserID;

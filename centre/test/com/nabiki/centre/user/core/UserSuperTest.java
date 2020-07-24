@@ -150,7 +150,6 @@ public class UserSuperTest {
         // Set position.
         //
         var openDate0 = LocalDate.of(2020, 5, 13);
-        var openDate1 = LocalDate.now();
 
         Map<String, List<UserPositionDetail>> map = new HashMap<>();
         map.put("c2101", new LinkedList<>());
@@ -193,8 +192,8 @@ public class UserSuperTest {
         map.get("c2101").add(new UserPositionDetail(p));
 
         // Today position.
-        p.OpenDate = Utils.getDay(openDate1, null);
-        p.TradingDay = Utils.getDay(openDate1, null);
+        p.OpenDate = Utils.getDay(tradingDay, null);
+        p.TradingDay = Utils.getDay(tradingDay, null);
         p.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
         p.MarginRateByVolume = margin.ShortMarginRatioByVolume;
         p.MarginRateByMoney = margin.ShortMarginRatioByMoney;
