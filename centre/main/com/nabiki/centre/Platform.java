@@ -112,7 +112,7 @@ public class Platform {
         var server = IOP.createServer();
         StaticChainInstaller.install(
                 server, this.authManager, this.userManager, router, config);
-        server.bind(InetSocketAddress.createUnresolved(host, port));
+        server.bind(new InetSocketAddress(host, port));
     }
 
     private void managers() {

@@ -28,18 +28,27 @@
 
 package com.nabiki.centre.user.auth;
 
-import java.util.List;
+import com.nabiki.iop.x.OP;
+import org.junit.Test;
 
-public class UserAuthProfile {
-    public static class InstrumentAuth {
-        public String InstrumentID;
-        public OrderOffset AllowOffset;
+import java.util.LinkedList;
+
+public class UserAuthProfileTest {
+    @Test
+    public void basic() {
+        // Auth.
+        var auth = new UserAuthProfile.InstrumentAuth();
+        auth.InstrumentID = "c2101";
+        auth.AllowOffset = OrderOffset.ONLY_CLOSE;
+
+        var profile = new UserAuthProfile();
+
+        profile.UserID = "0001";
+        profile.CanLogin = true;
+        profile.Password = "1234";
+        profile.InstrumentAuths = new LinkedList<>();
+        profile.InstrumentAuths.add(auth);
+
+        System.out.println(OP.toJson(profile));
     }
-
-    public String UserID;
-    public String Password;
-    public boolean CanLogin;
-    public List<InstrumentAuth> InstrumentAuths;
-
-    public UserAuthProfile() {}
 }
