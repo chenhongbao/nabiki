@@ -33,8 +33,41 @@ import com.nabiki.ctp4j.jni.struct.*;
 public abstract class CThostFtdcMdSpi {
     public void OnFrontConnected() {}
 
+    /**
+     * SDK or gate disconnects. The SDK connects to gate and gate communicates with
+     * remote counter. If the SDK disconnects from the gate, {@code reason} is
+     * {@code 0}. If the gate disconnects from the remote counter, {@code reason} is
+     * the error codes returned from the remote counter.
+     *
+     * <ul>
+     * <li>{@code 0x0000} SDK与网关连接断开</li>
+     * <li>{@code 0x1001} 网关返回错误，网络读失败</li>
+     * <li>{@code 0x1002} 网关返回错误，网络写失败</li>
+     * <li>{@code 0x2001} 网关返回错误，接收心跳超时</li>
+     * <li>{@code 0x2002} 网关返回错误，发送心跳失败</li>
+     * <li>{@code 0x2003} 网关返回错误，收到错误报文</li>
+     * </ul>
+     * @param reason
+     */
     public void OnFrontDisconnected(int reason) {}
 
+    /**
+     * Error response callback. The method is called whenever there is error from
+     * native(JVM) internals, CTP response or
+     * java codes.
+     *
+     * <p> The error code in {@link CThostFtdcRspInfoField} has 3 categories:
+     * <ul>
+     * <li>if code < 0, error happens on sending the requests
+     * <li>if code = 0, no error
+     * <li>if code > 0, error is returned by the remote CTP counter
+     * </ul>
+     *
+     * @param rspInfo   error response information
+     * @param requestId identifier for the request that causes this error
+     * @param isLast    {@code true} if the current response is the last piece from
+     *                              this error, {@code false} otherwise.
+     */
     public void OnRspError(CThostFtdcRspInfoField rspInfo, int requestId,
                            boolean isLast) {}
 
