@@ -232,17 +232,15 @@ public class UserPosition {
             Keep original volume because the close volume is also kept.
             When the settled position loaded for next day, the volume and close
             volume/amount/profit will be adjusted:
-            1. volume -= close volume
-            2. close volume = 0
-            3. close amount = 0;
-            4/ close profits = 0;
+            1. close volume = 0
+            2. close amount = 0;
+            3/ close profits = 0;
              */
             var origin = p.copyRawPosition();
             origin.SettlementPrice = settlementPrice;
-            var volume = origin.Volume - origin.CloseVolume;
-            if (volume == 0)
+            if (origin.Volume == 0)
                 continue;
-            if (volume < 0)
+            if (origin.Volume < 0)
                 throw new IllegalStateException("position volume less than zero");
             // Calculate new position detail, the close profit/volume/amount are
             // updated on return trade, just calculate the position's fields.
@@ -250,33 +248,33 @@ public class UserPosition {
             if (origin.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
                 // Margin.
                 if (origin.MarginRateByMoney > 0)
-                    origin.Margin = volume * origin.SettlementPrice
+                    origin.Margin = origin.Volume * origin.SettlementPrice
                             * volumeMultiple * origin.MarginRateByMoney;
                 else
-                    origin.Margin = volume * origin.MarginRateByVolume;
+                    origin.Margin = origin.Volume * origin.MarginRateByVolume;
                 // Long position, token is positive.
                 token = 1.0D;
             } else {
                 // Margin.
                 if (origin.MarginRateByMoney > 0)
-                    origin.Margin = volume * origin.SettlementPrice
+                    origin.Margin = origin.Volume * origin.SettlementPrice
                             * volumeMultiple * origin.MarginRateByMoney;
                 else
-                    origin.Margin = volume * origin.MarginRateByVolume;
+                    origin.Margin = origin.Volume * origin.MarginRateByVolume;
                 // Short position, token is negative.
                 token = -1.0D;
             }
             // ExchMargin.
             origin.ExchMargin = origin.Margin;
             // Position profit.
-            origin.PositionProfitByTrade = token * volume *
+            origin.PositionProfitByTrade = token * origin.Volume *
                     (origin.SettlementPrice - origin.OpenPrice) * volumeMultiple;
             if (origin.TradingDay.compareTo(tradingDay) == 0)
                 // Today position, open price is real open price.
                 origin.PositionProfitByDate = origin.PositionProfitByTrade;
             else
                 // History position, open price is last settlement price.
-                origin.PositionProfitByDate = token * volume *
+                origin.PositionProfitByDate = token * origin.Volume *
                         (origin.SettlementPrice - origin.LastSettlementPrice)
                         * volumeMultiple;
             // Save settled position.

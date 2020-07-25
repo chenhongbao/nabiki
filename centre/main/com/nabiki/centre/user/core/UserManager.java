@@ -146,7 +146,6 @@ public class UserManager implements Renewable {
     }
 
     private void renewPosition(CThostFtdcInvestorPositionDetailField position) {
-        position.Volume -= position.CloseVolume;
         position.CloseVolume = 0;
         position.CloseAmount
                 = position.CloseProfitByTrade

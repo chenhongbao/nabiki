@@ -76,6 +76,7 @@ public class ActiveUser {
             prep.prepare(instrInfo.Margin);
             prep.prepare(instrInfo.Commission);
         }
+        prep.prepare(config.getTradingDay());
         this.user.settle(prep);
     }
 

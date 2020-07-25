@@ -77,17 +77,21 @@ public class SettlementPreparation {
 
     public void prepare(CThostFtdcDepthMarketDataField depth) {
         Objects.requireNonNull(depth, "depth null");
+        this.depths.put(depth.InstrumentID, depth);
     }
 
     public void prepare(CThostFtdcInstrumentField instrument) {
         Objects.requireNonNull(instrument, "instrument null");
+        this.instruments.put(instrument.InstrumentID, instrument);
     }
 
     public void prepare(CThostFtdcInstrumentMarginRateField margin) {
         Objects.requireNonNull(margin, "margin null");
+        this.margins.put(margin.InstrumentID, margin);
     }
 
     public void prepare(CThostFtdcInstrumentCommissionRateField commission) {
         Objects.requireNonNull(commission, "commission null");
+        this.commissions.put(commission.InstrumentID, commission);
     }
 }
