@@ -34,8 +34,12 @@ import com.nabiki.ctp4j.jni.flag.*;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
+import com.nabiki.iop.x.OP;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -97,10 +101,70 @@ public class UserSettleTest extends UserSuperTest {
                 0.0);
     }
 
+    private void writeSettledUser() {
+        var todayDir = Path.of(flowDir, ".user", "0001",
+                Utils.getDay(LocalDate.now(), null));
+        var path = Path.of(todayDir.toString(), "account.0001.json");
+        try {
+            Utils.writeText(OP.toJson(user.getUserAccount().copyRawAccount()),
+                    Utils.createFile(path, false),
+                    StandardCharsets.UTF_8,
+                    false);
+            int count = 0;
+            for (var position : user.getUserPosition().getSpecificPosition("c2101")) {
+                path = Path.of(todayDir.toString(),
+                        "position." + (++count) + ".json");
+                Utils.writeText(OP.toJson(position.copyRawPosition()),
+                        Utils.createFile(path, false),
+                        StandardCharsets.UTF_8,
+                        false);
+            }
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    private void checkRenewUser() {
+        var userManager = UserManager.create(Path.of(flowDir, ".user"));
+        try {
+            userManager.renew();
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        var renewUser = userManager.getUser("0001");
+
+        // Check account.
+        var renewActive = new ActiveUser(renewUser, provider, config);
+        var renewAccount = renewActive.getTradingAccount();
+
+        var active = new ActiveUser(user, provider, config);
+        var account = active.getTradingAccount();
+
+        assertEquals(renewAccount.PreMargin, account.CurrMargin, 0.01);
+        assertEquals(renewAccount.PreBalance, account.Balance, 0.01);
+
+        // Check positions.
+        var renewPositions = renewActive.getPosition("c2101");
+        var positions = active.getPosition("c2101");
+
+        assertEquals(renewPositions.size(), positions.size());
+
+        int renewVolume = 0, volume = 0;
+        for (int i = 0; i < positions.size(); ++i) {
+            renewVolume += renewPositions.get(i).Position;
+            volume += positions.get(i).Position;
+        }
+
+        assertEquals(renewVolume, volume);
+    }
+
     @Test
     public void just_settle() {
         prepare();
         checkSettle();
+        // Test user manager.
+        writeSettledUser();
+        checkRenewUser();
     }
 
     @Test

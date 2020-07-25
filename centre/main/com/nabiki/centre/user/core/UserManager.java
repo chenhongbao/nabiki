@@ -52,9 +52,7 @@ public class UserManager implements Renewable {
     private final Path dataDir;
 
     private static UserManager singleton;
-
-    // Default value.
-    private SettlementPreparation prep = new SettlementPreparation();
+    private SettlementPreparation prep;
 
     private UserManager(Path dataDir) {
         Objects.requireNonNull(dataDir, "user data directory null");
@@ -182,8 +180,7 @@ public class UserManager implements Renewable {
                 if (pos.getAvailableVolume() > 0) {
                     path = Path.of(todayDir.toString(),
                             "position." + (++count) + ".json");
-                    Utils.writeText(OP.toJson(
-                            pos.copyRawPosition()),
+                    Utils.writeText(OP.toJson(pos.copyRawPosition()),
                             Utils.createFile(path, false),
                             StandardCharsets.UTF_8,
                             false);
@@ -208,6 +205,7 @@ public class UserManager implements Renewable {
 
     @Override
     public void settle() throws Exception {
+        Objects.requireNonNull(this.prep, "settlement preparation null");
         for (var user : this.users.values())
             user.settle(this.prep);
         write(this.dataDir);
