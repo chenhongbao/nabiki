@@ -40,6 +40,7 @@ import com.nabiki.iop.x.OP;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.FileHandler;
@@ -84,9 +85,27 @@ public class ConfigLoader {
                 config.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
             config.instrInfo.get(instr.InstrumentID).Instrument = instr;
         }
+        // Set the product and its instruments.
+        var pid = Utils.getProductID(instr.InstrumentID);
+        synchronized (config.products) {
+            if (!config.products.containsKey(pid))
+                config.products.put(pid, new HashSet<>());
+            config.products.get(pid).add(instr.InstrumentID);
+        }
     }
 
-    public static void setInstrConfig(
+    private static void setProductConfig(
+            CThostFtdcInstrumentMarginRateField margin,
+            String productID) {
+        var instruments = config.getProduct(productID);
+        if (instruments == null)
+            return;
+        for (var instrument : instruments) {
+            margin.InstrumentID = instrument;
+            setSingleConfig(margin);
+        }
+    }
+    public static void setSingleConfig(
             CThostFtdcInstrumentMarginRateField margin) {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(margin.InstrumentID))
@@ -96,12 +115,42 @@ public class ConfigLoader {
     }
 
     public static void setInstrConfig(
+            CThostFtdcInstrumentMarginRateField margin) {
+        var pid= Utils.getProductID(margin.InstrumentID);
+        if (pid.compareTo(margin.InstrumentID) == 0)
+            setProductConfig(margin, pid);
+        else
+            setSingleConfig(margin);
+    }
+
+    private static void setProductConfig(
+            CThostFtdcInstrumentCommissionRateField commission,
+            String productID) {
+        var instruments = config.getProduct(productID);
+        if (instruments == null)
+            return;
+        for (var instrument : instruments) {
+            commission.InstrumentID = instrument;
+            setSingleConfig(commission);
+        }
+    }
+
+    private static void setSingleConfig(
             CThostFtdcInstrumentCommissionRateField commission) {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(commission.InstrumentID))
                 config.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
             config.instrInfo.get(commission.InstrumentID).Commission = commission;
         }
+    }
+
+    public static void setInstrConfig(
+            CThostFtdcInstrumentCommissionRateField commission) {
+        var pid= Utils.getProductID(commission.InstrumentID);
+        if (pid.compareTo(commission.InstrumentID) == 0)
+            setProductConfig(commission, pid);
+        else
+            setSingleConfig(commission);
     }
 
     private static void setInstrConfig() {

@@ -34,6 +34,7 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class Config {
@@ -48,6 +49,8 @@ public class Config {
 
     // Instrument ID -> Depth market data
     final Map<String, CThostFtdcDepthMarketDataField> depths = new HashMap<>();
+
+    final Map<String, Set<String>> products = new HashMap<>();
 
     static Logger logger;
     String tradingDay;
@@ -145,6 +148,18 @@ public class Config {
     public CThostFtdcDepthMarketDataField getDepthMarketData(String instr) {
         synchronized (this.depths) {
             return this.depths.get(instr);
+        }
+    }
+
+    /**
+     * Get all instrument IDs under the specified product.
+     *
+     * @param productID product ID
+     * @return instrument IDs of the specified product
+     */
+    public Set<String> getProduct(String productID) {
+        synchronized (this.products) {
+            return this.products.get(productID);
         }
     }
 }
