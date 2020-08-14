@@ -221,6 +221,10 @@ public class Platform {
             }
         }
 
+        // TODO Try until providers all start. 
+        // Hence, need to improve internal working state management in 
+        // providers for more accurate report of the login/out ops, 
+        // especially on login/out failure.
         private void start() {
             this.workingState = WorkingState.STARTING;
             // Trader logins.
@@ -256,6 +260,7 @@ public class Platform {
             this.workingState = WorkingState.STARTED;
         }
 
+        // TODO Try stopping until providers really stop.
         private void stop() {
             this.workingState = WorkingState.STOPPING;
             orderProvider.logout();
