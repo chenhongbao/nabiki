@@ -224,35 +224,25 @@ public class Platform {
         private void start() {
             this.workingState = WorkingState.STARTING;
             // Trader logins.
-            orderProvider.login();
-            int count = 0;
-            while (!orderProvider.waitLastInstrument(
-                    TimeUnit.MINUTES.toMillis(1)) && ++count <= 10) {
-                config.getLogger()
-                        .info("wait query instrument(" + count + ")");
+            while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
+                orderProvider.login();
+                if (!orderProvider.waitLastInstrument(
+                        TimeUnit.MINUTES.toMillis(1)))
+                    config.getLogger().info("query instrument timeout");
+                if (orderProvider.getWorkingState() != WorkingState.STARTED)
+                    config.getLogger().severe("trader didn't start up");
             }
-            if (orderProvider.getWorkingState() != WorkingState.STARTED) {
-                config.getLogger().severe(
-                        "trader didn't start up");
-                return;
-            }
-            if (count > 10)
-                config.getLogger().warning(
-                        "trader didn't finish querying instruments");
             // Md logins.
-            tickProvider.login();
-            count = 0;
-            while (!tickProvider.waitLogin(
-                    TimeUnit.MINUTES.toMillis(1)) && count++ < 10) {
-                config.getLogger().info(
-                        "wait md login(" + count + ")");
+            while (tickProvider.getWorkingState() == WorkingState.STOPPED) {
+                tickProvider.login();
+                if (!tickProvider.waitLogin(
+                        TimeUnit.MINUTES.toMillis(1)))
+                    config.getLogger().info("wait md login timeout");
+                if (tickProvider.getWorkingState() != WorkingState.STARTED)
+                    config.getLogger().severe("market data didn't start up");
+                else
+                    tickProvider.subscribe(orderProvider.getInstruments());
             }
-            if (tickProvider.getWorkingState() != WorkingState.STARTED) {
-                config.getLogger().severe(
-                        "market data didn't start up");
-                return;
-            }
-            tickProvider.subscribe(orderProvider.getInstruments());
             this.workingState = WorkingState.STARTED;
         }
 

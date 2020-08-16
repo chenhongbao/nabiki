@@ -166,7 +166,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     public boolean waitLastInstrument(long millis) {
         this.lock.lock();
         try {
-            this.cond.wait(millis);
+            if (!this.qryInstrLast)
+                this.cond.wait(millis);
         } catch (InterruptedException ignored) {
         } finally {
             this.lock.unlock();
@@ -463,6 +464,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                         null, reason));
         this.isConnected = false;
         this.isConfirmed = false;
+        // Don't change working state here because it may disconnect in half way.
     }
 
     @Override
@@ -506,6 +508,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                     Utils.formatLog("failed authentication", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
+            this.workingState = WorkingState.STOPPED;
         }
     }
 
@@ -570,7 +573,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
-        if (isLast)
+        if (this.qryInstrLast)
             signalLastInstrument();
     }
 
@@ -621,6 +624,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                     Utils.formatLog("failed settlement confirm", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
+            // Confirm settlement fails, logout.
+            logout();
         }
     }
 
@@ -636,6 +641,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                     Utils.formatLog("failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
+            this.workingState =  WorkingState.STOPPED;
         }
     }
 
