@@ -260,14 +260,18 @@ public class Platform {
 
         @Override
         public void run() {
-            if (needStart())
-                start();
-            if (needStop())
-                stop();
-            if (needRenew())
-                renew();
-            if (needSettle())
-                settle();
+            try {
+                if (needStart())
+                    start();
+                if (needStop())
+                    stop();
+                if (needRenew())
+                    renew();
+                if (needSettle())
+                    settle();
+            } catch (Throwable th) {
+                config.getLogger().severe(th.getMessage());
+            }
         }
     }
 

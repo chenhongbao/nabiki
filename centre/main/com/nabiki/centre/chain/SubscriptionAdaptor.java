@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
@@ -55,24 +56,6 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             this.map.put(instrID, true);
         }
 
-        private Message toMessage(CThostFtdcDepthMarketDataField depth) {
-            var rsp = new Message();
-            rsp.Type = MessageType.FLOW_DEPTH;
-            rsp.TotalCount = rsp.CurrentCount = 0;
-            rsp.ResponseID = rsp.RequestID = "";
-            rsp.Body = depth;
-            return rsp;
-        }
-
-        private Message toMessage(CThostFtdcCandleField candle) {
-            var rsp = new Message();
-            rsp.Type = MessageType.FLOW_CANDLE;
-            rsp.TotalCount = rsp.CurrentCount = 0;
-            rsp.ResponseID = rsp.RequestID = "";
-            rsp.Body = candle;
-            return rsp;
-        }
-
         @Override
         public void depthReceived(CThostFtdcDepthMarketDataField depth) {
             if (this.map.containsKey(depth.InstrumentID))
@@ -88,9 +71,29 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
 
     static String FRONT_MDRECEIVER_KEY = "front.mdrecv";
     private final MarketDataRouter router;
+    private final CandleRW candlRW;
 
-    SubscriptionAdaptor(MarketDataRouter router) {
+    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw) {
         this.router = router;
+        this.candlRW = rw;
+    }
+
+    private static Message toMessage(CThostFtdcDepthMarketDataField depth) {
+        var rsp = new Message();
+        rsp.Type = MessageType.FLOW_DEPTH;
+        rsp.TotalCount = rsp.CurrentCount = 0;
+        rsp.ResponseID = rsp.RequestID = "";
+        rsp.Body = depth;
+        return rsp;
+    }
+
+    private static Message toMessage(CThostFtdcCandleField candle) {
+        var rsp = new Message();
+        rsp.Type = MessageType.FLOW_CANDLE;
+        rsp.TotalCount = rsp.CurrentCount = 0;
+        rsp.ResponseID = rsp.RequestID = "";
+        rsp.Body = candle;
+        return rsp;
     }
 
     private SessionMarketDataReceiver getReceiver(ServerSession session) {
@@ -103,6 +106,28 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         return (SessionMarketDataReceiver)recv;
     }
 
+    private void sendHistoryCandles(ServerSession session, String instrumentID) {
+        for (var c : this.candlRW.queryCandle(instrumentID))
+            session.sendResponse(toMessage(c));
+    }
+
+    private void sendRsp(ServerSession session, String instrID, String requestID) {
+        var r = new Message();
+        r.Type = MessageType.RSP_SUB_MD;
+        r.RequestID = requestID;
+        r.ResponseID = UUID.randomUUID().toString();
+        r.CurrentCount = r.TotalCount = 1;
+        // Set response body.
+        var ins = new CThostFtdcSpecificInstrumentField();
+        ins.InstrumentID = instrID;
+        r.Body = ins;
+        // Set rsp info.
+        r.RspInfo = new CThostFtdcRspInfoField();
+        r.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+        r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
+        session.sendResponse(r);
+    }
+
     @Override
     public void doSubDepthMarketData(
             ServerSession session,
@@ -112,22 +137,9 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             int total) {
         var recv = getReceiver(session);
         for (var instrID : request.InstrumentID) {
+            sendHistoryCandles(session, instrID);
             recv.subscribe(instrID);
-            // Send rsp.
-            var r = new Message();
-            r.Type = MessageType.RSP_SUB_MD;
-            r.RequestID = requestID;
-            r.ResponseID = UUID.randomUUID().toString();
-            r.CurrentCount = r.TotalCount = 1;
-            // Set response body.
-            var ins = new CThostFtdcSpecificInstrumentField();
-            ins.InstrumentID = instrID;
-            r.Body = ins;
-            // Set rsp info.
-            r.RspInfo = new CThostFtdcRspInfoField();
-            r.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
-            r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
-            session.sendResponse(r);
+            sendRsp(session, instrID, requestID);
         }
         session.done();
     }

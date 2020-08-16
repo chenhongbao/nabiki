@@ -43,7 +43,7 @@ public class CandleAccess {
             "LowestPrice,ClosePrice,AveragePrice,OpenInterest,Volume,Minute," +
             "TradingDay,ActionDay,UpdateTime" + System.lineSeparator();
 
-    public static void write(File file, CThostFtdcCandleField candle) {
+    protected void write(File file, CThostFtdcCandleField candle) {
         Objects.requireNonNull(file, "file null");
         Objects.requireNonNull(candle, "candle null");
         var value = String.format("%s,%,2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
@@ -69,7 +69,7 @@ public class CandleAccess {
         }
     }
 
-    private static CThostFtdcCandleField parse(String line) {
+    private CThostFtdcCandleField parse(String line) {
         String[] vars = line.split(",");
         if (vars.length != 12)
             return null;
@@ -89,7 +89,7 @@ public class CandleAccess {
         return candle;
     }
 
-    public static List<CThostFtdcCandleField> read(File file) {
+    protected List<CThostFtdcCandleField> read(File file) {
         var list = new LinkedList<CThostFtdcCandleField>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;

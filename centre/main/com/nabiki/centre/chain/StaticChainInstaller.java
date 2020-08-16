@@ -29,6 +29,7 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.centre.active.ActiveUserManager;
+import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.utils.Config;
@@ -48,6 +49,9 @@ public class StaticChainInstaller {
         Objects.requireNonNull(user, "active user manager null");
         Objects.requireNonNull(router, "md router null");
         Objects.requireNonNull(router, "md router null");
+        // Install candle writer.
+        var rw = new CandleRW(cfg);
+        router.addReceiver(rw);
         // Install login manager.
         server.setLoginManager(new UserLoginManager(auth, user));
         // Install session adaptor.
@@ -56,7 +60,7 @@ public class StaticChainInstaller {
         var chain = server.getAdaptorChain();
         chain.addAdaptor(new RequestValidator());
         chain.addAdaptor(new RequestExecutor());
-        chain.addAdaptor(new SubscriptionAdaptor(router));
+        chain.addAdaptor(new SubscriptionAdaptor(router, rw));
         chain.addAdaptor(new QueryAdaptor());
     }
 }

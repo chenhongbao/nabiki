@@ -36,15 +36,18 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CandleWriter implements MarketDataReceiver {
+public class CandleRW extends CandleAccess implements MarketDataReceiver {
     private final Path candleDir;
     private final Config config;
     private final Map<String, Map<Integer, File>> files = new ConcurrentHashMap<>();
 
-    public CandleWriter(Config cfg) {
+    public CandleRW(Config cfg) {
         this.config = cfg;
         this.candleDir = getPath(this.config);
     }
@@ -57,12 +60,17 @@ public class CandleWriter implements MarketDataReceiver {
             return Path.of("");
     }
 
-    private File getFile(String instrumentID, int minute) throws IOException {
+    private Map<Integer, File> getInstrFiles(String instrumentID) {
         var instrFiles = this.files.get(instrumentID);
         if (instrFiles == null) {
             instrFiles = new ConcurrentHashMap<>();
             this.files.put(instrumentID, instrFiles);
         }
+        return instrFiles;
+    }
+
+    private File getFile(String instrumentID, int minute) throws IOException {
+        var instrFiles = getInstrFiles(instrumentID);
         File file = instrFiles.get(minute);
         if (file == null) {
             var path = Path.of(this.candleDir.toString(),
@@ -74,6 +82,15 @@ public class CandleWriter implements MarketDataReceiver {
         return file;
     }
 
+    public List<CThostFtdcCandleField> queryCandle(String instrID) {
+        var candles = new LinkedList<CThostFtdcCandleField>();
+        for (var f : getInstrFiles(instrID).values())
+            candles.addAll(super.read(f));
+        // Sort candles.
+        candles.sort(Comparator.comparing(c -> (c.ActionDay + c.UpdateTime)));
+        return candles;
+    }
+
     @Override
     public void depthReceived(CThostFtdcDepthMarketDataField depth) {
 
@@ -82,7 +99,7 @@ public class CandleWriter implements MarketDataReceiver {
     @Override
     public void candleReceived(CThostFtdcCandleField candle) {
         try {
-            CandleAccess.write(getFile(candle.InstrumentID, candle.Minute), candle);
+            super.write(getFile(candle.InstrumentID, candle.Minute), candle);
         } catch (IOException e) {
             config.getLogger().warning(
                     "fail writing candle " + candle.InstrumentID
