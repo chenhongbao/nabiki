@@ -221,7 +221,7 @@ public class Platform {
             }
         }
 
-        // TODO Try until providers all start. 
+        // Try until providers all start.
         // Hence, need to improve internal working state management in 
         // providers for more accurate report of the login/out ops, 
         // especially on login/out failure.
