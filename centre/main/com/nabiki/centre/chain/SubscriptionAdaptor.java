@@ -138,8 +138,8 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         var recv = getReceiver(session);
         for (var instrID : request.InstrumentID) {
             sendHistoryCandles(session, instrID);
-            recv.subscribe(instrID);
             sendRsp(session, instrID, requestID);
+            recv.subscribe(instrID);
         }
         session.done();
     }
