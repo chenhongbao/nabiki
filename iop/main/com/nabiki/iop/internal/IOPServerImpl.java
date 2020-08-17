@@ -33,7 +33,6 @@ import com.nabiki.iop.frame.FrameParser;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
 import java.io.IOException;
@@ -51,7 +50,8 @@ public class IOPServerImpl implements IOPServer {
 
     private void io(InetSocketAddress address) throws IOException {
         var chain = this.acceptor.getFilterChain();
-        chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
+        // Too many logs, don't use the logging filter.
+        // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
         chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
                 new FrameCodecFactory()));
         // Frame handler.
