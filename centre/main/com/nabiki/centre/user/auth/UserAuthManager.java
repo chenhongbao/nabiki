@@ -73,7 +73,6 @@ public class UserAuthManager implements Renewable {
                     if (profile.UserID != null)
                         r.add(profile);
                 } catch (IOException e) {
-                    System.err.println("parsing user auth profile failed");
                     e.printStackTrace();
                 }
             }

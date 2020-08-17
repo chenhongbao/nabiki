@@ -170,6 +170,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 this.cond.await(millis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
             ex.printStackTrace();
+            this.config.getLogger().warning(ex.getMessage());
         } finally {
             this.lock.unlock();
         }
@@ -874,6 +875,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 doQuery();
             } catch (Throwable th) {
                 th.printStackTrace();
+                config.getLogger().warning(th.getMessage());
             }
         }
 

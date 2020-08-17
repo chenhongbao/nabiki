@@ -149,6 +149,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.cond.await(millis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
             ex.printStackTrace();
+            this.config.getLogger().warning(ex.getMessage());
         } finally {
             this.lock.unlock();
         }
