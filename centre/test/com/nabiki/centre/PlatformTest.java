@@ -94,11 +94,11 @@ public class PlatformTest {
             Platform.main(new String[]{
                     "--root", "C:\\Users\\chenh\\Desktop\\.root",
                     "--host", "localhost",
-                    "--port", "9037"});
+                    "--port", "9038"});
         });
         main.start();
 
-        sleep((int)TimeUnit.SECONDS.toMillis(2));
+        sleep((int)TimeUnit.MINUTES.toMillis(2));
 
         // Client up.
         TradeClientFactory factory = new TradeClientFactoryImpl();
@@ -108,7 +108,7 @@ public class PlatformTest {
 
         // Connect to server.
         try {
-            client.open(new InetSocketAddress("localhost", 9037));
+            client.open(new InetSocketAddress("localhost", 9038));
         } catch (Throwable e) {
             fail(e.getMessage());
         }

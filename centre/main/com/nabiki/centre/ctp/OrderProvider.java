@@ -167,8 +167,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.lock.lock();
         try {
             if (!this.qryInstrLast)
-                this.cond.wait(millis);
-        } catch (InterruptedException ignored) {
+                this.cond.await(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
         } finally {
             this.lock.unlock();
         }

@@ -146,8 +146,9 @@ public class TickProvider extends CThostFtdcMdSpi {
     public boolean waitLogin(long millis) {
         this.lock.lock();
         try {
-            this.cond.wait(millis);
-        } catch (InterruptedException ignored) {
+            this.cond.await(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
         } finally {
             this.lock.unlock();
         }
