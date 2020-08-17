@@ -34,29 +34,9 @@ import com.nabiki.ctp4j.jni.struct.*;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * {@code CThostFtdcTraderApi} manages native resources for a trading session between
- * client and counter server.
- *
- * <p>There are two objects in the native codes serving a Java instance. And they are
- * session between client and server where trades happen, and channel between the
- * above session and JNI interface where data are moved from the native codes to JVM.
- * </p>
- *
- * <p>Request from Java to remote counter is moved from JVM to the native via JNI
- * interface, and then directly calls the native API to send request. It is no need
- * to route via the channel.
- * </p>
- *
- * <p>Data from remote counter are read via JNI by a Java thread and processed via
- * {@link CThostFtdcTraderSpi} callback methods.
- * </p>
- *
- * <p>To stop a trader api instance in Java, the class first destroys the native
- * session between client and remote counter, then the channel reading thread, and
- * then the channel. All resources must be released when a trader api instance is
- * no longer in use because the information of the native resources could be lost
- * after JVM garbage collection, thus those native resources are leaked.
- * </p>
+ * {@code CThostFtdcTraderApi} manages resources for a trading session between
+ * client and counter server. The mechanism behind the interface depends on how
+ * it is implemented.
  */
 public abstract class CThostFtdcTraderApi {
 
