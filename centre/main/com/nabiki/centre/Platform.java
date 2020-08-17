@@ -86,12 +86,11 @@ public class Platform {
     private ActiveUserManager userManager;
 
     private final MarketDataRouter router;
-    private final Timer timerPlat, timerCandle;
+    private final Timer timerPlat;
     private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
     Platform() {
         this.timerPlat = new Timer();
-        this.timerCandle = new Timer();
         this.router = new MarketDataRouter();
     }
 
@@ -157,10 +156,6 @@ public class Platform {
     public void task() {
         this.timerPlat.scheduleAtFixedRate(
                 new PlatformTask(),
-                MILLIS - System.currentTimeMillis() % MILLIS,
-                MILLIS);
-        this.timerCandle.scheduleAtFixedRate(
-                this.candleEngine,
                 MILLIS - System.currentTimeMillis() % MILLIS,
                 MILLIS);
     }

@@ -61,13 +61,15 @@ public class CandleEngine extends TimerTask {
     }
 
     private void prepare() {
-        this.timer.scheduleAtFixedRate(this,
-                MILLIS - System.currentTimeMillis() % MILLIS, MILLIS);
         // Set hour keepers.
         var m = this.config.getAllTradingHour();
-        for (var keeper : m.values())
+        for (var keeper : m.values()) {
             for (var du : this.durations)
                 keeper.sample(du);
+        }
+        // Schedule.
+        this.timer.scheduleAtFixedRate(this,
+                MILLIS - System.currentTimeMillis() % MILLIS, MILLIS);
     }
 
     public void setWorking(boolean working) {

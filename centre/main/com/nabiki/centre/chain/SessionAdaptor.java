@@ -55,7 +55,6 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                 this.config.getLogger().warning(
                         ((Throwable) eventObject).getMessage());
                 break;
-            case IDLE:
             case MISS_HEARTBEAT:
                 this.config.getLogger().warning(
                         "miss heartbeat(" + eventObject + ")");
@@ -80,6 +79,7 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                 this.config.getLogger().info(
                         "session created(" + session.getRemoteAddress() + ")");
                 break;
+            case IDLE:
             default:
                 break;
         }
