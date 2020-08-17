@@ -174,4 +174,14 @@ class TradeClientImpl implements TradeClient {
                 requestID,
                 CThostFtdcSpecificInstrumentField.class);
     }
+
+    @Override
+    public Response<CThostFtdcSpecificInstrumentField> unSubscribeMarketData(
+            CThostFtdcUnsubMarketDataField subscription, String requestID) {
+        return send(
+                MessageType.UNSUB_MD,
+                subscription,
+                requestID,
+                CThostFtdcSpecificInstrumentField.class);
+    }
 }

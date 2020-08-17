@@ -60,9 +60,13 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                         "miss heartbeat(" + eventObject + ")");
                 break;
             case MESSAGE_NOT_DONE:
+                this.config.getLogger().warning("message not processed");
+                this.config.getLogger().warning(OP.toJson(eventObject));
+                break;
             case STRANGE_MESSAGE:
             case BROKEN_BODY:
-                this.config.getLogger().warning("fail parsing message");
+                this.config.getLogger().warning("fail parsing message: "
+                        + event);
                 this.config.getLogger().warning(OP.toJson(eventObject));
                 break;
             case CLOSED:
@@ -75,9 +79,12 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                         "session closed(" + session.getRemoteAddress() + ")");
                 break;
             case CREATED:
-            case OPENED:
                 this.config.getLogger().info(
                         "session created(" + session.getRemoteAddress() + ")");
+                break;
+            case OPENED:
+                this.config.getLogger().info(
+                        "session opened(" + session.getRemoteAddress() + ")");
                 break;
             case IDLE:
             default:

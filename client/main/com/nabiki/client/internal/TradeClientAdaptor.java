@@ -85,8 +85,6 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
         if (!this.responses.containsKey(requestID))
             throw new IllegalStateException(
                     "no such request ID and response mapping");
-        if (!(object instanceof CThostFtdcRspUserLoginField))
-            throw new IllegalArgumentException("wrong message body");
         // Call response.
         var response = (ResponseImpl<T>) this.responses.get(requestID);
         response.put(object, info, current, total);

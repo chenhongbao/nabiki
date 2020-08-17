@@ -65,11 +65,13 @@ class AdaptorChainImpl implements AdaptorChain {
             try {
                 handleMessage(adaptor, session, message);
             } catch (Throwable th) {
+                session.setResponseState(SessionResponseState.ERROR);
                 whenError(session, SessionEvent.ERROR, th);
             }
         }
         // The message goes through all adaptors and not done yet.
-        whenError(session, SessionEvent.MESSAGE_NOT_DONE, message);
+        if (session.getResponseState() != SessionResponseState.DONE)
+            whenError(session, SessionEvent.MESSAGE_NOT_DONE, message);
     }
 
     private void whenError(ServerSessionImpl session, SessionEvent event, Object obj) {

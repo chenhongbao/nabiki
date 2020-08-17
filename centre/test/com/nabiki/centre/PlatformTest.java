@@ -29,10 +29,11 @@
 package com.nabiki.centre;
 
 import com.nabiki.client.MarketDataListener;
-import com.nabiki.client.ResponseConsumer;
 import com.nabiki.client.TradeClientFactory;
 import com.nabiki.client.TradeClientListener;
 import com.nabiki.client.internal.TradeClientFactoryImpl;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
+import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.x.OP;
 import org.junit.Test;
@@ -113,23 +114,127 @@ public class PlatformTest {
             fail(e.getMessage());
         }
 
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Test login.
         var login = new CThostFtdcReqUserLoginField();
         login.Password = "1234";
         login.UserID = "0001";
         var rsp = client.login(login, UUID.randomUUID().toString());
 
-        rsp.consume(new ResponseConsumer<>() {
+        rsp.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Query account.
+        var qryAccount = new CThostFtdcQryTradingAccountField();
+        qryAccount.CurrencyID = "CNY";
+        qryAccount.AccountID = "0001";
+        qryAccount.InvestorID = "0001";
+        var rsp1 = client.queryAccount(qryAccount, UUID.randomUUID().toString());
+
+        rsp1.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Query position.
+        var qryPosition = new CThostFtdcQryInvestorPositionField();
+        qryPosition.InstrumentID = "c2101";
+        qryPosition.InvestorID = "0001";
+        var rsp2 = client.queryPosition(qryPosition, UUID.randomUUID().toString());
+
+        rsp2.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Subscribe md.
+        client.setListener(new MarketDataListener() {
             @Override
-            public void accept(
-                    CThostFtdcRspUserLoginField object,
-                    CThostFtdcRspInfoField rspInfo,
-                    int currentCount,
-                    int totalCount) {
+            public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
+                System.out.println(OP.toJson(depth));
+            }
+
+            @Override
+            public void onCandle(CThostFtdcCandleField candle) {
+                System.out.println(OP.toJson(candle));
+            }
+        });
+
+        var sub = new CThostFtdcSubMarketDataField();
+        sub.InstrumentID = new String[] {"c2101", "c2105" };
+        var rsp3 = client.subscribeMarketData(sub, UUID.randomUUID().toString());
+
+        rsp3.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(10));
+
+        // Un-subscribe md.
+        var unsub = new CThostFtdcUnsubMarketDataField();
+        unsub.InstrumentID = new String[] {"c2101", "c2105" };
+        var rsp4 = client.unSubscribeMarketData(unsub, UUID.randomUUID().toString());
+
+        rsp4.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Insert order.
+        var order = new CThostFtdcInputOrderField();
+        order.InstrumentID = "c2101";
+        order.BrokerID = "9999";
+        order.ExchangeID = "DCE";
+        order.LimitPrice = 2250;
+        order.VolumeTotalOriginal = 1;
+        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+
+        var rsp5 = client.orderInsert(order, UUID.randomUUID().toString());
+        String[] id = new String[1];
+
+        rsp5.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+
+            // Save ID.
+            id[0] = object.OrderLocalID;
+        });
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Query order.
+        if (id[0] == null)
+            System.err.println("no order id");
+        else {
+            var qryOrder = new CThostFtdcQryOrderField();
+            qryOrder.OrderSysID = id[0];
+            var rsp6 = client.queryOrder(qryOrder, UUID.randomUUID().toString());
+
+            rsp6.consume((object, rspInfo, currentCount, totalCount) -> {
                 System.out.println(OP.toJson(object));
                 System.out.println(OP.toJson(rspInfo));
                 System.out.println(currentCount + "/" + totalCount);
-            }
-        });
+            });
+        }
 
         try {
             new CountDownLatch(1).await();

@@ -466,6 +466,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                         null, reason));
         this.isConnected = false;
         this.isConfirmed = false;
+        // Clear trading day.
+        ConfigLoader.setTradingDay(null);
         // Don't change working state here because it may disconnect in half way.
     }
 
@@ -638,6 +640,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         if (rspInfo.ErrorID == 0) {
             doSettlement();
             doRspLogin(rspUserLogin);
+            // Set trading day.
+            ConfigLoader.setTradingDay(rspUserLogin.TradingDay);
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
@@ -657,6 +661,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
+            // Clear trading day.
+            ConfigLoader.setTradingDay(null);
         } else {
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout", null,

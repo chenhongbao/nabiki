@@ -55,4 +55,6 @@ public interface TradeClient {
     Response<CThostFtdcOrderField> queryOrder(CThostFtdcQryOrderField query, String requestID);
 
     Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(CThostFtdcSubMarketDataField subscription, String requestID);
+
+    Response<CThostFtdcSpecificInstrumentField> unSubscribeMarketData(CThostFtdcUnsubMarketDataField subscription, String requestID);
 }

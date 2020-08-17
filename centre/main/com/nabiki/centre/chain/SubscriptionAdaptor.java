@@ -56,6 +56,10 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             this.map.put(instrID, true);
         }
 
+        void unsubscribe(String instrID) {
+            this.map.remove(instrID);
+        }
+
         @Override
         public void depthReceived(CThostFtdcDepthMarketDataField depth) {
             if (this.map.containsKey(depth.InstrumentID))
@@ -141,6 +145,19 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             sendRsp(session, instrID, requestID);
             recv.subscribe(instrID);
         }
+        session.done();
+    }
+
+    @Override
+    public void doUnsubDepthMarketData(
+            ServerSession session,
+            CThostFtdcUnsubMarketDataField request,
+            String requestID,
+            int current,
+            int total) {
+        var recv = getReceiver(session);
+        for (var instrID : request.InstrumentID)
+            recv.unsubscribe(instrID);
         session.done();
     }
 }
