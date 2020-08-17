@@ -58,6 +58,7 @@ public class ActiveUserManager implements Renewable {
             if (usr == null)
                 return null;
             active = new ActiveUser(usr, this.provider, this.config);
+            this.users.put(userID, active);
         }
         return active;
     }
@@ -68,12 +69,13 @@ public class ActiveUserManager implements Renewable {
 
     @Override
     public void renew() throws Exception {
-        this.userMgr.renew();
         this.users.clear();
+        this.userMgr.renew();
     }
 
     @Override
     public void settle() throws Exception {
+        this.users.clear();
         this.userMgr.settle();
     }
 }

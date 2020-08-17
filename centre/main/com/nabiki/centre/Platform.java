@@ -208,6 +208,7 @@ public class Platform {
                 ConfigLoader.config();
                 this.userState = UserState.RENEW;
             } catch (Exception e) {
+                e.printStackTrace();
                 config.getLogger().severe("renew failed");
             }
         }
@@ -218,6 +219,7 @@ public class Platform {
                 userManager.settle();
                 this.userState = UserState.SETTLED;
             } catch (Exception e) {
+                e.printStackTrace();
                 config.getLogger().severe("settle failed");
             }
         }
@@ -271,6 +273,7 @@ public class Platform {
                 if (needSettle())
                     settle();
             } catch (Throwable th) {
+                th.printStackTrace();
                 config.getLogger().severe(th.getMessage());
             }
         }

@@ -80,10 +80,12 @@ public class UserManager implements Renewable {
     private File findLatestDir(Path userDir) {
         final File[] r = {null};
         userDir.toFile().listFiles(file -> {
-            if (r[0] == null)
-                r[0] = file;
-            else if (file.getName().compareTo(r[0].getName()) > 0)
-                r[0] = file;
+            if (file.isDirectory()) {
+                if (r[0] == null)
+                    r[0] = file;
+                else if (file.getName().compareTo(r[0].getName()) > 0)
+                    r[0] = file;
+            }
             return false;
         });
         return r[0];
