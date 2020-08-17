@@ -26,18 +26,14 @@
  * SOFTWARE.
  */
 
-package com.nabiki.ctp4j.md.internal;
+package com.nabiki.ctp4j.trader.internal;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcReqUserLoginField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcUserLogoutField;
-import com.nabiki.ctp4j.md.CThostFtdcMdApi;
-import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
+import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
+import com.nabiki.ctp4j.trader.CThostFtdcTraderSpi;
 
-public class CThostFtdcMdApiImpl extends CThostFtdcMdApi {
-    public CThostFtdcMdApiImpl(
-            String flowPath,
-            boolean isUsingUdp,
-            boolean isMulticast) {
+public class CThostFtdcTraderApiImpl_0 extends CThostFtdcTraderApi {
+    public CThostFtdcTraderApiImpl_0(String flowPath) {
     }
 
     @Override
@@ -61,18 +57,33 @@ public class CThostFtdcMdApiImpl extends CThostFtdcMdApi {
     }
 
     @Override
+    public void SubscribePrivateTopic(int type) {
+
+    }
+
+    @Override
+    public void SubscribePublicTopic(int type) {
+
+    }
+
+    @Override
     public void RegisterFront(String frontAddress) {
 
     }
 
     @Override
-    public void RegisterSpi(CThostFtdcMdSpi spi) {
+    public void RegisterSpi(CThostFtdcTraderSpi spi) {
 
     }
 
     @Override
     public void Release() {
 
+    }
+
+    @Override
+    public int ReqAuthenticate(CThostFtdcReqAuthenticateField reqAuthenticateField, int requestID) {
+        return 0;
     }
 
     @Override
@@ -86,12 +97,42 @@ public class CThostFtdcMdApiImpl extends CThostFtdcMdApi {
     }
 
     @Override
-    public int SubscribeMarketData(String[] instrumentID, int count) {
+    public int ReqSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField settlementInfoConfirm, int requestID) {
         return 0;
     }
 
     @Override
-    public int UnSubscribeMarketData(String[] instrumentID, int count) {
+    public int ReqOrderInsert(CThostFtdcInputOrderField inputOrder, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqOrderAction(CThostFtdcInputOrderActionField inputOrderAction, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqQryInstrument(CThostFtdcQryInstrumentField qryInstrument, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqQryInstrumentCommissionRate(CThostFtdcQryInstrumentCommissionRateField qryInstrumentCommissionRate, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqQryInstrumentMarginRate(CThostFtdcQryInstrumentMarginRateField qryInstrumentMarginRate, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqQryTradingAccount(CThostFtdcQryTradingAccountField qryTradingAccount, int requestID) {
+        return 0;
+    }
+
+    @Override
+    public int ReqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField qryInvestorPositionDetail, int requestID) {
         return 0;
     }
 }

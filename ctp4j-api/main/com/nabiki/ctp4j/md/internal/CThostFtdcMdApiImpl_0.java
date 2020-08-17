@@ -26,14 +26,18 @@
  * SOFTWARE.
  */
 
-package com.nabiki.ctp4j.trader.internal;
+package com.nabiki.ctp4j.md.internal;
 
-import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
-import com.nabiki.ctp4j.trader.CThostFtdcTraderSpi;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcReqUserLoginField;
+import com.nabiki.ctp4j.jni.struct.CThostFtdcUserLogoutField;
+import com.nabiki.ctp4j.md.CThostFtdcMdApi;
+import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
 
-public class CThostFtdcTraderApiImpl extends CThostFtdcTraderApi {
-    public CThostFtdcTraderApiImpl(String flowPath) {
+public class CThostFtdcMdApiImpl_0 extends CThostFtdcMdApi {
+    public CThostFtdcMdApiImpl_0(
+            String flowPath,
+            boolean isUsingUdp,
+            boolean isMulticast) {
     }
 
     @Override
@@ -57,33 +61,18 @@ public class CThostFtdcTraderApiImpl extends CThostFtdcTraderApi {
     }
 
     @Override
-    public void SubscribePrivateTopic(int type) {
-
-    }
-
-    @Override
-    public void SubscribePublicTopic(int type) {
-
-    }
-
-    @Override
     public void RegisterFront(String frontAddress) {
 
     }
 
     @Override
-    public void RegisterSpi(CThostFtdcTraderSpi spi) {
+    public void RegisterSpi(CThostFtdcMdSpi spi) {
 
     }
 
     @Override
     public void Release() {
 
-    }
-
-    @Override
-    public int ReqAuthenticate(CThostFtdcReqAuthenticateField reqAuthenticateField, int requestID) {
-        return 0;
     }
 
     @Override
@@ -97,42 +86,12 @@ public class CThostFtdcTraderApiImpl extends CThostFtdcTraderApi {
     }
 
     @Override
-    public int ReqSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField settlementInfoConfirm, int requestID) {
+    public int SubscribeMarketData(String[] instrumentID, int count) {
         return 0;
     }
 
     @Override
-    public int ReqOrderInsert(CThostFtdcInputOrderField inputOrder, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqOrderAction(CThostFtdcInputOrderActionField inputOrderAction, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqQryInstrument(CThostFtdcQryInstrumentField qryInstrument, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqQryInstrumentCommissionRate(CThostFtdcQryInstrumentCommissionRateField qryInstrumentCommissionRate, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqQryInstrumentMarginRate(CThostFtdcQryInstrumentMarginRateField qryInstrumentMarginRate, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqQryTradingAccount(CThostFtdcQryTradingAccountField qryTradingAccount, int requestID) {
-        return 0;
-    }
-
-    @Override
-    public int ReqQryInvestorPositionDetail(CThostFtdcQryInvestorPositionDetailField qryInvestorPositionDetail, int requestID) {
+    public int UnSubscribeMarketData(String[] instrumentID, int count) {
         return 0;
     }
 }

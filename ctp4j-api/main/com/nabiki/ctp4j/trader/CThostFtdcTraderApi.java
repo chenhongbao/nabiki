@@ -30,7 +30,8 @@ package com.nabiki.ctp4j.trader;
 
 import com.nabiki.ctp4j.jni.flag.ThostTeResumeType;
 import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.ctp4j.trader.internal.CThostFtdcTraderApiImpl;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * {@code CThostFtdcTraderApi} manages native resources for a trading session between
@@ -70,7 +71,19 @@ public abstract class CThostFtdcTraderApi {
 	 * @return new trader api instance
 	 */
 	public static CThostFtdcTraderApi CreateFtdcTraderApi(String flowPath) {
-		return new CThostFtdcTraderApiImpl(flowPath);
+		try {
+			var clz = Class.forName(
+					"com.nabiki.ctp4j.trader.internal.CThostFtdcTraderApiImpl");
+			return (CThostFtdcTraderApi)clz
+					.getConstructor(String.class).newInstance(flowPath);
+		} catch (ClassNotFoundException
+				| NoSuchMethodException
+				| IllegalAccessException
+				| InstantiationException
+				| InvocationTargetException e) {
+			return new com.nabiki.ctp4j.trader.internal
+					.CThostFtdcTraderApiImpl_0(flowPath);
+		}
 	}
 
 	/**

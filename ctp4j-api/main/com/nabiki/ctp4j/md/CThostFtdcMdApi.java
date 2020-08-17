@@ -30,8 +30,9 @@ package com.nabiki.ctp4j.md;
 
 import com.nabiki.ctp4j.jni.struct.CThostFtdcReqUserLoginField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcUserLogoutField;
-import com.nabiki.ctp4j.md.internal.CThostFtdcMdApiImpl;
 import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Mechanism of the market data instance is like the {@link CThostFtdcTraderApi}.
@@ -62,7 +63,20 @@ public abstract class CThostFtdcMdApi {
      */
     public static CThostFtdcMdApi CreateFtdcMdApi(
             String flowPath, boolean isUsingUdp, boolean isMulticast) {
-        return new CThostFtdcMdApiImpl(flowPath, isUsingUdp, isMulticast);
+        try {
+            var clz = Class.forName(
+                    "com.nabiki.ctp4j.md.internal.CThostFtdcMdApiImpl");
+            return (CThostFtdcMdApi)clz
+                    .getConstructor(String.class, boolean.class, boolean.class)
+                    .newInstance(flowPath, isUsingUdp, isMulticast);
+        } catch (ClassNotFoundException
+                | NoSuchMethodException
+                | IllegalAccessException
+                | InstantiationException
+                | InvocationTargetException e) {
+            return new com.nabiki.ctp4j.md.internal
+                    .CThostFtdcMdApiImpl_0(flowPath, isUsingUdp, isMulticast);
+        }
     }
 
     /**
