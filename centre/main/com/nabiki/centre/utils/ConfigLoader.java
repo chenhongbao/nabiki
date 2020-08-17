@@ -101,8 +101,9 @@ public class ConfigLoader {
         if (instruments == null)
             return;
         for (var instrument : instruments) {
-            margin.InstrumentID = instrument;
-            setSingleConfig(margin);
+            var m = Utils.deepCopy(margin);
+            m.InstrumentID = instrument;
+            setSingleConfig(m);
         }
     }
     public static void setSingleConfig(
@@ -130,8 +131,12 @@ public class ConfigLoader {
         if (instruments == null)
             return;
         for (var instrument : instruments) {
-            commission.InstrumentID = instrument;
-            setSingleConfig(commission);
+            // The commission has product ID as instrument, so I need to get all
+            // instruments under the product, and set one by one.
+            // They must not share the same commission instance.
+            var c = Utils.deepCopy(commission);
+            c.InstrumentID = instrument;
+            setSingleConfig(c);
         }
     }
 
@@ -157,6 +162,7 @@ public class ConfigLoader {
         var dirs = config.getRootDirectory().recursiveGet("dir.flow.rsp");
         if (dirs.size() == 0)
             return;
+        // Instrument are all ready with correct instrument ID.
         for (var d : dirs) {
             d.path().toFile().listFiles(file -> {
                 try {
@@ -164,7 +170,22 @@ public class ConfigLoader {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
                                 CThostFtdcInstrumentField.class));
-                    } else if (file.getName().startsWith("commission")) {
+                    }
+                } catch (IOException e) {
+                    config.getLogger().warning(
+                            Utils.formatLog("failed instr config",
+                                    null, e.getMessage(), null));
+                }
+                return false;
+            });
+        }
+        // Some rate's info has product ID as instrument ID, and it needs to know
+        // all instrument ID before setting the data.
+        // So loading margin and commission after loading instruments.
+        for (var d : dirs) {
+            d.path().toFile().listFiles(file -> {
+                try {
+                    if (file.getName().startsWith("commission")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
                                 CThostFtdcInstrumentCommissionRateField.class));

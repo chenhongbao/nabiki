@@ -870,7 +870,11 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         public void run() {
             if (!qryInstrLast || !isConfirmed)
                 return;
-            doQuery();
+            try {
+                doQuery();
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
         }
 
         protected void doQuery() {
@@ -910,7 +914,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
         protected String randomGet() {
             synchronized (instruments) {
-                return instruments.get(rand.nextInt() % instruments.size());
+                return instruments.get(
+                        Math.abs(rand.nextInt()) % instruments.size());
             }
         }
     }

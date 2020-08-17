@@ -115,19 +115,19 @@ public class MessageWriter {
     public void writeRsp(CThostFtdcInstrumentMarginRateField rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.rspDir,
-                        "margin." + getTimeStamp() + ".json"));
+                        "margin." + rsp.InstrumentID + ".json"));
     }
 
     public void writeRsp(CThostFtdcInstrumentCommissionRateField rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.rspDir,
-                        "commission." + getTimeStamp() + ".json"));
+                        "commission." + rsp.InstrumentID + ".json"));
     }
 
     public void writeRsp(CThostFtdcInstrumentField rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.rspDir,
-                        "instrument." + getTimeStamp() + ".json"));
+                        "instrument." + rsp.InstrumentID + ".json"));
     }
 
     public void writeErr(CThostFtdcOrderActionField err) {
