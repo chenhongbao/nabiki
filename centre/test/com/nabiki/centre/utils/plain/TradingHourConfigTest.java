@@ -28,28 +28,152 @@
 
 package com.nabiki.centre.utils.plain;
 
+import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class TradingHourConfigTest {
+    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+    TradingHourConfig.SingleTradingHour hour(String from, String to) {
+        var h = new TradingHourConfig.SingleTradingHour();
+        h.From = LocalTime.parse(from, formatter);
+        h.To = LocalTime.parse(to, formatter);
+        return h;
+    }
+
+    private void setName(TradingHourConfig cfg, String n) {
+        cfg.Name = n;
+    }
+
+    private void setProducts(TradingHourConfig cfg, String... p) {
+        cfg.ProductID = new LinkedList<>();
+        cfg.ProductID.addAll(Arrays.asList(p));
+    }
+
+    private void setHours(
+            TradingHourConfig cfg,
+            TradingHourConfig.SingleTradingHour hour) {
+        if (cfg.TradingHour == null)
+            cfg.TradingHour = new LinkedList<>();
+        cfg.TradingHour.add(hour);
+    }
+
+    private void write(Path dir, TradingHourConfig cfg) throws IOException {
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
+            Files.createDirectories(dir);
+        var f = new File(dir.toString() + "/hour." + cfg.Name + ".json");
+        Utils.writeText(OP.toJson(cfg), f, StandardCharsets.UTF_8, false);
+    }
+
     @Test
     public void basic() {
+        var dir = Paths.get("C:\\Users\\chenh\\Desktop\\.root\\.cfg\\.hour");
+
         var cfg = new TradingHourConfig();
+        setName(cfg, "p0");
+        setProducts(cfg,
+                "eb", "j", "jm", "i", "eg",
+                "l", "v", "pp", "c", "cs",
+                "a", "b", "p", "y", "m",
+                "rb", "hc", "fu", "bu", "ru",
+                "sp", "rr", "nr", "FG", "ZC",
+                "TA", "MA", "SA", "RM", "OI",
+                "CF", "SR", "CY");
+        setHours(cfg, hour("21:00", "23:00"));
+        setHours(cfg, hour("09:00", "10:15"));
+        setHours(cfg, hour("10:30", "11:30"));
+        setHours(cfg, hour("13:30", "15:00"));
 
-        var hour0 = new TradingHourConfig.SingleTradingHour();
-        hour0.From = LocalTime.of(0, 0);
-        hour0.To = LocalTime.of(23,59);
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        cfg.Name = "test case";
-        cfg.ProductID = new LinkedList<>();
-        cfg.ProductID.add("c");
-        cfg.TradingHour = new LinkedList<>();
-        cfg.TradingHour.add(hour0);
+        cfg = new TradingHourConfig();
+        setName(cfg, "p1");
+        setProducts(cfg,
+                "ss", "pb", "ni", "sn", "cu", "al", "zn");
+        setHours(cfg, hour("21:00", "01:00"));
+        setHours(cfg, hour("09:00", "10:15"));
+        setHours(cfg, hour("10:30", "11:30"));
+        setHours(cfg, hour("13:30", "15:00"));
 
-        System.out.println(OP.toJson(cfg));
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        cfg = new TradingHourConfig();
+        setName(cfg, "p2");
+        setProducts(cfg,
+                "au", "ag", "sc");
+        setHours(cfg, hour("21:00", "02:30"));
+        setHours(cfg, hour("09:00", "10:15"));
+        setHours(cfg, hour("10:30", "11:30"));
+        setHours(cfg, hour("13:30", "15:00"));
+
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        cfg = new TradingHourConfig();
+        setName(cfg, "p3");
+        setProducts(cfg,
+                "pg", "wr", "jd", "bb", "fb",
+                "WH", "RI", "LR", "JR", "RS",
+                "SF", "SM", "AP", "PM", "CJ",
+                "UR", "lu");
+        setHours(cfg, hour("09:00", "10:15"));
+        setHours(cfg, hour("10:30", "11:30"));
+        setHours(cfg, hour("13:30", "15:00"));
+
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        cfg = new TradingHourConfig();
+        setName(cfg, "p4");
+        setProducts(cfg,
+                "IC", "IH", "IF");
+        setHours(cfg, hour("09:30", "11:30"));
+        setHours(cfg, hour("13:00", "15:00"));
+
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        cfg = new TradingHourConfig();
+        setName(cfg, "p5");
+        setProducts(cfg,
+                "T", "TF", "TS");
+        setHours(cfg, hour("09:30", "11:30"));
+        setHours(cfg, hour("13:00", "15:15"));
+
+        try {
+            write(dir, cfg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

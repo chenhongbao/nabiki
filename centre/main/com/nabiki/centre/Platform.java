@@ -79,17 +79,19 @@ public class Platform {
     }
 
     private Config config;
+    private CandleEngine candleEngine;
     private OrderProvider orderProvider;
     private TickProvider tickProvider;
     private UserAuthManager authManager;
     private ActiveUserManager userManager;
 
     private final MarketDataRouter router;
-    private final Timer timer;
+    private final Timer timerPlat, timerCandle;
     private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
     Platform() {
-        this.timer = new Timer();
+        this.timerPlat = new Timer();
+        this.timerCandle = new Timer();
         this.router = new MarketDataRouter();
     }
 
@@ -97,12 +99,12 @@ public class Platform {
         // Set order provider.
         this.orderProvider = new OrderProvider(this.config);
         this.orderProvider.initialize();
-        // Set tick provider.
         // Prepare candle engine.
-        var candleEngine = new CandleEngine(this.config);
-        candleEngine.registerRouter(this.router);
+        this.candleEngine = new CandleEngine(this.config);
+        this.candleEngine.registerRouter(this.router);
+        // Set tick provider.
         this.tickProvider = new TickProvider(this.config);
-        this.tickProvider.register(candleEngine);
+        this.tickProvider.register(this.candleEngine);
         this.tickProvider.register(this.router);
         this.tickProvider.initialize();
     }
@@ -153,8 +155,12 @@ public class Platform {
     }
 
     public void task() {
-        this.timer.scheduleAtFixedRate(
+        this.timerPlat.scheduleAtFixedRate(
                 new PlatformTask(),
+                MILLIS - System.currentTimeMillis() % MILLIS,
+                MILLIS);
+        this.timerCandle.scheduleAtFixedRate(
+                this.candleEngine,
                 MILLIS - System.currentTimeMillis() % MILLIS,
                 MILLIS);
     }
