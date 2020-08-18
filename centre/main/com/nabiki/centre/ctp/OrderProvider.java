@@ -64,6 +64,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected final Timer qryTimer = new Timer();
     protected final List<String> instruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
+    protected final TimeAligner timeAligner = new TimeAligner();
 
     protected boolean isConfirmed = false,
             isConnected = false,
@@ -642,6 +643,12 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             doRspLogin(rspUserLogin);
             // Set trading day.
             ConfigLoader.setTradingDay(rspUserLogin.TradingDay);
+            // Align time.
+            this.timeAligner.align("SHFE", LocalTime.now(), rspLogin.SHFETime);
+            this.timeAligner.align("CZCE", LocalTime.now(), rspLogin.CZCETime);
+            this.timeAligner.align("DCE", LocalTime.now(), rspLogin.DCETime);
+            this.timeAligner.align("FFEX", LocalTime.now(), rspLogin.FFEXTime);
+            this.timeAligner.align("INE", LocalTime.now(), rspLogin.INETime);
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
@@ -743,7 +750,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 pend = pendingReqs.poll(1, TimeUnit.DAYS);
             // Await time out, or notified by new request.
             // Instrument not trading.
-            if (!isTrading(getInstrID(pend))) {
+            if (!canTrade(getInstrID(pend))) {
                 return pend;
             }
             int r = 0;
@@ -838,7 +845,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             return traderApi.ReqOrderAction(action, Utils.getIncrementID());
         }
 
-        protected boolean isTrading(String instrID) {
+        protected boolean canTrade(String instrID) {
             var hour = config.getTradingHour(null, instrID);
             if (hour == null) {
                 config.getLogger().warning(
@@ -846,7 +853,14 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                                 null, null));
                 return false;
             }
-            return isConfirmed && hour.contains(LocalTime.now());
+            LocalTime now;
+            var ins = config.getInstrInfo(instrID);
+            if (ins != null && ins.Instrument != null)
+                now = timeAligner.getAlignTime(ins.Instrument.ExchangeID,
+                        LocalTime.now());
+            else
+                now = LocalTime.now();
+            return isConfirmed && hour.contains(now.minusSeconds(1));
         }
 
         protected String getInstrID(PendingRequest pend) {
