@@ -40,12 +40,12 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 class TradeClientImpl implements TradeClient {
-
-
     private final IOPClient client = IOP.createClient();
     private final TradeClientAdaptor clientAdaptor = new TradeClientAdaptor();
     private final TradeClientSessionAdaptor sessionAdaptor
             = new TradeClientSessionAdaptor();
+
+    private CThostFtdcReqUserLoginField lastLoginReq;
 
     public TradeClientImpl() {
     }
@@ -88,6 +88,8 @@ class TradeClientImpl implements TradeClient {
         this.clientAdaptor.setResponse(rsp, requestID);
         getSession().sendLogin(
                 toMessage(MessageType.REQ_LOGIN, request, requestID));
+        // Preserve login request.
+        this.lastLoginReq = request;
         return rsp;
     }
 
@@ -118,6 +120,11 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcOrderField> orderInsert(
             CThostFtdcInputOrderField order, String requestID) {
+        order.InvestorID
+                = order.UserID
+                = order.AccountID
+                = this.lastLoginReq.UserID;
+        order.BrokerID = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.REQ_ORDER_INSERT,
                 order,
@@ -128,6 +135,10 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcOrderActionField> orderAction(
             CThostFtdcInputOrderActionField action, String requestID) {
+        action.InvestorID
+                = action.UserID
+                = this.lastLoginReq.UserID;
+        action.BrokerID = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.REQ_ORDER_ACTION,
                 action,
@@ -138,6 +149,8 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcInvestorPositionField> queryPosition(
             CThostFtdcQryInvestorPositionField query, String requestID) {
+        query.InvestorID = this.lastLoginReq.UserID;
+        query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_POSITION,
                 query,
@@ -148,6 +161,10 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcTradingAccountField> queryAccount(
             CThostFtdcQryTradingAccountField query, String requestID) {
+        query.InvestorID
+                = query.AccountID
+                = this.lastLoginReq.UserID;
+        query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_ACCOUNT,
                 query,
@@ -158,6 +175,8 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CThostFtdcOrderField> queryOrder(
             CThostFtdcQryOrderField query, String requestID) {
+        query.InvestorID = this.lastLoginReq.UserID;
+        query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_ORDER,
                 query,
