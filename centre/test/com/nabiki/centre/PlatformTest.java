@@ -221,7 +221,7 @@ public class PlatformTest {
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2350;
-        order.VolumeTotalOriginal = 1000;
+        order.VolumeTotalOriginal = 1;
         order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
         order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
 

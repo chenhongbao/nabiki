@@ -48,7 +48,7 @@ import java.util.UUID;
 
 public class ActiveRequest {
     private final Map<String, FrozenAccount> frozenAccount = new HashMap<>();
-    private final Map<String, FrozenPositionDetail> frozenPosition  = new HashMap<>();
+    private final Map<String, FrozenPositionDetail> frozenPosition = new HashMap<>();
 
     private final String uuid = UUID.randomUUID().toString();
     private final UserAccount userAccount;
@@ -61,7 +61,7 @@ public class ActiveRequest {
     private final CThostFtdcRspInfoField execRsp = new CThostFtdcRspInfoField();
 
     ActiveRequest(CThostFtdcInputOrderField order, User user, OrderProvider provider,
-                         Config cfg) {
+                  Config cfg) {
         this.userAccount = user.getUserAccount();
         this.userPos = user.getUserPosition();
         this.orderProvider = provider;
@@ -123,10 +123,23 @@ public class ActiveRequest {
             this.execRsp.ErrorID = TThostFtdcErrorCode.INSTRUMENT_NOT_FOUND;
             this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSTRUMENT_NOT_FOUND;
         } else {
-            if (this.order.CombOffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN)
-                insertOpen(this.order, instrInfo);
-            else
-                insertClose(this.order, instrInfo);
+            switch (this.order.CombOffsetFlag) {
+                case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
+                    insertOpen(this.order, instrInfo);
+                    break;
+                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
+                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
+                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+                case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
+                case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
+                case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
+                    insertClose(this.order, instrInfo);
+                    break;
+                default:
+                    this.config.getLogger().warning("unknown offset flag: "
+                            + this.order.CombOffsetFlag);
+                    break;
+            }
         }
     }
 
@@ -285,9 +298,31 @@ public class ActiveRequest {
     public void updateRtnOrder(CThostFtdcOrderField rtn) {
         if (rtn == null)
             throw new NullPointerException("return order null");
-        char flag = (char) rtn.OrderStatus;
-        if (flag == TThostFtdcOrderStatusType.CANCELED) {
-            if (rtn.CombOffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN) {
+        switch ((char) rtn.OrderStatus) {
+            case TThostFtdcOrderStatusType.CANCELED:
+                cancelOrder(rtn);
+                break;
+            case TThostFtdcOrderStatusType.ALL_TRADED:
+            case TThostFtdcOrderStatusType.NO_TRADE_NOT_QUEUEING:
+            case TThostFtdcOrderStatusType.NO_TRADE_QUEUEING:
+            case TThostFtdcOrderStatusType.PART_TRADED_NOT_QUEUEING:
+            case TThostFtdcOrderStatusType.PART_TRADED_QUEUEING:
+            case TThostFtdcOrderStatusType.NOT_TOUCHED:
+            case TThostFtdcOrderStatusType.TOUCHED:
+            case TThostFtdcOrderStatusType.UNKNOWN:
+                break;
+            default:
+                this.config.getLogger().warning("unknown order status: "
+                        + this.order.CombOffsetFlag);
+                break;
+        }
+
+
+    }
+
+    private void cancelOrder(CThostFtdcOrderField rtn) {
+        switch (rtn.CombOffsetFlag) {
+            case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
                 // Cancel cash.
                 if (this.frozenAccount == null) {
                     this.config.getLogger().severe(
@@ -299,7 +334,13 @@ public class ActiveRequest {
                     return;
                 }
                 getFrozenAccount().cancel();
-            } else {
+                break;
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
+            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
+            case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
                 if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen position",
@@ -321,7 +362,11 @@ public class ActiveRequest {
                     return;
                 }
                 p.cancel();
-            }
+                break;
+            default:
+                this.config.getLogger().warning("unknown offset flag: "
+                        + this.order.CombOffsetFlag);
+                break;
         }
     }
 
@@ -343,61 +388,79 @@ public class ActiveRequest {
         Objects.requireNonNull(instrInfo.Instrument, "instrument null");
         Objects.requireNonNull(instrInfo.Margin, "margin null");
         Objects.requireNonNull(instrInfo.Commission, "commission null");
-        if (trade.OffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN) {
-            // Open.
-            if (this.frozenAccount == null) {
-                this.config.getLogger().severe(
-                        Utils.formatLog("no frozen cash",
-                                trade.OrderRef, null, null));
-                this.userAccount.getParent().setPanic(
-                        TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
-                        "frozen cash null");
-                return;
-            }
-            var depth = this.config.getDepthMarketData(trade.InstrumentID);
-            Objects.requireNonNull(depth, "depth market data null");
-            // Update frozen account, user account and user position.
-            // The frozen account handles the update of user account.
-            getFrozenAccount().applyOpenTrade(trade, instrInfo.Instrument,
-                    instrInfo.Commission);
-            this.userPos.applyOpenTrade(trade, instrInfo.Instrument,
-                    instrInfo.Margin, depth.PreSettlementPrice);
-        } else {
-            // Close.
-            if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
-                this.config.getLogger().severe(
-                        Utils.formatLog("no frozen position",
-                                trade.OrderRef, null, null));
-                this.userAccount.getParent().setPanic(
-                        TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
-                        "frozen position null");
-                return;
-            }
-            // Update user position, frozen position and user account.
-            // The frozen position handles the update of user position.
-            var p = this.frozenPosition.get(trade.OrderRef);
-            if (p == null) {
-                this.config.getLogger().severe(
-                        Utils.formatLog("frozen position not found",
-                                trade.OrderRef, null, null));
-                this.userAccount.getParent().setPanic(
-                        TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
-                        "frozen position not found for order ref");
-                return;
-            }
-            if (p.getFrozenVolume() < trade.Volume) {
-                this.config.getLogger().severe(
-                        Utils.formatLog("not enough frozen position",
-                                trade.OrderRef, null, null));
-                this.userAccount.getParent().setPanic(
-                        TThostFtdcErrorCode.OVER_CLOSE_POSITION,
-                        "not enough frozen position for trade");
-                return;
-            }
-            // Check the frozen position OK, here won't throw exception.
-            p.applyCloseTrade(trade, instrInfo.Instrument);
-            this.userAccount.applyTrade(trade, instrInfo.Instrument,
-                    instrInfo.Commission);
+        switch (trade.OffsetFlag) {
+            case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
+                openTrade(trade, instrInfo);
+                break;
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
+            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
+            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
+            case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
+                closeTrade(trade, instrInfo);
+                break;
+            default:
+                this.config.getLogger().warning("unknown offset flag: "
+                        + this.order.CombOffsetFlag);
+                break;
         }
+    }
+
+    private void openTrade(CThostFtdcTradeField trade, InstrumentInfo instrInfo) {
+        if (this.frozenAccount == null) {
+            this.config.getLogger().severe(
+                    Utils.formatLog("no frozen cash",
+                            trade.OrderRef, null, null));
+            this.userAccount.getParent().setPanic(
+                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    "frozen cash null");
+            return;
+        }
+        var depth = this.config.getDepthMarketData(trade.InstrumentID);
+        Objects.requireNonNull(depth, "depth market data null");
+        // Update frozen account, user account and user position.
+        // The frozen account handles the update of user account.
+        getFrozenAccount().applyOpenTrade(trade, instrInfo.Instrument,
+                instrInfo.Commission);
+        this.userPos.applyOpenTrade(trade, instrInfo.Instrument,
+                instrInfo.Margin, depth.PreSettlementPrice);
+    }
+
+    private void closeTrade(CThostFtdcTradeField trade, InstrumentInfo instrInfo) {
+        if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
+            this.config.getLogger().severe(
+                    Utils.formatLog("no frozen position",
+                            trade.OrderRef, null, null));
+            this.userAccount.getParent().setPanic(
+                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    "frozen position null");
+            return;
+        }
+        // Update user position, frozen position and user account.
+        // The frozen position handles the update of user position.
+        var p = this.frozenPosition.get(trade.OrderRef);
+        if (p == null) {
+            this.config.getLogger().severe(
+                    Utils.formatLog("frozen position not found",
+                            trade.OrderRef, null, null));
+            this.userAccount.getParent().setPanic(
+                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    "frozen position not found for order ref");
+            return;
+        }
+        if (p.getFrozenVolume() < trade.Volume) {
+            this.config.getLogger().severe(
+                    Utils.formatLog("not enough frozen position",
+                            trade.OrderRef, null, null));
+            this.userAccount.getParent().setPanic(
+                    TThostFtdcErrorCode.OVER_CLOSE_POSITION,
+                    "not enough frozen position for trade");
+            return;
+        }
+        // Check the frozen position OK, here won't throw exception.
+        p.applyCloseTrade(trade, instrInfo.Instrument);
+        this.userAccount.applyTrade(trade, instrInfo.Instrument,
+                instrInfo.Commission);
     }
 }
