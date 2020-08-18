@@ -118,6 +118,8 @@ public class ActiveUser {
 
     public Set<CThostFtdcOrderField> getRtnOrder(String uuid) {
         var r = new HashSet<CThostFtdcOrderField>();
+        if (uuid == null)
+            return r;
         var refs = this.orderProvider.getMapper().getDetailRef(uuid);
         if (refs == null || refs.size() == 0)
             return r;

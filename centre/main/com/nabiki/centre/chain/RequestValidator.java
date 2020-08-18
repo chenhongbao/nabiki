@@ -92,7 +92,8 @@ public class RequestValidator extends RequestSuper {
                     OP.getErrorMsg(TThostFtdcErrorCode.NOT_AUTHENT));
         } else {
             var auth = (UserAuthProfile) attr;
-            if (auth.UserID.compareTo(request.UserID) != 0) {
+            if (request.UserID == null
+                    || auth.UserID.compareTo(request.UserID) != 0) {
                 reply(session,
                         toRtnOrder(request),
                         requestID,
@@ -134,7 +135,8 @@ public class RequestValidator extends RequestSuper {
                     OP.getErrorMsg(TThostFtdcErrorCode.NOT_AUTHENT));
         } else {
             var auth = (UserAuthProfile) attr;
-            if (auth.UserID.compareTo(request.UserID) != 0) {
+            if (request.UserID == null
+                    || auth.UserID.compareTo(request.UserID) != 0) {
                 reply(session,
                         toOrderAction(request),
                         requestID,

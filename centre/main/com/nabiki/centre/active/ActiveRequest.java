@@ -66,7 +66,7 @@ public class ActiveRequest {
         this.userPos = user.getUserPosition();
         this.orderProvider = provider;
         this.config = cfg;
-        this.order = order;
+        this.order = Utils.deepCopy(order);
         this.action = null;
     }
 
@@ -77,7 +77,7 @@ public class ActiveRequest {
         this.orderProvider = mgr;
         this.config = cfg;
         this.order = null;
-        this.action = action;
+        this.action = Utils.deepCopy(action);
     }
 
     public boolean isAction() {
@@ -147,13 +147,14 @@ public class ActiveRequest {
         }
         for (var ref : refs) {
             var realAction = Utils.deepCopy(this.action);
+            Objects.requireNonNull(realAction, "action deep copy null");
             realAction.OrderRef = ref;
             // Check order return.
             var rtn = mapper.getRtnOrder(ref);
             if (rtn != null && (rtn.OrderStatus == TThostFtdcOrderStatusType.CANCELED
                     || rtn.OrderStatus == TThostFtdcOrderStatusType.ALL_TRADED))
                 continue;
-            if (send(this.action, this) != 0)
+            if (send(realAction, this) != 0)
                 break;
         }
     }

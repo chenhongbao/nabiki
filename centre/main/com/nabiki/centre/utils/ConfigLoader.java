@@ -353,6 +353,7 @@ public class ConfigLoader {
                 // Get logger with config's name.
                 Config.logger = Logger.getLogger(Config.class.getCanonicalName());
                 Config.logger.addHandler(fh);
+                Config.logger.setUseParentHandlers(false);
             } catch (IOException e) {
                 Config.logger = Logger.getGlobal();
             }

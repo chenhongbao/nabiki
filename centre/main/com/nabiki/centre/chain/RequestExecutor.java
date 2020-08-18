@@ -68,11 +68,14 @@ public class RequestExecutor extends RequestSuper {
             var uuid = activeUser.insertOrder(request);
             // Build response.
             var o = toRtnOrder(request);
-            o.OrderLocalID = uuid;
+            rsp.RspInfo = activeUser.getExecRsp(uuid);
+            if (rsp.RspInfo.ErrorID == TThostFtdcErrorCode.NONE)
+                o.OrderLocalID = uuid;
+            else
+                o.OrderLocalID = null;
             o.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
             o.OrderStatus = TThostFtdcOrderStatusType.UNKNOWN;
             rsp.Body = o;
-            rsp.RspInfo = activeUser.getExecRsp(uuid);
         }
         session.sendResponse(rsp);
         session.done();
@@ -102,7 +105,8 @@ public class RequestExecutor extends RequestSuper {
             var uuid = activeUser.orderAction(request);
             // Build response.
             var o = toOrderAction(request);
-            o.OrderLocalID = uuid;
+            o.OrderLocalID = request.OrderSysID;
+            o.OrderSysID = null;
             rsp.Body = o;
             rsp.RspInfo = activeUser.getExecRsp(uuid);
         }

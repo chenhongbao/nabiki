@@ -39,6 +39,7 @@ import com.nabiki.iop.x.OP;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.time.LocalTime;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -117,6 +118,8 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Test login.
+        System.out.println("Test login");
+
         var login = new CThostFtdcReqUserLoginField();
         login.Password = "1234";
         login.UserID = "0001";
@@ -131,6 +134,8 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Query account.
+        System.out.println("Query account");
+
         var qryAccount = new CThostFtdcQryTradingAccountField();
         qryAccount.CurrencyID = "CNY";
         qryAccount.AccountID = "0001";
@@ -138,6 +143,7 @@ public class PlatformTest {
         var rsp1 = client.queryAccount(qryAccount, UUID.randomUUID().toString());
 
         rsp1.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp query account");
             System.out.println(OP.toJson(object));
             System.out.println(OP.toJson(rspInfo));
             System.out.println(currentCount + "/" + totalCount);
@@ -146,12 +152,15 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Query position.
+        System.out.println("Query position");
+
         var qryPosition = new CThostFtdcQryInvestorPositionField();
         qryPosition.InstrumentID = "c2101";
         qryPosition.InvestorID = "0001";
         var rsp2 = client.queryPosition(qryPosition, UUID.randomUUID().toString());
 
         rsp2.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp query position");
             System.out.println(OP.toJson(object));
             System.out.println(OP.toJson(rspInfo));
             System.out.println(currentCount + "/" + totalCount);
@@ -160,6 +169,8 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Subscribe md.
+        System.out.println("Subscribe md");
+
         client.setListener(new MarketDataListener() {
             @Override
             public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
@@ -177,6 +188,7 @@ public class PlatformTest {
         var rsp3 = client.subscribeMarketData(sub, UUID.randomUUID().toString());
 
         rsp3.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp subscribe");
             System.out.println(OP.toJson(object));
             System.out.println(OP.toJson(rspInfo));
             System.out.println(currentCount + "/" + totalCount);
@@ -185,32 +197,39 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(10));
 
         // Un-subscribe md.
+        System.out.println("Un-subscribe md");
+
         var unsub = new CThostFtdcUnsubMarketDataField();
         unsub.InstrumentID = new String[] {"c2101", "c2105" };
         var rsp4 = client.unSubscribeMarketData(unsub, UUID.randomUUID().toString());
 
         rsp4.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp un-subscribe");
             System.out.println(OP.toJson(object));
             System.out.println(OP.toJson(rspInfo));
             System.out.println(currentCount + "/" + totalCount);
         });
 
-        sleep((int)TimeUnit.SECONDS.toMillis(5));
+        while (LocalTime.now().getHour() < 9)
+            sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Insert order.
+        System.out.println("Insert order");
+
         var order = new CThostFtdcInputOrderField();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
-        order.LimitPrice = 2250;
-        order.VolumeTotalOriginal = 1;
+        order.LimitPrice = 2350;
+        order.VolumeTotalOriginal = 1000;
         order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
 
         var rsp5 = client.orderInsert(order, UUID.randomUUID().toString());
         String[] id = new String[1];
 
         rsp5.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp insert order");
             System.out.println(OP.toJson(object));
             System.out.println(OP.toJson(rspInfo));
             System.out.println(currentCount + "/" + totalCount);
@@ -222,6 +241,8 @@ public class PlatformTest {
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Query order.
+        System.out.println("Query order");
+
         if (id[0] == null)
             System.err.println("no order id");
         else {
@@ -230,6 +251,7 @@ public class PlatformTest {
             var rsp6 = client.queryOrder(qryOrder, UUID.randomUUID().toString());
 
             rsp6.consume((object, rspInfo, currentCount, totalCount) -> {
+                System.out.println("Rsp query order");
                 System.out.println(OP.toJson(object));
                 System.out.println(OP.toJson(rspInfo));
                 System.out.println(currentCount + "/" + totalCount);

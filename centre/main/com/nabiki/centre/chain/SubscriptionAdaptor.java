@@ -31,6 +31,7 @@ package com.nabiki.centre.chain;
 import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
+import com.nabiki.centre.utils.Config;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
@@ -39,6 +40,8 @@ import com.nabiki.iop.ServerMessageAdaptor;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,10 +79,12 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     static String FRONT_MDRECEIVER_KEY = "front.mdrecv";
     private final MarketDataRouter router;
     private final CandleRW candlRW;
+    private final Config config;
 
-    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw) {
+    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Config cfg) {
         this.router = router;
         this.candlRW = rw;
+        this.config = cfg;
     }
 
     private static Message toMessage(CThostFtdcDepthMarketDataField depth) {
@@ -115,12 +120,18 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             session.sendResponse(toMessage(c));
     }
 
-    private void sendRsp(ServerSession session, String instrID, String requestID) {
+    private void sendRsp(
+            ServerSession session,
+            String instrID,
+            String requestID,
+            int count,
+            int total) {
         var r = new Message();
         r.Type = MessageType.RSP_SUB_MD;
         r.RequestID = requestID;
         r.ResponseID = UUID.randomUUID().toString();
-        r.CurrentCount = r.TotalCount = 1;
+        r.CurrentCount = count;
+        r.TotalCount = total;
         // Set response body.
         var ins = new CThostFtdcSpecificInstrumentField();
         ins.InstrumentID = instrID;
@@ -132,6 +143,19 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         session.sendResponse(r);
     }
 
+    private List<String> getValidInstruments(String[] instrID) {
+        var r = new LinkedList<String>();
+        if (instrID == null)
+            return r;
+        for (var s : instrID) {
+            if (this.config.getInstrInfo(s) != null)
+                r.add(s);
+            else
+                this.config.getLogger().warning("unknown instrument: " + s);
+        }
+        return r;
+    }
+
     @Override
     public void doSubDepthMarketData(
             ServerSession session,
@@ -140,9 +164,11 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             int current,
             int total) {
         var recv = getReceiver(session);
-        for (var instrID : request.InstrumentID) {
+        var instr = getValidInstruments(request.InstrumentID);
+        int count = 0;
+        for (var instrID : instr) {
             sendHistoryCandles(session, instrID);
-            sendRsp(session, instrID, requestID);
+            sendRsp(session, instrID, requestID, ++count, instr.size());
             recv.subscribe(instrID);
         }
         session.done();

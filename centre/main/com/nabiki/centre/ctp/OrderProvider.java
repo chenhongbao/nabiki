@@ -887,37 +887,42 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
         protected void doQuery() {
             String ins = randomGet();
-            // Query.
-            var req = new CThostFtdcQryInstrumentMarginRateField();
-            req.BrokerID = loginCfg.BrokerID;
-            req.InvestorID = loginCfg.UserID;
-            req.HedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
-            req.InstrumentID = ins;
-            int r = traderApi.ReqQryInstrumentMarginRate(req,
-                    Utils.getIncrementID());
-            if (r != 0)
-                config.getLogger().warning(
-                        Utils.formatLog("failed query margin", null,
-                                ins, r));
-            // Sleep for 1.5 seconds
-            try {
-                Thread.sleep(1500);
-            } catch (InterruptedException e) {
-                config.getLogger().warning(
-                        Utils.formatLog("failed sleep", null,
-                                e.getMessage(), null));
+            var in = config.getInstrInfo(ins);
+            // Query margin.
+            if (in.Margin == null) {
+                var req = new CThostFtdcQryInstrumentMarginRateField();
+                req.BrokerID = loginCfg.BrokerID;
+                req.InvestorID = loginCfg.UserID;
+                req.HedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
+                req.InstrumentID = ins;
+                int r = traderApi.ReqQryInstrumentMarginRate(req,
+                        Utils.getIncrementID());
+                if (r != 0)
+                    config.getLogger().warning(
+                            Utils.formatLog("failed query margin",
+                                    null, ins, r));
+                // Sleep for 1.5 seconds
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    config.getLogger().warning(
+                            Utils.formatLog("failed sleep", null,
+                                    e.getMessage(), null));
+                }
             }
-
-            var req0 = new CThostFtdcQryInstrumentCommissionRateField();
-            req0.BrokerID = loginCfg.BrokerID;
-            req0.InvestorID = loginCfg.UserID;
-            req0.InstrumentID = ins;
-            r = traderApi.ReqQryInstrumentCommissionRate(req0,
-                    Utils.getIncrementID());
-            if (r != 0)
-                config.getLogger().warning(
-                        Utils.formatLog("failed query commission",
-                                null, ins, r));
+            // Query commission.
+            if (in.Commission == null) {
+                var req0 = new CThostFtdcQryInstrumentCommissionRateField();
+                req0.BrokerID = loginCfg.BrokerID;
+                req0.InvestorID = loginCfg.UserID;
+                req0.InstrumentID = ins;
+                var r = traderApi.ReqQryInstrumentCommissionRate(req0,
+                        Utils.getIncrementID());
+                if (r != 0)
+                    config.getLogger().warning(
+                            Utils.formatLog("failed query commission",
+                                    null, ins, r));
+            }
         }
 
         protected String randomGet() {

@@ -60,7 +60,7 @@ public class StaticChainInstaller {
         var chain = server.getAdaptorChain();
         chain.addAdaptor(new RequestValidator());
         chain.addAdaptor(new RequestExecutor());
-        chain.addAdaptor(new SubscriptionAdaptor(router, rw));
+        chain.addAdaptor(new SubscriptionAdaptor(router, rw, cfg));
         chain.addAdaptor(new QueryAdaptor());
     }
 }
