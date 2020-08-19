@@ -203,17 +203,18 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     public int sendDetailOrder(
             CThostFtdcInputOrderField input,
             ActiveRequest active) {
+        // Set the initial rtn order.
+        registerInitialOrderInsert(input, active);
+        // Check time.
         if (isOver(input.InstrumentID)) {
             rspError(input, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
                     TThostFtdcErrorMessage.FRONT_NOT_ACTIVE);
-            return (-1);
+            return TThostFtdcErrorCode.FRONT_NOT_ACTIVE;
         } else {
             if (!this.pendingReqs.offer(new PendingRequest(input, active)))
                 return (-2);
-            else {
-                registerInitialOrderInsert(input, active);
-                return 0;
-            }
+            else
+                return TThostFtdcErrorCode.NONE;
         }
     }
 
