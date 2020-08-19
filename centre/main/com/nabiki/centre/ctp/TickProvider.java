@@ -38,9 +38,8 @@ import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.ctp4j.md.CThostFtdcMdApi;
 import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -60,6 +59,9 @@ public class TickProvider extends CThostFtdcMdSpi {
     protected ReentrantLock lock = new ReentrantLock();
     protected Condition cond = lock.newCondition();
 
+    private String actionDay;
+    private final Timer dayUpdater = new Timer();
+
     public TickProvider(Config cfg) {
         this.config = cfg;
         this.loginCfg = this.config.getLoginConfigs().get("md");
@@ -68,6 +70,14 @@ public class TickProvider extends CThostFtdcMdSpi {
                 this.loginCfg.IsUsingUDP,
                 this.loginCfg.IsMulticast);
         this.msgWriter = new MessageWriter(this.config);
+        // Schedule action day updater.
+        var m = TimeUnit.DAYS.toMillis(1);
+        this.dayUpdater.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateActionDay();
+            }
+        },  m - System.currentTimeMillis() % m, m);
     }
 
     public void register(CandleEngine engine) {
@@ -156,6 +166,10 @@ public class TickProvider extends CThostFtdcMdSpi {
         return this.isLogin;
     }
 
+    private void updateActionDay() {
+        this.actionDay = Utils.getDay(LocalDate.now(), null);
+    }
+
     private void signalLogin() {
         this.lock.lock();
         try {
@@ -239,6 +253,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.workingState = WorkingState.STARTED;
             setWorking(true);
             signalLogin();
+            updateActionDay();
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
@@ -289,6 +304,8 @@ public class TickProvider extends CThostFtdcMdSpi {
 
     @Override
     public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField depthMarketData) {
+        // Set action day to today.
+        depthMarketData.ActionDay = this.actionDay;
         synchronized (this.routers) {
             for (var r : this.routers)
                 r.route(depthMarketData);

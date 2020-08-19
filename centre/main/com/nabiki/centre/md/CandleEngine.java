@@ -136,8 +136,14 @@ public class CandleEngine extends TimerTask {
             }
             for (var du : this.config.getDurations()) {
                 if (h.contains(du, now))
-                    for (var r : this.routers)
-                        r.route(e.getValue().pop(du));
+                    for (var r : this.routers) {
+                        try {
+                            r.route(e.getValue().pop(du));
+                        } catch (Throwable th) {
+                            th.printStackTrace();
+                            config.getLogger().severe(th.getMessage());
+                        }
+                    }
             }
         }
     }

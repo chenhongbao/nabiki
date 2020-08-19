@@ -193,8 +193,6 @@ public class Utils {
         if (day == null)
             throw new NullPointerException("day null");
         if (pattern == null || pattern.trim().length() == 0)
-            pattern = dayPatternStr;
-        if (pattern.compareTo(dayPatternStr) == 0)
             return day.format(dayPattern);
         else
             return day.format(DateTimeFormatter.ofPattern(pattern));
@@ -212,8 +210,6 @@ public class Utils {
         if (time == null)
             throw new NullPointerException("time null");
         if (pattern == null || pattern.trim().length() == 0)
-            pattern = timePatternStr;
-        if (pattern.compareTo(timePatternStr) == 0)
             return time.format(timePattern);
         else
             return time.format(DateTimeFormatter.ofPattern(pattern));
@@ -231,8 +227,6 @@ public class Utils {
         if (day == null || day.trim().length() == 0)
             return null;
         if (pattern == null || pattern.trim().length() == 0)
-            pattern = dayPatternStr;
-        if (pattern.compareTo(dayPatternStr) == 0)
             return LocalDate.parse(day, dayPattern);
         else
             return LocalDate.parse(day, DateTimeFormatter.ofPattern(pattern));
@@ -250,8 +244,6 @@ public class Utils {
         if (time == null || time.trim().length() == 0)
             return null;
         if (pattern == null || pattern.trim().length() == 0)
-            pattern = timePatternStr;
-        if (pattern.compareTo(timePatternStr) == 0)
             return LocalTime.parse(time, timePattern);
         else
             return LocalTime.parse(time, DateTimeFormatter.ofPattern(pattern));
