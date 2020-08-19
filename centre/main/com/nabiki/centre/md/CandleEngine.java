@@ -47,11 +47,6 @@ public class CandleEngine extends TimerTask {
     private final Timer timer = new Timer();
     private final Map<String, Product> products = new ConcurrentHashMap<>();
     private final Set<MarketDataRouter> routers = new HashSet<>();
-    private final Duration[] durations = new Duration[] {
-            Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15),
-            Duration.ofMinutes(30), Duration.ofHours(1), Duration.ofHours(2),
-            Duration.ofHours(24)
-    };
 
     private final AtomicBoolean working = new AtomicBoolean(false);
 
@@ -61,12 +56,6 @@ public class CandleEngine extends TimerTask {
     }
 
     private void prepare() {
-        // Set hour keepers.
-        var m = this.config.getAllTradingHour();
-        for (var keeper : m.values()) {
-            for (var du : this.durations)
-                keeper.sample(du);
-        }
         // Schedule.
         this.timer.scheduleAtFixedRate(this,
                 MILLIS - System.currentTimeMillis() % MILLIS, MILLIS);
@@ -104,7 +93,7 @@ public class CandleEngine extends TimerTask {
                 p = this.products.get(product);
             }
         }
-        for (var du : this.durations)
+        for (var du : this.config.getDurations())
             p.registerDuration(du);
         return p;
     }
@@ -136,7 +125,7 @@ public class CandleEngine extends TimerTask {
                                 null, null));
                 continue;
             }
-            for (var du : this.durations) {
+            for (var du : this.config.getDurations()) {
                 if (h.contains(du, now))
                     for (var r : this.routers)
                         r.route(e.getValue().pop(du));

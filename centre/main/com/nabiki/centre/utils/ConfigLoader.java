@@ -106,6 +106,7 @@ public class ConfigLoader {
             setSingleConfig(m);
         }
     }
+
     public static void setSingleConfig(
             CThostFtdcInstrumentMarginRateField margin) {
         synchronized (config.instrInfo) {
@@ -117,7 +118,7 @@ public class ConfigLoader {
 
     public static void setInstrConfig(
             CThostFtdcInstrumentMarginRateField margin) {
-        var pid= Utils.getProductID(margin.InstrumentID);
+        var pid = Utils.getProductID(margin.InstrumentID);
         if (pid.compareTo(margin.InstrumentID) == 0)
             setProductConfig(margin, pid);
         else
@@ -151,7 +152,7 @@ public class ConfigLoader {
 
     public static void setInstrConfig(
             CThostFtdcInstrumentCommissionRateField commission) {
-        var pid= Utils.getProductID(commission.InstrumentID);
+        var pid = Utils.getProductID(commission.InstrumentID);
         if (pid.compareTo(commission.InstrumentID) == 0)
             setProductConfig(commission, pid);
         else
@@ -273,6 +274,12 @@ public class ConfigLoader {
             Utils.writeText(OP.toJson(new TradingHourConfig()),
                     cfg.get("cfg.hour.sample").file(), StandardCharsets.UTF_8,
                     false);
+        } else {
+            // Set hour keepers.
+            for (var keeper : config.tradingHour.values()) {
+                for (var du : config.durations)
+                    keeper.sample(du);
+            }
         }
     }
 
@@ -348,7 +355,7 @@ public class ConfigLoader {
 
             try {
                 // File and format.
-                var fh = new FileHandler(fp);
+                var fh = new FileHandler(fp, true);
                 fh.setFormatter(new SimpleFormatter());
                 // Get logger with config's name.
                 Config.logger = Logger.getLogger(Config.class.getCanonicalName());

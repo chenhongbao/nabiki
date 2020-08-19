@@ -45,7 +45,12 @@ public class MarketDataRouter implements Runnable {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
 
-    public MarketDataRouter() {}
+    private final Thread daemon;
+
+    public MarketDataRouter() {
+        this.daemon = new Thread(this);
+        this.daemon.start();
+    }
 
     public void addReceiver(MarketDataReceiver recv) {
         if (recv == null)

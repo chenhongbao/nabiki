@@ -32,6 +32,7 @@ import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +52,12 @@ public class Config {
     final Map<String, CThostFtdcDepthMarketDataField> depths = new HashMap<>();
 
     final Map<String, Set<String>> products = new HashMap<>();
+
+    final Duration[] durations = new Duration[] {
+            Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15),
+            Duration.ofMinutes(30), Duration.ofHours(1), Duration.ofHours(2),
+            Duration.ofHours(24)
+    };
 
     static Logger logger;
     String tradingDay;
@@ -161,5 +168,14 @@ public class Config {
         synchronized (this.products) {
             return this.products.get(productID);
         }
+    }
+
+    /**
+     * Get candle durations.
+     *
+     * @return candle durations
+     */
+    public Duration[] getDurations() {
+        return this.durations;
     }
 }
