@@ -99,8 +99,12 @@ public class TickProvider extends CThostFtdcMdSpi {
         int count = -1;
         var iter = instr.iterator();
         while (true) {
-            while (iter.hasNext() && ++count < 50)
-                ins[count] = iter.next();
+            while (iter.hasNext() && ++count < 50) {
+                var i= iter.next();
+                // Initialize instrument ID in candle engine.
+                addInstruments(i);
+                ins[count] = i;
+            }
             // Subscribe batch.
             subscribeBatch(ins, count);
             count = -1;
@@ -116,6 +120,8 @@ public class TickProvider extends CThostFtdcMdSpi {
                 }
             }
         }
+        // Setup durations.
+        setupDurations();
     }
 
     public void initialize() {
@@ -181,6 +187,20 @@ public class TickProvider extends CThostFtdcMdSpi {
 
     private void subscribeBatch(String[] instr, int count) {
         this.mdApi.SubscribeMarketData(instr, count);
+    }
+
+    private void addInstruments(String instrID) {
+        synchronized (this.engines) {
+            for (var e : this.engines)
+                e.addInstrument(instrID);
+        }
+    }
+
+    private void setupDurations() {
+        synchronized (this.engines) {
+            for (var e : this.engines)
+                e.setupDurations();
+        }
     }
 
     private void doLogin() {

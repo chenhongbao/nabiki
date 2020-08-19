@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SingleCandle {
+    private final Duration minuteDuration = Duration.ofMinutes(1);
     private final String instrID;
     private final Map<Duration, CandleProgress> progress = new HashMap<>();
 
@@ -57,7 +58,9 @@ public class SingleCandle {
             if (this.progress.containsKey(du))
                 return;
             else
-                this.progress.put(du, new CandleProgress());
+                this.progress.put(du, new CandleProgress(
+                        this.instrID,
+                        (int)du.dividedBy(minuteDuration)));
         }
     }
 

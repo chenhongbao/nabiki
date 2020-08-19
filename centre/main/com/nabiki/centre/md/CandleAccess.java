@@ -93,6 +93,8 @@ public class CandleAccess {
         var list = new LinkedList<CThostFtdcCandleField>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
+            // Skip the first header line.
+            br.readLine();
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (line.length() == 0)

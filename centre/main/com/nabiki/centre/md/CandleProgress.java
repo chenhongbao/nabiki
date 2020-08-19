@@ -42,7 +42,10 @@ public class CandleProgress {
     private double lastClosePrice = 0.0D;
     private boolean popped = true;
 
-    public CandleProgress() {}
+    public CandleProgress(String instrID, int minute) {
+        this.candle.InstrumentID = instrID;
+        this.candle.Minute = minute;
+    }
 
     public void update(CThostFtdcDepthMarketDataField md) {
         if (this.lastVolume == 0)

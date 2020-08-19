@@ -90,6 +90,12 @@ public class CandleEngine extends TimerTask {
         ensureProduct(Utils.getProductID(instrID)).unregisterInstr(instrID);
     }
 
+    public void setupDurations() {
+        for (var p : this.products.values())
+            for (var du : this.config.getDurations())
+                p.registerDuration(du);
+    }
+
     private Product ensureProduct(String product) {
         Product p;
         synchronized (this.products) {
@@ -100,8 +106,6 @@ public class CandleEngine extends TimerTask {
                 p = this.products.get(product);
             }
         }
-        for (var du : this.config.getDurations())
-            p.registerDuration(du);
         return p;
     }
 
