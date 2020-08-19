@@ -266,7 +266,7 @@ public class ActiveRequest {
         }
     }
 
-    public String getOrderUUID() {
+    public String getRequestUUID() {
         return this.uuid;
     }
 

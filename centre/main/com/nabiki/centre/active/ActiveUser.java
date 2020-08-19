@@ -91,7 +91,7 @@ public class ActiveUser {
     public String insertOrder(CThostFtdcInputOrderField order) {
         var active = new ActiveRequest(order, this.user, this.orderProvider,
                 this.config);
-        this.requests.put(active.getOrderUUID(), active);
+        this.requests.put(active.getRequestUUID(), active);
         try {
             active.execOrder();
         } catch (Throwable th) {
@@ -99,13 +99,13 @@ public class ActiveUser {
                     Utils.formatLog("failed order insertion", order.UserID,
                             th.getMessage(), null));
         }
-        return active.getOrderUUID();
+        return active.getRequestUUID();
     }
 
     public String orderAction(CThostFtdcInputOrderActionField action) {
         var active = new ActiveRequest(action, this.user, this.orderProvider,
                 this.config);
-        this.requests.put(active.getOrderUUID(), active);
+        this.requests.put(active.getRequestUUID(), active);
         try {
             active.execAction();
         } catch (Throwable th) {
@@ -113,7 +113,7 @@ public class ActiveUser {
                     Utils.formatLog("failed order action", action.UserID,
                             th.getMessage(), null));
         }
-        return active.getOrderUUID();
+        return active.getRequestUUID();
     }
 
     public Set<CThostFtdcOrderField> getRtnOrder(String uuid) {
