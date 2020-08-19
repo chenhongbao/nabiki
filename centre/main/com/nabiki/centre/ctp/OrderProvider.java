@@ -196,22 +196,37 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      * return error.
      * </p>
      *
-     * @param detail input order
+     * @param input input order
      * @param active alive order
      * @return always return 0
      */
-    public int sendDetailOrder(CThostFtdcInputOrderField detail,
-                               ActiveRequest active) {
-        if (isOver(detail.InstrumentID)) {
-            rspError(detail, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
+    public int sendDetailOrder(
+            CThostFtdcInputOrderField input,
+            ActiveRequest active) {
+        if (isOver(input.InstrumentID)) {
+            rspError(input, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
                     TThostFtdcErrorMessage.FRONT_NOT_ACTIVE);
             return (-1);
         } else {
-            if (!this.pendingReqs.offer(new PendingRequest(detail, active)))
+            if (!this.pendingReqs.offer(new PendingRequest(input, active)))
                 return (-2);
-            else
+            else {
+                registerInitialOrderInsert(input, active);
                 return 0;
+            }
         }
+    }
+
+    protected void registerInitialOrderInsert(
+            CThostFtdcInputOrderField detail,
+            ActiveRequest active) {
+        var o = toRtnOrder(detail);
+        o.OrderLocalID = active.getRequestUUID();
+        o.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
+        o.OrderStatus = TThostFtdcOrderStatusType.NO_TRADE_QUEUEING;
+        // Register order.
+        this.mapper.register(detail, active);
+        this.mapper.register(o);
     }
 
     protected void rspError(CThostFtdcInputOrderField order, int code,
@@ -273,8 +288,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      * @param active alive order
      * @return always return 0
      */
-    public int sendOrderAction(CThostFtdcInputOrderActionField action,
-                               ActiveRequest active) {
+    public int sendOrderAction(
+            CThostFtdcInputOrderActionField action,
+            ActiveRequest active) {
         if (isOver(action.InstrumentID)) {
             rspError(action, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
                     TThostFtdcErrorMessage.FRONT_NOT_ACTIVE);
@@ -356,44 +372,41 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     /*
-     Construct a cancel return order from the specified error order.
+     Construct a return order from the specified error order.
      */
-    protected CThostFtdcOrderField toCancelRtnOrder(CThostFtdcInputOrderField rtn) {
-        var cancel = new CThostFtdcOrderField();
-        cancel.AccountID = rtn.AccountID;
-        cancel.BrokerID = rtn.BrokerID;
-        cancel.BusinessUnit = rtn.BusinessUnit;
-        cancel.ClientID = rtn.ClientID;
-        cancel.CombHedgeFlag = rtn.CombHedgeFlag;
-        cancel.CombOffsetFlag = rtn.CombOffsetFlag;
-        cancel.ContingentCondition = rtn.ContingentCondition;
-        cancel.CurrencyID = rtn.CurrencyID;
-        cancel.Direction = rtn.Direction;
-        cancel.ExchangeID = rtn.ExchangeID;
-        cancel.ForceCloseReason = rtn.ForceCloseReason;
-        cancel.GTDDate = rtn.GTDDate;
-        cancel.InstrumentID = rtn.InstrumentID;
-        cancel.InvestorID = rtn.InvestorID;
-        cancel.InvestUnitID = rtn.InvestUnitID;
-        cancel.IPAddress = rtn.IPAddress;
-        cancel.IsAutoSuspend = rtn.IsAutoSuspend;
-        cancel.IsSwapOrder = rtn.IsSwapOrder;
-        cancel.LimitPrice = rtn.LimitPrice;
-        cancel.MacAddress = rtn.MacAddress;
-        cancel.MinVolume = rtn.MinVolume;
-        cancel.OrderPriceType = rtn.OrderPriceType;
-        cancel.OrderRef = rtn.OrderRef;
-        cancel.RequestID = rtn.RequestID;
-        cancel.StopPrice = rtn.StopPrice;
-        cancel.TimeCondition = rtn.TimeCondition;
-        cancel.UserForceClose = rtn.UserForceClose;
-        cancel.UserID = rtn.UserID;
-        cancel.VolumeCondition = rtn.VolumeCondition;
-        cancel.VolumeTotalOriginal = rtn.VolumeTotalOriginal;
-        // Order status.
-        cancel.OrderStatus = TThostFtdcOrderStatusType.CANCELED;
-        cancel.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.CANCEL_SUBMITTED;
-        return cancel;
+    CThostFtdcOrderField toRtnOrder(CThostFtdcInputOrderField rtn) {
+        var r = new CThostFtdcOrderField();
+        r.AccountID = rtn.AccountID;
+        r.BrokerID = rtn.BrokerID;
+        r.BusinessUnit = rtn.BusinessUnit;
+        r.ClientID = rtn.ClientID;
+        r.CombHedgeFlag = rtn.CombHedgeFlag;
+        r.CombOffsetFlag = rtn.CombOffsetFlag;
+        r.ContingentCondition = rtn.ContingentCondition;
+        r.CurrencyID = rtn.CurrencyID;
+        r.Direction = rtn.Direction;
+        r.ExchangeID = rtn.ExchangeID;
+        r.ForceCloseReason = rtn.ForceCloseReason;
+        r.GTDDate = rtn.GTDDate;
+        r.InstrumentID = rtn.InstrumentID;
+        r.InvestorID = rtn.InvestorID;
+        r.InvestUnitID = rtn.InvestUnitID;
+        r.IPAddress = rtn.IPAddress;
+        r.IsAutoSuspend = rtn.IsAutoSuspend;
+        r.IsSwapOrder = rtn.IsSwapOrder;
+        r.LimitPrice = rtn.LimitPrice;
+        r.MacAddress = rtn.MacAddress;
+        r.MinVolume = rtn.MinVolume;
+        r.OrderPriceType = rtn.OrderPriceType;
+        r.OrderRef = rtn.OrderRef;
+        r.RequestID = rtn.RequestID;
+        r.StopPrice = rtn.StopPrice;
+        r.TimeCondition = rtn.TimeCondition;
+        r.UserForceClose = rtn.UserForceClose;
+        r.UserID = rtn.UserID;
+        r.VolumeCondition = rtn.VolumeCondition;
+        r.VolumeTotalOriginal = rtn.VolumeTotalOriginal;
+        return r;
     }
 
     protected void doRtnOrder(CThostFtdcOrderField rtn) {
@@ -409,7 +422,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         rtn.UserID = active.getOriginOrder().UserID;
         rtn.InvestorID = active.getOriginOrder().InvestorID;
         rtn.AccountID = active.getOriginOrder().AccountID;
-        rtn.OrderLocalID = active.getOrderUUID();
+        rtn.OrderLocalID = active.getRequestUUID();
 
         try {
             active.updateRtnOrder(rtn);
@@ -432,7 +445,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         trade.BrokerID = active.getOriginOrder().BrokerID;
         trade.UserID = active.getOriginOrder().UserID;
         trade.InvestorID = active.getOriginOrder().InvestorID;
-        trade.OrderLocalID = active.getOrderUUID();
+        trade.OrderLocalID = active.getRequestUUID();
 
         try {
             active.updateTrade(trade);
@@ -450,6 +463,16 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             this.config.getLogger().warning(
                     Utils.formatLog("failed query instrument", null,
                             null, r));
+    }
+
+    protected void cancelInputOrder(CThostFtdcInputOrderField inputOrder) {
+        var cancel = toRtnOrder(inputOrder);
+        // Order status.
+        cancel.OrderStatus = TThostFtdcOrderStatusType.CANCELED;
+        cancel.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.CANCEL_SUBMITTED;
+        doRtnOrder(cancel);
+        // Write input order as normal cancel order.
+        this.msgWriter.writeRtn(cancel);
     }
 
     @Override
@@ -481,7 +504,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         // Rewrite the local ID.
         var active = this.mapper.getActiveOrder(orderAction.OrderRef);
         if (active != null)
-            orderAction.OrderLocalID = active.getOrderUUID();
+            orderAction.OrderLocalID = active.getRequestUUID();
         this.msgWriter.writeErr(orderAction);
         this.msgWriter.writeErr(rspInfo);
     }
@@ -493,11 +516,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        var cancel = toCancelRtnOrder(inputOrder);
-        doRtnOrder(toCancelRtnOrder(inputOrder));
-        // The writing follows the doXXX method because some of its fields are
-        // rewritten with local IDs.
-        this.msgWriter.writeRtn(cancel);
+        cancelInputOrder(inputOrder);
         this.msgWriter.writeErr(inputOrder);
         this.msgWriter.writeErr(rspInfo);
     }
@@ -545,11 +564,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        var cancel = toCancelRtnOrder(inputOrder);
-        doRtnOrder(cancel);
-        // The writing follows the doXXX method because some of its fields are
-        // rewritten with local IDs.
-        this.msgWriter.writeRtn(cancel);
+        cancelInputOrder(inputOrder);
         this.msgWriter.writeErr(inputOrder);
         this.msgWriter.writeErr(rspInfo);
     }
@@ -762,10 +777,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                     msgWriter.writeReq(pend.action);
             } else if (pend.order != null) {
                 r = fillAndSendOrder(pend.order);
-                if (r == 0) {
+                if (r == 0)
                     msgWriter.writeReq(pend.order);
-                    mapper.register(pend.order, pend.active);
-                }
             }
             // Check send ret code.
             // If fail sending the request, add it back to queue and sleep

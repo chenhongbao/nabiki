@@ -58,10 +58,9 @@ public class OrderMapper {
      */
     public void register(CThostFtdcInputOrderField order, ActiveRequest active) {
         this.detRef2Active.put(order.OrderRef, active);
-        this.uuid2Active.put(active.getOrderUUID(), active);
-        this.uuid2DetRef.computeIfAbsent(active.getOrderUUID(),
-                k -> new HashSet<>());
-        this.uuid2DetRef.get(active.getOrderUUID()).add(order.OrderRef);
+        this.uuid2Active.put(active.getRequestUUID(), active);
+        this.uuid2DetRef.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
+        this.uuid2DetRef.get(active.getRequestUUID()).add(order.OrderRef);
         this.detRef2Det.put(order.OrderRef, order);
 
     }
