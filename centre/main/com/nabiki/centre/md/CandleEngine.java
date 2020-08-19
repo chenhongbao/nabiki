@@ -61,6 +61,13 @@ public class CandleEngine extends TimerTask {
                 MILLIS - System.currentTimeMillis() % MILLIS, MILLIS);
     }
 
+    // Time point is stored as key of a hash map.
+    // Avoid missing hash key because of fractional nanoseconds.
+    private LocalTime getRoundTime(LocalTime now, int seconds) {
+        var nearSec = (int)Math.round(now.toSecondOfDay() / (double)seconds) * seconds;
+        return LocalTime.ofSecondOfDay(nearSec);
+    }
+
     public void setWorking(boolean working) {
         this.working.set(working);
     }
@@ -115,7 +122,9 @@ public class CandleEngine extends TimerTask {
         if (!this.working.get())
             return;
         // Working now.
-        var now = LocalTime.now();
+        var now = getRoundTime(
+                LocalTime.now(),
+                (int)TimeUnit.MILLISECONDS.toSeconds(MILLIS));
         var hours = this.config.getAllTradingHour();
         for (var e : this.products.entrySet()) {
             var h = hours.get(e.getKey());

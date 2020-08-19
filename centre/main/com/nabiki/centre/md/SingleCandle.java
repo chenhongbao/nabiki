@@ -66,7 +66,7 @@ public class SingleCandle {
             if (this.progress.containsKey(du))
                 return this.progress.get(du).peak(tradingDay);
             else
-                throw new IllegalArgumentException("key not found");
+                throw new IllegalArgumentException("duration not found");
         }
     }
 
@@ -75,7 +75,7 @@ public class SingleCandle {
             if (this.progress.containsKey(du))
                 return this.progress.get(du).pop(tradingDay);
             else
-                throw new IllegalArgumentException("key not found");
+                throw new IllegalArgumentException("duration not found");
         }
     }
 }

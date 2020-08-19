@@ -34,6 +34,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 
 public class TradingHourKeeperTest  {
 
@@ -393,4 +394,53 @@ public class TradingHourKeeperTest  {
             Assert.assertTrue(s + " should contain or hour",
                     keeper.contains(Duration.ofMinutes(30), time(s)));
     }
+
+    private LocalTime getRoundTime(LocalTime now, int seconds) {
+        var nearSec = (int)Math.round(now.toSecondOfDay() / (double)seconds) * seconds;
+        return LocalTime.ofSecondOfDay(nearSec);
+    }
+
+    @Test
+    public void small_diff() {
+        long MILLIS = TimeUnit.MINUTES.toMillis(1);
+        var hours = new TradingHourKeeper.TradingHour[2];
+
+        hours[0] = hour("09:15", "11:30");
+        hours[1] = hour("13:00", "15:15");
+
+        var keeper = new TradingHourKeeper(hours);
+
+        // Test end-of-day
+        var small_before = LocalTime.of(15, 14, 59, (int)TimeUnit.MILLISECONDS.toNanos(36));
+        var small_after = LocalTime.of(15, 15, 0, (int)TimeUnit.MILLISECONDS.toNanos(36));
+
+        var round_before = getRoundTime(small_before, (int)TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+        var round_after = getRoundTime(small_after, (int)TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+
+        Assert.assertFalse("small before - end of day", keeper.isEndDay(small_before));
+        Assert.assertTrue("small after - end of day", keeper.isEndDay(small_after));
+        Assert.assertFalse("round before - end of day", keeper.isEndDay(round_before));
+        Assert.assertFalse("round after - end of day", keeper.isEndDay(round_after));
+
+        // Test contains.
+        Assert.assertTrue("small before - contains", keeper.contains(small_before));
+        Assert.assertFalse("small after - contains", keeper.contains(small_after));
+        Assert.assertTrue("round before - contains", keeper.contains(round_before));
+        Assert.assertTrue("round after - contains", keeper.contains(round_after));
+
+        // Test sample.
+        keeper.sample(Duration.ofMinutes(1));
+
+        var small_diff = LocalTime.of(15, 1, 0, (int)TimeUnit.MILLISECONDS.toNanos(26));
+
+        var round_diff = getRoundTime(small_diff, (int)TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+
+        Assert.assertFalse("small before - contains duration", keeper.contains(Duration.ofMinutes(1), small_before));
+        Assert.assertFalse("small after - contains duration", keeper.contains(Duration.ofMinutes(1), small_after));
+        Assert.assertFalse("small diff - contains duration", keeper.contains(Duration.ofMinutes(1), small_diff));
+        Assert.assertTrue("round before - contains duration", keeper.contains(Duration.ofMinutes(1), round_before));
+        Assert.assertTrue("round after - contains duration", keeper.contains(Duration.ofMinutes(1), round_after));
+        Assert.assertTrue("round diff - contains duration", keeper.contains(Duration.ofMinutes(1), round_diff));
+    }
+
 }
