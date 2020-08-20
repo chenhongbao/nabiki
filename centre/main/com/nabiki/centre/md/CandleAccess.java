@@ -46,7 +46,7 @@ public class CandleAccess {
     protected void write(File file, CThostFtdcCandleField candle) {
         Objects.requireNonNull(file, "file null");
         Objects.requireNonNull(candle, "candle null");
-        var value = String.format("%s,2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
+        var value = String.format("%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
                 candle.InstrumentID,
                 candle.OpenPrice,
                 candle.HighestPrice,
