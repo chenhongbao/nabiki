@@ -51,7 +51,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     private final MessageWriter msgWriter;
     private final Set<MarketDataRouter> routers = new HashSet<>();
     private final Set<CandleEngine> engines = new HashSet<>();
-    private final List<String> subscribed = new LinkedList<>();
+    private final Set<String> subscribed = new HashSet<>();
 
     private boolean isConnected = false,
             isLogin = false;
@@ -97,7 +97,7 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    public void subscribe(List<String> instr) {
+    public void subscribe(Collection<String> instr) {
         if (instr == null || instr.size() == 0)
             return;
         // Clear subscribed instruments in last call.
@@ -286,8 +286,10 @@ public class TickProvider extends CThostFtdcMdSpi {
             signalWorkingState();
             updateActionDay();
             // If there are instruments to subscribe, do it.
+            // The subscribe method clears the container, so the instruments must be
+            // kept in another container.
             if (this.subscribed.size() > 0)
-                subscribe(this.subscribed);
+                subscribe(new HashSet<String>(this.subscribed));
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
