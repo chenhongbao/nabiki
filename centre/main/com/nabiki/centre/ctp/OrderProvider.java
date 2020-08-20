@@ -187,6 +187,23 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
+    public WorkingState waitWorkingState(long millis) {
+        this.lock.lock();
+        try {
+            this.cond.await(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+            this.config.getLogger().warning(ex.getMessage());
+        } finally {
+            this.lock.unlock();
+        }
+        return this.workingState;
+    }
+
+    private void signalWorkingState() {
+        signalLastInstrument();
+    }
+
     /**
      * Save the mapping from the specified input order to the specified alive order,
      * then send the specified input order to remote server.

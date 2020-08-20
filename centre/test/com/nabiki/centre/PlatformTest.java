@@ -223,7 +223,7 @@ public class PlatformTest {
         order.LimitPrice = 2350;
         order.VolumeTotalOriginal = 1;
         order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
+        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
 
         var rsp5 = client.orderInsert(order, UUID.randomUUID().toString());
         String[] id = new String[1];
@@ -252,6 +252,47 @@ public class PlatformTest {
 
             rsp6.consume((object, rspInfo, currentCount, totalCount) -> {
                 System.out.println("Rsp query order");
+                System.out.println(OP.toJson(object));
+                System.out.println(OP.toJson(rspInfo));
+                System.out.println(currentCount + "/" + totalCount);
+            });
+        }
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        if (id[0] == null)
+            System.err.println("no order id");
+        else {
+            // Cancel the order.
+            var action = new CThostFtdcInputOrderActionField();
+
+            action.UserID = "0001";
+            action.BrokerID = "9999";
+            action.InstrumentID = "c2101";
+            action.OrderSysID = id[0];
+
+            var rsp7 = client.orderAction(action, UUID.randomUUID().toString());
+            rsp7.consume((object, rspInfo, currentCount, totalCount) -> {
+                System.out.println("Rsp order action");
+                System.out.println(OP.toJson(object));
+                System.out.println(OP.toJson(rspInfo));
+                System.out.println(currentCount + "/" + totalCount);
+            });
+        }
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        System.out.println("Query canceled order");
+
+        if (id[0] == null)
+            System.err.println("no order id");
+        else {
+            var qryOrder = new CThostFtdcQryOrderField();
+            qryOrder.OrderSysID = id[0];
+            var rsp8 = client.queryOrder(qryOrder, UUID.randomUUID().toString());
+
+            rsp8.consume((object, rspInfo, currentCount, totalCount) -> {
+                System.out.println("Rsp query canceled order");
                 System.out.println(OP.toJson(object));
                 System.out.println(OP.toJson(rspInfo));
                 System.out.println(currentCount + "/" + totalCount);

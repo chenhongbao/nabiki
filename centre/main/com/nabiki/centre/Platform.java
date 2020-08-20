@@ -242,22 +242,28 @@ public class Platform {
             // Md logins.
             while (tickProvider.getWorkingState() == WorkingState.STOPPED) {
                 tickProvider.login();
-                if (!tickProvider.waitLogin(
+                if (WorkingState.STARTED != tickProvider.waitWorkingState(
                         TimeUnit.MINUTES.toMillis(1)))
                     config.getLogger().info("wait md login timeout");
-                if (tickProvider.getWorkingState() != WorkingState.STARTED)
-                    config.getLogger().severe("market data didn't start up");
                 else
                     tickProvider.subscribe(orderProvider.getInstruments());
             }
             this.workingState = WorkingState.STARTED;
         }
 
-        // TODO Try stopping until providers really stop.
         private void stop() {
             this.workingState = WorkingState.STOPPING;
+            // Trader logout.
             orderProvider.logout();
+            if (WorkingState.STOPPED != orderProvider.waitWorkingState(
+                    TimeUnit.MINUTES.toMillis(1)))
+                config.getLogger().severe("trader logout timeout");
+            // Md logout.
             tickProvider.logout();
+            if (WorkingState.STOPPED != tickProvider.waitWorkingState(
+                    TimeUnit.MINUTES.toMillis(1)))
+                config.getLogger().severe("md logout timeout");
+            // Change state.
             this.workingState = WorkingState.STOPPED;
         }
 

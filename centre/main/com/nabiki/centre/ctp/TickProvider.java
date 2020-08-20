@@ -51,6 +51,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     private final MessageWriter msgWriter;
     private final Set<MarketDataRouter> routers = new HashSet<>();
     private final Set<CandleEngine> engines = new HashSet<>();
+    private final List<String> subscribed = new LinkedList<>();
 
     private boolean isConnected = false,
             isLogin = false;
@@ -60,7 +61,6 @@ public class TickProvider extends CThostFtdcMdSpi {
     protected Condition cond = lock.newCondition();
 
     private String actionDay;
-    private final Timer dayUpdater = new Timer();
 
     public TickProvider(Config cfg) {
         this.config = cfg;
@@ -71,8 +71,13 @@ public class TickProvider extends CThostFtdcMdSpi {
                 this.loginCfg.IsMulticast);
         this.msgWriter = new MessageWriter(this.config);
         // Schedule action day updater.
+        prepareActionDayUpdater();
+    }
+
+    private void prepareActionDayUpdater() {
         var m = TimeUnit.DAYS.toMillis(1);
-        this.dayUpdater.scheduleAtFixedRate(new TimerTask() {
+        Timer dayUpdater = new Timer();
+        dayUpdater.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 updateActionDay();
@@ -95,6 +100,9 @@ public class TickProvider extends CThostFtdcMdSpi {
     public void subscribe(List<String> instr) {
         if (instr == null || instr.size() == 0)
             return;
+        // Clear subscribed instruments in last call.
+        this.subscribed.clear();
+        // Prepare new subscription.
         var ins = new String[50];
         int count = -1;
         var iter = instr.iterator();
@@ -102,8 +110,10 @@ public class TickProvider extends CThostFtdcMdSpi {
             while (iter.hasNext() && ++count < 50) {
                 var i= iter.next();
                 // Initialize instrument ID in candle engine.
-                addInstruments(i);
+                registerInstrument(i);
                 ins[count] = i;
+                // Save instruments for reconnection and re-subscription.
+                this.subscribed.add(i);
             }
             // Subscribe batch.
             subscribeBatch(ins, count);
@@ -159,7 +169,7 @@ public class TickProvider extends CThostFtdcMdSpi {
         return this.workingState;
     }
 
-    public boolean waitLogin(long millis) {
+    public WorkingState waitWorkingState(long millis) {
         this.lock.lock();
         try {
             this.cond.await(millis, TimeUnit.MILLISECONDS);
@@ -169,14 +179,14 @@ public class TickProvider extends CThostFtdcMdSpi {
         } finally {
             this.lock.unlock();
         }
-        return this.isLogin;
+        return this.workingState;
     }
 
     private void updateActionDay() {
         this.actionDay = Utils.getDay(LocalDate.now(), null);
     }
 
-    private void signalLogin() {
+    private void signalWorkingState() {
         this.lock.lock();
         try {
             this.cond.signal();
@@ -189,7 +199,7 @@ public class TickProvider extends CThostFtdcMdSpi {
         this.mdApi.SubscribeMarketData(instr, count);
     }
 
-    private void addInstruments(String instrID) {
+    private void registerInstrument(String instrID) {
         synchronized (this.engines) {
             for (var e : this.engines)
                 e.addInstrument(instrID);
@@ -271,9 +281,13 @@ public class TickProvider extends CThostFtdcMdSpi {
         if (rspInfo.ErrorID == 0) {
             this.isLogin = true;
             this.workingState = WorkingState.STARTED;
+            // Candle engine starts working.
             setWorking(true);
-            signalLogin();
+            signalWorkingState();
             updateActionDay();
+            // If there are instruments to subscribe, do it.
+            if (this.subscribed.size() > 0)
+                subscribe(this.subscribed);
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
@@ -290,6 +304,9 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.isLogin = false;
             this.workingState = WorkingState.STOPPED;
             setWorking(false);
+            signalWorkingState();
+            // Clear last subscription on successful logout.
+            this.subscribed.clear();
         } else {
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout", null,
