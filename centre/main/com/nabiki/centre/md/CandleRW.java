@@ -34,7 +34,9 @@ import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -50,6 +52,29 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
     public CandleRW(Config cfg) {
         this.config = cfg;
         this.candleDir = getPath(this.config);
+        loadInstrFiles();
+    }
+
+    private void loadInstrFiles() {
+        if (!Files.exists(this.candleDir))
+            return;
+        this.candleDir.toFile().listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                var n = file.getName();
+                var ns = n.substring(0, n.indexOf(".csv")).split("_");
+                if (ns.length == 2) {
+                    try {
+                        getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
+                    } catch (Throwable th) {
+                        th.printStackTrace();
+                        config.getLogger().warning(
+                                "incorrect candle file name: " + n);
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     private Path getPath(Config cfg) {

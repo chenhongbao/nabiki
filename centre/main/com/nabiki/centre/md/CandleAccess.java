@@ -46,7 +46,7 @@ public class CandleAccess {
     protected void write(File file, CThostFtdcCandleField candle) {
         Objects.requireNonNull(file, "file null");
         Objects.requireNonNull(candle, "candle null");
-        var value = String.format("%s,%,2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
+        var value = String.format("%s,2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
                 candle.InstrumentID,
                 candle.OpenPrice,
                 candle.HighestPrice,
@@ -99,12 +99,16 @@ public class CandleAccess {
                 line = line.trim();
                 if (line.length() == 0)
                     continue;
-                var candle = parse(line);
-                if (candle != null)
-                    list.add(candle);
-                else {
-                    System.err.println("wrong candle csv line");
-                    System.err.println(line);
+                try {
+                    var candle = parse(line);
+                    if (candle != null)
+                        list.add(candle);
+                    else {
+                        System.err.println("wrong candle csv line");
+                        System.err.println(line);
+                    }
+                } catch (Throwable th) {
+                    th.printStackTrace();
                 }
             }
         } catch (Throwable th) {
