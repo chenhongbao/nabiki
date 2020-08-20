@@ -498,7 +498,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.isConnected = true;
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED)
-            doLogin();
+            doAuthentication();
     }
 
     @Override
