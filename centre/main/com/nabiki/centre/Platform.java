@@ -175,12 +175,13 @@ public class Platform {
         }
 
         private boolean needRenew() {
-            return this.workingState == WorkingState.STARTED
+            return LocalTime.now().isAfter(this.renewTime)
                     && this.userState == UserState.SETTLED;
         }
 
         private boolean needSettle() {
-            return this.workingState == WorkingState.STOPPED
+            var n = LocalTime.now();
+            return n.isAfter(this.settleTime) && n.isBefore(this.renewTime)
                     && this.userState == UserState.RENEW;
         }
 
