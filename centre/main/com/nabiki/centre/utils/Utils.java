@@ -133,7 +133,7 @@ public class Utils {
     public static String getProductID(String instrID) {
         var m = productPattern.matcher(instrID);
         if (m.find())
-            return instrID.substring(m.start(), m.end()).toLowerCase();
+            return instrID.substring(m.start(), m.end());
         else
             return null;
     }

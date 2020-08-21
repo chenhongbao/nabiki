@@ -76,7 +76,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     // Query instrument info.
     protected final QueryTask qryTask = new QueryTask();
-    protected final Thread qryDaemon = new Thread(this.qryDaemon);
+    protected final Thread qryDaemon = new Thread(this.qryTask);
     protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
     // State.
@@ -89,10 +89,30 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
         this.msgWriter = new MessageWriter(this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
-        // Start query timer task.
-        this.qryDaemon.start();
         // Start order daemon.
         this.orderDaemon.start();
+        // Start query timer task if it needs to query some info.
+        if (estimateQueryCount())
+            this.qryDaemon.start();
+
+    }
+
+    private boolean estimateQueryCount() {
+        int estimatedQueryCount = 0;
+        for (var i : config.getAllInstrInfo()) {
+            if (i == null)
+                continue;
+            if (i.Instrument == null)
+                ++estimatedQueryCount;
+            if (i.Commission == null)
+                ++estimatedQueryCount;
+            if (i.Margin == null)
+                ++estimatedQueryCount;
+        }
+        if (estimatedQueryCount > 0)
+            config.getLogger().info(
+                    "estimated query count: " + estimatedQueryCount);
+        return estimatedQueryCount != 0;
     }
 
     /**
@@ -569,7 +589,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         if (rspInfo.ErrorID == 0) {
             var accepted = InstrumentFilter.accept(instrument.InstrumentID);
             if (accepted) {
-                this.msgWriter.writeRsp(instrument);
+                this.msgWriter.writeInfo(instrument);
                 ConfigLoader.setInstrConfig(instrument);
             }
             // Sync on instrument set.
@@ -598,7 +618,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             CThostFtdcInstrumentCommissionRateField instrumentCommissionRate,
             CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.msgWriter.writeRsp(instrumentCommissionRate);
+            this.msgWriter.writeInfo(instrumentCommissionRate);
             ConfigLoader.setInstrConfig(instrumentCommissionRate);
         } else {
             this.config.getLogger().severe(
@@ -615,7 +635,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             CThostFtdcInstrumentMarginRateField instrumentMarginRate,
             CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.msgWriter.writeRsp(instrumentMarginRate);
+            this.msgWriter.writeInfo(instrumentMarginRate);
             ConfigLoader.setInstrConfig(instrumentMarginRate);
         } else {
             this.config.getLogger().severe(
@@ -906,7 +926,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         protected final Signal lastRtn = new Signal();
         protected final AtomicInteger lastID = new AtomicInteger(0);
 
-        protected int estimatedQueryCount = 0;
+        QueryTask() {
+        }
 
         void signalRequest(int requestID) {
             if (this.lastID.get() == requestID)
@@ -919,26 +940,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             return this.lastRtn.waitSignal(millis);
         }
 
-        private void estimateQueryCount() {
-            if (estimatedQueryCount == 0) {
-                for (var i : config.getAllInstrInfo()) {
-                    if (i.Instrument == null)
-                        ++this.estimatedQueryCount;
-                    if (i.Commission == null)
-                        ++this.estimatedQueryCount;
-                    if (i.Margin == null)
-                        ++this.estimatedQueryCount;
-                }
-                config.getLogger().info(
-                        "estimated query count: " + this.estimatedQueryCount);
-                // Set value to -1 so it won't count again when no info is queried.
-                this.estimatedQueryCount = -1;
-            }
-        }
 
         @Override
         public void run() {
-            estimateQueryCount();
             while (!Thread.currentThread().isInterrupted()) {
                 if (qryInstrLast && isConfirmed) {
                     try {

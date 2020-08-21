@@ -41,7 +41,7 @@ public class TimeAligner {
     }
 
     void align(String name, LocalTime local, LocalTime remote) {
-        this.diff.put(name.toLowerCase(), local.toSecondOfDay() - remote.toSecondOfDay());
+        this.diff.put(name, local.toSecondOfDay() - remote.toSecondOfDay());
     }
 
     void align(String name, LocalTime local, String remote) {
@@ -49,7 +49,7 @@ public class TimeAligner {
     }
 
     LocalTime getAlignTime(String name, LocalTime now) {
-        var diff = this.diff.get(name.toLowerCase());
+        var diff = this.diff.get(name);
         if (diff == null || diff == 0)
             return now;
         else

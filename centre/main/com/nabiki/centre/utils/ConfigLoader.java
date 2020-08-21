@@ -160,7 +160,8 @@ public class ConfigLoader {
     }
 
     private static void setInstrConfig() {
-        var dirs = config.getRootDirectory().recursiveGet("dir.flow.rsp");
+        var dirs = config.getRootDirectory()
+                .recursiveGet("dir.flow.info");
         if (dirs.size() == 0)
             return;
         // Instrument are all ready with correct instrument ID.
@@ -258,7 +259,7 @@ public class ConfigLoader {
                     // Save mapping into config.
                     // All product IDs are lower case.
                     for (var p : c.ProductID)
-                        config.tradingHour.put(p.toLowerCase(), h);
+                        config.tradingHour.put(p, h);
                 } catch (IOException | NullPointerException e) {
                     config.getLogger().warning(
                             Utils.formatLog("failed trading hour config",
@@ -336,6 +337,7 @@ public class ConfigLoader {
         flow.setDirectory("dir.flow.rtn", ".rtn");
         flow.setDirectory("dir.flow.rsp", ".rsp");
         flow.setDirectory("dir.flow.err", ".err");
+        flow.setDirectory("dir.flow.info", ".info");
 
         // Set config.
         config.rootDirectory = root;
