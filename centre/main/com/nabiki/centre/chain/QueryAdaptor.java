@@ -142,6 +142,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
             session.sendResponse(rsp);
+            // Write rsp.
+            writeRsp(rsp);
         } else {
             var activeUser = (ActiveUser) attr;
             var orders = activeUser.getRtnOrder(query.OrderSysID);
@@ -153,6 +155,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                 rsp.RspInfo.ErrorID = TThostFtdcErrorCode.ORDER_NOT_FOUND;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 session.sendResponse(rsp);
+                // Write rsp.
+                writeRsp(rsp);
             } else {
                 // Send rtn orders.
                 rsp.CurrentCount = 0;
@@ -192,6 +196,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
             session.sendResponse(rsp);
+            // Write rsp.
+            writeRsp(rsp);
         } else {
             var activeUser = (ActiveUser)attr;
             var positions = activeUser.getPosition(query.InstrumentID);
@@ -202,6 +208,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                 rsp.RspInfo.ErrorID = TThostFtdcErrorCode.INSTRUMENT_NOT_FOUND;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 session.sendResponse(rsp);
+                // Write rsp.
+                writeRsp(rsp);
             } else {
                 rsp.CurrentCount = 0;
                 rsp.TotalCount = positions.size();
