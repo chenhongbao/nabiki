@@ -42,7 +42,9 @@ import com.nabiki.ctp4j.trader.CThostFtdcTraderSpi;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -73,9 +75,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected final Signal lastRspSignal = new Signal();
 
     // Query instrument info.
-    protected final Timer qryTimer = new Timer();
     protected final QueryTask qryTask = new QueryTask();
-    protected final long queryPeriod = TimeUnit.SECONDS.toMillis(10);
+    protected final Thread qryDaemon = new Thread(this.qryDaemon);
+    protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
     // State.
     protected WorkingState workingState = WorkingState.STOPPED;
@@ -88,7 +90,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.msgWriter = new MessageWriter(this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
         // Start query timer task.
-        this.qryTimer.scheduleAtFixedRate(this.qryTask, 0, this.queryPeriod);
+        this.qryDaemon.start();
         // Start order daemon.
         this.orderDaemon.start();
     }
@@ -127,7 +129,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.isConnected = false;
         this.workingState = WorkingState.STOPPED;
         // Cancel threads.
-        this.qryTimer.cancel();
+        this.qryDaemon.interrupt();
         this.orderDaemon.interrupt();
         try {
             this.orderDaemon.join(5000);
@@ -897,7 +899,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    protected class QueryTask extends TimerTask {
+    protected class QueryTask implements Runnable {
         protected final Random rand = new Random();
 
         // Wait last request return.
@@ -937,13 +939,21 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         @Override
         public void run() {
             estimateQueryCount();
-            if (!qryInstrLast || !isConfirmed)
-                return;
-            try {
-                doQuery();
-            } catch (Throwable th) {
-                th.printStackTrace();
-                config.getLogger().warning(th.getMessage());
+            while (!Thread.currentThread().isInterrupted()) {
+                if (qryInstrLast && isConfirmed) {
+                    try {
+                        doQuery();
+                    } catch (Throwable th) {
+                        th.printStackTrace();
+                        config.getLogger().warning(th.getMessage());
+                    }
+                }
+                // Sleep 1 second between queries.
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -967,8 +977,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 } else {
                     // Sleep up tp some seconds.
                     try {
-                        if (!waitRequestRsp(
-                                TimeUnit.SECONDS.toMillis(5), reqID))
+                        if (!waitRequestRsp(qryWaitMillis, reqID))
                             config.getLogger().warning("query margin timeout");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -996,8 +1005,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 } else {
                     // Sleep up tp some seconds.
                     try {
-                        if (!waitRequestRsp(
-                                TimeUnit.SECONDS.toMillis(5), reqID))
+                        if (!waitRequestRsp(qryWaitMillis, reqID))
                             config.getLogger().warning("query margin timeout");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
