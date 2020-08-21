@@ -42,7 +42,7 @@ import java.time.format.DateTimeFormatter;
 
 public class MessageWriter {
     private final Config config;
-    private final Path reqDir, rtnDir, rspDir, errDir;
+    private final Path reqDir, rtnDir, infoDir, errDir;
     private final DateTimeFormatter formatter
             = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSSSSS");
 
@@ -50,7 +50,7 @@ public class MessageWriter {
         this.config = cfg;
         this.reqDir = getPath(cfg, "dir.flow.req");
         this.rtnDir = getPath(cfg, "dir.flow.rtn");
-        this.rspDir = getPath(cfg, "dir.flow.rsp");
+        this.infoDir = getPath(cfg, "dir.flow.info");
         this.errDir = getPath(cfg, "dir.flow.err");
     }
 
@@ -112,21 +112,21 @@ public class MessageWriter {
                         "action." + getTimeStamp() + ".json"));
     }
 
-    public void writeRsp(CThostFtdcInstrumentMarginRateField rsp) {
+    public void writeInfo(CThostFtdcInstrumentMarginRateField rsp) {
         write(OP.toJson(rsp),
-                ensureFile(this.rspDir,
+                ensureFile(this.infoDir,
                         "margin." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeRsp(CThostFtdcInstrumentCommissionRateField rsp) {
+    public void writeInfo(CThostFtdcInstrumentCommissionRateField rsp) {
         write(OP.toJson(rsp),
-                ensureFile(this.rspDir,
+                ensureFile(this.infoDir,
                         "commission." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeRsp(CThostFtdcInstrumentField rsp) {
+    public void writeInfo(CThostFtdcInstrumentField rsp) {
         write(OP.toJson(rsp),
-                ensureFile(this.rspDir,
+                ensureFile(this.infoDir,
                         "instrument." + rsp.InstrumentID + ".json"));
     }
 
