@@ -440,6 +440,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         try {
             active.updateRtnOrder(rtn);
         } catch (Throwable th) {
+            th.printStackTrace();
             this.config.getLogger().severe(
                     Utils.formatLog("failed update rtn order", rtn.OrderRef,
                             th.getMessage(), null));
@@ -463,6 +464,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         try {
             active.updateTrade(trade);
         } catch (Throwable th) {
+            th.printStackTrace();
             this.config.getLogger().severe(
                     Utils.formatLog("failed update rtn trade", trade.OrderRef,
                             th.getMessage(), null));

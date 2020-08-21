@@ -95,6 +95,7 @@ public class ActiveUser {
         try {
             active.execOrder();
         } catch (Throwable th) {
+            th.printStackTrace();
             this.config.getLogger().severe(
                     Utils.formatLog("failed order insertion", order.UserID,
                             th.getMessage(), null));
@@ -109,6 +110,7 @@ public class ActiveUser {
         try {
             active.execAction();
         } catch (Throwable th) {
+            th.printStackTrace();
             this.config.getLogger().severe(
                     Utils.formatLog("failed order action", action.UserID,
                             th.getMessage(), null));
