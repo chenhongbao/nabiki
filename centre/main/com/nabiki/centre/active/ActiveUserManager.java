@@ -36,7 +36,6 @@ import com.nabiki.centre.utils.Config;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUserManager implements Renewable {
@@ -73,12 +72,8 @@ public class ActiveUserManager implements Renewable {
         SettlementPreparation prep = new SettlementPreparation();
         prep.prepare(this.config.getTradingDay());
         for (var i : this.config.getAllInstrInfo()) {
-            Objects.requireNonNull(
-                    i.Instrument, "instrument null when settling");
-            Objects.requireNonNull(
-                    i.Commission, "commission null when settling");
-            Objects.requireNonNull(
-                    i.Margin, "margin null when settling");
+            // There may be some info missing, but it doesn't matter if we don't
+            // have that position.
             prep.prepare(i.Instrument);
             prep.prepare(i.Commission);
             prep.prepare(i.Margin);
