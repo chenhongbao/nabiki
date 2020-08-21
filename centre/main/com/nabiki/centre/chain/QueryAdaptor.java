@@ -29,6 +29,8 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.centre.active.ActiveUser;
+import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Utils;
 import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
 import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
@@ -37,10 +39,57 @@ import com.nabiki.iop.ServerMessageAdaptor;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public class QueryAdaptor extends ServerMessageAdaptor {
-    public QueryAdaptor() {
+    private final Config config;
+    private final Path rspDir;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+    public QueryAdaptor(Config cfg) {
+        this.config = cfg;
+        this.rspDir = getPath(cfg, "dir.flow.rsp");
+    }
+
+    private Path getPath(Config cfg, String key) {
+        var dirs = cfg.getRootDirectory().recursiveGet(key);
+        if (dirs.size() > 0)
+            return dirs.iterator().next().path();
+        else
+            return Path.of("");
+    }
+
+    private void write(String text, File file) {
+        try {
+            Utils.writeText(text, file, StandardCharsets.UTF_8, false);
+        } catch (IOException e) {
+            this.config.getLogger()
+                    .warning(file.toString() + ". " + e.getMessage());
+        }
+    }
+
+    private File ensureFile(Path root, String fn) {
+        try {
+            var r = Path.of(root.toAbsolutePath().toString(), fn);
+            Utils.createFile(root, true);
+            Utils.createFile(r, false);
+            return r.toFile();
+        } catch (IOException e) {
+            this.config.getLogger().warning(root.toString() + "/" + fn + ". "
+                    + e.getMessage());
+            return new File(".failover");
+        }
+    }
+
+    private void writeRsp(Message rsp) {
+        write(OP.toJson(rsp), ensureFile(this.rspDir,
+                LocalDateTime.now().format(this.formatter) + "." + rsp.RequestID + ".json"));
     }
 
     @Override
@@ -68,6 +117,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         }
         rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         session.sendResponse(rsp);
+        // Write rsp.
+        writeRsp(rsp);
         session.done();
     }
 
@@ -113,6 +164,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                     ++rsp.CurrentCount;
                     rsp.Body = order;
                     session.sendResponse(rsp);
+                    // Write rsp.
+                    writeRsp(rsp);
                 }
             }
         }
@@ -159,6 +212,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                     ++rsp.CurrentCount;
                     rsp.Body = position;
                     session.sendResponse(rsp);
+                    // Write rsp.
+                    writeRsp(rsp);
                 }
             }
         }
