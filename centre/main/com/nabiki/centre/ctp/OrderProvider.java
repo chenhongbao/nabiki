@@ -904,6 +904,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         protected final Signal lastRtn = new Signal();
         protected final AtomicInteger lastID = new AtomicInteger(0);
 
+        protected int estimatedQueryCount = 0;
+
         void signalRequest(int requestID) {
             if (this.lastID.get() == requestID)
                 this.lastRtn.signal();
@@ -915,8 +917,26 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             return this.lastRtn.waitSignal(millis);
         }
 
+        private void estimateQueryCount() {
+            if (estimatedQueryCount == 0) {
+                for (var i : config.getAllInstrInfo()) {
+                    if (i.Instrument == null)
+                        ++this.estimatedQueryCount;
+                    if (i.Commission == null)
+                        ++this.estimatedQueryCount;
+                    if (i.Margin == null)
+                        ++this.estimatedQueryCount;
+                }
+                config.getLogger().info(
+                        "estimated query count: " + this.estimatedQueryCount);
+                // Set value to -1 so it won't count again when no info is queried.
+                this.estimatedQueryCount = -1;
+            }
+        }
+
         @Override
         public void run() {
+            estimateQueryCount();
             if (!qryInstrLast || !isConfirmed)
                 return;
             try {

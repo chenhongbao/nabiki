@@ -33,6 +33,7 @@ import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -124,6 +125,17 @@ public class Config {
     public InstrumentInfo getInstrInfo(String instrID) {
         synchronized (this.instrInfo) {
             return this.instrInfo.get(instrID);
+        }
+    }
+
+    /**
+     * Get all instrument info.
+     *
+     * @return all instrument info.
+     */
+    public Collection<InstrumentInfo> getAllInstrInfo() {
+        synchronized (this.instrInfo) {
+            return this.instrInfo.values();
         }
     }
 

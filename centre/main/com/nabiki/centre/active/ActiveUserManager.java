@@ -31,10 +31,12 @@ package com.nabiki.centre.active;
 import com.nabiki.centre.Renewable;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.UserManager;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUserManager implements Renewable {
@@ -67,6 +69,24 @@ public class ActiveUserManager implements Renewable {
         return getOrCreate(userID);
     }
 
+    private SettlementPreparation prepare() {
+        SettlementPreparation prep = new SettlementPreparation();
+        prep.prepare(this.config.getTradingDay());
+        for (var i : this.config.getAllInstrInfo()) {
+            Objects.requireNonNull(
+                    i.Instrument, "instrument null when settling");
+            Objects.requireNonNull(
+                    i.Commission, "commission null when settling");
+            Objects.requireNonNull(
+                    i.Margin, "margin null when settling");
+            prep.prepare(i.Instrument);
+            prep.prepare(i.Commission);
+            prep.prepare(i.Margin);
+            prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
+        }
+        return prep;
+    }
+
     @Override
     public void renew() throws Exception {
         this.users.clear();
@@ -76,6 +96,8 @@ public class ActiveUserManager implements Renewable {
     @Override
     public void settle() throws Exception {
         this.users.clear();
+        // Prepare info.
+        this.userMgr.prepareSettlement(prepare());
         this.userMgr.settle();
     }
 }
