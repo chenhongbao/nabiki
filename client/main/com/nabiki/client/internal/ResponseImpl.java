@@ -73,11 +73,13 @@ public class ResponseImpl<T> implements Response<T> {
         if (this.consumer.get() != null) {
             try {
                 this.consumer.get().accept(response, rspInfo, count, total);
-            } catch (Throwable ignored) {
+            } catch (Throwable th) {
+                th.printStackTrace();
             }
         } else {
             this.responses.add(
                     new ArriveResponse<>(response, rspInfo, count, total));
+            this.infos.put(response.hashCode(), rspInfo);
         }
         this.hasRsp.set(true);
         // Set count.

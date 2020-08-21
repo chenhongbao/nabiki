@@ -177,7 +177,9 @@ class ServerFrameHandler implements IoHandler {
             // First call message handler.
             try {
                 this.msgHandler.onMessage(iopSession, iopMessage);
-            } catch (Throwable ignored) {}
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
             // Then call message adaptor chain.
             switch (frame.Type) {
                 case FrameType.REQUEST:

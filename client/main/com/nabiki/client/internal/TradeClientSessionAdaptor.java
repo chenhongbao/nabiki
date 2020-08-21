@@ -71,20 +71,23 @@ class TradeClientSessionAdaptor extends ClientSessionAdaptor {
                 this.closed.set(false);
                 try {
                     this.listener.get().onOpen();
-                } catch (Throwable ignored) {
+                } catch (Throwable th) {
+                    th.printStackTrace();
                 }
                 break;
             case CLOSED:
                 this.closed.set(true);
                 try {
                     this.listener.get().onClose();
-                } catch (Throwable ignored) {
+                } catch (Throwable th) {
+                    th.printStackTrace();
                 }
                 break;
             case ERROR:
                 try {
                     this.listener.get().onError((Throwable) eventObject);
-                } catch (Throwable ignored) {
+                } catch (Throwable th) {
+                    th.printStackTrace();
                 }
             default:
                 break;

@@ -151,7 +151,9 @@ class ClientFrameHandler implements IoHandler {
             // First call message handler.
             try {
                 this.msgHandler.onMessage(iopSession, iopMessage);
-            } catch (Throwable ignored) {}
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
             // Then call default message handler that wraps adaptor.
             switch (frame.Type) {
                 case FrameType.RESPONSE:

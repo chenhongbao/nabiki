@@ -65,6 +65,7 @@ class AdaptorChainImpl implements AdaptorChain {
             try {
                 handleMessage(adaptor, session, message);
             } catch (Throwable th) {
+                th.printStackTrace();
                 session.setResponseState(SessionResponseState.ERROR);
                 whenError(session, SessionEvent.ERROR, th);
             }
@@ -78,7 +79,9 @@ class AdaptorChainImpl implements AdaptorChain {
         try {
             if (sessionAdaptor != null)
                 sessionAdaptor.doEvent(session, event, obj);
-        } catch (Throwable ignored) {}
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
     }
 
     private void handleMessage(ServerMessageAdaptor adaptor,
