@@ -31,6 +31,7 @@ package com.nabiki.centre.ctp;
 import com.nabiki.centre.active.ActiveRequest;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.jni.flag.*;
@@ -46,8 +47,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * {@code AliveOrderManager} keeps the status of all alive orders, interacts with
@@ -61,7 +60,6 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected final MessageWriter msgWriter;
     protected final CThostFtdcTraderApi traderApi;
     protected final Thread orderDaemon = new Thread(new RequestDaemon());
-    protected final Timer qryTimer = new Timer();
     protected final List<String> instruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
     protected final TimeAligner timeAligner = new TimeAligner();
@@ -72,8 +70,12 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected CThostFtdcRspUserLoginField rspLogin;
 
     // Wait last instrument.
-    protected ReentrantLock lock = new ReentrantLock();
-    protected Condition cond = lock.newCondition();
+    protected final Signal lastRspSignal = new Signal();
+
+    // Query instrument info.
+    protected final Timer qryTimer = new Timer();
+    protected final QueryTask qryTask = new QueryTask();
+    protected final long queryPeriod = TimeUnit.SECONDS.toMillis(10);
 
     // State.
     protected WorkingState workingState = WorkingState.STOPPED;
@@ -86,7 +88,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.msgWriter = new MessageWriter(this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
         // Start query timer task.
-        this.qryTimer.scheduleAtFixedRate(new QueryTask(), 0, 3000);
+        this.qryTimer.scheduleAtFixedRate(this.qryTask, 0, this.queryPeriod);
         // Start order daemon.
         this.orderDaemon.start();
     }
@@ -164,44 +166,15 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         return this.workingState;
     }
 
-    public boolean waitLastInstrument(long millis) {
-        this.lock.lock();
-        try {
-            if (!this.qryInstrLast)
-                this.cond.await(millis, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-            this.config.getLogger().warning(ex.getMessage());
-        } finally {
-            this.lock.unlock();
-        }
+    public boolean waitLastInstrument(long millis) throws InterruptedException {
+        if (!this.qryInstrLast)
+            this.lastRspSignal.waitSignal(millis);
         return this.qryInstrLast;
     }
 
-    private void signalLastInstrument() {
-        this.lock.lock();
-        try {
-            this.cond.signal();
-        } finally {
-            this.lock.unlock();
-        }
-    }
-
-    public WorkingState waitWorkingState(long millis) {
-        this.lock.lock();
-        try {
-            this.cond.await(millis, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-            this.config.getLogger().warning(ex.getMessage());
-        } finally {
-            this.lock.unlock();
-        }
+    public WorkingState waitWorkingState(long millis) throws InterruptedException {
+        this.lastRspSignal.waitSignal(millis);
         return this.workingState;
-    }
-
-    private void signalWorkingState() {
-        signalLastInstrument();
     }
 
     /**
@@ -213,7 +186,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      * return error.
      * </p>
      *
-     * @param input input order
+     * @param input  input order
      * @param active alive order
      * @return always return 0
      */
@@ -589,7 +562,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     @Override
     public void OnRspQryInstrument(CThostFtdcInstrumentField instrument,
-                                   CThostFtdcRspInfoField rspInfo, int requestId,
+                                   CThostFtdcRspInfoField rspInfo, int requestID,
                                    boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             var accepted = InstrumentFilter.accept(instrument.InstrumentID);
@@ -611,14 +584,17 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        // Signal request rtn.
+        this.qryTask.signalRequest(requestID);
+        // Signal last rsp.
         if (this.qryInstrLast)
-            signalLastInstrument();
+            this.lastRspSignal.signal();
     }
 
     @Override
     public void OnRspQryInstrumentCommissionRate(
             CThostFtdcInstrumentCommissionRateField instrumentCommissionRate,
-            CThostFtdcRspInfoField rspInfo, int requestId, boolean isLast) {
+            CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeRsp(instrumentCommissionRate);
             ConfigLoader.setInstrConfig(instrumentCommissionRate);
@@ -628,12 +604,14 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        // Signal request rtn.
+        this.qryTask.signalRequest(requestID);
     }
 
     @Override
     public void OnRspQryInstrumentMarginRate(
             CThostFtdcInstrumentMarginRateField instrumentMarginRate,
-            CThostFtdcRspInfoField rspInfo, int requestId, boolean isLast) {
+            CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeRsp(instrumentMarginRate);
             ConfigLoader.setInstrConfig(instrumentMarginRate);
@@ -643,6 +621,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        // Signal request rtn.
+        this.qryTask.signalRequest(requestID);
     }
 
     @Override
@@ -687,7 +667,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                     Utils.formatLog("failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
-            this.workingState =  WorkingState.STOPPED;
+            this.workingState = WorkingState.STOPPED;
         }
     }
 
@@ -703,6 +683,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             this.workingState = WorkingState.STOPPED;
             // Clear trading day.
             ConfigLoader.setTradingDay(null);
+            // Signal logout.
+            this.lastRspSignal.signal();
         } else {
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout", null,
@@ -918,6 +900,21 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected class QueryTask extends TimerTask {
         protected final Random rand = new Random();
 
+        // Wait last request return.
+        protected final Signal lastRtn = new Signal();
+        protected final AtomicInteger lastID = new AtomicInteger(0);
+
+        void signalRequest(int requestID) {
+            if (this.lastID.get() == requestID)
+                this.lastRtn.signal();
+        }
+
+        private boolean waitRequestRsp(
+                long millis, int requestID) throws InterruptedException {
+            this.lastID.set(requestID);
+            return this.lastRtn.waitSignal(millis);
+        }
+
         @Override
         public void run() {
             if (!qryInstrLast || !isConfirmed)
@@ -932,6 +929,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
         protected void doQuery() {
             String ins = randomGet();
+            int reqID = 0;
             var in = config.getInstrInfo(ins);
             // Query margin.
             if (in.Margin == null) {
@@ -940,20 +938,28 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 req.InvestorID = loginCfg.UserID;
                 req.HedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
                 req.InstrumentID = ins;
-                int r = traderApi.ReqQryInstrumentMarginRate(req,
-                        Utils.getIncrementID());
-                if (r != 0)
+                reqID = Utils.getIncrementID();
+                int r = traderApi.ReqQryInstrumentMarginRate(req, reqID);
+                if (r != 0) {
                     config.getLogger().warning(
                             Utils.formatLog("failed query margin",
                                     null, ins, r));
-                // Sleep for 1.5 seconds
-                try {
-                    Thread.sleep(1500);
-                } catch (InterruptedException e) {
-                    config.getLogger().warning(
-                            Utils.formatLog("failed sleep", null,
-                                    e.getMessage(), null));
+                } else {
+                    // Sleep up tp some seconds.
+                    try {
+                        if (!waitRequestRsp(
+                                TimeUnit.SECONDS.toMillis(5), reqID))
+                            config.getLogger().warning("query margin timeout");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
+            }
+            // Sleep 1 second between queries.
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
             // Query commission.
             if (in.Commission == null) {
@@ -961,12 +967,22 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 req0.BrokerID = loginCfg.BrokerID;
                 req0.InvestorID = loginCfg.UserID;
                 req0.InstrumentID = ins;
-                var r = traderApi.ReqQryInstrumentCommissionRate(req0,
-                        Utils.getIncrementID());
-                if (r != 0)
+                reqID = Utils.getIncrementID();
+                var r = traderApi.ReqQryInstrumentCommissionRate(req0, reqID);
+                if (r != 0) {
                     config.getLogger().warning(
                             Utils.formatLog("failed query commission",
                                     null, ins, r));
+                } else {
+                    // Sleep up tp some seconds.
+                    try {
+                        if (!waitRequestRsp(
+                                TimeUnit.SECONDS.toMillis(5), reqID))
+                            config.getLogger().warning("query margin timeout");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 

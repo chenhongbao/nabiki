@@ -32,6 +32,7 @@ import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.jni.struct.*;
@@ -41,8 +42,6 @@ import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class TickProvider extends CThostFtdcMdSpi {
     private final Config config;
@@ -57,8 +56,8 @@ public class TickProvider extends CThostFtdcMdSpi {
             isLogin = false;
     private WorkingState workingState = WorkingState.STOPPED;
 
-    protected ReentrantLock lock = new ReentrantLock();
-    protected Condition cond = lock.newCondition();
+    // Login signal.
+    protected final Signal loginSignal = new Signal();
 
     private String actionDay;
 
@@ -169,30 +168,13 @@ public class TickProvider extends CThostFtdcMdSpi {
         return this.workingState;
     }
 
-    public WorkingState waitWorkingState(long millis) {
-        this.lock.lock();
-        try {
-            this.cond.await(millis, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-            this.config.getLogger().warning(ex.getMessage());
-        } finally {
-            this.lock.unlock();
-        }
+    public WorkingState waitWorkingState(long millis) throws InterruptedException {
+        this.loginSignal.waitSignal(millis);
         return this.workingState;
     }
 
     private void updateActionDay() {
         this.actionDay = Utils.getDay(LocalDate.now(), null);
-    }
-
-    private void signalWorkingState() {
-        this.lock.lock();
-        try {
-            this.cond.signal();
-        } finally {
-            this.lock.unlock();
-        }
     }
 
     private void subscribeBatch(String[] instr, int count) {
@@ -283,7 +265,8 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.workingState = WorkingState.STARTED;
             // Candle engine starts working.
             setWorking(true);
-            signalWorkingState();
+            // Signal login state changed.
+            this.loginSignal.signal();
             updateActionDay();
             // If there are instruments to subscribe, do it.
             // The subscribe method clears the container, so the instruments must be
@@ -306,7 +289,8 @@ public class TickProvider extends CThostFtdcMdSpi {
             this.isLogin = false;
             this.workingState = WorkingState.STOPPED;
             setWorking(false);
-            signalWorkingState();
+            // Signal login state changed to logout.
+            this.loginSignal.signal();
             // Clear last subscription on successful logout.
             this.subscribed.clear();
         } else {

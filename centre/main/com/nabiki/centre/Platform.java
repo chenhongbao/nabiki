@@ -175,7 +175,9 @@ public class Platform {
         }
 
         private boolean needRenew() {
-            return LocalTime.now().isAfter(this.renewTime)
+            // Renew at some time of day, or at platform startup.
+            return (LocalTime.now().isAfter(this.renewTime)
+                    || this.workingState == WorkingState.STARTED)
                     && this.userState == UserState.SETTLED;
         }
 
@@ -234,21 +236,31 @@ public class Platform {
             // Trader logins.
             while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
                 orderProvider.login();
-                if (!orderProvider.waitLastInstrument(
-                        TimeUnit.MINUTES.toMillis(1)))
-                    config.getLogger().info("query instrument timeout");
+                // Wait query instruments completed.
+                try {
+                    if (!orderProvider.waitLastInstrument(
+                            TimeUnit.MINUTES.toMillis(1)))
+                        config.getLogger().info("query instrument timeout");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if (orderProvider.getWorkingState() != WorkingState.STARTED)
                     config.getLogger().severe("trader didn't start up");
             }
             // Md logins.
             while (tickProvider.getWorkingState() == WorkingState.STOPPED) {
                 tickProvider.login();
-                if (WorkingState.STARTED != tickProvider.waitWorkingState(
-                        TimeUnit.MINUTES.toMillis(1)))
-                    config.getLogger().info("wait md login timeout");
-                else
-                    tickProvider.subscribe(orderProvider.getInstruments());
+                try {
+                    if (WorkingState.STARTED != tickProvider.waitWorkingState(
+                            TimeUnit.MINUTES.toMillis(1)))
+                        config.getLogger().info("wait md login timeout");
+                    else
+                        tickProvider.subscribe(orderProvider.getInstruments());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+            // Change order provider state.
             this.workingState = WorkingState.STARTED;
         }
 
@@ -256,14 +268,24 @@ public class Platform {
             this.workingState = WorkingState.STOPPING;
             // Trader logout.
             orderProvider.logout();
-            if (WorkingState.STOPPED != orderProvider.waitWorkingState(
-                    TimeUnit.MINUTES.toMillis(1)))
-                config.getLogger().severe("trader logout timeout");
+            // Wait for logout.
+            try {
+                if (WorkingState.STOPPED != orderProvider.waitWorkingState(
+                        TimeUnit.MINUTES.toMillis(1)))
+                    config.getLogger().severe("trader logout timeout");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             // Md logout.
             tickProvider.logout();
-            if (WorkingState.STOPPED != tickProvider.waitWorkingState(
-                    TimeUnit.MINUTES.toMillis(1)))
-                config.getLogger().severe("md logout timeout");
+            // Wait for logout.
+            try {
+                if (WorkingState.STOPPED != tickProvider.waitWorkingState(
+                        TimeUnit.MINUTES.toMillis(1)))
+                    config.getLogger().severe("md logout timeout");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             // Change state.
             this.workingState = WorkingState.STOPPED;
         }

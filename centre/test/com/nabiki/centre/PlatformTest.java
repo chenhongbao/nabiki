@@ -260,6 +260,8 @@ public class PlatformTest {
 
         sleep((int)TimeUnit.SECONDS.toMillis(5));
 
+        System.out.println("Action order");
+
         if (id[0] == null)
             System.err.println("no order id");
         else {
