@@ -28,8 +28,8 @@
 
 package com.nabiki.client;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
+import com.nabiki.objects.CRspInfo;
 
 public interface ResponseConsumer<T> {
-    void accept(T object, CThostFtdcRspInfoField rspInfo, int currentCount, int totalCount);
+    void accept(T object, CRspInfo rspInfo, int currentCount, int totalCount);
 }

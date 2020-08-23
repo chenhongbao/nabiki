@@ -28,7 +28,7 @@
 
 package com.nabiki.client;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
+import com.nabiki.objects.CRspInfo;
 
 public interface Response<T> {
     /**
@@ -44,13 +44,13 @@ public interface Response<T> {
     T poll();
 
     /**
-     * Get the corresponding {@link CThostFtdcRspInfoField} of the specified
+     * Get the corresponding {@link CRspInfo} of the specified
      * response. If no mapping for the specified response, return {@code null}.
      *
      * @param object response object
      * @return response information, or {@code null} if no mapping
      */
-    CThostFtdcRspInfoField getRspInfo(T object);
+    CRspInfo getRspInfo(T object);
 
     /**
      * Set the {@link ResponseConsumer} to receive the upcoming responses.

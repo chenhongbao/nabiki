@@ -28,12 +28,12 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 public abstract class ServerMessageAdaptor {
     public void doSubDepthMarketData(
             ServerSession session,
-            CThostFtdcSubMarketDataField request,
+            CSubMarketData request,
             String requestID,
             int current,
             int total) {
@@ -41,7 +41,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doUnsubDepthMarketData(
             ServerSession session,
-            CThostFtdcUnsubMarketDataField request,
+            CUnsubMarketData request,
             String requestID,
             int current,
             int total) {
@@ -49,7 +49,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqAuthenticate(
             ServerSession session,
-            CThostFtdcReqAuthenticateField request,
+            CReqAuthenticate request,
             String requestID,
             int current,
             int total) {
@@ -57,7 +57,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqLogin(
             ServerSession session,
-            CThostFtdcReqUserLoginField request,
+            CReqUserLogin request,
             String requestID,
             int current,
             int total) {
@@ -65,7 +65,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqLogout(
             ServerSession session,
-            CThostFtdcUserLogoutField request,
+            CUserLogout request,
             String requestID,
             int current,
             int total) {
@@ -73,7 +73,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqSettlementConfirm(
             ServerSession session,
-            CThostFtdcSettlementInfoConfirmField request,
+            CSettlementInfoConfirm request,
             String requestID,
             int current,
             int total) {
@@ -81,7 +81,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqOrderInsert(
             ServerSession session,
-            CThostFtdcInputOrderField request,
+            CInputOrder request,
             String requestID,
             int current,
             int total) {
@@ -89,7 +89,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doReqOrderAction(
             ServerSession session,
-            CThostFtdcInputOrderActionField request,
+            CInputOrderAction request,
             String requestID,
             int current,
             int total) {
@@ -97,7 +97,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryAccount(
             ServerSession session,
-            CThostFtdcQryTradingAccountField query,
+            CQryTradingAccount query,
             String requestID,
             int current,
             int total) {
@@ -105,7 +105,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryOrder(
             ServerSession session,
-            CThostFtdcQryOrderField query,
+            CQryOrder query,
             String requestID,
             int current,
             int total) {
@@ -113,7 +113,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryPosition(
             ServerSession session,
-            CThostFtdcQryInvestorPositionField query,
+            CQryInvestorPosition query,
             String requestID,
             int current,
             int total) {
@@ -121,7 +121,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryPositionDetail(
             ServerSession session,
-            CThostFtdcQryInvestorPositionDetailField query,
+            CQryInvestorPositionDetail query,
             String requestID,
             int current,
             int total) {
@@ -129,7 +129,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryInstrument(
             ServerSession session,
-            CThostFtdcQryInstrumentField query,
+            CQryInstrument query,
             String requestID,
             int current,
             int total) {
@@ -137,7 +137,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryCommission(
             ServerSession session,
-            CThostFtdcQryInstrumentCommissionRateField query,
+            CQryInstrumentCommissionRate query,
             String requestID,
             int current,
             int total) {
@@ -145,7 +145,7 @@ public abstract class ServerMessageAdaptor {
 
     public void doQryMargin(
             ServerSession session,
-            CThostFtdcQryInstrumentMarginRateField query,
+            CQryInstrumentMarginRate query,
             String requestID,
             int current,
             int total) {

@@ -28,12 +28,12 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
+import com.nabiki.objects.CRspInfo;
 
 public class Message implements java.io.Serializable {
     public MessageType Type;
     public Object Body;
-    public CThostFtdcRspInfoField RspInfo;
+    public CRspInfo RspInfo;
     public String RequestID, ResponseID;
     public int CurrentCount, TotalCount;
 

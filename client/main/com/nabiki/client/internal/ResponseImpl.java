@@ -30,7 +30,7 @@ package com.nabiki.client.internal;
 
 import com.nabiki.client.Response;
 import com.nabiki.client.ResponseConsumer;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
+import com.nabiki.objects.CRspInfo;
 
 import java.util.Map;
 import java.util.Objects;
@@ -44,10 +44,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ResponseImpl<T> implements Response<T> {
     private static class ArriveResponse<T> {
         final T Response;
-        final CThostFtdcRspInfoField RspInfo;
+        final CRspInfo RspInfo;
         final int CurrentCount, TotalCount;
 
-        ArriveResponse(T response, CThostFtdcRspInfoField rspInfo, int count,
+        ArriveResponse(T response, CRspInfo rspInfo, int count,
                        int total) {
             this.Response = response;
             this.RspInfo = rspInfo;
@@ -57,7 +57,7 @@ public class ResponseImpl<T> implements Response<T> {
     }
 
     private final AtomicReference<ResponseConsumer<T>> consumer;
-    private final Map<Integer, CThostFtdcRspInfoField> infos;
+    private final Map<Integer, CRspInfo> infos;
     private final Queue<ArriveResponse<T>> responses;
     private final AtomicInteger totalCount = new AtomicInteger(0),
             arriveCount = new AtomicInteger(0);
@@ -69,7 +69,7 @@ public class ResponseImpl<T> implements Response<T> {
         this.responses = new ConcurrentLinkedQueue<>();
     }
 
-    void put(T response, CThostFtdcRspInfoField rspInfo, int count, int total) {
+    void put(T response, CRspInfo rspInfo, int count, int total) {
         if (this.consumer.get() != null) {
             try {
                 this.consumer.get().accept(response, rspInfo, count, total);
@@ -95,7 +95,7 @@ public class ResponseImpl<T> implements Response<T> {
     }
 
     @Override
-    public CThostFtdcRspInfoField getRspInfo(T response) {
+    public CRspInfo getRspInfo(T response) {
         if (response == null)
             return null;
         return this.infos.get(response.hashCode());

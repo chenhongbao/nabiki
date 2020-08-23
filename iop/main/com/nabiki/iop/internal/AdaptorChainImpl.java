@@ -28,8 +28,8 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.*;
+import com.nabiki.objects.*;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -90,7 +90,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case SUB_MD:
                 adaptor.doSubDepthMarketData(
                         session,
-                        (CThostFtdcSubMarketDataField) message.Body,
+                        (CSubMarketData) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -98,7 +98,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case UNSUB_MD:
                 adaptor.doUnsubDepthMarketData(
                         session,
-                        (CThostFtdcUnsubMarketDataField) message.Body,
+                        (CUnsubMarketData) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -106,7 +106,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_AUTHENTICATE:
                 adaptor.doReqAuthenticate(
                         session,
-                        (CThostFtdcReqAuthenticateField) message.Body,
+                        (CReqAuthenticate) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -114,7 +114,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_LOGIN:
                 adaptor.doReqLogin(
                         session,
-                        (CThostFtdcReqUserLoginField) message.Body,
+                        (CReqUserLogin) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -122,7 +122,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_LOGOUT:
                 adaptor.doReqLogout(
                         session,
-                        (CThostFtdcUserLogoutField) message.Body,
+                        (CUserLogout) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -130,7 +130,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_SETTLEMENT:
                 adaptor.doReqSettlementConfirm(
                         session,
-                        (CThostFtdcSettlementInfoConfirmField) message.Body,
+                        (CSettlementInfoConfirm) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -138,7 +138,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_ORDER_INSERT:
                 adaptor.doReqOrderInsert(
                         session,
-                        (CThostFtdcInputOrderField) message.Body,
+                        (CInputOrder) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -146,7 +146,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case REQ_ORDER_ACTION:
                 adaptor.doReqOrderAction(
                         session,
-                        (CThostFtdcInputOrderActionField) message.Body,
+                        (CInputOrderAction) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -154,7 +154,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_ACCOUNT:
                 adaptor.doQryAccount(
                         session,
-                        (CThostFtdcQryTradingAccountField) message.Body,
+                        (CQryTradingAccount) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -162,7 +162,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_ORDER:
                 adaptor.doQryOrder(
                         session,
-                        (CThostFtdcQryOrderField) message.Body,
+                        (CQryOrder) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -170,7 +170,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_POSITION:
                 adaptor.doQryPosition(
                         session,
-                        (CThostFtdcQryInvestorPositionField) message.Body,
+                        (CQryInvestorPosition) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -178,7 +178,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_POSI_DETAIL:
                 adaptor.doQryPositionDetail(
                         session,
-                        (CThostFtdcQryInvestorPositionDetailField) message.Body,
+                        (CQryInvestorPositionDetail) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -186,7 +186,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_INSTRUMENT:
                 adaptor.doQryInstrument(
                         session,
-                        (CThostFtdcQryInstrumentField) message.Body,
+                        (CQryInstrument) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -194,7 +194,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_COMMISSION:
                 adaptor.doQryCommission(
                         session,
-                        (CThostFtdcQryInstrumentCommissionRateField) message.Body,
+                        (CQryInstrumentCommissionRate) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);
@@ -202,7 +202,7 @@ class AdaptorChainImpl implements AdaptorChain {
             case QRY_MARGIN:
                 adaptor.doQryMargin(
                         session,
-                        (CThostFtdcQryInstrumentMarginRateField) message.Body,
+                        (CQryInstrumentMarginRate) message.Body,
                         message.RequestID,
                         message.CurrentCount,
                         message.TotalCount);

@@ -28,14 +28,14 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspUserLoginField;
 import com.nabiki.iop.*;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.CRspInfo;
+import com.nabiki.objects.CRspUserLogin;
+import com.nabiki.objects.ErrorCodes;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -89,7 +89,7 @@ class ServerFrameHandler implements IoHandler {
         if (message.Type == MessageType.REQ_LOGIN) {
             var code = this.loginManager.doLogin(session, message);
             session.setAttribute(IOP_ISLOGIN_KEY,
-                    code == TThostFtdcErrorCode.NONE);
+                    code == ErrorCodes.NONE);
             // Send rsp.
             sendLoginRsp(code, session, message);
         }
@@ -102,8 +102,8 @@ class ServerFrameHandler implements IoHandler {
         rsp.TotalCount = 1;
         rsp.RequestID = message.RequestID;
         rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.Body = new CThostFtdcRspUserLoginField(); /* No need to repeat */
-        rsp.RspInfo = new CThostFtdcRspInfoField();
+        rsp.Body = new CRspUserLogin(); /* No need to repeat */
+        rsp.RspInfo = new CRspInfo();
         rsp.RspInfo.ErrorID = code;
         rsp.RspInfo.ErrorMsg = OP.getErrorMsg(code);
         session.sendLogin(rsp);
@@ -167,7 +167,7 @@ class ServerFrameHandler implements IoHandler {
         if (!(message instanceof Frame))
             throw new IllegalStateException("message is not frame");
         Body body = null;
-        Message iopMessage = null;
+        Message iopMessage;
         ServerSessionImpl iopSession = ServerSessionImpl.from(session);
         var frame = (Frame) message;
         try {

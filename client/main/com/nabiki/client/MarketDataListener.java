@@ -28,11 +28,11 @@
 
 package com.nabiki.client;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 public interface MarketDataListener {
-    void onDepthMarketData(CThostFtdcDepthMarketDataField depth);
+    void onDepthMarketData(CDepthMarketData depth);
 
-    void onCandle(CThostFtdcCandleField candle);
+    void onCandle(CCandle candle);
 }

@@ -127,8 +127,4 @@ public class JNI {
     public static CThostFtdcQryInstrumentCommissionRateField toJni(CQryInstrumentCommissionRate req0) {
         return new CThostFtdcQryInstrumentCommissionRateField();
     }
-
-    public static SWIGTYPE_p_p_char toJni(String[] instr) {
-        return null;
-    }
 }

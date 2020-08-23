@@ -177,7 +177,7 @@ public class TickProvider {
     }
 
     private void subscribeBatch(String[] instr, int count) {
-        this.mdApi.SubscribeMarketData(JNI.toJni(instr), count);
+        this.mdApi.SubscribeMarketData(instr, count);
     }
 
     private void registerInstrument(String instrID) {

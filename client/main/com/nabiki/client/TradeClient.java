@@ -28,7 +28,7 @@
 
 package com.nabiki.client;
 
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -42,19 +42,19 @@ public interface TradeClient {
 
     void close();
 
-    Response<CThostFtdcRspUserLoginField> login(CThostFtdcReqUserLoginField request, String requestID);
+    Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
 
-    Response<CThostFtdcOrderField> orderInsert(CThostFtdcInputOrderField order, String requestID);
+    Response<COrder> orderInsert(CInputOrder order, String requestID);
 
-    Response<CThostFtdcOrderActionField> orderAction(CThostFtdcInputOrderActionField action, String requestID);
+    Response<COrderAction> orderAction(CInputOrderAction action, String requestID);
 
-    Response<CThostFtdcInvestorPositionField> queryPosition(CThostFtdcQryInvestorPositionField query, String requestID);
+    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID);
 
-    Response<CThostFtdcTradingAccountField> queryAccount(CThostFtdcQryTradingAccountField query, String requestID);
+    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID);
 
-    Response<CThostFtdcOrderField> queryOrder(CThostFtdcQryOrderField query, String requestID);
+    Response<COrder> queryOrder(CQryOrder query, String requestID);
 
-    Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(CThostFtdcSubMarketDataField subscription, String requestID);
+    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID);
 
-    Response<CThostFtdcSpecificInstrumentField> unSubscribeMarketData(CThostFtdcUnsubMarketDataField subscription, String requestID);
+    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID);
 }

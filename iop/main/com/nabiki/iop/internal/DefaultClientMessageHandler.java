@@ -28,11 +28,11 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.ClientMessageAdaptor;
 import com.nabiki.iop.ClientMessageHandler;
 import com.nabiki.iop.ClientSession;
 import com.nabiki.iop.Message;
+import com.nabiki.objects.*;
 
 public class DefaultClientMessageHandler implements ClientMessageHandler {
     static class DefaultClientMessageAdaptor extends ClientMessageAdaptor {
@@ -56,7 +56,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
         switch (message.Type) {
             case RSP_SUB_MD:
                 adaptor.doRspSubscribeMarketData(
-                        (CThostFtdcSpecificInstrumentField) message.Body,
+                        (CSpecificInstrument) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -65,7 +65,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_UNSUB_MD:
                 adaptor.doRspUnsubscribeMarketData(
-                        (CThostFtdcSpecificInstrumentField) message.Body,
+                        (CSpecificInstrument) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -74,7 +74,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case FLOW_DEPTH:
                 adaptor.doRspDepthMarketData(
-                        (CThostFtdcDepthMarketDataField) message.Body,
+                        (CDepthMarketData) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -83,7 +83,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case FLOW_CANDLE:
                 adaptor.doRspCandle(
-                        (CThostFtdcCandleField) message.Body,
+                        (CCandle) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -92,7 +92,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_AUTHENTICATE:
                 adaptor.doRspAuthenticate(
-                        (CThostFtdcRspAuthenticateField) message.Body,
+                        (CRspAuthenticate) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -101,7 +101,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_LOGIN:
                 adaptor.doRspReqLogin(
-                        (CThostFtdcRspUserLoginField) message.Body,
+                        (CRspUserLogin) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -110,7 +110,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_LOGOUT:
                 adaptor.doRspReqLogout(
-                        (CThostFtdcUserLogoutField) message.Body,
+                        (CUserLogout) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -119,7 +119,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_SETTLEMENT:
                 adaptor.doRspReqSettlementConfirm(
-                        (CThostFtdcSettlementInfoConfirmField) message.Body,
+                        (CSettlementInfoConfirm) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -128,7 +128,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_ORDER_INSERT:
                 adaptor.doRspReqOrderInsert(
-                        (CThostFtdcOrderField) message.Body,
+                        (COrder) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -137,7 +137,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_REQ_ORDER_ACTION:
                 adaptor.doRspReqOrderAction(
-                        (CThostFtdcOrderActionField) message.Body,
+                        (COrderAction) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -146,7 +146,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_ACCOUNT:
                 adaptor.doRspQryAccount(
-                        (CThostFtdcTradingAccountField) message.Body,
+                        (CTradingAccount) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -155,7 +155,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_ORDER:
                 adaptor.doRspQryOrder(
-                        (CThostFtdcOrderField) message.Body,
+                        (COrder) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -164,7 +164,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_POSITION:
                 adaptor.doRspQryPosition(
-                        (CThostFtdcInvestorPositionField) message.Body,
+                        (CInvestorPosition) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -173,7 +173,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_POSI_DETAIL:
                 adaptor.doRspQryPositionDetail(
-                        (CThostFtdcInvestorPositionDetailField) message.Body,
+                        (CInvestorPositionDetail) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -182,7 +182,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_INSTRUMENT:
                 adaptor.doRspQryInstrument(
-                        (CThostFtdcInstrumentField) message.Body,
+                        (CInstrument) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -191,7 +191,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_COMMISSION:
                 adaptor.doRspQryCommission(
-                        (CThostFtdcInstrumentCommissionRateField) message.Body,
+                        (CInstrumentCommissionRate) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -200,7 +200,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_QRY_MARGIN:
                 adaptor.doRspQryMargin(
-                        (CThostFtdcInstrumentMarginRateField) message.Body,
+                        (CInstrumentMarginRate) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -209,7 +209,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RTN_ORDER:
                 adaptor.doRtnOrder(
-                        (CThostFtdcOrderField) message.Body,
+                        (COrder) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -218,7 +218,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RTN_TRADE:
                 adaptor.doRtnTrade(
-                        (CThostFtdcTradeField) message.Body,
+                        (CTrade) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -227,7 +227,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RTN_ORDER_ACTION:
                 adaptor.doRtnOrderAction(
-                        (CThostFtdcOrderActionField) message.Body,
+                        (COrderAction) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -236,7 +236,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RTN_ORDER_INSERT:
                 adaptor.doRtnOrderInsert(
-                        (CThostFtdcInputOrderField) message.Body,
+                        (CInputOrder) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -245,7 +245,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_ORDER_ACTION:
                 adaptor.doRspOrderAction(
-                        (CThostFtdcInputOrderActionField) message.Body,
+                        (CInputOrderAction) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -254,7 +254,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_ORDER_INSERT:
                 adaptor.doRspOrderInsert(
-                        (CThostFtdcInputOrderField) message.Body,
+                        (CInputOrder) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -263,7 +263,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_ERROR:
                 adaptor.doRspError(
-                        (CThostFtdcRspInfoField) message.Body,
+                        (CRspInfo) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -272,7 +272,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_CONNECT:
                 adaptor.doRspConnect(
-                        (CThostFtdcConnect) message.Body,
+                        (CConnect) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,
@@ -281,7 +281,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                 break;
             case RSP_DISCONNECT:
                 adaptor.doRspDisconnect(
-                        (CThostFtdcDisconnect) message.Body,
+                        (CDisconnect) message.Body,
                         message.RspInfo,
                         message.RequestID,
                         message.ResponseID,

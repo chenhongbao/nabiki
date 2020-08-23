@@ -28,10 +28,10 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.io.IOException;
 
@@ -49,161 +49,161 @@ class MessageImpl extends Message {
                     break;
                 case SUB_MD:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcSubMarketDataField.class);
+                            CSubMarketData.class);
                     break;
                 case RSP_SUB_MD:
                 case RSP_UNSUB_MD:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcSpecificInstrumentField.class);
+                            CSpecificInstrument.class);
                     break;
                 case UNSUB_MD:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcUnsubMarketDataField.class);
+                            CUnsubMarketData.class);
                     break;
                 case FLOW_DEPTH:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcDepthMarketDataField.class);
+                            CDepthMarketData.class);
                     break;
                 case FLOW_CANDLE:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcCandleField.class);
+                            CCandle.class);
                     break;
                 case REQ_AUTHENTICATE:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcReqAuthenticateField.class);
+                            CReqAuthenticate.class);
                     break;
                 case RSP_REQ_AUTHENTICATE:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcRspAuthenticateField.class);
+                            CRspAuthenticate.class);
                     break;
                 case REQ_LOGIN:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcReqUserLoginField.class);
+                            CReqUserLogin.class);
                     break;
                 case RSP_REQ_LOGIN:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcRspUserLoginField.class);
+                            CRspUserLogin.class);
                     break;
                 case REQ_LOGOUT:
                 case RSP_REQ_LOGOUT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcUserLogoutField.class);
+                            CUserLogout.class);
                     break;
                 case REQ_SETTLEMENT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcSettlementInfoConfirmField.class);
+                            CSettlementInfoConfirm.class);
                     break;
                 case RSP_REQ_SETTLEMENT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcSettlementInfoConfirmField.class);
+                            CSettlementInfoConfirm.class);
                     break;
                 case REQ_ORDER_INSERT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInputOrderField.class);
+                            CInputOrder.class);
                     break;
                 case RSP_REQ_ORDER_INSERT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderField.class);
+                            COrder.class);
                     break;
                 case REQ_ORDER_ACTION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInputOrderActionField.class);
+                            CInputOrderAction.class);
                     break;
                 case RSP_REQ_ORDER_ACTION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderActionField.class);
+                            COrderAction.class);
                     break;
                 case QRY_ACCOUNT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryTradingAccountField.class);
+                            CQryTradingAccount.class);
                     break;
                 case RSP_QRY_ACCOUNT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcTradingAccountField.class);
+                            CTradingAccount.class);
                     break;
                 case QRY_ORDER:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryOrderField.class);
+                            CQryOrder.class);
                     break;
                 case RSP_QRY_ORDER:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderField.class);
+                            COrder.class);
                     break;
                 case QRY_POSITION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryInvestorPositionField.class);
+                            CQryInvestorPosition.class);
                     break;
                 case RSP_QRY_POSITION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInvestorPositionField.class);
+                            CInvestorPosition.class);
                     break;
                 case QRY_POSI_DETAIL:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryInvestorPositionDetailField.class);
+                            CQryInvestorPositionDetail.class);
                     break;
                 case RSP_QRY_POSI_DETAIL:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInvestorPositionDetailField.class);
+                            CInvestorPositionDetail.class);
                     break;
                 case QRY_INSTRUMENT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryInstrumentField.class);
+                            CQryInstrument.class);
                     break;
                 case RSP_QRY_INSTRUMENT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInstrumentField.class);
+                            CInstrument.class);
                     break;
                 case QRY_COMMISSION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryInstrumentCommissionRateField.class);
+                            CQryInstrumentCommissionRate.class);
                     break;
                 case RSP_QRY_COMMISSION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInstrumentCommissionRateField.class);
+                            CInstrumentCommissionRate.class);
                     break;
                 case QRY_MARGIN:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcQryInstrumentMarginRateField.class);
+                            CQryInstrumentMarginRate.class);
                     break;
                 case RSP_QRY_MARGIN:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInstrumentMarginRateField.class);
+                            CInstrumentMarginRate.class);
                     break;
                 case RTN_ORDER:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderField.class);
+                            COrder.class);
                     break;
                 case RTN_TRADE:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcTradeField.class);
+                            CTrade.class);
                     break;
                 case RTN_ORDER_ACTION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcOrderActionField.class);
+                            COrderAction.class);
                     break;
                 case RTN_ORDER_INSERT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInputOrderField.class);
+                            CInputOrder.class);
                     break;
                 case RSP_ORDER_ACTION:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInputOrderActionField.class);
+                            CInputOrderAction.class);
                     break;
                 case RSP_ORDER_INSERT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcInputOrderField.class);
+                            CInputOrder.class);
                     break;
                 case RSP_ERROR:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcRspInfoField.class);
+                            CRspInfo.class);
                     break;
                 case RSP_CONNECT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcConnect.class);
+                            CConnect.class);
                     break;
                 case RSP_DISCONNECT:
                     msg.Body = OP.fromJson(body.Body,
-                            CThostFtdcDisconnect.class);
+                            CDisconnect.class);
                     break;
                 default:
                     throw new IOException("unknown message type " + body.Type);
@@ -211,7 +211,7 @@ class MessageImpl extends Message {
         }
         if (body.RspInfo != null && body.RspInfo.length() > 0)
             msg.RspInfo = OP.fromJson(body.RspInfo,
-                    CThostFtdcRspInfoField.class);
+                    CRspInfo.class);
         // Copy other info.
         msg.Type = body.Type;
         msg.RequestID = body.RequestID;

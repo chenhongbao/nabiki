@@ -29,8 +29,8 @@
 package com.nabiki.iop;
 
 import com.google.gson.Gson;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 import com.nabiki.iop.frame.*;
+import com.nabiki.objects.CRspInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class FrameParserTest {
     static Frame frame = new Frame();
     static byte[] frameBytes;
 
-    static CThostFtdcRspInfoField rspInfo;
+    static CRspInfo rspInfo;
 
     static {
         body.RequestID = UUID.randomUUID().toString();
@@ -71,7 +71,7 @@ public class FrameParserTest {
         msg.Date = LocalDate.now();
         msg.Time = LocalTime.now();
 
-        rspInfo = new CThostFtdcRspInfoField();
+        rspInfo = new CRspInfo();
         rspInfo.ErrorID = 1;
         rspInfo.ErrorMsg = "error message";
 

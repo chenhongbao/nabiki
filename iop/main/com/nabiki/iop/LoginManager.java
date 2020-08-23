@@ -28,10 +28,10 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
+import com.nabiki.objects.ErrorCodes;
 
 public abstract class LoginManager {
     public int doLogin(ServerSession session, Message message) {
-        return TThostFtdcErrorCode.INVALID_LOGIN;
+        return ErrorCodes.INVALID_LOGIN;
     }
 }

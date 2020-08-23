@@ -28,11 +28,10 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.x.OP;
 import com.nabiki.iop.x.SystemStream;
+import com.nabiki.objects.*;
 import org.apache.mina.core.session.IdleStatus;
 import org.junit.Test;
 
@@ -94,7 +93,7 @@ public class IopTest {
         m.Type = type;
         m.Body = object;
         if (new Random().nextDouble() > 0.5)
-            m.RspInfo = new CThostFtdcRspInfoField();
+            m.RspInfo = new CRspInfo();
         session.sendResponse(m);
     }
 
@@ -106,7 +105,7 @@ public class IopTest {
         m.Type = type;
         m.Body = object;
         if (new Random().nextDouble() > 0.5)
-            m.RspInfo = new CThostFtdcRspInfoField();
+            m.RspInfo = new CRspInfo();
         session.sendRequest(m);
     }
 
@@ -116,7 +115,7 @@ public class IopTest {
         m.TotalCount = total;
         m.Body = object;
         if (new Random().nextDouble() > 0.5)
-            m.RspInfo = new CThostFtdcRspInfoField();
+            m.RspInfo = new CRspInfo();
         session.sendLogin(m);
     }
 
@@ -149,8 +148,8 @@ public class IopTest {
     class TestClientMessageAdaptor extends ClientMessageAdaptor {
         @Override
         public void doRspSubscribeMarketData(
-                CThostFtdcSpecificInstrumentField rsp,
-                CThostFtdcRspInfoField info,
+                CSpecificInstrument rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -160,8 +159,8 @@ public class IopTest {
 
         @Override
         public void doRspUnsubscribeMarketData(
-                CThostFtdcSpecificInstrumentField rsp,
-                CThostFtdcRspInfoField info,
+                CSpecificInstrument rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -171,8 +170,8 @@ public class IopTest {
 
         @Override
         public void doRspDepthMarketData(
-                CThostFtdcDepthMarketDataField rsp,
-                CThostFtdcRspInfoField info,
+                CDepthMarketData rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -182,8 +181,8 @@ public class IopTest {
 
         @Override
         public void doRspCandle(
-                CThostFtdcCandleField rsp,
-                CThostFtdcRspInfoField info,
+                CCandle rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -193,8 +192,8 @@ public class IopTest {
 
         @Override
         public void doRspAuthenticate(
-                CThostFtdcRspAuthenticateField rsp,
-                CThostFtdcRspInfoField info,
+                CRspAuthenticate rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -204,8 +203,8 @@ public class IopTest {
 
         @Override
         public void doRspReqLogin(
-                CThostFtdcRspUserLoginField rsp,
-                CThostFtdcRspInfoField info,
+                CRspUserLogin rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -215,8 +214,8 @@ public class IopTest {
 
         @Override
         public void doRspReqLogout(
-                CThostFtdcUserLogoutField rsp,
-                CThostFtdcRspInfoField info,
+                CUserLogout rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -226,8 +225,8 @@ public class IopTest {
 
         @Override
         public void doRspReqSettlementConfirm(
-                CThostFtdcSettlementInfoConfirmField rsp,
-                CThostFtdcRspInfoField info,
+                CSettlementInfoConfirm rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -237,8 +236,8 @@ public class IopTest {
 
         @Override
         public void doRspReqOrderInsert(
-                CThostFtdcOrderField rsp,
-                CThostFtdcRspInfoField info,
+                COrder rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -248,8 +247,8 @@ public class IopTest {
 
         @Override
         public void doRspReqOrderAction(
-                CThostFtdcOrderActionField rsp,
-                CThostFtdcRspInfoField info,
+                COrderAction rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -259,8 +258,8 @@ public class IopTest {
 
         @Override
         public void doRspQryAccount(
-                CThostFtdcTradingAccountField rsp,
-                CThostFtdcRspInfoField info,
+                CTradingAccount rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -270,8 +269,8 @@ public class IopTest {
 
         @Override
         public void doRspQryOrder(
-                CThostFtdcOrderField rsp,
-                CThostFtdcRspInfoField info,
+                COrder rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -281,8 +280,8 @@ public class IopTest {
 
         @Override
         public void doRspQryPosition(
-                CThostFtdcInvestorPositionField rsp,
-                CThostFtdcRspInfoField info,
+                CInvestorPosition rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -292,8 +291,8 @@ public class IopTest {
 
         @Override
         public void doRspQryPositionDetail(
-                CThostFtdcInvestorPositionDetailField rsp,
-                CThostFtdcRspInfoField info,
+                CInvestorPositionDetail rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -303,8 +302,8 @@ public class IopTest {
 
         @Override
         public void doRspQryInstrument(
-                CThostFtdcInstrumentField rsp,
-                CThostFtdcRspInfoField info,
+                CInstrument rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -314,8 +313,8 @@ public class IopTest {
 
         @Override
         public void doRspQryCommission(
-                CThostFtdcInstrumentCommissionRateField rsp,
-                CThostFtdcRspInfoField info,
+                CInstrumentCommissionRate rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -325,8 +324,8 @@ public class IopTest {
 
         @Override
         public void doRspQryMargin(
-                CThostFtdcInstrumentMarginRateField rsp,
-                CThostFtdcRspInfoField info,
+                CInstrumentMarginRate rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -336,8 +335,8 @@ public class IopTest {
 
         @Override
         public void doRtnOrder(
-                CThostFtdcOrderField rtn,
-                CThostFtdcRspInfoField info,
+                COrder rtn,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -347,8 +346,8 @@ public class IopTest {
 
         @Override
         public void doRtnTrade(
-                CThostFtdcTradeField rtn,
-                CThostFtdcRspInfoField info,
+                CTrade rtn,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -358,8 +357,8 @@ public class IopTest {
 
         @Override
         public void doRtnOrderAction(
-                CThostFtdcOrderActionField rtn,
-                CThostFtdcRspInfoField info,
+                COrderAction rtn,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -369,8 +368,8 @@ public class IopTest {
 
         @Override
         public void doRtnOrderInsert(
-                CThostFtdcInputOrderField rtn,
-                CThostFtdcRspInfoField info,
+                CInputOrder rtn,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -380,8 +379,8 @@ public class IopTest {
 
         @Override
         public void doRspOrderAction(
-                CThostFtdcInputOrderActionField rsp,
-                CThostFtdcRspInfoField info,
+                CInputOrderAction rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -391,8 +390,8 @@ public class IopTest {
 
         @Override
         public void doRspOrderInsert(
-                CThostFtdcInputOrderField rsp,
-                CThostFtdcRspInfoField info,
+                CInputOrder rsp,
+                CRspInfo info,
                 String requestID,
                 String responseID,
                 int current,
@@ -405,28 +404,28 @@ public class IopTest {
         @Override
         public void doSubDepthMarketData(
                 ServerSession session,
-                CThostFtdcSubMarketDataField request,
+                CSubMarketData request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcSpecificInstrumentField(),
+            send(session, new CSpecificInstrument(),
                     MessageType.RSP_SUB_MD, 1, 1);
             hit(MessageType.SUB_MD);
             // Send flow.
-            send(session, new CThostFtdcDepthMarketDataField(),
+            send(session, new CDepthMarketData(),
                     MessageType.FLOW_DEPTH, 1, 1);
-            send(session, new CThostFtdcCandleField(),
+            send(session, new CCandle(),
                     MessageType.FLOW_CANDLE, 1, 1);
         }
 
         @Override
         public void doUnsubDepthMarketData(
                 ServerSession session,
-                CThostFtdcUnsubMarketDataField request,
+                CUnsubMarketData request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcSpecificInstrumentField(),
+            send(session, new CSpecificInstrument(),
                     MessageType.RSP_UNSUB_MD, 1, 1);
             hit(MessageType.UNSUB_MD);
         }
@@ -434,11 +433,11 @@ public class IopTest {
         @Override
         public void doReqAuthenticate(
                 ServerSession session,
-                CThostFtdcReqAuthenticateField request,
+                CReqAuthenticate request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcRspAuthenticateField(),
+            send(session, new CRspAuthenticate(),
                     MessageType.RSP_REQ_AUTHENTICATE, 1, 1);
             hit(MessageType.REQ_AUTHENTICATE);
         }
@@ -446,11 +445,11 @@ public class IopTest {
         @Override
         public void doReqLogin(
                 ServerSession session,
-                CThostFtdcReqUserLoginField request,
+                CReqUserLogin request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcRspUserLoginField(),
+            send(session, new CRspUserLogin(),
                     MessageType.RSP_REQ_LOGIN, 1, 1);
             hit(MessageType.REQ_LOGIN);
         }
@@ -458,11 +457,11 @@ public class IopTest {
         @Override
         public void doReqLogout(
                 ServerSession session,
-                CThostFtdcUserLogoutField request,
+                CUserLogout request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcUserLogoutField(),
+            send(session, new CUserLogout(),
                     MessageType.RSP_REQ_LOGOUT, 1, 1);
             hit(MessageType.REQ_LOGOUT);
         }
@@ -470,11 +469,11 @@ public class IopTest {
         @Override
         public void doReqSettlementConfirm(
                 ServerSession session,
-                CThostFtdcSettlementInfoConfirmField request,
+                CSettlementInfoConfirm request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcSettlementInfoConfirmField(),
+            send(session, new CSettlementInfoConfirm(),
                     MessageType.RSP_REQ_SETTLEMENT, 1, 1);
             hit(MessageType.REQ_SETTLEMENT);
         }
@@ -482,52 +481,52 @@ public class IopTest {
         @Override
         public void doReqOrderInsert(
                 ServerSession session,
-                CThostFtdcInputOrderField request,
+                CInputOrder request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcOrderField(),
+            send(session, new COrder(),
                     MessageType.RSP_REQ_ORDER_INSERT, 1, 2);
-            send(session, new CThostFtdcOrderField(),
+            send(session, new COrder(),
                     MessageType.RSP_REQ_ORDER_INSERT, 2, 2);
             hit(MessageType.REQ_ORDER_INSERT);
             // Send rtn.
-            send(session, new CThostFtdcOrderField(),
+            send(session, new COrder(),
                     MessageType.RTN_ORDER, 1, 1);
-            send(session, new CThostFtdcTradeField(),
+            send(session, new CTrade(),
                     MessageType.RTN_TRADE, 1, 1);
             // Send error.
-            send(session, new CThostFtdcInputOrderField(),
+            send(session, new CInputOrder(),
                     MessageType.RSP_ORDER_INSERT, 1, 1);
-            send(session, new CThostFtdcInputOrderField(),
+            send(session, new CInputOrder(),
                     MessageType.RTN_ORDER_INSERT, 1, 1);
         }
 
         @Override
         public void doReqOrderAction(
                 ServerSession session,
-                CThostFtdcInputOrderActionField request,
+                CInputOrderAction request,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcOrderActionField(),
+            send(session, new COrderAction(),
                     MessageType.RSP_REQ_ORDER_ACTION, 1, 1);
             hit(MessageType.REQ_ORDER_ACTION);
             // Send error.
-            send(session, new CThostFtdcInputOrderActionField(),
+            send(session, new CInputOrderAction(),
                     MessageType.RSP_ORDER_ACTION, 1, 1);
-            send(session, new CThostFtdcOrderActionField(),
+            send(session, new COrderAction(),
                     MessageType.RTN_ORDER_ACTION, 1, 1);
         }
 
         @Override
         public void doQryAccount(
                 ServerSession session,
-                CThostFtdcQryTradingAccountField query,
+                CQryTradingAccount query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcTradingAccountField(),
+            send(session, new CTradingAccount(),
                     MessageType.RSP_QRY_ACCOUNT, 1, 1);
             hit(MessageType.QRY_ACCOUNT);
         }
@@ -535,11 +534,11 @@ public class IopTest {
         @Override
         public void doQryOrder(
                 ServerSession session,
-                CThostFtdcQryOrderField query,
+                CQryOrder query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcOrderField(),
+            send(session, new COrder(),
                     MessageType.RSP_QRY_ORDER, 1, 1);
             hit(MessageType.QRY_ORDER);
         }
@@ -547,11 +546,11 @@ public class IopTest {
         @Override
         public void doQryPosition(
                 ServerSession session,
-                CThostFtdcQryInvestorPositionField query,
+                CQryInvestorPosition query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcInvestorPositionField(),
+            send(session, new CInvestorPosition(),
                     MessageType.RSP_QRY_POSITION, 1, 1);
             hit(MessageType.QRY_POSITION);
         }
@@ -559,15 +558,15 @@ public class IopTest {
         @Override
         public void doQryPositionDetail(
                 ServerSession session,
-                CThostFtdcQryInvestorPositionDetailField query,
+                CQryInvestorPositionDetail query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcInvestorPositionDetailField(),
+            send(session, new CInvestorPositionDetail(),
                     MessageType.RSP_QRY_POSI_DETAIL, 1, 3);
-            send(session, new CThostFtdcInvestorPositionDetailField(),
+            send(session, new CInvestorPositionDetail(),
                     MessageType.RSP_QRY_POSI_DETAIL, 2, 3);
-            send(session, new CThostFtdcInvestorPositionDetailField(),
+            send(session, new CInvestorPositionDetail(),
                     MessageType.RSP_QRY_POSI_DETAIL, 3, 3);
             hit(MessageType.QRY_POSI_DETAIL);
         }
@@ -575,11 +574,11 @@ public class IopTest {
         @Override
         public void doQryInstrument(
                 ServerSession session,
-                CThostFtdcQryInstrumentField query,
+                CQryInstrument query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcInstrumentField(),
+            send(session, new CInstrument(),
                     MessageType.RSP_QRY_INSTRUMENT, 1, 1);
             hit(MessageType.QRY_INSTRUMENT);
         }
@@ -587,11 +586,11 @@ public class IopTest {
         @Override
         public void doQryCommission(
                 ServerSession session,
-                CThostFtdcQryInstrumentCommissionRateField query,
+                CQryInstrumentCommissionRate query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcInstrumentCommissionRateField(),
+            send(session, new CInstrumentCommissionRate(),
                     MessageType.RSP_QRY_COMMISSION, 1, 1);
             hit(MessageType.QRY_COMMISSION);
         }
@@ -599,11 +598,11 @@ public class IopTest {
         @Override
         public void doQryMargin(
                 ServerSession session,
-                CThostFtdcQryInstrumentMarginRateField query,
+                CQryInstrumentMarginRate query,
                 String requestID,
                 int current,
                 int total) {
-            send(session, new CThostFtdcInstrumentMarginRateField(),
+            send(session, new CInstrumentMarginRate(),
                     MessageType.RSP_QRY_MARGIN, 1, 1);
             hit(MessageType.QRY_MARGIN);
         }
@@ -613,14 +612,14 @@ public class IopTest {
         @Override
         public int doLogin(ServerSession session, Message message) {
             if (message.Body != null) {
-                assertTrue(message.Body instanceof CThostFtdcReqUserLoginField);
+                assertTrue(message.Body instanceof CReqUserLogin);
                 System.out.println(OP.toJson(message.Body));
             }
             if (message.RspInfo != null)
                 System.out.println(OP.toJson(message.RspInfo));
             assertEquals(message.Type, MessageType.REQ_LOGIN);
             hit(message.Type);
-            return TThostFtdcErrorCode.NONE;
+            return ErrorCodes.NONE;
         }
     }
 
@@ -654,45 +653,45 @@ public class IopTest {
             // Test heart beat.
             session.sendHeartbeat(UUID.randomUUID().toString());
             // Test login.
-            login(session, new CThostFtdcReqUserLoginField(), 1, 1);
+            login(session, new CReqUserLogin(), 1, 1);
             // Test logout.
-            send(session, new CThostFtdcUserLogoutField(),
+            send(session, new CUserLogout(),
                     MessageType.REQ_LOGOUT, 1, 1);
             // Test order insert.
-            send(session, new CThostFtdcInputOrderField(),
+            send(session, new CInputOrder(),
                     MessageType.REQ_ORDER_INSERT, 1, 1);
             // Test order action.
-            send(session, new CThostFtdcInputOrderActionField(),
+            send(session, new CInputOrderAction(),
                     MessageType.REQ_ORDER_ACTION, 1, 1);
             // Test query account.
-            send(session, new CThostFtdcQryTradingAccountField(),
+            send(session, new CQryTradingAccount(),
                     MessageType.QRY_ACCOUNT, 1, 1);
             // Test query order.
-            send(session, new CThostFtdcQryOrderField(),
+            send(session, new CQryOrder(),
                     MessageType.QRY_ORDER, 1, 1);
             // Test query position.
-            send(session, new CThostFtdcQryInvestorPositionField(),
+            send(session, new CQryInvestorPosition(),
                     MessageType.QRY_POSITION, 1, 1);
             // Test subscribe/unsubscribe.
-            send(session, new CThostFtdcSubMarketDataField(), MessageType.SUB_MD,
+            send(session, new CSubMarketData(), MessageType.SUB_MD,
                     1, 1);
-            send(session, new CThostFtdcUnsubMarketDataField(), MessageType.UNSUB_MD,
+            send(session, new CUnsubMarketData(), MessageType.UNSUB_MD,
                     1, 1);
             // Test authenticate.
-            send(session, new CThostFtdcReqAuthenticateField(), MessageType.REQ_AUTHENTICATE,
+            send(session, new CReqAuthenticate(), MessageType.REQ_AUTHENTICATE,
                     1, 1);
             // Test settlement.
-            send(session, new CThostFtdcSettlementInfoConfirmField(), MessageType.REQ_SETTLEMENT,
+            send(session, new CSettlementInfoConfirm(), MessageType.REQ_SETTLEMENT,
                     1, 1);
             // Test query position detail.
-            send(session, new CThostFtdcQryInvestorPositionDetailField(), MessageType.QRY_POSI_DETAIL,
+            send(session, new CQryInvestorPositionDetail(), MessageType.QRY_POSI_DETAIL,
                     1, 1);
             // Test query instrument/commission/margin.
-            send(session, new CThostFtdcQryInstrumentField(), MessageType.QRY_INSTRUMENT,
+            send(session, new CQryInstrument(), MessageType.QRY_INSTRUMENT,
                     1, 1);
-            send(session, new CThostFtdcQryInstrumentCommissionRateField(), MessageType.QRY_COMMISSION,
+            send(session, new CQryInstrumentCommissionRate(), MessageType.QRY_COMMISSION,
                     1, 1);
-            send(session, new CThostFtdcQryInstrumentMarginRateField(), MessageType.QRY_MARGIN,
+            send(session, new CQryInstrumentMarginRate(), MessageType.QRY_MARGIN,
                     1, 1);
             //.........Sleep........
             Thread.sleep(TimeUnit.SECONDS.toMillis(5));

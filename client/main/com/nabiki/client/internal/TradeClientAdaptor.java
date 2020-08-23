@@ -29,8 +29,8 @@
 package com.nabiki.client.internal;
 
 import com.nabiki.client.MarketDataListener;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.ClientMessageAdaptor;
+import com.nabiki.objects.*;
 
 import java.util.Map;
 import java.util.Objects;
@@ -40,11 +40,11 @@ import java.util.concurrent.atomic.AtomicReference;
 class TradeClientAdaptor extends ClientMessageAdaptor {
     private class DefaultDepthListener implements MarketDataListener {
         @Override
-        public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
+        public void onDepthMarketData(CDepthMarketData depth) {
         }
 
         @Override
-        public void onCandle(CThostFtdcCandleField candle) {
+        public void onCandle(CCandle candle) {
         }
     }
 
@@ -78,7 +78,7 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
     @SuppressWarnings("unchecked")
     private <T> void doRsp(
             T object,
-            CThostFtdcRspInfoField info,
+            CRspInfo info,
             String requestID,
             int current,
             int total) {
@@ -94,8 +94,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspReqLogin(
-            CThostFtdcRspUserLoginField rsp,
-            CThostFtdcRspInfoField info,
+            CRspUserLogin rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -105,8 +105,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspReqOrderInsert(
-            CThostFtdcOrderField rsp,
-            CThostFtdcRspInfoField info,
+            COrder rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -116,8 +116,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspReqOrderAction(
-            CThostFtdcOrderActionField rsp,
-            CThostFtdcRspInfoField info,
+            COrderAction rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -127,8 +127,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspQryAccount(
-            CThostFtdcTradingAccountField rsp,
-            CThostFtdcRspInfoField info,
+            CTradingAccount rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -138,8 +138,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspQryOrder(
-            CThostFtdcOrderField rsp,
-            CThostFtdcRspInfoField info,
+            COrder rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -149,8 +149,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspQryPosition(
-            CThostFtdcInvestorPositionField rsp,
-            CThostFtdcRspInfoField info,
+            CInvestorPosition rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -160,8 +160,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspSubscribeMarketData(
-            CThostFtdcSpecificInstrumentField rsp,
-            CThostFtdcRspInfoField info,
+            CSpecificInstrument rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -171,8 +171,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspDepthMarketData(
-            CThostFtdcDepthMarketDataField rsp,
-            CThostFtdcRspInfoField info,
+            CDepthMarketData rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -182,8 +182,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
 
     @Override
     public void doRspCandle(
-            CThostFtdcCandleField rsp,
-            CThostFtdcRspInfoField info,
+            CCandle rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,

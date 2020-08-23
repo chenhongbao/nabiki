@@ -28,12 +28,12 @@
 
 package com.nabiki.iop;
 
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 public abstract class ClientMessageAdaptor {
     public void doRspSubscribeMarketData(
-            CThostFtdcSpecificInstrumentField rsp,
-            CThostFtdcRspInfoField info,
+            CSpecificInstrument rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -41,8 +41,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspUnsubscribeMarketData(
-            CThostFtdcSpecificInstrumentField rsp,
-            CThostFtdcRspInfoField info,
+            CSpecificInstrument rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -50,8 +50,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspDepthMarketData(
-            CThostFtdcDepthMarketDataField rsp,
-            CThostFtdcRspInfoField info,
+            CDepthMarketData rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -59,8 +59,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspCandle(
-            CThostFtdcCandleField rsp,
-            CThostFtdcRspInfoField info,
+            CCandle rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -68,8 +68,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspAuthenticate(
-            CThostFtdcRspAuthenticateField rsp,
-            CThostFtdcRspInfoField info,
+            CRspAuthenticate rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -77,8 +77,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspReqLogin(
-            CThostFtdcRspUserLoginField rsp,
-            CThostFtdcRspInfoField info,
+            CRspUserLogin rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -86,8 +86,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspReqLogout(
-            CThostFtdcUserLogoutField rsp,
-            CThostFtdcRspInfoField info,
+            CUserLogout rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -95,8 +95,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspReqSettlementConfirm(
-            CThostFtdcSettlementInfoConfirmField rsp,
-            CThostFtdcRspInfoField info,
+            CSettlementInfoConfirm rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -104,8 +104,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspReqOrderInsert(
-            CThostFtdcOrderField rsp,
-            CThostFtdcRspInfoField info,
+            COrder rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -113,8 +113,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspReqOrderAction(
-            CThostFtdcOrderActionField rsp,
-            CThostFtdcRspInfoField info,
+            COrderAction rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -122,8 +122,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryAccount(
-            CThostFtdcTradingAccountField rsp,
-            CThostFtdcRspInfoField info,
+            CTradingAccount rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -131,8 +131,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryOrder(
-            CThostFtdcOrderField rsp,
-            CThostFtdcRspInfoField info,
+            COrder rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -140,8 +140,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryPosition(
-            CThostFtdcInvestorPositionField rsp,
-            CThostFtdcRspInfoField info,
+            CInvestorPosition rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -149,8 +149,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryPositionDetail(
-            CThostFtdcInvestorPositionDetailField rsp,
-            CThostFtdcRspInfoField info,
+            CInvestorPositionDetail rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -158,8 +158,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryInstrument(
-            CThostFtdcInstrumentField rsp,
-            CThostFtdcRspInfoField info,
+            CInstrument rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -167,8 +167,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryCommission(
-            CThostFtdcInstrumentCommissionRateField rsp,
-            CThostFtdcRspInfoField info,
+            CInstrumentCommissionRate rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -176,8 +176,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspQryMargin(
-            CThostFtdcInstrumentMarginRateField rsp,
-            CThostFtdcRspInfoField info,
+            CInstrumentMarginRate rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -185,8 +185,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRtnOrder(
-            CThostFtdcOrderField rtn,
-            CThostFtdcRspInfoField info,
+            COrder rtn,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -194,8 +194,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRtnTrade(
-            CThostFtdcTradeField rtn,
-            CThostFtdcRspInfoField info,
+            CTrade rtn,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -203,8 +203,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRtnOrderAction(
-            CThostFtdcOrderActionField rtn,
-            CThostFtdcRspInfoField info,
+            COrderAction rtn,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -212,8 +212,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRtnOrderInsert(
-            CThostFtdcInputOrderField rtn,
-            CThostFtdcRspInfoField info,
+            CInputOrder rtn,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -221,8 +221,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspOrderAction(
-            CThostFtdcInputOrderActionField rsp,
-            CThostFtdcRspInfoField info,
+            CInputOrderAction rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -230,8 +230,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspOrderInsert(
-            CThostFtdcInputOrderField rsp,
-            CThostFtdcRspInfoField info,
+            CInputOrder rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -239,8 +239,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspError(
-            CThostFtdcRspInfoField rsp,
-            CThostFtdcRspInfoField info,
+            CRspInfo rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -248,8 +248,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspConnect(
-            CThostFtdcConnect rsp,
-            CThostFtdcRspInfoField info,
+            CConnect rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,
@@ -257,8 +257,8 @@ public abstract class ClientMessageAdaptor {
     }
 
     public void doRspDisconnect(
-            CThostFtdcDisconnect rsp,
-            CThostFtdcRspInfoField info,
+            CDisconnect rsp,
+            CRspInfo info,
             String requestID,
             String responseID,
             int current,

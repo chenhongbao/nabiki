@@ -32,8 +32,8 @@ import com.nabiki.client.MarketDataListener;
 import com.nabiki.client.Response;
 import com.nabiki.client.TradeClient;
 import com.nabiki.client.TradeClientListener;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.*;
+import com.nabiki.objects.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -45,7 +45,7 @@ class TradeClientImpl implements TradeClient {
     private final TradeClientSessionAdaptor sessionAdaptor
             = new TradeClientSessionAdaptor();
 
-    private CThostFtdcReqUserLoginField lastLoginReq;
+    private CReqUserLogin lastLoginReq;
 
     public TradeClientImpl() {
     }
@@ -82,9 +82,9 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
-    public Response<CThostFtdcRspUserLoginField> login(
-            CThostFtdcReqUserLoginField request, String requestID) {
-        var rsp = new ResponseImpl<CThostFtdcRspUserLoginField>();
+    public Response<CRspUserLogin> login(
+            CReqUserLogin request, String requestID) {
+        var rsp = new ResponseImpl<CRspUserLogin>();
         this.clientAdaptor.setResponse(rsp, requestID);
         getSession().sendLogin(
                 toMessage(MessageType.REQ_LOGIN, request, requestID));
@@ -118,8 +118,8 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
-    public Response<CThostFtdcOrderField> orderInsert(
-            CThostFtdcInputOrderField order, String requestID) {
+    public Response<COrder> orderInsert(
+            CInputOrder order, String requestID) {
         order.InvestorID
                 = order.UserID
                 = order.AccountID
@@ -129,12 +129,12 @@ class TradeClientImpl implements TradeClient {
                 MessageType.REQ_ORDER_INSERT,
                 order,
                 requestID,
-                CThostFtdcOrderField.class);
+                COrder.class);
     }
 
     @Override
-    public Response<CThostFtdcOrderActionField> orderAction(
-            CThostFtdcInputOrderActionField action, String requestID) {
+    public Response<COrderAction> orderAction(
+            CInputOrderAction action, String requestID) {
         action.InvestorID
                 = action.UserID
                 = this.lastLoginReq.UserID;
@@ -143,24 +143,24 @@ class TradeClientImpl implements TradeClient {
                 MessageType.REQ_ORDER_ACTION,
                 action,
                 requestID,
-                CThostFtdcOrderActionField.class);
+                COrderAction.class);
     }
 
     @Override
-    public Response<CThostFtdcInvestorPositionField> queryPosition(
-            CThostFtdcQryInvestorPositionField query, String requestID) {
+    public Response<CInvestorPosition> queryPosition(
+            CQryInvestorPosition query, String requestID) {
         query.InvestorID = this.lastLoginReq.UserID;
         query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_POSITION,
                 query,
                 requestID,
-                CThostFtdcInvestorPositionField.class);
+                CInvestorPosition.class);
     }
 
     @Override
-    public Response<CThostFtdcTradingAccountField> queryAccount(
-            CThostFtdcQryTradingAccountField query, String requestID) {
+    public Response<CTradingAccount> queryAccount(
+            CQryTradingAccount query, String requestID) {
         query.InvestorID
                 = query.AccountID
                 = this.lastLoginReq.UserID;
@@ -169,38 +169,38 @@ class TradeClientImpl implements TradeClient {
                 MessageType.QRY_ACCOUNT,
                 query,
                 requestID,
-                CThostFtdcTradingAccountField.class);
+                CTradingAccount.class);
     }
 
     @Override
-    public Response<CThostFtdcOrderField> queryOrder(
-            CThostFtdcQryOrderField query, String requestID) {
+    public Response<COrder> queryOrder(
+            CQryOrder query, String requestID) {
         query.InvestorID = this.lastLoginReq.UserID;
         query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_ORDER,
                 query,
                 requestID,
-                CThostFtdcOrderField.class);
+                COrder.class);
     }
 
     @Override
-    public Response<CThostFtdcSpecificInstrumentField> subscribeMarketData(
-            CThostFtdcSubMarketDataField subscription, String requestID) {
+    public Response<CSpecificInstrument> subscribeMarketData(
+            CSubMarketData subscription, String requestID) {
         return send(
                 MessageType.SUB_MD,
                 subscription,
                 requestID,
-                CThostFtdcSpecificInstrumentField.class);
+                CSpecificInstrument.class);
     }
 
     @Override
-    public Response<CThostFtdcSpecificInstrumentField> unSubscribeMarketData(
-            CThostFtdcUnsubMarketDataField subscription, String requestID) {
+    public Response<CSpecificInstrument> unSubscribeMarketData(
+            CUnsubMarketData subscription, String requestID) {
         return send(
                 MessageType.UNSUB_MD,
                 subscription,
                 requestID,
-                CThostFtdcSpecificInstrumentField.class);
+                CSpecificInstrument.class);
     }
 }
