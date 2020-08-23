@@ -88,7 +88,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
 
     private void writeRsp(Message rsp) {
         write(OP.toJson(rsp), ensureFile(this.rspDir,
-                LocalDateTime.now().format(this.formatter) + "." + rsp.RequestID + ".json"));
+                rsp.Type + "." + LocalDateTime.now().format(this.formatter)
+                        + "." + rsp.RequestID + ".json"));
     }
 
     @Override
