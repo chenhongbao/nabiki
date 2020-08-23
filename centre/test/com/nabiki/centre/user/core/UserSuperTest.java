@@ -54,6 +54,12 @@ public class UserSuperTest {
     protected LocalDate tradingDay;
     protected CRspUserLogin rspLogin;
 
+    static {
+        System.loadLibrary("thostmduserapi_se");
+        System.loadLibrary("thosttraderapi_se");
+        System.loadLibrary("thostctpapi_se-6.3.19-P1");
+    }
+
     protected void sleep(long millis) {
         try {
             Thread.sleep(millis);
@@ -244,6 +250,12 @@ public class UserSuperTest {
         rspLogin.MaxOrderRef = "0";
         rspLogin.TradingDay = Utils.getDay(tradingDay, null);
         rspLogin.LoginTime = Utils.getTime(LocalTime.now(), null);
+        rspLogin.CZCETime
+                = rspLogin.DCETime
+                = rspLogin.SHFETime
+                = rspLogin.FFEXTime
+                = rspLogin.INETime
+                = rspLogin.LoginTime;
         rspLogin.SessionID = 2;
         rspLogin.FrontID = 1;
         provider.whenRspUserLogin(rspLogin, rspInfo, 1, true);

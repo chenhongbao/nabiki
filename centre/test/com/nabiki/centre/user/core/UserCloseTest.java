@@ -249,7 +249,10 @@ public class UserCloseTest extends UserSuperTest {
         provider.whenRtnOrder(rtnOrder);
 
         // Check rtn order.
-        assertEquals(active.getRtnOrder(uuid).size(), 1);
+        // When input order is sent, it creates a rtn order by default to note
+        // the current state of the order.
+        // It inits 2 input orders, so there are 2 rtn orders.
+        assertEquals(active.getRtnOrder(uuid).size(), 2);
 
         var rtnOrder0 = active.getRtnOrder(uuid).iterator().next();
         assertNotNull(rtnOrder0);
