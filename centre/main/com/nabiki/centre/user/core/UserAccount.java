@@ -32,9 +32,7 @@ import com.nabiki.centre.user.core.plain.AccountFrozenCash;
 import com.nabiki.centre.user.core.plain.AccountTradedCash;
 import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,10 +40,10 @@ import java.util.Objects;
 
 public class UserAccount {
     private final User parent;
-    private final CThostFtdcTradingAccountField raw;
+    private final CTradingAccount raw;
     private final List<FrozenAccount> frozenAccount = new LinkedList<>();
 
-    public UserAccount(CThostFtdcTradingAccountField raw, User parent) {
+    public UserAccount(CTradingAccount raw, User parent) {
         this.raw = Utils.deepCopy(raw);
         this.parent = parent;
     }
@@ -59,7 +57,7 @@ public class UserAccount {
         return this.parent;
     }
 
-    public CThostFtdcTradingAccountField copyRawAccount() {
+    public CTradingAccount copyRawAccount() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -70,9 +68,9 @@ public class UserAccount {
      * @param instr instrument
      * @param comm  commission
      */
-    public void applyTrade(CThostFtdcTradeField trade,
-                           CThostFtdcInstrumentField instr,
-                           CThostFtdcInstrumentCommissionRateField comm) {
+    public void applyTrade(CTrade trade,
+                           CInstrument instr,
+                           CInstrumentCommissionRate comm) {
         var cash = toTradedCash(trade, instr, comm);
         this.raw.Commission += cash.Commission;
     }
@@ -107,15 +105,15 @@ public class UserAccount {
     }
 
     public FrozenAccount getOpenFrozenAccount(
-            CThostFtdcInputOrderField order, CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentMarginRateField margin,
-            CThostFtdcInstrumentCommissionRateField comm) {
+            CInputOrder order, CInstrument instr,
+            CInstrumentMarginRate margin,
+            CInstrumentCommissionRate comm) {
         Objects.requireNonNull(instr, "instrument null");
         Objects.requireNonNull(margin, "margin null");
         Objects.requireNonNull(comm, "commission null");
         // Calculate commission, cash.
         var c = new AccountFrozenCash();
-        if (order.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
+        if (order.Direction == DirectionType.DIRECTION_BUY) {
             if (margin.LongMarginRatioByMoney > 0)
                 c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
                         * margin.LongMarginRatioByMoney;
@@ -159,13 +157,13 @@ public class UserAccount {
 
     // Only calculate commission.
     private AccountTradedCash toTradedCash(
-            CThostFtdcTradeField trade,
-            CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentCommissionRateField comm) {
+            CTrade trade,
+            CInstrument instr,
+            CInstrumentCommissionRate comm) {
         Objects.requireNonNull(comm, "commission null");
         Objects.requireNonNull(instr, "instrument null");
         var r = new AccountTradedCash();
-        if (trade.OffsetFlag == TThostFtdcCombOffsetFlagType.OFFSET_OPEN) {
+        if (trade.OffsetFlag == CombOffsetFlagType.OFFSET_OPEN) {
             if (comm.OpenRatioByMoney > 0)
                 r.Commission = comm.OpenRatioByMoney * instr.VolumeMultiple
                         * trade.Price * trade.Volume;
@@ -173,7 +171,7 @@ public class UserAccount {
                 r.Commission = comm.OpenRatioByVolume * trade.Volume;
         } else {
             if (trade.OffsetFlag ==
-                    TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY) {
+                    CombOffsetFlagType.OFFSET_CLOSE_TODAY) {
                 if (comm.CloseRatioByMoney > 0)
                     r.Commission = comm.CloseTodayRatioByMoney
                             * instr.VolumeMultiple * trade.Price * trade.Volume;

@@ -30,11 +30,10 @@ package com.nabiki.centre.md;
 
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,22 +57,19 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
     private void loadInstrFiles() {
         if (!Files.exists(this.candleDir))
             return;
-        this.candleDir.toFile().listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                var n = file.getName();
-                var ns = n.substring(0, n.indexOf(".csv")).split("_");
-                if (ns.length == 2) {
-                    try {
-                        getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
-                    } catch (Throwable th) {
-                        th.printStackTrace();
-                        config.getLogger().warning(
-                                "incorrect candle file name: " + n);
-                    }
+        this.candleDir.toFile().listFiles(file -> {
+            var n = file.getName();
+            var ns = n.substring(0, n.indexOf(".csv")).split("_");
+            if (ns.length == 2) {
+                try {
+                    getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                    config.getLogger().warning(
+                            "incorrect candle file name: " + n);
                 }
-                return false;
             }
+            return false;
         });
     }
 
@@ -107,8 +103,8 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
         return file;
     }
 
-    public List<CThostFtdcCandleField> queryCandle(String instrID) {
-        var candles = new LinkedList<CThostFtdcCandleField>();
+    public List<CCandle> queryCandle(String instrID) {
+        var candles = new LinkedList<CCandle>();
         for (var f : getInstrFiles(instrID).values())
             candles.addAll(super.read(f));
         // Sort candles.
@@ -117,12 +113,12 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
     }
 
     @Override
-    public void depthReceived(CThostFtdcDepthMarketDataField depth) {
+    public void depthReceived(CDepthMarketData depth) {
 
     }
 
     @Override
-    public void candleReceived(CThostFtdcCandleField candle) {
+    public void candleReceived(CCandle candle) {
         try {
             super.write(getFile(candle.InstrumentID, candle.Minute), candle);
         } catch (IOException e) {

@@ -30,15 +30,11 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.auth.OrderOffset;
 import com.nabiki.centre.user.auth.UserAuthProfile;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderActionField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.util.UUID;
 
@@ -52,7 +48,7 @@ public class RequestValidator extends RequestSuper {
             byte offset) {
         var rightTrade = (auth.AllowOffset == OrderOffset.OPEN_CLOSE ||
                 (auth.AllowOffset == OrderOffset.ONLY_CLOSE &&
-                        offset != TThostFtdcCombOffsetFlagType.OFFSET_OPEN));
+                        offset != CombOffsetFlagType.OFFSET_OPEN));
         return auth.InstrumentID.compareTo(instrumentID) == 0 && rightTrade;
     }
 
@@ -69,7 +65,7 @@ public class RequestValidator extends RequestSuper {
         m.CurrentCount = m.TotalCount = 1;
         m.Type = type;
         m.Body = request;
-        m.RspInfo = new CThostFtdcRspInfoField();
+        m.RspInfo = new CRspInfo();
         m.RspInfo.ErrorID = errorCode;
         m.RspInfo.ErrorMsg = errorMsg;
         session.sendResponse(m);
@@ -78,7 +74,7 @@ public class RequestValidator extends RequestSuper {
     @Override
     public void doReqOrderInsert(
             ServerSession session,
-            CThostFtdcInputOrderField request,
+            CInputOrder request,
             String requestID,
             int current,
             int total) {
@@ -88,8 +84,8 @@ public class RequestValidator extends RequestSuper {
                     toRtnOrder(request),
                     requestID,
                     MessageType.RSP_REQ_ORDER_INSERT,
-                    TThostFtdcErrorCode.NOT_AUTHENT,
-                    OP.getErrorMsg(TThostFtdcErrorCode.NOT_AUTHENT));
+                    ErrorCodes.NOT_AUTHENT,
+                    OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
         } else {
             var auth = (UserAuthProfile) attr;
             if (request.UserID == null
@@ -98,8 +94,8 @@ public class RequestValidator extends RequestSuper {
                         toRtnOrder(request),
                         requestID,
                         MessageType.RSP_REQ_ORDER_INSERT,
-                        TThostFtdcErrorCode.USER_NOT_ACTIVE,
-                        OP.getErrorMsg(TThostFtdcErrorCode.USER_NOT_ACTIVE));
+                        ErrorCodes.USER_NOT_ACTIVE,
+                        OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
             } else {
                 for (var instrAuth : auth.InstrumentAuths) {
                     var instrumentID = request.InstrumentID;
@@ -111,8 +107,8 @@ public class RequestValidator extends RequestSuper {
                         toRtnOrder(request),
                         requestID,
                         MessageType.RSP_REQ_ORDER_INSERT,
-                        TThostFtdcErrorCode.NO_TRADING_RIGHT,
-                        OP.getErrorMsg(TThostFtdcErrorCode.NO_TRADING_RIGHT));
+                        ErrorCodes.NO_TRADING_RIGHT,
+                        OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
             }
         }
         session.done();
@@ -121,7 +117,7 @@ public class RequestValidator extends RequestSuper {
     @Override
     public void doReqOrderAction(
             ServerSession session,
-            CThostFtdcInputOrderActionField request,
+            CInputOrderAction request,
             String requestID,
             int current,
             int total) {
@@ -131,8 +127,8 @@ public class RequestValidator extends RequestSuper {
                     toOrderAction(request),
                     requestID,
                     MessageType.RSP_REQ_ORDER_ACTION,
-                    TThostFtdcErrorCode.NOT_AUTHENT,
-                    OP.getErrorMsg(TThostFtdcErrorCode.NOT_AUTHENT));
+                    ErrorCodes.NOT_AUTHENT,
+                    OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
         } else {
             var auth = (UserAuthProfile) attr;
             if (request.UserID == null
@@ -141,8 +137,8 @@ public class RequestValidator extends RequestSuper {
                         toOrderAction(request),
                         requestID,
                         MessageType.RSP_REQ_ORDER_ACTION,
-                        TThostFtdcErrorCode.USER_NOT_ACTIVE,
-                        OP.getErrorMsg(TThostFtdcErrorCode.USER_NOT_ACTIVE));
+                        ErrorCodes.USER_NOT_ACTIVE,
+                        OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
             } else {
                 for (var instrAuth : auth.InstrumentAuths) {
                     var instrumentID = request.InstrumentID;
@@ -153,8 +149,8 @@ public class RequestValidator extends RequestSuper {
                         toOrderAction(request),
                         requestID,
                         MessageType.RSP_REQ_ORDER_ACTION,
-                        TThostFtdcErrorCode.NO_TRADING_RIGHT,
-                        OP.getErrorMsg(TThostFtdcErrorCode.NO_TRADING_RIGHT));
+                        ErrorCodes.NO_TRADING_RIGHT,
+                        OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
             }
         }
         session.done();

@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.md;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
+import com.nabiki.objects.CCandle;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,7 +43,7 @@ public class CandleAccess {
             "LowestPrice,ClosePrice,AveragePrice,OpenInterest,Volume,Minute," +
             "TradingDay,ActionDay,UpdateTime" + System.lineSeparator();
 
-    protected void write(File file, CThostFtdcCandleField candle) {
+    protected void write(File file, CCandle candle) {
         Objects.requireNonNull(file, "file null");
         Objects.requireNonNull(candle, "candle null");
         var value = String.format("%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
@@ -69,11 +69,11 @@ public class CandleAccess {
         }
     }
 
-    private CThostFtdcCandleField parse(String line) {
+    private CCandle parse(String line) {
         String[] vars = line.split(",");
         if (vars.length != 12)
             return null;
-        CThostFtdcCandleField candle = new CThostFtdcCandleField();
+        CCandle candle = new CCandle();
         candle.InstrumentID = vars[0];
         candle.OpenPrice = Double.parseDouble(vars[1]);
         candle.HighestPrice = Double.parseDouble(vars[2]);
@@ -89,8 +89,8 @@ public class CandleAccess {
         return candle;
     }
 
-    protected List<CThostFtdcCandleField> read(File file) {
-        var list = new LinkedList<CThostFtdcCandleField>();
+    protected List<CCandle> read(File file) {
+        var list = new LinkedList<CCandle>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             // Skip the first header line.

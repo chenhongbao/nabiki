@@ -34,12 +34,8 @@ import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.InstrumentInfo;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorMessage;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderStatusType;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,12 +51,12 @@ public class ActiveRequest {
     private final UserPosition userPos;
     private final OrderProvider orderProvider;
     private final Config config;
-    private final CThostFtdcInputOrderField order;
-    private final CThostFtdcInputOrderActionField action;
+    private final CInputOrder order;
+    private final CInputOrderAction action;
 
-    private final CThostFtdcRspInfoField execRsp = new CThostFtdcRspInfoField();
+    private final CRspInfo execRsp = new CRspInfo();
 
-    ActiveRequest(CThostFtdcInputOrderField order, User user, OrderProvider provider,
+    ActiveRequest(CInputOrder order, User user, OrderProvider provider,
                   Config cfg) {
         this.userAccount = user.getUserAccount();
         this.userPos = user.getUserPosition();
@@ -70,7 +66,7 @@ public class ActiveRequest {
         this.action = null;
     }
 
-    ActiveRequest(CThostFtdcInputOrderActionField action, User user,
+    ActiveRequest(CInputOrderAction action, User user,
                   OrderProvider mgr, Config cfg) {
         this.userAccount = user.getUserAccount();
         this.userPos = user.getUserPosition();
@@ -84,11 +80,11 @@ public class ActiveRequest {
         return this.action != null;
     }
 
-    public CThostFtdcInputOrderField getOriginOrder() {
+    public CInputOrder getOriginOrder() {
         return this.order;
     }
 
-    public CThostFtdcInputOrderActionField getOriginAction() {
+    public CInputOrderAction getOriginAction() {
         return this.action;
     }
 
@@ -108,31 +104,31 @@ public class ActiveRequest {
         // If the user is panic, some internal error occurred. Don't trade again.
         var usrState = this.userAccount.getParent().getState();
         if (usrState == UserState.PANIC) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.INCONSISTENT_INFORMATION;
+            this.execRsp.ErrorID = ErrorCodes.INCONSISTENT_INFORMATION;
             this.execRsp.ErrorMsg = "internal error caused account panic";
             return;
         }
         // User is settled, but not inited for next day.
         if (usrState == UserState.SETTLED) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.NOT_INITED;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.NOT_INITED;
+            this.execRsp.ErrorID = ErrorCodes.NOT_INITED;
+            this.execRsp.ErrorMsg = ErrorMessages.NOT_INITED;
             return;
         }
         var instrInfo = this.config.getInstrInfo(this.order.InstrumentID);
         if (instrInfo == null) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.INSTRUMENT_NOT_FOUND;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSTRUMENT_NOT_FOUND;
+            this.execRsp.ErrorID = ErrorCodes.INSTRUMENT_NOT_FOUND;
+            this.execRsp.ErrorMsg = ErrorMessages.INSTRUMENT_NOT_FOUND;
         } else {
             switch (this.order.CombOffsetFlag) {
-                case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
+                case CombOffsetFlagType.OFFSET_OPEN:
                     insertOpen(this.order, instrInfo);
                     break;
-                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
-                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
-                case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
-                case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
-                case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
-                case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
+                case CombOffsetFlagType.OFFSET_CLOSE:
+                case CombOffsetFlagType.OFFSET_CLOSE_TODAY:
+                case CombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+                case CombOffsetFlagType.OFFSET_FORCE_CLOSE:
+                case CombOffsetFlagType.OFFSET_FORCE_OFF:
+                case CombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
                     insertClose(this.order, instrInfo);
                     break;
                 default:
@@ -147,15 +143,15 @@ public class ActiveRequest {
         if (this.action == null)
             throw new IllegalStateException("no action to execute");
         if (this.action.OrderSysID == null || this.action.OrderSysID.length() < 1) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.BAD_ORDER_ACTION_FIELD;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.BAD_ORDER_ACTION_FIELD;
+            this.execRsp.ErrorID = ErrorCodes.BAD_ORDER_ACTION_FIELD;
+            this.execRsp.ErrorMsg = ErrorMessages.BAD_ORDER_ACTION_FIELD;
             return;
         }
         var mapper = this.orderProvider.getMapper();
         var refs = mapper.getDetailRef(this.action.OrderSysID);
         if (refs == null || refs.size() < 1) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.ORDER_NOT_FOUND;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.ORDER_NOT_FOUND;
+            this.execRsp.ErrorID = ErrorCodes.ORDER_NOT_FOUND;
+            this.execRsp.ErrorMsg = ErrorMessages.ORDER_NOT_FOUND;
             return;
         }
         for (var ref : refs) {
@@ -164,29 +160,29 @@ public class ActiveRequest {
             realAction.OrderRef = ref;
             // Check order return.
             var rtn = mapper.getRtnOrder(ref);
-            if (rtn != null && (rtn.OrderStatus == TThostFtdcOrderStatusType.CANCELED
-                    || rtn.OrderStatus == TThostFtdcOrderStatusType.ALL_TRADED))
+            if (rtn != null && (rtn.OrderStatus == OrderStatusType.CANCELED
+                    || rtn.OrderStatus == OrderStatusType.ALL_TRADED))
                 continue;
             if (send(realAction, this) != 0)
                 break;
         }
     }
 
-    private int send(CThostFtdcInputOrderField order, ActiveRequest active) {
+    private int send(CInputOrder order, ActiveRequest active) {
         int r = this.orderProvider.sendDetailOrder(order, active);
         this.execRsp.ErrorID = r;
         this.execRsp.ErrorMsg = OP.getErrorMsg(r);
         return r;
     }
 
-    private int send(CThostFtdcInputOrderActionField action, ActiveRequest active) {
+    private int send(CInputOrderAction action, ActiveRequest active) {
         int r = this.orderProvider.sendOrderAction(action, active);
         this.execRsp.ErrorID = r;
         this.execRsp.ErrorMsg = OP.getErrorMsg(r);
         return r;
     }
 
-    private boolean isValidVolume(CThostFtdcInputOrderField order) {
+    private boolean isValidVolume(CInputOrder order) {
         int minVol, maxVol;
         var instrInfo = this.config.getInstrInfo(order.InstrumentID);
         if (instrInfo == null || instrInfo.Instrument == null) {
@@ -200,7 +196,7 @@ public class ActiveRequest {
                 && order.VolumeTotalOriginal <= maxVol;
     }
 
-    private boolean isValidPrice(CThostFtdcInputOrderField order) {
+    private boolean isValidPrice(CInputOrder order) {
         var depth = this.config.getDepthMarketData(order.InstrumentID);
         if (depth == null)
             return true;
@@ -209,15 +205,15 @@ public class ActiveRequest {
                     && order.LimitPrice <= depth.UpperLimitPrice;
     }
 
-    private boolean isValidField(CThostFtdcInputOrderField order) {
+    private boolean isValidField(CInputOrder order) {
         return isValidVolume(order) && isValidPrice(order);
     }
 
-    private void insertOpen(CThostFtdcInputOrderField order,
+    private void insertOpen(CInputOrder order,
                             InstrumentInfo instrInfo) {
         if (!isValidField(order)) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.BAD_FIELD;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.BAD_FIELD;
+            this.execRsp.ErrorID = ErrorCodes.BAD_FIELD;
+            this.execRsp.ErrorMsg = ErrorMessages.BAD_FIELD;
             return;
         }
         // Check info ready.
@@ -227,8 +223,8 @@ public class ActiveRequest {
         var frzAccount = this.userAccount.getOpenFrozenAccount(this.order,
                 instrInfo.Instrument, instrInfo.Margin, instrInfo.Commission);
         if (frzAccount == null) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.INSUFFICIENT_MONEY;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.INSUFFICIENT_MONEY;
+            this.execRsp.ErrorID = ErrorCodes.INSUFFICIENT_MONEY;
+            this.execRsp.ErrorMsg = ErrorMessages.INSUFFICIENT_MONEY;
         } else {
             // Set valid order ref.
             order.OrderRef = this.orderProvider.getOrderRef();
@@ -239,15 +235,15 @@ public class ActiveRequest {
         }
     }
 
-    private void insertClose(CThostFtdcInputOrderField order,
+    private void insertClose(CInputOrder order,
                              InstrumentInfo instrInfo) {
         Objects.requireNonNull(instrInfo.Instrument, "instrument null");
         Objects.requireNonNull(instrInfo.Commission, "commission null");
         var pds = this.userPos.peakCloseFrozen(order, instrInfo.Instrument,
                 instrInfo.Commission, this.config.getTradingDay());
         if (pds == null || pds.size() == 0) {
-            this.execRsp.ErrorID = TThostFtdcErrorCode.OVER_CLOSE_POSITION;
-            this.execRsp.ErrorMsg = TThostFtdcErrorMessage.OVER_CLOSE_POSITION;
+            this.execRsp.ErrorID = ErrorCodes.OVER_CLOSE_POSITION;
+            this.execRsp.ErrorMsg = ErrorMessages.OVER_CLOSE_POSITION;
             return;
         }
         // Send close request.
@@ -270,21 +266,21 @@ public class ActiveRequest {
         return this.uuid;
     }
 
-    public CThostFtdcRspInfoField getExecRsp() {
+    public CRspInfo getExecRsp() {
         return this.execRsp;
     }
 
-    private CThostFtdcInputOrderField toCloseOrder(FrozenPositionDetail pd) {
+    private CInputOrder toCloseOrder(FrozenPositionDetail pd) {
         var cls = Utils.deepCopy(getOriginOrder());
         Objects.requireNonNull(cls, "failed deep copy");
         cls.VolumeTotalOriginal = (int) pd.getFrozenVolume();
         if (pd.getSingleFrozenPosition().TradingDay
                 .compareTo(this.config.getTradingDay()) != 0) {
             // Yesterday.
-            cls.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY;
+            cls.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_YESTERDAY;
         } else {
             // Today.
-            cls.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY;
+            cls.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_TODAY;
         }
         return cls;
     }
@@ -295,21 +291,21 @@ public class ActiveRequest {
      *
      * @param rtn return order
      */
-    public void updateRtnOrder(CThostFtdcOrderField rtn) {
+    public void updateRtnOrder(COrder rtn) {
         if (rtn == null)
             throw new NullPointerException("return order null");
         switch ((char) rtn.OrderStatus) {
-            case TThostFtdcOrderStatusType.CANCELED:
+            case OrderStatusType.CANCELED:
                 cancelOrder(rtn);
                 break;
-            case TThostFtdcOrderStatusType.ALL_TRADED:
-            case TThostFtdcOrderStatusType.NO_TRADE_NOT_QUEUEING:
-            case TThostFtdcOrderStatusType.NO_TRADE_QUEUEING:
-            case TThostFtdcOrderStatusType.PART_TRADED_NOT_QUEUEING:
-            case TThostFtdcOrderStatusType.PART_TRADED_QUEUEING:
-            case TThostFtdcOrderStatusType.NOT_TOUCHED:
-            case TThostFtdcOrderStatusType.TOUCHED:
-            case TThostFtdcOrderStatusType.UNKNOWN:
+            case OrderStatusType.ALL_TRADED:
+            case OrderStatusType.NO_TRADE_NOT_QUEUEING:
+            case OrderStatusType.NO_TRADE_QUEUEING:
+            case OrderStatusType.PART_TRADED_NOT_QUEUEING:
+            case OrderStatusType.PART_TRADED_QUEUEING:
+            case OrderStatusType.NOT_TOUCHED:
+            case OrderStatusType.TOUCHED:
+            case OrderStatusType.UNKNOWN:
                 break;
             default:
                 this.config.getLogger().warning("unknown order status: "
@@ -320,33 +316,33 @@ public class ActiveRequest {
 
     }
 
-    private void cancelOrder(CThostFtdcOrderField rtn) {
+    private void cancelOrder(COrder rtn) {
         switch (rtn.CombOffsetFlag) {
-            case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
+            case CombOffsetFlagType.OFFSET_OPEN:
                 // Cancel cash.
                 if (this.frozenAccount == null) {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen cash",
                                     rtn.OrderRef, null, null));
                     this.userAccount.getParent().setPanic(
-                            TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                            ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen cash null");
                     return;
                 }
                 getFrozenAccount().cancel();
                 break;
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
-            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
-            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
-            case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
+            case CombOffsetFlagType.OFFSET_CLOSE:
+            case CombOffsetFlagType.OFFSET_CLOSE_TODAY:
+            case CombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+            case CombOffsetFlagType.OFFSET_FORCE_CLOSE:
+            case CombOffsetFlagType.OFFSET_FORCE_OFF:
+            case CombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
                 if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen position",
                                     rtn.OrderRef, null, null));
                     this.userAccount.getParent().setPanic(
-                            TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                            ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen position null");
                     return;
                 }
@@ -357,7 +353,7 @@ public class ActiveRequest {
                             Utils.formatLog("frozen position not found",
                                     rtn.OrderRef, null, null));
                     this.userAccount.getParent().setPanic(
-                            TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                            ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen position not found for order ref");
                     return;
                 }
@@ -380,7 +376,7 @@ public class ActiveRequest {
      *
      * @param trade trade response
      */
-    public void updateTrade(CThostFtdcTradeField trade) {
+    public void updateTrade(CTrade trade) {
         if (trade == null)
             throw new NullPointerException("return trade null");
         var instrInfo = this.config.getInstrInfo(trade.InstrumentID);
@@ -389,15 +385,15 @@ public class ActiveRequest {
         Objects.requireNonNull(instrInfo.Margin, "margin null");
         Objects.requireNonNull(instrInfo.Commission, "commission null");
         switch (trade.OffsetFlag) {
-            case TThostFtdcCombOffsetFlagType.OFFSET_OPEN:
+            case CombOffsetFlagType.OFFSET_OPEN:
                 openTrade(trade, instrInfo);
                 break;
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE:
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY:
-            case TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
-            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_CLOSE:
-            case TThostFtdcCombOffsetFlagType.OFFSET_FORCE_OFF:
-            case TThostFtdcCombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
+            case CombOffsetFlagType.OFFSET_CLOSE:
+            case CombOffsetFlagType.OFFSET_CLOSE_TODAY:
+            case CombOffsetFlagType.OFFSET_CLOSE_YESTERDAY:
+            case CombOffsetFlagType.OFFSET_FORCE_CLOSE:
+            case CombOffsetFlagType.OFFSET_FORCE_OFF:
+            case CombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
                 closeTrade(trade, instrInfo);
                 break;
             default:
@@ -407,13 +403,13 @@ public class ActiveRequest {
         }
     }
 
-    private void openTrade(CThostFtdcTradeField trade, InstrumentInfo instrInfo) {
+    private void openTrade(CTrade trade, InstrumentInfo instrInfo) {
         if (this.frozenAccount == null) {
             this.config.getLogger().severe(
                     Utils.formatLog("no frozen cash",
                             trade.OrderRef, null, null));
             this.userAccount.getParent().setPanic(
-                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen cash null");
             return;
         }
@@ -427,13 +423,13 @@ public class ActiveRequest {
                 instrInfo.Margin, depth.PreSettlementPrice);
     }
 
-    private void closeTrade(CThostFtdcTradeField trade, InstrumentInfo instrInfo) {
+    private void closeTrade(CTrade trade, InstrumentInfo instrInfo) {
         if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
             this.config.getLogger().severe(
                     Utils.formatLog("no frozen position",
                             trade.OrderRef, null, null));
             this.userAccount.getParent().setPanic(
-                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen position null");
             return;
         }
@@ -445,7 +441,7 @@ public class ActiveRequest {
                     Utils.formatLog("frozen position not found",
                             trade.OrderRef, null, null));
             this.userAccount.getParent().setPanic(
-                    TThostFtdcErrorCode.INCONSISTENT_INFORMATION,
+                    ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen position not found for order ref");
             return;
         }
@@ -454,7 +450,7 @@ public class ActiveRequest {
                     Utils.formatLog("not enough frozen position",
                             trade.OrderRef, null, null));
             this.userAccount.getParent().setPanic(
-                    TThostFtdcErrorCode.OVER_CLOSE_POSITION,
+                    ErrorCodes.OVER_CLOSE_POSITION,
                     "not enough frozen position for trade");
             return;
         }

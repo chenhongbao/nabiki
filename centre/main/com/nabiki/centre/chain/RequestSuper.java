@@ -28,15 +28,15 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderActionField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderActionField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
 import com.nabiki.iop.ServerMessageAdaptor;
+import com.nabiki.objects.CInputOrder;
+import com.nabiki.objects.CInputOrderAction;
+import com.nabiki.objects.COrder;
+import com.nabiki.objects.COrderAction;
 
 public class RequestSuper extends ServerMessageAdaptor {
-    CThostFtdcOrderField toRtnOrder(CThostFtdcInputOrderField rtn) {
-        var r = new CThostFtdcOrderField();
+    COrder toRtnOrder(CInputOrder rtn) {
+        var r = new COrder();
         r.AccountID = rtn.AccountID;
         r.BrokerID = rtn.BrokerID;
         r.BusinessUnit = rtn.BusinessUnit;
@@ -70,8 +70,8 @@ public class RequestSuper extends ServerMessageAdaptor {
         return r;
     }
 
-    CThostFtdcOrderActionField toOrderAction(CThostFtdcInputOrderActionField action) {
-        var r = new CThostFtdcOrderActionField();
+    COrderAction toOrderAction(CInputOrderAction action) {
+        var r = new COrderAction();
         r.ActionFlag = action.ActionFlag;
         r.BrokerID = action.BrokerID;
         r.ExchangeID = action.ExchangeID;

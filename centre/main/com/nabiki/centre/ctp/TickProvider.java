@@ -35,31 +35,30 @@ import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
-import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.ctp4j.md.CThostFtdcMdApi;
-import com.nabiki.ctp4j.md.CThostFtdcMdSpi;
+import com.nabiki.ctp4j.CThostFtdcMdApi;
+import com.nabiki.objects.*;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class TickProvider extends CThostFtdcMdSpi {
-    private final Config config;
-    private final LoginConfig loginCfg;
-    private final CThostFtdcMdApi mdApi;
-    private final MessageWriter msgWriter;
-    private final Set<MarketDataRouter> routers = new HashSet<>();
-    private final Set<CandleEngine> engines = new HashSet<>();
-    private final Set<String> subscribed = new HashSet<>();
+public class TickProvider {
+    protected final Config config;
+    protected final LoginConfig loginCfg;
+    protected final CThostFtdcMdApi mdApi;
+    protected final MessageWriter msgWriter;
+    protected final Set<MarketDataRouter> routers = new HashSet<>();
+    protected final Set<CandleEngine> engines = new HashSet<>();
+    protected final Set<String> subscribed = new HashSet<>();
 
-    private boolean isConnected = false,
+    protected boolean isConnected = false,
             isLogin = false;
-    private WorkingState workingState = WorkingState.STOPPED;
+    protected WorkingState workingState = WorkingState.STOPPED;
 
     // Login signal.
     protected final Signal loginSignal = new Signal();
 
-    private String actionDay;
+    protected String actionDay;
 
     public TickProvider(Config cfg) {
         this.config = cfg;
@@ -134,7 +133,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     }
 
     public void initialize() {
-        this.mdApi.RegisterSpi(this);
+        this.mdApi.RegisterSpi(new JniMdSpi(this));
         for (var addr : this.loginCfg.FrontAddresses)
             this.mdApi.RegisterFront(addr);
         this.mdApi.Init();
@@ -178,7 +177,7 @@ public class TickProvider extends CThostFtdcMdSpi {
     }
 
     private void subscribeBatch(String[] instr, int count) {
-        this.mdApi.SubscribeMarketData(instr, count);
+        this.mdApi.SubscribeMarketData(JNI.toJni(instr), count);
     }
 
     private void registerInstrument(String instrID) {
@@ -196,11 +195,13 @@ public class TickProvider extends CThostFtdcMdSpi {
     }
 
     private void doLogin() {
-        var req = new CThostFtdcReqUserLoginField();
+        var req = new CReqUserLogin();
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
         req.Password = this.loginCfg.Password;
-        var r = this.mdApi.ReqUserLogin(req, Utils.getIncrementID());
+        var r = this.mdApi.ReqUserLogin(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
                     Utils.formatLog("failed login request", null,
@@ -208,10 +209,12 @@ public class TickProvider extends CThostFtdcMdSpi {
     }
 
     private void doLogout() {
-        var req = new CThostFtdcUserLogoutField();
+        var req = new CUserLogout();
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
-        var r = this.mdApi.ReqUserLogout(req, Utils.getIncrementID());
+        var r = this.mdApi.ReqUserLogout(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout request", null,
@@ -225,16 +228,14 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    @Override
-    public void OnFrontConnected() {
+    public void whenFrontConnected() {
         this.isConnected = true;
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED)
             doLogin();
     }
 
-    @Override
-    public void OnFrontDisconnected(int reason) {
+    public void whenFrontDisconnected(int reason) {
         this.config.getLogger().warning(
                 Utils.formatLog("md disconnected", null, null,
                         reason));
@@ -247,8 +248,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             setWorking(false);
     }
 
-    @Override
-    public void OnRspError(CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspError(CRspInfo rspInfo, int requestId,
                            boolean isLast) {
         this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
@@ -256,9 +256,8 @@ public class TickProvider extends CThostFtdcMdSpi {
                         rspInfo.ErrorID));
     }
 
-    @Override
-    public void OnRspUserLogin(CThostFtdcRspUserLoginField rspUserLogin,
-                               CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspUserLogin(CRspUserLogin rspUserLogin,
+                               CRspInfo rspInfo, int requestId,
                                boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.isLogin = true;
@@ -272,7 +271,7 @@ public class TickProvider extends CThostFtdcMdSpi {
             // The subscribe method clears the container, so the instruments must be
             // kept in another container.
             if (this.subscribed.size() > 0)
-                subscribe(new HashSet<String>(this.subscribed));
+                subscribe(new HashSet<>(this.subscribed));
         } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed login", null,
@@ -281,9 +280,8 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    @Override
-    public void OnRspUserLogout(CThostFtdcUserLogoutField userLogout,
-                                CThostFtdcRspInfoField rspInfo, int nRequestID,
+    public void whenRspUserLogout(CUserLogout userLogout,
+                                CRspInfo rspInfo, int nRequestID,
                                 boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.isLogin = false;
@@ -301,10 +299,9 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    @Override
-    public void OnRspSubMarketData(
-            CThostFtdcSpecificInstrumentField specificInstrument,
-            CThostFtdcRspInfoField rspInfo, int requestId, boolean isLast) {
+    public void whenRspSubMarketData(
+            CSpecificInstrument specificInstrument,
+            CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID != 0) {
             this.config.getLogger().warning(Utils.formatLog(
                     "failed subscription", specificInstrument.InstrumentID,
@@ -313,10 +310,9 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    @Override
-    public void OnRspUnSubMarketData(
-            CThostFtdcSpecificInstrumentField specificInstrument,
-            CThostFtdcRspInfoField rspInfo, int nRequestID, boolean isLast) {
+    public void whenRspUnSubMarketData(
+            CSpecificInstrument specificInstrument,
+            CRspInfo rspInfo, int nRequestID, boolean isLast) {
         if (rspInfo.ErrorID != 0) {
             this.config.getLogger().warning(Utils.formatLog(
                     "failed un-subscription", specificInstrument.InstrumentID,
@@ -325,8 +321,7 @@ public class TickProvider extends CThostFtdcMdSpi {
         }
     }
 
-    @Override
-    public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField depthMarketData) {
+    public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
         // Set action day to today.
         depthMarketData.ActionDay = this.actionDay;
         synchronized (this.routers) {

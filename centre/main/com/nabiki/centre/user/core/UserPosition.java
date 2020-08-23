@@ -33,8 +33,7 @@ import com.nabiki.centre.user.core.plain.PositionFrozenCash;
 import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 import java.util.*;
 
@@ -98,9 +97,9 @@ public class UserPosition {
         return r;
     }
 
-    public void applyOpenTrade(CThostFtdcTradeField trade,
-                               CThostFtdcInstrumentField instr,
-                               CThostFtdcInstrumentMarginRateField margin,
+    public void applyOpenTrade(CTrade trade,
+                               CInstrument instr,
+                               CInstrumentMarginRate margin,
                                double preSettlementPrice) {
         getSpecificPosition(trade.InstrumentID)
                 .add(toUserPosition(trade, instr, margin, preSettlementPrice));
@@ -118,9 +117,9 @@ public class UserPosition {
      * @return list of frozen position detail if the order is sent successfully
      */
     public List<FrozenPositionDetail> peakCloseFrozen(
-            CThostFtdcInputOrderField order,
-            CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentCommissionRateField comm,
+            CInputOrder order,
+            CInstrument instr,
+            CInstrumentCommissionRate comm,
             String tradingDay) {
         // Get position details.
         var avail = getSpecificPosition(order.InstrumentID);
@@ -245,7 +244,7 @@ public class UserPosition {
             // Calculate new position detail, the close profit/volume/amount are
             // updated on return trade, just calculate the position's fields.
             double token;
-            if (origin.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
+            if (origin.Direction == DirectionType.DIRECTION_BUY) {
                 // Margin.
                 if (origin.MarginRateByMoney > 0)
                     origin.Margin = origin.Volume * origin.SettlementPrice
@@ -284,11 +283,11 @@ public class UserPosition {
     }
 
     private UserPositionDetail toUserPosition(
-            CThostFtdcTradeField trade,
-            CThostFtdcInstrumentField instr,
-            CThostFtdcInstrumentMarginRateField margin,
+            CTrade trade,
+            CInstrument instr,
+            CInstrumentMarginRate margin,
             double preSettlementPrice) {
-        var d = new CThostFtdcInvestorPositionDetailField();
+        var d = new CInvestorPositionDetail();
         d.InvestorID = trade.InvestorID;
         d.BrokerID = trade.BrokerID;
         d.Volume = trade.Volume;
@@ -305,7 +304,7 @@ public class UserPosition {
         d.SettlementID = trade.SettlementID;
         // Calculate margin.
         // Decide margin rates.
-        if (d.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
+        if (d.Direction == DirectionType.DIRECTION_BUY) {
             d.MarginRateByMoney = margin.LongMarginRatioByMoney;
             d.MarginRateByVolume = margin.LongMarginRatioByVolume;
         } else {

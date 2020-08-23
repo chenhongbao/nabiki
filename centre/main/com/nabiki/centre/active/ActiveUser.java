@@ -35,8 +35,7 @@ import com.nabiki.centre.user.core.User;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
-import com.nabiki.ctp4j.jni.struct.*;
+import com.nabiki.objects.*;
 
 import java.util.*;
 
@@ -80,7 +79,7 @@ public class ActiveUser {
         this.user.settle(prep);
     }
 
-    public CThostFtdcRspInfoField getExecRsp(String uuid) {
+    public CRspInfo getExecRsp(String uuid) {
         var active = this.requests.get(uuid);
         if (active == null)
             return null;
@@ -88,7 +87,7 @@ public class ActiveUser {
             return active.getExecRsp();
     }
 
-    public String insertOrder(CThostFtdcInputOrderField order) {
+    public String insertOrder(CInputOrder order) {
         var active = new ActiveRequest(order, this.user, this.orderProvider,
                 this.config);
         this.requests.put(active.getRequestUUID(), active);
@@ -103,7 +102,7 @@ public class ActiveUser {
         return active.getRequestUUID();
     }
 
-    public String orderAction(CThostFtdcInputOrderActionField action) {
+    public String orderAction(CInputOrderAction action) {
         var active = new ActiveRequest(action, this.user, this.orderProvider,
                 this.config);
         this.requests.put(active.getRequestUUID(), active);
@@ -118,8 +117,8 @@ public class ActiveUser {
         return active.getRequestUUID();
     }
 
-    public Set<CThostFtdcOrderField> getRtnOrder(String uuid) {
-        var r = new HashSet<CThostFtdcOrderField>();
+    public Set<COrder> getRtnOrder(String uuid) {
+        var r = new HashSet<COrder>();
         if (uuid == null)
             return r;
         var refs = this.orderProvider.getMapper().getDetailRef(uuid);
@@ -149,15 +148,15 @@ public class ActiveUser {
             return null;
     }
 
-    public CThostFtdcTradingAccountField getTradingAccount() {
+    public CTradingAccount getTradingAccount() {
         var account = this.user.getFeaturedAccount();
         account.TradingDay = this.config.getTradingDay();
         return account;
     }
 
-    public List<CThostFtdcInvestorPositionField> getPosition(String instrID) {
+    public List<CInvestorPosition> getPosition(String instrID) {
         if (instrID == null || instrID.length() == 0) {
-            var ret = new LinkedList<CThostFtdcInvestorPositionField>();
+            var ret = new LinkedList<CInvestorPosition>();
             for (var instr : this.user.getUserPosition().getPositionMap().keySet())
                 ret.addAll(getInstrPosition(instr));
             return ret;
@@ -165,8 +164,8 @@ public class ActiveUser {
             return getInstrPosition(instrID);
     }
 
-    private List<CThostFtdcInvestorPositionField> getInstrPosition(String instrID) {
-        var ret = new LinkedList<CThostFtdcInvestorPositionField>();
+    private List<CInvestorPosition> getInstrPosition(String instrID) {
+        var ret = new LinkedList<CInvestorPosition>();
         if (instrID == null || instrID.length() == 0)
             return ret;
         var usrPos = this.user.getUserPosition().getSpecificPosition(instrID);
@@ -175,10 +174,10 @@ public class ActiveUser {
         var tradingDay = this.config.getTradingDay();
         if (tradingDay == null || tradingDay.length() == 0)
             throw new IllegalArgumentException("trading day null");
-        CThostFtdcInvestorPositionField lp = null, sp = null;
+        CInvestorPosition lp = null, sp = null;
         for (var p : usrPos) {
             var sum = p.getInvestorPosition(tradingDay);
-            if (sum.PosiDirection == TThostFtdcPosiDirectionType.LONG) {
+            if (sum.PosiDirection == PosiDirectionType.LONG) {
                 // Long position.
                 if (lp  == null)
                     lp = sum;
@@ -204,9 +203,9 @@ public class ActiveUser {
         return ret;
     }
 
-    private CThostFtdcInvestorPositionField add(
-            CThostFtdcInvestorPositionField a,
-            CThostFtdcInvestorPositionField b) {
+    private CInvestorPosition add(
+            CInvestorPosition a,
+            CInvestorPosition b) {
         a.CloseAmount += b.CloseAmount;
         a.CloseProfit += b.CloseProfit;
         a.CloseProfitByDate += b.CloseProfitByDate;

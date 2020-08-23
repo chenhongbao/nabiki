@@ -29,14 +29,14 @@
 package com.nabiki.centre.md;
 
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class CandleProgress {
-    private final CThostFtdcCandleField candle = new CThostFtdcCandleField();
+    private final CCandle candle = new CCandle();
 
     private int lastVolume = 0, lastVolumeUpdated = 0;
     private double lastClosePrice = 0.0D;
@@ -47,7 +47,7 @@ public class CandleProgress {
         this.candle.Minute = minute;
     }
 
-    public void update(CThostFtdcDepthMarketDataField md) {
+    public void update(CDepthMarketData md) {
         if (this.lastVolume == 0)
             this.lastVolume = md.Volume;
         synchronized (this.candle) {
@@ -77,7 +77,7 @@ public class CandleProgress {
         this.lastVolumeUpdated = md.Volume;
     }
 
-    public CThostFtdcCandleField peak(String tradingDay) {
+    public CCandle peak(String tradingDay) {
         synchronized (this.candle) {
             if (this.popped) {
                 // Not updated since last pop.
@@ -96,7 +96,7 @@ public class CandleProgress {
         }
     }
 
-    public CThostFtdcCandleField pop(String tradingDay) {
+    public CCandle pop(String tradingDay) {
         var r = peak(tradingDay);
         this.lastVolume = this.lastVolumeUpdated;
         this.lastVolumeUpdated = 0;

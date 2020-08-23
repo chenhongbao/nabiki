@@ -28,8 +28,8 @@
 
 package com.nabiki.centre.md;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -44,7 +44,7 @@ public class SingleCandle {
         this.instrID = instrID;
     }
 
-    void update(CThostFtdcDepthMarketDataField md) {
+    void update(CDepthMarketData md) {
         if (md.InstrumentID.compareTo(this.instrID) != 0)
             throw new IllegalArgumentException("wrong instrument");
         synchronized (this.progress) {
@@ -55,16 +55,14 @@ public class SingleCandle {
 
     void register(Duration du) {
         synchronized (this.progress) {
-            if (this.progress.containsKey(du))
-                return;
-            else
+            if (!this.progress.containsKey(du))
                 this.progress.put(du, new CandleProgress(
                         this.instrID,
                         (int)du.dividedBy(minuteDuration)));
         }
     }
 
-    CThostFtdcCandleField peak(Duration du, String tradingDay) {
+    CCandle peak(Duration du, String tradingDay) {
         synchronized (this.progress) {
             if (this.progress.containsKey(du))
                 return this.progress.get(du).peak(tradingDay);
@@ -73,7 +71,7 @@ public class SingleCandle {
         }
     }
 
-    CThostFtdcCandleField pop(Duration du, String tradingDay) {
+    CCandle pop(Duration du, String tradingDay) {
         synchronized (this.progress) {
             if (this.progress.containsKey(du))
                 return this.progress.get(du).pop(tradingDay);

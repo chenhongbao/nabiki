@@ -28,23 +28,23 @@
 
 package com.nabiki.centre.user.core.plain;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentMarginRateField;
+import com.nabiki.objects.CDepthMarketData;
+import com.nabiki.objects.CInstrument;
+import com.nabiki.objects.CInstrumentCommissionRate;
+import com.nabiki.objects.CInstrumentMarginRate;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SettlementPreparation {
-    private final Map<String, CThostFtdcDepthMarketDataField> depths
+    private final Map<String, CDepthMarketData> depths
             = new ConcurrentHashMap<>();
-    private final Map<String, CThostFtdcInstrumentField> instruments
+    private final Map<String, CInstrument> instruments
             = new ConcurrentHashMap<>();
-    private final Map<String, CThostFtdcInstrumentMarginRateField> margins
+    private final Map<String, CInstrumentMarginRate> margins
             = new ConcurrentHashMap<>();
-    private final Map<String, CThostFtdcInstrumentCommissionRateField> commissions
+    private final Map<String, CInstrumentCommissionRate> commissions
             = new ConcurrentHashMap<>();
     private String tradingDay;
 
@@ -55,19 +55,19 @@ public class SettlementPreparation {
         return this.tradingDay;
     }
 
-    public CThostFtdcDepthMarketDataField getDepth(String instrID) {
+    public CDepthMarketData getDepth(String instrID) {
         return this.depths.get(instrID);
     }
 
-    public CThostFtdcInstrumentField getInstrument(String instrID) {
+    public CInstrument getInstrument(String instrID) {
         return this.instruments.get(instrID);
     }
 
-    public CThostFtdcInstrumentMarginRateField getMargin(String instrID) {
+    public CInstrumentMarginRate getMargin(String instrID) {
         return this.margins.get(instrID);
     }
 
-    public CThostFtdcInstrumentCommissionRateField getCommission(String instrID) {
+    public CInstrumentCommissionRate getCommission(String instrID) {
         return this.commissions.get(instrID);
     }
 
@@ -75,22 +75,22 @@ public class SettlementPreparation {
         this.tradingDay = tradingDay;
     }
 
-    public void prepare(CThostFtdcDepthMarketDataField depth) {
+    public void prepare(CDepthMarketData depth) {
         Objects.requireNonNull(depth, "depth null");
         this.depths.put(depth.InstrumentID, depth);
     }
 
-    public void prepare(CThostFtdcInstrumentField instrument) {
+    public void prepare(CInstrument instrument) {
         Objects.requireNonNull(instrument, "instrument null");
         this.instruments.put(instrument.InstrumentID, instrument);
     }
 
-    public void prepare(CThostFtdcInstrumentMarginRateField margin) {
+    public void prepare(CInstrumentMarginRate margin) {
         Objects.requireNonNull(margin, "margin null");
         this.margins.put(margin.InstrumentID, margin);
     }
 
-    public void prepare(CThostFtdcInstrumentCommissionRateField commission) {
+    public void prepare(CInstrumentCommissionRate commission) {
         Objects.requireNonNull(commission, "commission null");
         this.commissions.put(commission.InstrumentID, commission);
     }

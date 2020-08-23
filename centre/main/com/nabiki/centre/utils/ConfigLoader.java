@@ -31,11 +31,11 @@ package com.nabiki.centre.utils;
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.centre.utils.plain.TradingHourConfig;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentMarginRateField;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.CDepthMarketData;
+import com.nabiki.objects.CInstrument;
+import com.nabiki.objects.CInstrumentCommissionRate;
+import com.nabiki.objects.CInstrumentMarginRate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -71,7 +71,7 @@ public class ConfigLoader {
         return config;
     }
 
-    public static void setDepthMarketData(CThostFtdcDepthMarketDataField md) {
+    public static void setDepthMarketData(CDepthMarketData md) {
         config.depths.put(md.InstrumentID, md);
     }
 
@@ -79,7 +79,7 @@ public class ConfigLoader {
         config.tradingDay = day;
     }
 
-    public static void setInstrConfig(CThostFtdcInstrumentField instr) {
+    public static void setInstrConfig(CInstrument instr) {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(instr.InstrumentID))
                 config.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
@@ -95,20 +95,22 @@ public class ConfigLoader {
     }
 
     private static void setProductConfig(
-            CThostFtdcInstrumentMarginRateField margin,
+            CInstrumentMarginRate margin,
             String productID) {
         var instruments = config.getProduct(productID);
         if (instruments == null)
             return;
         for (var instrument : instruments) {
             var m = Utils.deepCopy(margin);
-            m.InstrumentID = instrument;
-            setSingleConfig(m);
+            if (m != null) {
+                m.InstrumentID = instrument;
+                setSingleConfig(m);
+            }
         }
     }
 
     public static void setSingleConfig(
-            CThostFtdcInstrumentMarginRateField margin) {
+            CInstrumentMarginRate margin) {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(margin.InstrumentID))
                 config.instrInfo.put(margin.InstrumentID, new InstrumentInfo());
@@ -117,16 +119,18 @@ public class ConfigLoader {
     }
 
     public static void setInstrConfig(
-            CThostFtdcInstrumentMarginRateField margin) {
+            CInstrumentMarginRate margin) {
         var pid = Utils.getProductID(margin.InstrumentID);
-        if (pid.compareTo(margin.InstrumentID) == 0)
-            setProductConfig(margin, pid);
-        else
-            setSingleConfig(margin);
+        if (pid != null) {
+            if (pid.compareTo(margin.InstrumentID) == 0)
+                setProductConfig(margin, pid);
+            else
+                setSingleConfig(margin);
+        }
     }
 
     private static void setProductConfig(
-            CThostFtdcInstrumentCommissionRateField commission,
+            CInstrumentCommissionRate commission,
             String productID) {
         var instruments = config.getProduct(productID);
         if (instruments == null)
@@ -136,13 +140,15 @@ public class ConfigLoader {
             // instruments under the product, and set one by one.
             // They must not share the same commission instance.
             var c = Utils.deepCopy(commission);
-            c.InstrumentID = instrument;
-            setSingleConfig(c);
+            if (c != null) {
+                c.InstrumentID = instrument;
+                setSingleConfig(c);
+            }
         }
     }
 
     private static void setSingleConfig(
-            CThostFtdcInstrumentCommissionRateField commission) {
+            CInstrumentCommissionRate commission) {
         synchronized (config.instrInfo) {
             if (!config.instrInfo.containsKey(commission.InstrumentID))
                 config.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
@@ -151,12 +157,14 @@ public class ConfigLoader {
     }
 
     public static void setInstrConfig(
-            CThostFtdcInstrumentCommissionRateField commission) {
+            CInstrumentCommissionRate commission) {
         var pid = Utils.getProductID(commission.InstrumentID);
-        if (pid.compareTo(commission.InstrumentID) == 0)
-            setProductConfig(commission, pid);
-        else
-            setSingleConfig(commission);
+        if (pid != null) {
+            if (pid.compareTo(commission.InstrumentID) == 0)
+                setProductConfig(commission, pid);
+            else
+                setSingleConfig(commission);
+        }
     }
 
     private static void setInstrConfig() {
@@ -171,7 +179,7 @@ public class ConfigLoader {
                     if (file.getName().startsWith("instrument")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
-                                CThostFtdcInstrumentField.class));
+                                CInstrument.class));
                     }
                 } catch (IOException e) {
                     config.getLogger().warning(
@@ -190,11 +198,11 @@ public class ConfigLoader {
                     if (file.getName().startsWith("commission")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
-                                CThostFtdcInstrumentCommissionRateField.class));
+                                CInstrumentCommissionRate.class));
                     } else if (file.getName().startsWith("margin")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
-                                CThostFtdcInstrumentMarginRateField.class));
+                                CInstrumentMarginRate.class));
                     }
                 } catch (IOException e) {
                     config.getLogger().warning(

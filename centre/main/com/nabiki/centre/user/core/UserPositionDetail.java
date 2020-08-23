@@ -30,10 +30,10 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcPosiDirectionType;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionField;
+import com.nabiki.objects.CInvestorPosition;
+import com.nabiki.objects.CInvestorPositionDetail;
+import com.nabiki.objects.DirectionType;
+import com.nabiki.objects.PosiDirectionType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -45,10 +45,10 @@ public class UserPositionDetail {
      * {@code Volume + CloseVolume}. The {@code Margin} is decreased with the
      * {@code Volume}.
      */
-    private final CThostFtdcInvestorPositionDetailField raw;
+    private final CInvestorPositionDetail raw;
     private final List<FrozenPositionDetail> frozenPosition = new LinkedList<>();
 
-    public UserPositionDetail(CThostFtdcInvestorPositionDetailField raw) {
+    public UserPositionDetail(CInvestorPositionDetail raw) {
         this.raw = Utils.deepCopy(raw);
     }
 
@@ -126,7 +126,7 @@ public class UserPositionDetail {
      *
      * @return a deep copy of original position detail
      */
-    public CThostFtdcInvestorPositionDetailField copyRawPosition() {
+    public CInvestorPositionDetail copyRawPosition() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -135,10 +135,10 @@ public class UserPositionDetail {
      * today's trading day to decide if the position is YD.
      *
      * @param tradingDay today's trading day
-     * @return {@link CThostFtdcInvestorPositionField}
+     * @return {@link CInvestorPosition}
      */
-    public CThostFtdcInvestorPositionField getInvestorPosition(String tradingDay) {
-        var r = new CThostFtdcInvestorPositionField();
+    public CInvestorPosition getInvestorPosition(String tradingDay) {
+        var r = new CInvestorPosition();
         // Only need the following 5 fields.
         r.YdPosition = 0;
         r.Position = 0;
@@ -155,11 +155,11 @@ public class UserPositionDetail {
         r.InstrumentID = this.raw.InstrumentID;
         r.HedgeFlag = this.raw.HedgeFlag;
         // Calculate fields.
-        if (this.raw.Direction == TThostFtdcDirectionType.DIRECTION_BUY) {
-            r.PosiDirection = TThostFtdcPosiDirectionType.LONG;
+        if (this.raw.Direction == DirectionType.DIRECTION_BUY) {
+            r.PosiDirection = PosiDirectionType.LONG;
             r.LongFrozen = getFrozenVolume();
         } else {
-            r.PosiDirection = TThostFtdcPosiDirectionType.SHORT;
+            r.PosiDirection = PosiDirectionType.SHORT;
             r.ShortFrozen = getFrozenVolume();
         }
         r.CloseVolume = this.raw.CloseVolume;

@@ -30,8 +30,8 @@ package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.active.ActiveRequest;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
+import com.nabiki.objects.CInputOrder;
+import com.nabiki.objects.COrder;
 
 import java.util.*;
 
@@ -42,9 +42,9 @@ public class OrderMapper {
             uuid2Active = new HashMap<>();   // UUID -> alive order
     private final Map<String, Set<String>>
             uuid2DetRef = new HashMap<>();     // UUID -> detail ref
-    private final Map<String, CThostFtdcOrderField>
+    private final Map<String, COrder>
             detRef2Rtn = new HashMap<>();   // Detail ref -> detail rtn order
-    private final Map<String, CThostFtdcInputOrderField>
+    private final Map<String, CInputOrder>
             detRef2Det = new HashMap<>();   // Detail ref -> detail order
 
     public OrderMapper() {
@@ -56,7 +56,7 @@ public class OrderMapper {
      * @param order detailed order
      * @param active active order that issues the detailed order
      */
-    public void register(CThostFtdcInputOrderField order, ActiveRequest active) {
+    public void register(CInputOrder order, ActiveRequest active) {
         this.detRef2Active.put(order.OrderRef, active);
         this.uuid2Active.put(active.getRequestUUID(), active);
         this.uuid2DetRef.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
@@ -70,7 +70,7 @@ public class OrderMapper {
      *
      * @param rtn return order
      */
-    public void register(CThostFtdcOrderField rtn) {
+    public void register(COrder rtn) {
         this.detRef2Rtn.put(rtn.OrderRef, rtn);
     }
 
@@ -81,7 +81,7 @@ public class OrderMapper {
      * @param detailRef ref of the order
      * @return last updated return order, or {@code null} if no order has the UUID
      */
-    public CThostFtdcOrderField getRtnOrder(String detailRef) {
+    public COrder getRtnOrder(String detailRef) {
         return this.detRef2Rtn.get(detailRef);
     }
 
@@ -103,7 +103,7 @@ public class OrderMapper {
      * @param detailRef detail order reference
      * @return detail order, or {@code null} if no such ref
      */
-    public CThostFtdcInputOrderField getDetailOrder(String detailRef) {
+    public CInputOrder getDetailOrder(String detailRef) {
         return this.detRef2Det.get(detailRef);
     }
 

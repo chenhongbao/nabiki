@@ -31,9 +31,9 @@ package com.nabiki.centre.user.core;
 import com.nabiki.centre.Renewable;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.CInvestorPositionDetail;
+import com.nabiki.objects.CTradingAccount;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,7 +92,7 @@ public class UserManager implements Renewable {
     }
 
     private User readUser(Path userDir) {
-        final var account = new CThostFtdcTradingAccountField[1];
+        final var account = new CTradingAccount[1];
         var positions = new ConcurrentHashMap<String, List<UserPositionDetail>>();
         findLatestDir(userDir).listFiles(file -> {
             var name = file.getName();
@@ -102,21 +102,18 @@ public class UserManager implements Renewable {
                         throw new IOException("ambiguous account");
                     account[0] = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
-                            CThostFtdcTradingAccountField.class);
+                            CTradingAccount.class);
                     // Get account ready for today's trading.
                     renewAccount(account[0]);
                 }
                 if (name.startsWith("position.") && name.endsWith(".json")) {
                     var pos = OP.fromJson(Utils.readText(
                             file, StandardCharsets.UTF_8),
-                            CThostFtdcInvestorPositionDetailField.class);
+                            CInvestorPositionDetail.class);
                     // Get position ready for today's trading.
                     renewPosition(pos);
-                    var instrPos = positions.get(pos.InstrumentID);
-                    if (instrPos == null) {
-                        instrPos = new LinkedList<>();
-                        positions.put(pos.InstrumentID, instrPos);
-                    }
+                    var instrPos = positions.computeIfAbsent(
+                            pos.InstrumentID, k -> new LinkedList<>());
                     instrPos.add(new UserPositionDetail((pos)));
                 }
             } catch (IOException e) {
@@ -128,7 +125,7 @@ public class UserManager implements Renewable {
         return new User(account[0], positions);
     }
 
-    private void renewAccount(CThostFtdcTradingAccountField account) {
+    private void renewAccount(CTradingAccount account) {
         account.PreMargin = account.CurrMargin;
         account.CurrMargin = 0;
         account.PreDeposit = account.Deposit;
@@ -145,7 +142,7 @@ public class UserManager implements Renewable {
         account.Mortgage = 0;
     }
 
-    private void renewPosition(CThostFtdcInvestorPositionDetailField position) {
+    private void renewPosition(CInvestorPositionDetail position) {
         position.CloseVolume = 0;
         position.CloseAmount
                 = position.CloseProfitByTrade

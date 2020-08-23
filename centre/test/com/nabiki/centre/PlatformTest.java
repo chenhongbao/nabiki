@@ -32,10 +32,8 @@ import com.nabiki.client.MarketDataListener;
 import com.nabiki.client.TradeClientFactory;
 import com.nabiki.client.TradeClientListener;
 import com.nabiki.client.internal.TradeClientFactoryImpl;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcCombOffsetFlagType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -60,12 +58,12 @@ public class PlatformTest {
         }
 
         @Override
-        public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
+        public void onDepthMarketData(CDepthMarketData depth) {
             System.out.println(OP.toJson(depth));
         }
 
         @Override
-        public void onCandle(CThostFtdcCandleField candle) {
+        public void onCandle(CCandle candle) {
             System.out.println(OP.toJson(candle));
         }
     }
@@ -120,7 +118,7 @@ public class PlatformTest {
         // Test login.
         System.out.println("Test login");
 
-        var login = new CThostFtdcReqUserLoginField();
+        var login = new CReqUserLogin();
         login.Password = "1234";
         login.UserID = "0001";
         var rsp = client.login(login, UUID.randomUUID().toString());
@@ -136,7 +134,7 @@ public class PlatformTest {
         // Query account.
         System.out.println("Query account");
 
-        var qryAccount = new CThostFtdcQryTradingAccountField();
+        var qryAccount = new CQryTradingAccount();
         qryAccount.CurrencyID = "CNY";
         qryAccount.AccountID = "0001";
         qryAccount.InvestorID = "0001";
@@ -154,7 +152,7 @@ public class PlatformTest {
         // Query position.
         System.out.println("Query position");
 
-        var qryPosition = new CThostFtdcQryInvestorPositionField();
+        var qryPosition = new CQryInvestorPosition();
         qryPosition.InstrumentID = "c2101";
         qryPosition.InvestorID = "0001";
         var rsp2 = client.queryPosition(qryPosition, UUID.randomUUID().toString());
@@ -173,17 +171,17 @@ public class PlatformTest {
 
         client.setListener(new MarketDataListener() {
             @Override
-            public void onDepthMarketData(CThostFtdcDepthMarketDataField depth) {
+            public void onDepthMarketData(CDepthMarketData depth) {
                 System.out.println(OP.toJson(depth));
             }
 
             @Override
-            public void onCandle(CThostFtdcCandleField candle) {
+            public void onCandle(CCandle candle) {
                 System.out.println(OP.toJson(candle));
             }
         });
 
-        var sub = new CThostFtdcSubMarketDataField();
+        var sub = new CSubMarketData();
         sub.InstrumentID = new String[] {"c2101", "c2105" };
         var rsp3 = client.subscribeMarketData(sub, UUID.randomUUID().toString());
 
@@ -199,7 +197,7 @@ public class PlatformTest {
         // Un-subscribe md.
         System.out.println("Un-subscribe md");
 
-        var unsub = new CThostFtdcUnsubMarketDataField();
+        var unsub = new CUnsubMarketData();
         unsub.InstrumentID = new String[] {"c2101", "c2105" };
         var rsp4 = client.unSubscribeMarketData(unsub, UUID.randomUUID().toString());
 
@@ -216,14 +214,14 @@ public class PlatformTest {
         // Insert order.
         System.out.println("Insert order");
 
-        var order = new CThostFtdcInputOrderField();
+        var order = new CInputOrder();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2350;
         order.VolumeTotalOriginal = 1;
-        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_OPEN;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_SELL;
+        order.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
+        order.Direction = DirectionType.DIRECTION_SELL;
 
         var rsp5 = client.orderInsert(order, UUID.randomUUID().toString());
         String[] id = new String[1];
@@ -246,7 +244,7 @@ public class PlatformTest {
         if (id[0] == null)
             System.err.println("no order id");
         else {
-            var qryOrder = new CThostFtdcQryOrderField();
+            var qryOrder = new CQryOrder();
             qryOrder.OrderSysID = id[0];
             var rsp6 = client.queryOrder(qryOrder, UUID.randomUUID().toString());
 
@@ -266,7 +264,7 @@ public class PlatformTest {
             System.err.println("no order id");
         else {
             // Cancel the order.
-            var action = new CThostFtdcInputOrderActionField();
+            var action = new CInputOrderAction();
 
             action.UserID = "0001";
             action.BrokerID = "9999";
@@ -289,7 +287,7 @@ public class PlatformTest {
         if (id[0] == null)
             System.err.println("no order id");
         else {
-            var qryOrder = new CThostFtdcQryOrderField();
+            var qryOrder = new CQryOrder();
             qryOrder.OrderSysID = id[0];
             var rsp8 = client.queryOrder(qryOrder, UUID.randomUUID().toString());
 

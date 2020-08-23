@@ -30,7 +30,7 @@ package com.nabiki.centre.utils;
 
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -50,7 +50,7 @@ public class Config {
     final Map<String, InstrumentInfo> instrInfo = new HashMap<>();
 
     // Instrument ID -> Depth market data
-    final Map<String, CThostFtdcDepthMarketDataField> depths = new HashMap<>();
+    final Map<String, CDepthMarketData> depths = new HashMap<>();
 
     final Map<String, Set<String>> products = new HashMap<>();
 
@@ -162,9 +162,9 @@ public class Config {
      * Get the latest depth market data.
      *
      * @param instr instrument ID
-     * @return {@link CThostFtdcDepthMarketDataField} or {@code null} if not found
+     * @return {@link CDepthMarketData} or {@code null} if not found
      */
-    public CThostFtdcDepthMarketDataField getDepthMarketData(String instr) {
+    public CDepthMarketData getDepthMarketData(String instr) {
         synchronized (this.depths) {
             return this.depths.get(instr);
         }

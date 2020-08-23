@@ -32,10 +32,10 @@ import com.nabiki.centre.user.core.plain.AccountFrozenCash;
 import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.user.core.plain.ProcessStage;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcDirectionType;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInvestorPositionDetailField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
+import com.nabiki.objects.CInstrument;
+import com.nabiki.objects.CInvestorPositionDetail;
+import com.nabiki.objects.CTrade;
+import com.nabiki.objects.DirectionType;
 
 import java.util.Objects;
 
@@ -47,14 +47,14 @@ public class FrozenPositionDetail {
     // When trade returns, use the return trade to generate another share info
     // to update the position.
     // This share info is used to calculate frozen margin or commission.
-    private final CThostFtdcInvestorPositionDetailField frozenSinglePosition;
+    private final CInvestorPositionDetail frozenSinglePosition;
 
     private final long totalFrozenCount;
     private ProcessStage stage = ProcessStage.ONGOING;
     private long tradedCount = 0;
 
     public FrozenPositionDetail(UserPositionDetail parent,
-                                CThostFtdcInvestorPositionDetailField frzSinglePos,
+                                CInvestorPositionDetail frzSinglePos,
                                 AccountFrozenCash frzCash,
                                 long frzCount) {
         this.parent = parent;
@@ -85,8 +85,8 @@ public class FrozenPositionDetail {
      * @param trade trade response
      * @param instr instrument
      */
-    public void applyCloseTrade(CThostFtdcTradeField trade,
-                                CThostFtdcInstrumentField instr) {
+    public void applyCloseTrade(CTrade trade,
+                                CInstrument instr) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
         if (getFrozenVolume() < trade.Volume)
@@ -111,7 +111,7 @@ public class FrozenPositionDetail {
      *
      * @return pre-calculated closed position detail for 1 volume.
      */
-    public CThostFtdcInvestorPositionDetailField getSingleFrozenPosition() {
+    public CInvestorPositionDetail getSingleFrozenPosition() {
         return Utils.deepCopy(this.frozenSinglePosition);
     }
 
@@ -128,16 +128,16 @@ public class FrozenPositionDetail {
     }
 
     private PositionTradedCash toSingleTradedCash(
-            CThostFtdcInvestorPositionDetailField p,
-            CThostFtdcTradeField trade,
-            CThostFtdcInstrumentField instr) {
+            CInvestorPositionDetail p,
+            CTrade trade,
+            CInstrument instr) {
         var r = new PositionTradedCash();
         Objects.requireNonNull(r, "failed deep copy");
         // Calculate position detail.
         r.CloseAmount = trade.Price * instr.VolumeMultiple;
         r.CloseVolume = 1;
         double token;
-        if (p.Direction == TThostFtdcDirectionType.DIRECTION_BUY)
+        if (p.Direction == DirectionType.DIRECTION_BUY)
             token = 1.0D;   // Long position.
         else
             token = -1.0D;  // Short position.

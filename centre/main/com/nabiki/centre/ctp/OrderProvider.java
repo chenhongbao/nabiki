@@ -34,10 +34,9 @@ import com.nabiki.centre.utils.ConfigLoader;
 import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
-import com.nabiki.ctp4j.jni.flag.*;
-import com.nabiki.ctp4j.jni.struct.*;
-import com.nabiki.ctp4j.trader.CThostFtdcTraderApi;
-import com.nabiki.ctp4j.trader.CThostFtdcTraderSpi;
+import com.nabiki.ctp4j.CThostFtdcTraderApi;
+import com.nabiki.ctp4j.THOST_TE_RESUME_TYPE;
+import com.nabiki.objects.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -54,13 +53,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * {@code AliveOrderManager} keeps the status of all alive orders, interacts with
  * JNI interfaces and invoke callback methods to process responses.
  */
-public class OrderProvider extends CThostFtdcTraderSpi {
+public class OrderProvider {
     protected final OrderMapper mapper = new OrderMapper();
     protected final AtomicInteger orderRef = new AtomicInteger(0);
     protected final Config config;
     protected final LoginConfig loginCfg;
     protected final MessageWriter msgWriter;
-    protected final CThostFtdcTraderApi traderApi;
+    protected final CThostFtdcTraderApi api;
     protected final Thread orderDaemon = new Thread(new RequestDaemon());
     protected final List<String> instruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
@@ -69,7 +68,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     protected boolean isConfirmed = false,
             isConnected = false,
             qryInstrLast = false;
-    protected CThostFtdcRspUserLoginField rspLogin;
+    protected CRspUserLogin rspLogin;
 
     // Wait last instrument.
     protected final Signal lastRspSignal = new Signal();
@@ -85,7 +84,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     public OrderProvider(Config cfg) {
         this.config = cfg;
         this.loginCfg = this.config.getLoginConfigs().get("trader");
-        this.traderApi = CThostFtdcTraderApi
+        this.api = CThostFtdcTraderApi
                 .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
         this.msgWriter = new MessageWriter(this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
@@ -126,10 +125,10 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected void configTrader() {
         for (var fa : this.loginCfg.FrontAddresses)
-            this.traderApi.RegisterFront(fa);
-        this.traderApi.SubscribePrivateTopic(ThostTeResumeType.THOST_TERT_RESUME);
-        this.traderApi.SubscribePublicTopic(ThostTeResumeType.THOST_TERT_RESUME);
-        this.traderApi.RegisterSpi(this);
+            this.api.RegisterFront(fa);
+        this.api.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
+        this.api.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
+        this.api.RegisterSpi(new JniTraderSpi(this));
     }
 
     /**
@@ -137,7 +136,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      */
     public void initialize() {
         configTrader();
-        this.traderApi.Init();
+        this.api.Init();
     }
 
     /**
@@ -159,7 +158,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                             null, e.getMessage(), null));
         }
         // Release resources.
-        this.traderApi.Release();
+        this.api.Release();
     }
 
     /**
@@ -213,49 +212,49 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      * @return always return 0
      */
     public int sendDetailOrder(
-            CThostFtdcInputOrderField input,
+            CInputOrder input,
             ActiveRequest active) {
         // Set the initial rtn order.
         registerInitialOrderInsert(input, active);
         // Check time.
         if (isOver(input.InstrumentID)) {
-            rspError(input, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
-                    TThostFtdcErrorMessage.FRONT_NOT_ACTIVE);
-            return TThostFtdcErrorCode.FRONT_NOT_ACTIVE;
+            rspError(input, ErrorCodes.FRONT_NOT_ACTIVE,
+                    ErrorMessages.FRONT_NOT_ACTIVE);
+            return ErrorCodes.FRONT_NOT_ACTIVE;
         } else {
             if (!this.pendingReqs.offer(new PendingRequest(input, active)))
                 return (-2);
             else
-                return TThostFtdcErrorCode.NONE;
+                return ErrorCodes.NONE;
         }
     }
 
     protected void registerInitialOrderInsert(
-            CThostFtdcInputOrderField detail,
+            CInputOrder detail,
             ActiveRequest active) {
         var o = toRtnOrder(detail);
         o.OrderLocalID = active.getRequestUUID();
-        o.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
-        o.OrderStatus = TThostFtdcOrderStatusType.NO_TRADE_QUEUEING;
+        o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+        o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
         // Register order.
         this.mapper.register(detail, active);
         this.mapper.register(o);
     }
 
-    protected void rspError(CThostFtdcInputOrderField order, int code,
+    protected void rspError(CInputOrder order, int code,
                             String msg) {
-        var rsp = new CThostFtdcRspInfoField();
+        var rsp = new CRspInfo();
         rsp.ErrorID = code;
         rsp.ErrorMsg = msg;
-        OnErrRtnOrderInsert(order, rsp);
+        whenErrRtnOrderInsert(order, rsp);
     }
 
-    protected void rspError(CThostFtdcInputOrderActionField action, int code,
+    protected void rspError(CInputOrderAction action, int code,
                             String msg) {
-        var rsp = new CThostFtdcRspInfoField();
+        var rsp = new CRspInfo();
         rsp.ErrorID = code;
         rsp.ErrorMsg = msg;
-        OnRspOrderAction(action, rsp, 0, true);
+        whenRspOrderAction(action, rsp, 0, true);
     }
 
     /*
@@ -302,11 +301,11 @@ public class OrderProvider extends CThostFtdcTraderSpi {
      * @return always return 0
      */
     public int sendOrderAction(
-            CThostFtdcInputOrderActionField action,
+            CInputOrderAction action,
             ActiveRequest active) {
         if (isOver(action.InstrumentID)) {
-            rspError(action, TThostFtdcErrorCode.FRONT_NOT_ACTIVE,
-                    TThostFtdcErrorMessage.FRONT_NOT_ACTIVE);
+            rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
+                    ErrorMessages.FRONT_NOT_ACTIVE);
             return (-1);
         } else {
             if (!this.pendingReqs.offer(new PendingRequest(action, active)))
@@ -327,11 +326,13 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void doLogin() {
-        var req = new CThostFtdcReqUserLoginField();
+        var req = new CReqUserLogin();
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
         req.Password = this.loginCfg.Password;
-        var r = this.traderApi.ReqUserLogin(req, Utils.getIncrementID());
+        var r = this.api.ReqUserLogin(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
                     Utils.formatLog("failed login request", null,
@@ -339,10 +340,12 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void doLogout() {
-        var req = new CThostFtdcUserLogoutField();
+        var req = new CUserLogout();
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
-        var r = this.traderApi.ReqUserLogout(req, Utils.getIncrementID());
+        var r = this.api.ReqUserLogout(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().warning(
                     Utils.formatLog("failed logout request", null,
@@ -350,13 +353,15 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void doAuthentication() {
-        var req = new CThostFtdcReqAuthenticateField();
+        var req = new CReqAuthenticate();
         req.AppID = this.loginCfg.AppID;
         req.AuthCode = this.loginCfg.AuthCode;
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
         req.UserProductInfo = this.loginCfg.UserProductInfo;
-        var r = this.traderApi.ReqAuthenticate(req, Utils.getIncrementID());
+        var r = this.api.ReqAuthenticate(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
                     Utils.formatLog("failed authentication", null,
@@ -364,19 +369,21 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void doSettlement() {
-        var req = new CThostFtdcSettlementInfoConfirmField();
+        var req = new CSettlementInfoConfirm();
         req.BrokerID = this.loginCfg.BrokerID;
         req.AccountID = this.loginCfg.UserID;
         req.InvestorID = this.loginCfg.UserID;
         req.CurrencyID = "CNY";
-        var r = this.traderApi.ReqSettlementInfoConfirm(req, Utils.getIncrementID());
+        var r = this.api.ReqSettlementInfoConfirm(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().severe(
                     Utils.formatLog("failed confirm settlement", null,
                             null, r));
     }
 
-    protected void doRspLogin(CThostFtdcRspUserLoginField rsp) {
+    protected void doRspLogin(CRspUserLogin rsp) {
         this.rspLogin = rsp;
         // Update order ref if max order ref goes after it.
         var maxOrderRef = Integer.parseInt(this.rspLogin.MaxOrderRef);
@@ -387,8 +394,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     /*
      Construct a return order from the specified error order.
      */
-    CThostFtdcOrderField toRtnOrder(CThostFtdcInputOrderField rtn) {
-        var r = new CThostFtdcOrderField();
+    COrder toRtnOrder(CInputOrder rtn) {
+        var r = new COrder();
         r.AccountID = rtn.AccountID;
         r.BrokerID = rtn.BrokerID;
         r.BusinessUnit = rtn.BusinessUnit;
@@ -422,7 +429,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         return r;
     }
 
-    protected void doRtnOrder(CThostFtdcOrderField rtn) {
+    protected void doOrder(COrder rtn) {
         var active = this.mapper.getActiveOrder(rtn.OrderRef);
         if (active == null) {
             this.config.getLogger().warning(
@@ -447,7 +454,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    protected void doRtnTrade(CThostFtdcTradeField trade) {
+    protected void doTrade(CTrade trade) {
         var active = this.mapper.getActiveOrder(trade.OrderRef);
         if (active == null) {
             this.config.getLogger().warning(
@@ -472,34 +479,34 @@ public class OrderProvider extends CThostFtdcTraderSpi {
     }
 
     protected void doQueryInstr() {
-        var req = new CThostFtdcQryInstrumentField();
-        var r = this.traderApi.ReqQryInstrument(req, Utils.getIncrementID());
+        var req = new CQryInstrument();
+        var r = this.api.ReqQryInstrument(
+                JNI.toJni(req),
+                Utils.getIncrementID());
         if (r != 0)
             this.config.getLogger().warning(
                     Utils.formatLog("failed query instrument", null,
                             null, r));
     }
 
-    protected void cancelInputOrder(CThostFtdcInputOrderField inputOrder) {
+    protected void cancelInputOrder(CInputOrder inputOrder) {
         var cancel = toRtnOrder(inputOrder);
         // Order status.
-        cancel.OrderStatus = TThostFtdcOrderStatusType.CANCELED;
-        cancel.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.CANCEL_SUBMITTED;
-        doRtnOrder(cancel);
+        cancel.OrderStatus = OrderStatusType.CANCELED;
+        cancel.OrderSubmitStatus = OrderSubmitStatusType.CANCEL_SUBMITTED;
+        doOrder(cancel);
         // Write input order as normal cancel order.
         this.msgWriter.writeRtn(cancel);
     }
 
-    @Override
-    public void OnFrontConnected() {
+    public void whenFrontConnected() {
         this.isConnected = true;
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED)
             doAuthentication();
     }
 
-    @Override
-    public void OnFrontDisconnected(int reason) {
+    public void whenFrontDisconnected(int reason) {
         this.config.getLogger().warning(
                 Utils.formatLog("trader disconnected", null,
                         null, reason));
@@ -510,9 +517,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         // Don't change working state here because it may disconnect in half way.
     }
 
-    @Override
-    public void OnErrRtnOrderAction(CThostFtdcOrderActionField orderAction,
-                                    CThostFtdcRspInfoField rspInfo) {
+    public void whenErrRtnOrderAction(COrderAction orderAction,
+                                    CRspInfo rspInfo) {
         this.config.getLogger().warning(
                 Utils.formatLog("failed action", orderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
@@ -524,9 +530,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.msgWriter.writeErr(rspInfo);
     }
 
-    @Override
-    public void OnErrRtnOrderInsert(CThostFtdcInputOrderField inputOrder,
-                                    CThostFtdcRspInfoField rspInfo) {
+    public void whenErrRtnOrderInsert(CInputOrder inputOrder,
+                                      CRspInfo rspInfo) {
         this.config.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
@@ -536,10 +541,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.msgWriter.writeErr(rspInfo);
     }
 
-    @Override
-    public void OnRspAuthenticate(
-            CThostFtdcRspAuthenticateField rspAuthenticateField,
-            CThostFtdcRspInfoField rspInfo, int requestId, boolean isLast) {
+    public void whenRspAuthenticate(
+            CRspAuthenticate rspAuthenticateField,
+            CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID == 0)
             doLogin();
         else {
@@ -551,8 +555,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    @Override
-    public void OnRspError(CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspError(CRspInfo rspInfo, int requestId,
                            boolean isLast) {
         this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
@@ -560,10 +563,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                         rspInfo.ErrorID));
     }
 
-    @Override
-    public void OnRspOrderAction(CThostFtdcInputOrderActionField inputOrderAction,
-                                 CThostFtdcRspInfoField rspInfo, int requestId,
-                                 boolean isLast) {
+    public void whenRspOrderAction(CInputOrderAction inputOrderAction,
+                                   CRspInfo rspInfo, int requestId,
+                                   boolean isLast) {
         this.msgWriter.writeErr(inputOrderAction);
         this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().warning(
@@ -571,9 +573,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
     }
 
-    @Override
-    public void OnRspOrderInsert(CThostFtdcInputOrderField inputOrder,
-                                 CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspOrderInsert(CInputOrder inputOrder,
+                                 CRspInfo rspInfo, int requestId,
                                  boolean isLast) {
         this.config.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
@@ -584,9 +585,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.msgWriter.writeErr(rspInfo);
     }
 
-    @Override
-    public void OnRspQryInstrument(CThostFtdcInstrumentField instrument,
-                                   CThostFtdcRspInfoField rspInfo, int requestID,
+    public void whenRspQryInstrument(CInstrument instrument,
+                                   CRspInfo rspInfo, int requestID,
                                    boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             var accepted = InstrumentFilter.accept(instrument.InstrumentID);
@@ -615,10 +615,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             this.lastRspSignal.signal();
     }
 
-    @Override
-    public void OnRspQryInstrumentCommissionRate(
-            CThostFtdcInstrumentCommissionRateField instrumentCommissionRate,
-            CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
+    public void whenRspQryInstrumentCommissionRate(
+            CInstrumentCommissionRate instrumentCommissionRate,
+            CRspInfo rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeInfo(instrumentCommissionRate);
             ConfigLoader.setInstrConfig(instrumentCommissionRate);
@@ -632,10 +631,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.qryTask.signalRequest(requestID);
     }
 
-    @Override
-    public void OnRspQryInstrumentMarginRate(
-            CThostFtdcInstrumentMarginRateField instrumentMarginRate,
-            CThostFtdcRspInfoField rspInfo, int requestID, boolean isLast) {
+    public void whenRspQryInstrumentMarginRate(
+            CInstrumentMarginRate instrumentMarginRate,
+            CRspInfo rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeInfo(instrumentMarginRate);
             ConfigLoader.setInstrConfig(instrumentMarginRate);
@@ -649,10 +647,9 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         this.qryTask.signalRequest(requestID);
     }
 
-    @Override
-    public void OnRspSettlementInfoConfirm(
-            CThostFtdcSettlementInfoConfirmField settlementInfoConfirm,
-            CThostFtdcRspInfoField rspInfo, int requestId, boolean isLast) {
+    public void whenRspSettlementInfoConfirm(
+            CSettlementInfoConfirm settlementInfoConfirm,
+            CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.config.getLogger().fine(
                     Utils.formatLog("successful login", null,
@@ -671,9 +668,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    @Override
-    public void OnRspUserLogin(CThostFtdcRspUserLoginField rspUserLogin,
-                               CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspUserLogin(CRspUserLogin rspUserLogin,
+                               CRspInfo rspInfo, int requestId,
                                boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             doSettlement();
@@ -695,9 +691,8 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    @Override
-    public void OnRspUserLogout(CThostFtdcUserLogoutField userLogout,
-                                CThostFtdcRspInfoField rspInfo, int requestId,
+    public void whenRspUserLogout(CUserLogout userLogout,
+                                CRspInfo rspInfo, int requestId,
                                 boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.config.getLogger().fine(
@@ -717,18 +712,16 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         }
     }
 
-    @Override
-    public void OnRtnOrder(CThostFtdcOrderField order) {
-        doRtnOrder(order);
+    public void whenRtnOrder(COrder order) {
+        doOrder(order);
         // The codes below follow the doXXX method because the parameter's fields
         // were rewritten by the method, with local IDs.
         this.msgWriter.writeRtn(order);
         this.mapper.register(order);
     }
 
-    @Override
-    public void OnRtnTrade(CThostFtdcTradeField trade) {
-        doRtnTrade(trade);
+    public void whenRtnTrade(CTrade trade) {
+        doTrade(trade);
         // The writing method must follow the doXXX method because the fields are
         // rewritten with local IDs.
         this.msgWriter.writeRtn(trade);
@@ -736,16 +729,16 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
     protected static class PendingRequest {
         final ActiveRequest active;
-        final CThostFtdcInputOrderField order;
-        final CThostFtdcInputOrderActionField action;
+        final CInputOrder order;
+        final CInputOrderAction action;
 
-        PendingRequest(CThostFtdcInputOrderField order, ActiveRequest active) {
+        PendingRequest(CInputOrder order, ActiveRequest active) {
             this.order = order;
             this.action = null;
             this.active = active;
         }
 
-        PendingRequest(CThostFtdcInputOrderActionField action, ActiveRequest active) {
+        PendingRequest(CInputOrderAction action, ActiveRequest active) {
             this.order = null;
             this.action = action;
             this.active = active;
@@ -829,25 +822,27 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             return null;
         }
 
-        protected int fillAndSendOrder(CThostFtdcInputOrderField detail) {
+        protected int fillAndSendOrder(CInputOrder input) {
             // Set correct users.
-            detail.BrokerID = rspLogin.BrokerID;
-            detail.UserID = rspLogin.UserID;
-            detail.InvestorID = rspLogin.UserID;
+            input.BrokerID = rspLogin.BrokerID;
+            input.UserID = rspLogin.UserID;
+            input.InvestorID = rspLogin.UserID;
             // Adjust flags.
-            detail.CombHedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
-            detail.ContingentCondition = TThostFtdcContingentConditionType.IMMEDIATELY;
-            detail.ForceCloseReason = TThostFtdcForceCloseReasonType.NOT_FORCE_CLOSE;
-            detail.IsAutoSuspend = 0;
-            detail.MinVolume = 1;
-            detail.OrderPriceType = TThostFtdcOrderPriceTypeType.LIMIT_PRICE;
-            detail.StopPrice = 0;
-            detail.TimeCondition = TThostFtdcTimeConditionType.GFD;
-            detail.VolumeCondition = TThostFtdcVolumeConditionType.ANY_VOLUME;
-            return traderApi.ReqOrderInsert(detail, Utils.getIncrementID());
+            input.CombHedgeFlag = CombHedgeFlagType.SPECULATION;
+            input.ContingentCondition = ContingentConditionType.IMMEDIATELY;
+            input.ForceCloseReason = ForceCloseReasonType.NOT_FORCE_CLOSE;
+            input.IsAutoSuspend = 0;
+            input.MinVolume = 1;
+            input.OrderPriceType = OrderPriceTypeType.LIMIT_PRICE;
+            input.StopPrice = 0;
+            input.TimeCondition = TimeConditionType.GFD;
+            input.VolumeCondition = VolumeConditionType.ANY_VOLUME;
+            return api.ReqOrderInsert(
+                    JNI.toJni(input),
+                    Utils.getIncrementID());
         }
 
-        protected int fillAndSendAction(CThostFtdcInputOrderActionField action) {
+        protected int fillAndSendAction(CInputOrderAction action) {
             var instrInfo = config.getInstrInfo(action.InstrumentID);
             var rtn = mapper.getRtnOrder(action.OrderRef);
             if (rtn != null) {
@@ -857,7 +852,7 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 // Use order sys ID as first choice.
                 action.OrderSysID = rtn.OrderSysID;
                 // Adjust flags.
-                action.ActionFlag = TThostFtdcActionFlagType.DELETE;
+                action.ActionFlag = ActionFlagType.DELETE;
                 // Adjust other info.
                 action.OrderRef = null;
                 action.FrontID = 0;
@@ -873,13 +868,15 @@ public class OrderProvider extends CThostFtdcTraderSpi {
                 action.FrontID = rspLogin.FrontID;
                 action.SessionID = rspLogin.SessionID;
                 // Adjust flags.
-                action.ActionFlag = TThostFtdcActionFlagType.DELETE;
+                action.ActionFlag = ActionFlagType.DELETE;
                 // Adjust other info.
                 action.OrderSysID = null;
                 action.ExchangeID = (instrInfo.Instrument != null)
                         ? instrInfo.Instrument.ExchangeID : null;
             }
-            return traderApi.ReqOrderAction(action, Utils.getIncrementID());
+            return api.ReqOrderAction(
+                    JNI.toJni(action),
+                    Utils.getIncrementID());
         }
 
         protected boolean canTrade(String instrID) {
@@ -903,8 +900,10 @@ public class OrderProvider extends CThostFtdcTraderSpi {
         protected String getInstrID(PendingRequest pend) {
             if (pend.action != null)
                 return pend.action.InstrumentID;
-            else
+            else if (pend.order != null)
                 return pend.order.InstrumentID;
+            else
+                return null;
         }
 
         protected void warn(int r, PendingRequest pend) {
@@ -912,10 +911,11 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             if (pend.order != null) {
                 ref = pend.order.OrderRef;
                 hint = "failed sending order";
-            } else {
+            } else if (pend.action != null) {
                 ref = pend.action.OrderRef;
                 hint = "failed sending action";
-            }
+            } else
+                return;
             config.getLogger().warning(
                     Utils.formatLog(hint, ref, null, r));
         }
@@ -965,17 +965,19 @@ public class OrderProvider extends CThostFtdcTraderSpi {
 
         protected void doQuery() {
             String ins = randomGet();
-            int reqID = 0;
+            int reqID;
             var in = config.getInstrInfo(ins);
             // Query margin.
             if (in.Margin == null) {
-                var req = new CThostFtdcQryInstrumentMarginRateField();
+                var req = new CQryInstrumentMarginRate();
                 req.BrokerID = loginCfg.BrokerID;
                 req.InvestorID = loginCfg.UserID;
-                req.HedgeFlag = TThostFtdcCombHedgeFlagType.SPECULATION;
+                req.HedgeFlag = CombHedgeFlagType.SPECULATION;
                 req.InstrumentID = ins;
                 reqID = Utils.getIncrementID();
-                int r = traderApi.ReqQryInstrumentMarginRate(req, reqID);
+                int r = api.ReqQryInstrumentMarginRate(
+                        JNI.toJni(req),
+                        reqID);
                 if (r != 0) {
                     config.getLogger().warning(
                             Utils.formatLog("failed query margin",
@@ -998,12 +1000,14 @@ public class OrderProvider extends CThostFtdcTraderSpi {
             }
             // Query commission.
             if (in.Commission == null) {
-                var req0 = new CThostFtdcQryInstrumentCommissionRateField();
+                var req0 = new CQryInstrumentCommissionRate();
                 req0.BrokerID = loginCfg.BrokerID;
                 req0.InvestorID = loginCfg.UserID;
                 req0.InstrumentID = ins;
                 reqID = Utils.getIncrementID();
-                var r = traderApi.ReqQryInstrumentCommissionRate(req0, reqID);
+                var r = api.ReqQryInstrumentCommissionRate(
+                        JNI.toJni(req0),
+                        reqID);
                 if (r != 0) {
                     config.getLogger().warning(
                             Utils.formatLog("failed query commission",

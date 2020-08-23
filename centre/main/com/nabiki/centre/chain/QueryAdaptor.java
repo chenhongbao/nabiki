@@ -31,13 +31,12 @@ package com.nabiki.centre.chain;
 import com.nabiki.centre.active.ActiveUser;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerMessageAdaptor;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,7 +94,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     @Override
     public void doQryAccount(
             ServerSession session,
-            CThostFtdcQryTradingAccountField query,
+            CQryTradingAccount query,
             String requestID,
             int current,
             int total) {
@@ -106,14 +105,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         rsp.TotalCount = 1;
         rsp.RequestID = requestID;
         rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.RspInfo = new CThostFtdcRspInfoField();
+        rsp.RspInfo = new CRspInfo();
         if (attr == null) {
-            rsp.Body = new CThostFtdcTradingAccountField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
+            rsp.Body = new CTradingAccount();
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
         } else {
             var activeUser = (ActiveUser) attr;
             rsp.Body = activeUser.getTradingAccount();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+            rsp.RspInfo.ErrorID = ErrorCodes.NONE;
         }
         rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         session.sendResponse(rsp);
@@ -125,7 +124,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     @Override
     public void doQryOrder(
             ServerSession session,
-            CThostFtdcQryOrderField query,
+            CQryOrder query,
             String requestID,
             int current,
             int total) {
@@ -134,12 +133,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         rsp.Type = MessageType.RSP_QRY_ORDER;
         rsp.RequestID = requestID;
         rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.RspInfo = new CThostFtdcRspInfoField();
+        rsp.RspInfo = new CRspInfo();
         if (attr == null) {
             rsp.CurrentCount = 1;
             rsp.TotalCount = 1;
-            rsp.Body = new CThostFtdcOrderField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
+            rsp.Body = new COrder();
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
             session.sendResponse(rsp);
             // Write rsp.
@@ -151,8 +150,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                 // No rtn orders found.
                 rsp.CurrentCount = 1;
                 rsp.TotalCount = 1;
-                rsp.Body = new CThostFtdcOrderField();
-                rsp.RspInfo.ErrorID = TThostFtdcErrorCode.ORDER_NOT_FOUND;
+                rsp.Body = new COrder();
+                rsp.RspInfo.ErrorID = ErrorCodes.ORDER_NOT_FOUND;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 session.sendResponse(rsp);
                 // Write rsp.
@@ -161,10 +160,10 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                 // Send rtn orders.
                 rsp.CurrentCount = 0;
                 rsp.TotalCount = orders.size();
-                rsp.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+                rsp.RspInfo.ErrorID = ErrorCodes.NONE;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 // Send rtn orders.
-                for (CThostFtdcOrderField order : orders) {
+                for (COrder order : orders) {
                     ++rsp.CurrentCount;
                     rsp.Body = order;
                     session.sendResponse(rsp);
@@ -179,7 +178,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     @Override
     public void doQryPosition(
             ServerSession session,
-            CThostFtdcQryInvestorPositionField query,
+            CQryInvestorPosition query,
             String requestID,
             int current,
             int total) {
@@ -188,12 +187,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         rsp.Type = MessageType.RSP_QRY_POSITION;
         rsp.RequestID = requestID;
         rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.RspInfo = new CThostFtdcRspInfoField();
+        rsp.RspInfo = new CRspInfo();
         if (attr == null) {
             rsp.CurrentCount = 1;
             rsp.TotalCount = 1;
-            rsp.Body = new CThostFtdcInvestorPositionField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
+            rsp.Body = new CInvestorPosition();
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
             session.sendResponse(rsp);
             // Write rsp.
@@ -204,8 +203,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             if (positions == null || positions.size() == 0) {
                 rsp.CurrentCount = 1;
                 rsp.TotalCount = 1;
-                rsp.Body = new CThostFtdcInvestorPositionField();
-                rsp.RspInfo.ErrorID = TThostFtdcErrorCode.INSTRUMENT_NOT_FOUND;
+                rsp.Body = new CInvestorPosition();
+                rsp.RspInfo.ErrorID = ErrorCodes.INSTRUMENT_NOT_FOUND;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 session.sendResponse(rsp);
                 // Write rsp.
@@ -213,10 +212,10 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             } else {
                 rsp.CurrentCount = 0;
                 rsp.TotalCount = positions.size();
-                rsp.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+                rsp.RspInfo.ErrorID = ErrorCodes.NONE;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 // Send positions.
-                for (CThostFtdcInvestorPositionField position : positions) {
+                for (CInvestorPosition position : positions) {
                     ++rsp.CurrentCount;
                     rsp.Body = position;
                     session.sendResponse(rsp);

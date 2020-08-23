@@ -31,10 +31,7 @@ package com.nabiki.centre.user.core;
 import com.nabiki.centre.active.ActiveUser;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.flag.*;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInputOrderField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcOrderField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
+import com.nabiki.objects.*;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -64,7 +61,7 @@ public class UserCloseTest extends UserSuperTest {
         var active = new ActiveUser(user, provider, config);
         var positions = active.getPosition("c2101");
         for (var p : positions) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG) {
+            if (p.PosiDirection == PosiDirectionType.LONG) {
                 assertEquals(p.Position, 40);
                 assertEquals(p.YdPosition, 20);
                 assertEquals(p.TodayPosition, 20);
@@ -86,21 +83,21 @@ public class UserCloseTest extends UserSuperTest {
     public void close() {
         prepare();
 
-        var order = new CThostFtdcInputOrderField();
+        var order = new CInputOrder();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2120;
         order.VolumeTotalOriginal = 10;
-        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
+        order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        order.Direction = DirectionType.DIRECTION_BUY;
 
         var active = new ActiveUser(user, provider, config);
         var uuid = active.insertOrder(order);
 
         // Test order exec state.
         var rspInfo = active.getExecRsp(uuid);
-        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.NONE);
+        assertEquals(rspInfo.ErrorID, ErrorCodes.NONE);
 
         // Test frozen volume.
         var frz = active.getFrozenAccount(uuid);
@@ -131,14 +128,14 @@ public class UserCloseTest extends UserSuperTest {
     public void close_fail() {
         prepare();
 
-        var order = new CThostFtdcInputOrderField();
+        var order = new CInputOrder();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2120;
         order.VolumeTotalOriginal = 100;
-        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
+        order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        order.Direction = DirectionType.DIRECTION_BUY;
 
         var active = new ActiveUser(user, provider, config);
         var uuid = active.insertOrder(order);
@@ -147,7 +144,7 @@ public class UserCloseTest extends UserSuperTest {
 
         // Check rsp info.
         var rspInfo = active.getExecRsp(uuid);
-        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.OVER_CLOSE_POSITION);
+        assertEquals(rspInfo.ErrorID, ErrorCodes.OVER_CLOSE_POSITION);
 
         var frzPosition = active.getFrozenPositionDetail(uuid);
         assertEquals(frzPosition.values().size(), 0);
@@ -157,14 +154,14 @@ public class UserCloseTest extends UserSuperTest {
     public void close_rtn() {
         prepare();
 
-        var order = new CThostFtdcInputOrderField();
+        var order = new CInputOrder();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2120;
         order.VolumeTotalOriginal = 30;
-        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
+        order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        order.Direction = DirectionType.DIRECTION_BUY;
 
         var active = new ActiveUser(user, provider, config);
         var uuid = active.insertOrder(order);
@@ -173,7 +170,7 @@ public class UserCloseTest extends UserSuperTest {
 
         // Test order exec state.
         var rspInfo = active.getExecRsp(uuid);
-        assertEquals(rspInfo.ErrorID, TThostFtdcErrorCode.NONE);
+        assertEquals(rspInfo.ErrorID, ErrorCodes.NONE);
 
         // Test frozen volume.
         var frz = active.getFrozenAccount(uuid);
@@ -218,7 +215,7 @@ public class UserCloseTest extends UserSuperTest {
         var orderRef = refIter.next();
 
         // Construct rtn order.
-        var rtnOrder = new CThostFtdcOrderField();
+        var rtnOrder = new COrder();
         rtnOrder.InstrumentID = "c2101";
         rtnOrder.ExchangeInstID = "c2101";
         rtnOrder.ExchangeID = "DCE";
@@ -232,24 +229,24 @@ public class UserCloseTest extends UserSuperTest {
         rtnOrder.Direction = order.Direction;
         rtnOrder.CombOffsetFlag = order.CombOffsetFlag;
         rtnOrder.CombHedgeFlag = order.CombHedgeFlag;
-        rtnOrder.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.NO_TRADE_QUEUEING;
+        rtnOrder.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+        rtnOrder.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.TradingDay = config.getTradingDay();
 
         // Update rtn order.
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Construct a traded return order.
         rtnOrder.VolumeTraded = 3;
         rtnOrder.VolumeTotal = rtnOrder.VolumeTotalOriginal - rtnOrder.VolumeTraded;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.PART_TRADED_QUEUEING;
+        rtnOrder.OrderStatus = OrderStatusType.PART_TRADED_QUEUEING;
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
 
         // Update order again.
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Check rtn order.
         assertEquals(active.getRtnOrder(uuid).size(), 1);
@@ -259,7 +256,7 @@ public class UserCloseTest extends UserSuperTest {
         assertEquals(rtnOrder0.UpdateTime, rtnOrder.UpdateTime);
 
         // Construct rtn trade.
-        var rtnTrade = new CThostFtdcTradeField();
+        var rtnTrade = new CTrade();
         rtnTrade.InstrumentID = "c2101";
         rtnTrade.ExchangeInstID = "c2101";
         rtnTrade.ExchangeID = "DCE";
@@ -276,12 +273,12 @@ public class UserCloseTest extends UserSuperTest {
         rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
 
         // Update rtn trade.
-        provider.OnRtnTrade(rtnTrade);
+        provider.whenRtnTrade(rtnTrade);
 
         // Check account and position.
         var position = active.getPosition("c2101");
         for (var p : position) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG)
+            if (p.PosiDirection == PosiDirectionType.LONG)
                 continue;
             // Close yd position first.
             assertEquals(p.CloseVolume, rtnOrder.VolumeTraded);
@@ -307,10 +304,10 @@ public class UserCloseTest extends UserSuperTest {
         // Update order.
         rtnOrder.VolumeTraded = 20;
         rtnOrder.VolumeTotal = 0;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.ALL_TRADED;
+        rtnOrder.OrderStatus = OrderStatusType.ALL_TRADED;
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
 
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Update trade.
         // **********************
@@ -321,19 +318,19 @@ public class UserCloseTest extends UserSuperTest {
         rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
 
         try {
-            provider.OnRtnTrade(rtnTrade);
+            provider.whenRtnTrade(rtnTrade);
             fail("should throw exception");
         } catch (Throwable ignored) {
         }
 
         // Good trade.
         rtnTrade.Volume = 17;
-        provider.OnRtnTrade(rtnTrade);
+        provider.whenRtnTrade(rtnTrade);
 
         // Check account and position.
         position = active.getPosition("c2101");
         for (var p : position) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG)
+            if (p.PosiDirection == PosiDirectionType.LONG)
                 continue;
             // Close yd position first.
             assertEquals(p.CloseVolume, rtnOrder.VolumeTraded);
@@ -351,27 +348,27 @@ public class UserCloseTest extends UserSuperTest {
 
         // Update order.
         rtnOrder.OrderRef = orderRef;
-        rtnOrder.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY;
+        rtnOrder.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_TODAY;
         rtnOrder.VolumeTraded = 10;
         rtnOrder.VolumeTotal = 0;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.ALL_TRADED;
+        rtnOrder.OrderStatus = OrderStatusType.ALL_TRADED;
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
 
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Update trade.
         rtnTrade.OrderRef = orderRef;
-        rtnTrade.OffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY;
+        rtnTrade.OffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_TODAY;
         rtnTrade.Volume = 10;
         rtnTrade.TradeTime = Utils.getTime(LocalTime.now(), null);
         rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
 
-        provider.OnRtnTrade(rtnTrade);
+        provider.whenRtnTrade(rtnTrade);
 
         // Check account and position.
         position = active.getPosition("c2101");
         for (var p : position) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG)
+            if (p.PosiDirection == PosiDirectionType.LONG)
                 continue;
             // Close yd position first.
             assertEquals(p.CloseVolume, 30);
@@ -390,14 +387,14 @@ public class UserCloseTest extends UserSuperTest {
     public void close_rtn_cancel() {
         prepare();
 
-        var order = new CThostFtdcInputOrderField();
+        var order = new CInputOrder();
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
         order.LimitPrice = 2120;
         order.VolumeTotalOriginal = 30;
-        order.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE;
-        order.Direction = TThostFtdcDirectionType.DIRECTION_BUY;
+        order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        order.Direction = DirectionType.DIRECTION_BUY;
 
         var active = new ActiveUser(user, provider, config);
         var uuid = active.insertOrder(order);
@@ -412,7 +409,7 @@ public class UserCloseTest extends UserSuperTest {
         var orderRef = refIter.next();
 
         // Construct rtn order.
-        var rtnOrder = new CThostFtdcOrderField();
+        var rtnOrder = new COrder();
         rtnOrder.InstrumentID = "c2101";
         rtnOrder.ExchangeInstID = "c2101";
         rtnOrder.ExchangeID = "DCE";
@@ -426,27 +423,27 @@ public class UserCloseTest extends UserSuperTest {
         rtnOrder.Direction = order.Direction;
         rtnOrder.CombOffsetFlag = order.CombOffsetFlag;
         rtnOrder.CombHedgeFlag = order.CombHedgeFlag;
-        rtnOrder.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.NO_TRADE_QUEUEING;
+        rtnOrder.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+        rtnOrder.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.TradingDay = config.getTradingDay();
 
         // Update rtn order.
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Construct a traded return order.
         rtnOrder.VolumeTraded = 3;
         rtnOrder.VolumeTotal = rtnOrder.VolumeTotalOriginal - rtnOrder.VolumeTraded;
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.PART_TRADED_QUEUEING;
+        rtnOrder.OrderStatus = OrderStatusType.PART_TRADED_QUEUEING;
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
 
         // Update order again.
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Construct rtn trade.
-        var rtnTrade = new CThostFtdcTradeField();
+        var rtnTrade = new CTrade();
         rtnTrade.InstrumentID = "c2101";
         rtnTrade.ExchangeInstID = "c2101";
         rtnTrade.ExchangeID = "DCE";
@@ -463,12 +460,12 @@ public class UserCloseTest extends UserSuperTest {
         rtnTrade.TradeDate = Utils.getDay(LocalDate.now(), null);
 
         // Update rtn trade.
-        provider.OnRtnTrade(rtnTrade);
+        provider.whenRtnTrade(rtnTrade);
 
         // Check account and position.
         var position = active.getPosition("c2101");
         for (var p : position) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG)
+            if (p.PosiDirection == PosiDirectionType.LONG)
                 continue;
             // Close yd position first.
             assertEquals(p.CloseVolume, rtnOrder.VolumeTraded);
@@ -491,24 +488,24 @@ public class UserCloseTest extends UserSuperTest {
         assertEquals(account.FrozenMargin, sgMargin * 27, 0.0);
 
         // Cancel the order.
-        rtnOrder.OrderStatus = TThostFtdcOrderStatusType.CANCELED;
+        rtnOrder.OrderStatus = OrderStatusType.CANCELED;
         rtnOrder.CancelTime = Utils.getTime(LocalTime.now(), null);
 
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Cancel the other order.
         orderRef = refIter.next();
         rtnOrder.OrderRef = orderRef;
-        rtnOrder.CombOffsetFlag = TThostFtdcCombOffsetFlagType.OFFSET_CLOSE_TODAY;
+        rtnOrder.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_TODAY;
 
-        provider.OnRtnOrder(rtnOrder);
+        provider.whenRtnOrder(rtnOrder);
 
         // Check order status.
         var status = active.getRtnOrder(uuid);
         assertEquals(status.size(), 1);
 
         var s = status.iterator().next();
-        assertEquals(s.OrderStatus, TThostFtdcOrderStatusType.CANCELED);
+        assertEquals(s.OrderStatus, OrderStatusType.CANCELED);
 
         frzPosition = active.getFrozenPositionDetail(uuid);
         for (var p : frzPosition.values())
@@ -517,7 +514,7 @@ public class UserCloseTest extends UserSuperTest {
         // Check account and position.
         position = active.getPosition("c2101");
         for (var p : position) {
-            if (p.PosiDirection == TThostFtdcPosiDirectionType.LONG)
+            if (p.PosiDirection == PosiDirectionType.LONG)
                 continue;
             // Close yd position first.
             assertEquals(p.CloseVolume, rtnOrder.VolumeTraded);

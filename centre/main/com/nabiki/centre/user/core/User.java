@@ -30,8 +30,8 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.user.core.plain.UserState;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcRspInfoField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradingAccountField;
+import com.nabiki.objects.CRspInfo;
+import com.nabiki.objects.CTradingAccount;
 
 import java.util.List;
 import java.util.Map;
@@ -40,11 +40,11 @@ public class User {
     private final UserPosition userPosition;
     private final UserAccount userAccount;
     private final String userID;
-    private final CThostFtdcRspInfoField panicReason = new CThostFtdcRspInfoField();
+    private final CRspInfo panicReason = new CRspInfo();
 
     private UserState state = UserState.RENEW;
 
-    public User(CThostFtdcTradingAccountField rawAccount,
+    public User(CTradingAccount rawAccount,
                 Map<String, List<UserPositionDetail>> positions) {
         this.userID  = rawAccount.AccountID;
         this.userAccount = new UserAccount(rawAccount, this);
@@ -61,7 +61,7 @@ public class User {
      *
      * @return current trading account.
      */
-    public CThostFtdcTradingAccountField getFeaturedAccount() {
+    public CTradingAccount getFeaturedAccount() {
         var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
         var posFrzCash = this.userPosition.getPositionFrozenCash();
@@ -86,7 +86,7 @@ public class User {
         this.panicReason.ErrorMsg = msg;
     }
 
-    CThostFtdcRspInfoField getRspInfo() {
+    CRspInfo getRspInfo() {
         return this.panicReason;
     }
 

@@ -30,11 +30,11 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.active.ActiveUserManager;
 import com.nabiki.centre.user.auth.UserAuthManager;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcReqUserLoginField;
 import com.nabiki.iop.LoginManager;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.ServerSession;
+import com.nabiki.objects.CReqUserLogin;
+import com.nabiki.objects.ErrorCodes;
 
 import java.util.Objects;
 
@@ -58,26 +58,26 @@ public class UserLoginManager extends LoginManager {
     @Override
     public int doLogin(ServerSession session, Message message) {
         if (isLogin(session))
-            return TThostFtdcErrorCode.DUPLICATE_LOGIN;
+            return ErrorCodes.DUPLICATE_LOGIN;
         Objects.requireNonNull(message, "message null");
         Objects.requireNonNull(message.Body, "login request null");
-        var req = (CThostFtdcReqUserLoginField)message.Body;
+        var req = (CReqUserLogin)message.Body;
         Objects.requireNonNull(req.UserID, "user ID null");
         var auth = this.authMgr.getAuthProfile(req.UserID);
         if (auth == null)
-            return TThostFtdcErrorCode.USER_NOT_FOUND;
+            return ErrorCodes.USER_NOT_FOUND;
         if (!auth.CanLogin)
-            return TThostFtdcErrorCode.LOGIN_FORBIDDEN;
+            return ErrorCodes.LOGIN_FORBIDDEN;
         if (auth.Password.compareTo(req.Password) != 0)
-            return TThostFtdcErrorCode.INVALID_LOGIN;
+            return ErrorCodes.INVALID_LOGIN;
         var user = this.userMgr.getActiveUser(req.UserID);
         if (user == null)
-            return TThostFtdcErrorCode.USER_NOT_FOUND;
+            return ErrorCodes.USER_NOT_FOUND;
         else {
             session.setAttribute(FRONT_LOGINREQ_KEY, req);
             session.setAttribute(FRONT_USERAUTH_KEY, auth);
             session.setAttribute(FRONT_ACTIVEUSR_KEY, user);
-            return TThostFtdcErrorCode.NONE;
+            return ErrorCodes.NONE;
         }
     }
 }

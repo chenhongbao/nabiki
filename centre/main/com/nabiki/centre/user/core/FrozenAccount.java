@@ -30,9 +30,9 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.user.core.plain.AccountFrozenCash;
 import com.nabiki.centre.user.core.plain.ProcessStage;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcTradeField;
+import com.nabiki.objects.CInstrument;
+import com.nabiki.objects.CInstrumentCommissionRate;
+import com.nabiki.objects.CTrade;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -87,9 +87,9 @@ public class FrozenAccount {
      * @param instr instrument
      * @param comm commission
      */
-    public void applyOpenTrade(CThostFtdcTradeField trade,
-                               CThostFtdcInstrumentField instr,
-                               CThostFtdcInstrumentCommissionRateField comm) {
+    public void applyOpenTrade(CTrade trade,
+                               CInstrument instr,
+                               CInstrumentCommissionRate comm) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
         if (this.stage == ProcessStage.CANCELED)

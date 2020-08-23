@@ -32,13 +32,12 @@ import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.utils.Config;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerMessageAdaptor;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -64,13 +63,13 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         }
 
         @Override
-        public void depthReceived(CThostFtdcDepthMarketDataField depth) {
+        public void depthReceived(CDepthMarketData depth) {
             if (this.map.containsKey(depth.InstrumentID))
                 this.session.sendResponse(toMessage(depth));
         }
 
         @Override
-        public void candleReceived(CThostFtdcCandleField candle) {
+        public void candleReceived(CCandle candle) {
             if (this.map.containsKey(candle.InstrumentID))
                 this.session.sendResponse(toMessage(candle));
         }
@@ -87,7 +86,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         this.config = cfg;
     }
 
-    private static Message toMessage(CThostFtdcDepthMarketDataField depth) {
+    private static Message toMessage(CDepthMarketData depth) {
         var rsp = new Message();
         rsp.Type = MessageType.FLOW_DEPTH;
         rsp.TotalCount = rsp.CurrentCount = 0;
@@ -96,7 +95,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         return rsp;
     }
 
-    private static Message toMessage(CThostFtdcCandleField candle) {
+    private static Message toMessage(CCandle candle) {
         var rsp = new Message();
         rsp.Type = MessageType.FLOW_CANDLE;
         rsp.TotalCount = rsp.CurrentCount = 0;
@@ -133,12 +132,12 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         r.CurrentCount = count;
         r.TotalCount = total;
         // Set response body.
-        var ins = new CThostFtdcSpecificInstrumentField();
+        var ins = new CSpecificInstrument();
         ins.InstrumentID = instrID;
         r.Body = ins;
         // Set rsp info.
-        r.RspInfo = new CThostFtdcRspInfoField();
-        r.RspInfo.ErrorID = TThostFtdcErrorCode.NONE;
+        r.RspInfo = new CRspInfo();
+        r.RspInfo.ErrorID = ErrorCodes.NONE;
         r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
         session.sendResponse(r);
     }
@@ -159,7 +158,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     @Override
     public void doSubDepthMarketData(
             ServerSession session,
-            CThostFtdcSubMarketDataField request,
+            CSubMarketData request,
             String requestID,
             int current,
             int total) {
@@ -177,7 +176,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     @Override
     public void doUnsubDepthMarketData(
             ServerSession session,
-            CThostFtdcUnsubMarketDataField request,
+            CUnsubMarketData request,
             String requestID,
             int current,
             int total) {

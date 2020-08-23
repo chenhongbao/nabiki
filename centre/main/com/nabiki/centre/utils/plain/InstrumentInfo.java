@@ -28,25 +28,25 @@
 
 package com.nabiki.centre.utils.plain;
 
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentCommissionRateField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcInstrumentMarginRateField;
+import com.nabiki.objects.CInstrument;
+import com.nabiki.objects.CInstrumentCommissionRate;
+import com.nabiki.objects.CInstrumentMarginRate;
 
 public class InstrumentInfo {
     /**
      * Instrument.
      */
-    public CThostFtdcInstrumentField Instrument;
+    public CInstrument Instrument;
 
     /**
      * Commission.
      */
-    public CThostFtdcInstrumentCommissionRateField Commission;
+    public CInstrumentCommissionRate Commission;
 
     /**
      * Margin.
      */
-    public CThostFtdcInstrumentMarginRateField Margin;
+    public CInstrumentMarginRate Margin;
 
     public InstrumentInfo() {}
 }

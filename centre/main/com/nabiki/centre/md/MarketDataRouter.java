@@ -29,8 +29,8 @@
 package com.nabiki.centre.md;
 
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +39,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class MarketDataRouter implements Runnable {
     private final Set<MarketDataReceiver> receivers = new HashSet<>();
-    private final Queue<CThostFtdcDepthMarketDataField> depths = new LinkedList<>();
-    private final Queue<CThostFtdcCandleField> candles = new LinkedList<>();
+    private final Queue<CDepthMarketData> depths = new LinkedList<>();
+    private final Queue<CCandle> candles = new LinkedList<>();
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
@@ -68,17 +68,17 @@ public class MarketDataRouter implements Runnable {
         }
     }
 
-    public void route(CThostFtdcDepthMarketDataField depth) {
+    public void route(CDepthMarketData depth) {
         offerDepth(depth);
         trySignal();
     }
 
-    public void route(CThostFtdcCandleField candle) {
+    public void route(CCandle candle) {
         offerCandle(candle);
         trySignal();
     }
 
-    public void route(Collection<CThostFtdcCandleField> candles) {
+    public void route(Collection<CCandle> candles) {
         offerCandle(candles);
         trySignal();
     }
@@ -93,19 +93,19 @@ public class MarketDataRouter implements Runnable {
         }
     }
 
-    private void offerDepth(CThostFtdcDepthMarketDataField depth) {
+    private void offerDepth(CDepthMarketData depth) {
         synchronized (this.depths) {
             this.depths.add(depth);
         }
     }
 
-    private void offerCandle(CThostFtdcCandleField candle) {
+    private void offerCandle(CCandle candle) {
         synchronized (this.candles) {
             this.candles.add(candle);
         }
     }
 
-    private void offerCandle(Collection<CThostFtdcCandleField> candles) {
+    private void offerCandle(Collection<CCandle> candles) {
         if (candles == null || candles.size() == 0)
             return;
         synchronized (this.candles) {
@@ -113,20 +113,20 @@ public class MarketDataRouter implements Runnable {
         }
     }
 
-    private CThostFtdcDepthMarketDataField pollDepth() {
+    private CDepthMarketData pollDepth() {
         synchronized (this.depths) {
             return this.depths.poll();
         }
     }
 
-    private CThostFtdcCandleField pollCandle() {
+    private CCandle pollCandle() {
         synchronized (this.candles) {
             return this.candles.poll();
         }
     }
 
     private boolean hasData() {
-        int mdCnt = 0, cndCnt = 0;
+        int mdCnt, cndCnt;
         synchronized (this.depths) {
             mdCnt = this.depths.size();
         }
@@ -143,8 +143,8 @@ public class MarketDataRouter implements Runnable {
             try {
                 while (!hasData())
                     this.cond.await(1, TimeUnit.SECONDS);
-                CThostFtdcCandleField candle = null;
-                CThostFtdcDepthMarketDataField md = null;
+                CCandle candle;
+                CDepthMarketData md;
                 // Depth.
                 while ((md = pollDepth()) != null)
                     synchronized (this.receivers) {

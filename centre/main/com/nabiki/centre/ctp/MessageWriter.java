@@ -30,8 +30,8 @@ package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,67 +88,67 @@ public class MessageWriter {
         return LocalDateTime.now().format(this.formatter);
     }
 
-    public void writeRtn(CThostFtdcOrderField rtn) {
+    public void writeRtn(COrder rtn) {
         write(OP.toJson(rtn),
                 ensureFile(this.rtnDir,
                         "order." + getTimeStamp() + ".json"));
     }
 
-    public void writeRtn(CThostFtdcTradeField rtn) {
+    public void writeRtn(CTrade rtn) {
         write(OP.toJson(rtn),
                 ensureFile(this.rtnDir,
                         "trade." + getTimeStamp() + ".json"));
     }
 
-    public void writeReq(CThostFtdcInputOrderField req) {
+    public void writeReq(CInputOrder req) {
         write(OP.toJson(req),
                 ensureFile(this.reqDir,
                         "inputorder." + getTimeStamp() + ".json"));
     }
 
-    public void writeReq(CThostFtdcInputOrderActionField req) {
+    public void writeReq(CInputOrderAction req) {
         write(OP.toJson(req),
                 ensureFile(this.reqDir,
                         "action." + getTimeStamp() + ".json"));
     }
 
-    public void writeInfo(CThostFtdcInstrumentMarginRateField rsp) {
+    public void writeInfo(CInstrumentMarginRate rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
                         "margin." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeInfo(CThostFtdcInstrumentCommissionRateField rsp) {
+    public void writeInfo(CInstrumentCommissionRate rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
                         "commission." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeInfo(CThostFtdcInstrumentField rsp) {
+    public void writeInfo(CInstrument rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
                         "instrument." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeErr(CThostFtdcOrderActionField err) {
+    public void writeErr(COrderAction err) {
         write(OP.toJson(err),
                 ensureFile(this.errDir,
                         "orderaction." + getTimeStamp() + ".json"));
     }
 
-    public void writeErr(CThostFtdcInputOrderActionField err) {
+    public void writeErr(CInputOrderAction err) {
         write(OP.toJson(err),
                 ensureFile(this.errDir,
                         "action." + getTimeStamp() + ".json"));
     }
 
-    public void writeErr(CThostFtdcInputOrderField err) {
+    public void writeErr(CInputOrder err) {
         write(OP.toJson(err),
                 ensureFile(this.errDir,
                         "inputorder." + getTimeStamp() + ".json"));
     }
 
-    public void writeErr(CThostFtdcRspInfoField err) {
+    public void writeErr(CRspInfo err) {
         write(OP.toJson(err),
                 ensureFile(this.errDir,
                         "info." + getTimeStamp() + ".json"));

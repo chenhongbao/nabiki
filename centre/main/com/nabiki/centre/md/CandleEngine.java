@@ -30,8 +30,8 @@ package com.nabiki.centre.md;
 
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcCandleField;
-import com.nabiki.ctp4j.jni.struct.CThostFtdcDepthMarketDataField;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -116,7 +116,7 @@ public class CandleEngine extends TimerTask {
             }
     }
 
-    public void update(CThostFtdcDepthMarketDataField md) {
+    public void update(CDepthMarketData md) {
         ensureProduct(Utils.getProductID(md.InstrumentID)).update(md);
     }
 
@@ -176,10 +176,10 @@ public class CandleEngine extends TimerTask {
             }
         }
 
-        public Set<CThostFtdcCandleField> peak(Duration du) {
+        public Set<CCandle> peak(Duration du) {
             if (du == null)
                 throw new NullPointerException("duration null");
-            var r = new HashSet<CThostFtdcCandleField>();
+            var r = new HashSet<CCandle>();
             synchronized (this.candles) {
                 for (var c : this.candles.values())
                     r.add(c.peak(du, config.getTradingDay()));
@@ -187,10 +187,10 @@ public class CandleEngine extends TimerTask {
             return r;
         }
 
-        public Set<CThostFtdcCandleField> pop(Duration du) {
+        public Set<CCandle> pop(Duration du) {
             if (du == null)
                 throw new IllegalArgumentException("duration null");
-            var r = new HashSet<CThostFtdcCandleField>();
+            var r = new HashSet<CCandle>();
             synchronized (this.candles) {
                 for (var c : this.candles.values())
                     r.add(c.pop(du, config.getTradingDay()));
@@ -198,7 +198,7 @@ public class CandleEngine extends TimerTask {
             return r;
         }
 
-        public void update(CThostFtdcDepthMarketDataField md) {
+        public void update(CDepthMarketData md) {
             synchronized (this.candles) {
                 if (!this.candles.containsKey(md.InstrumentID))
                     this.candles.put(md.InstrumentID,

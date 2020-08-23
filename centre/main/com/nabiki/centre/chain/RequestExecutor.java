@@ -29,14 +29,11 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.centre.active.ActiveUser;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcErrorCode;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderStatusType;
-import com.nabiki.ctp4j.jni.flag.TThostFtdcOrderSubmitStatusType;
-import com.nabiki.ctp4j.jni.struct.*;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
+import com.nabiki.objects.*;
 
 import java.util.UUID;
 
@@ -47,7 +44,7 @@ public class RequestExecutor extends RequestSuper {
     @Override
     public void doReqOrderInsert(
             ServerSession session,
-            CThostFtdcInputOrderField request,
+            CInputOrder request,
             String requestID,
             int current,
             int total) {
@@ -59,9 +56,9 @@ public class RequestExecutor extends RequestSuper {
         rsp.CurrentCount = 1;
         rsp.TotalCount = 1;
         if (attr == null) {
-            rsp.Body = new CThostFtdcOrderField();
-            rsp.RspInfo = new CThostFtdcRspInfoField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
+            rsp.Body = new COrder();
+            rsp.RspInfo = new CRspInfo();
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         } else {
             var activeUser = (ActiveUser)attr;
@@ -69,12 +66,12 @@ public class RequestExecutor extends RequestSuper {
             // Build response.
             var o = toRtnOrder(request);
             rsp.RspInfo = activeUser.getExecRsp(uuid);
-            if (rsp.RspInfo.ErrorID == TThostFtdcErrorCode.NONE)
+            if (rsp.RspInfo.ErrorID == ErrorCodes.NONE)
                 o.OrderLocalID = uuid;
             else
                 o.OrderLocalID = null;
-            o.OrderSubmitStatus = TThostFtdcOrderSubmitStatusType.ACCEPTED;
-            o.OrderStatus = TThostFtdcOrderStatusType.UNKNOWN;
+            o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+            o.OrderStatus = OrderStatusType.UNKNOWN;
             rsp.Body = o;
         }
         session.sendResponse(rsp);
@@ -84,7 +81,7 @@ public class RequestExecutor extends RequestSuper {
     @Override
     public void doReqOrderAction(
             ServerSession session,
-            CThostFtdcInputOrderActionField request,
+            CInputOrderAction request,
             String requestID,
             int current,
             int total) {
@@ -96,9 +93,9 @@ public class RequestExecutor extends RequestSuper {
         rsp.CurrentCount = 1;
         rsp.TotalCount = 1;
         if (attr == null) {
-            rsp.Body = new CThostFtdcOrderActionField();
-            rsp.RspInfo = new CThostFtdcRspInfoField();
-            rsp.RspInfo.ErrorID = TThostFtdcErrorCode.USER_NOT_ACTIVE;
+            rsp.Body = new COrderAction();
+            rsp.RspInfo = new CRspInfo();
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         } else {
             var activeUser = (ActiveUser)attr;
