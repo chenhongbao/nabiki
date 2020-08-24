@@ -59,6 +59,7 @@ public class TickProvider {
     protected final Signal loginSignal = new Signal();
 
     protected String actionDay;
+    protected JniMdSpi spi;
 
     public TickProvider(Config cfg) {
         this.config = cfg;
@@ -133,7 +134,13 @@ public class TickProvider {
     }
 
     public void initialize() {
-        this.mdApi.RegisterSpi(new JniMdSpi(this));
+        /*
+         IMPORTANT!
+         Kept reference to SPI so GC won't release the object, hence the underlining
+         C++ objects.
+         */
+        this.spi = new JniMdSpi(this);
+        this.mdApi.RegisterSpi(spi);
         for (var addr : this.loginCfg.FrontAddresses)
             this.mdApi.RegisterFront(addr);
         this.mdApi.Init();

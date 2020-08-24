@@ -81,6 +81,9 @@ public class OrderProvider {
     // State.
     protected WorkingState workingState = WorkingState.STOPPED;
 
+    // SPI.
+    protected JniTraderSpi spi;
+
     public OrderProvider(Config cfg) {
         this.config = cfg;
         this.loginCfg = this.config.getLoginConfigs().get("trader");
@@ -128,7 +131,13 @@ public class OrderProvider {
             this.api.RegisterFront(fa);
         this.api.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
         this.api.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
-        this.api.RegisterSpi(new JniTraderSpi(this));
+        /*
+         IMPORTANT!
+         Must kept reference to SPi explicitly so GC won't release the underlining
+         C++ objects.
+         */
+        this.spi = new JniTraderSpi(this);
+        this.api.RegisterSpi(spi);
     }
 
     /**

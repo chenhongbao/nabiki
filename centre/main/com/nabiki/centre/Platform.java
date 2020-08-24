@@ -61,6 +61,12 @@ import java.util.concurrent.TimeUnit;
  * </ul>
  */
 public class Platform {
+    static {
+        System.loadLibrary("thostmduserapi_se");
+        System.loadLibrary("thosttraderapi_se");
+        System.loadLibrary("thostctpapi_se-6.3.19-P1");
+    }
+
     public static String getArgument(String[] args, String prefix) {
         String value = null;
         for (var arg : args) {
@@ -232,6 +238,9 @@ public class Platform {
         // providers for more accurate report of the login/out ops, 
         // especially on login/out failure.
         private void start() {
+            // Debug
+            System.out.println(Thread.currentThread().getName() + " starts platform.");
+
             this.workingState = WorkingState.STARTING;
             // Trader logins.
             while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
@@ -292,6 +301,7 @@ public class Platform {
 
         @Override
         public void run() {
+            System.out.println(Thread.currentThread().getName() + ": " + this.workingState);
             try {
                 if (needStart())
                     start();

@@ -30,6 +30,8 @@ package com.nabiki.centre.ctp;
 
 import com.nabiki.ctp4j.*;
 
+import java.util.Objects;
+
 public class JniMdSpi extends CThostFtdcMdSpi {
     private final TickProvider provider;
 
@@ -60,6 +62,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         try {
+            Objects.requireNonNull(pRspUserLogin, "rsp login null");
+            if (pRspInfo == null)
+                pRspInfo = new CThostFtdcRspInfoField();
             this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
@@ -70,6 +75,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRspUserLogout(CThostFtdcUserLogoutField pUserLogout, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         try {
+            Objects.requireNonNull(pUserLogout, "rsp logout null");
+            if (pRspInfo == null)
+                pRspInfo = new CThostFtdcRspInfoField();
             this.provider.whenRspUserLogout(JNI.toLocal(pUserLogout), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
@@ -80,6 +88,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRspError(CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         try {
+            Objects.requireNonNull(pRspInfo, "rsp error null");
             this.provider.whenRspError(JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
@@ -90,6 +99,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRspSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         try {
+            Objects.requireNonNull(pSpecificInstrument, "rsp sub md null");
+            if (pRspInfo == null)
+                pRspInfo = new CThostFtdcRspInfoField();
             this.provider.whenRspSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
@@ -100,6 +112,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
         try {
+            Objects.requireNonNull(pSpecificInstrument, "rsp unsub md null");
+            if (pRspInfo == null)
+                pRspInfo = new CThostFtdcRspInfoField();
             this.provider.whenRspUnSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
@@ -110,6 +125,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     @Override
     public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData) {
         try {
+            Objects.requireNonNull(pDepthMarketData, "return md null");
             this.provider.whenRtnDepthMarketData(JNI.toLocal(pDepthMarketData));
         } catch (Throwable th) {
             th.printStackTrace();
