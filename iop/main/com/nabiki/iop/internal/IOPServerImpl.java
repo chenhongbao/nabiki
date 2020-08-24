@@ -75,8 +75,13 @@ public class IOPServerImpl implements IOPServer {
     }
 
     @Override
-    public void setMessageHandler(ServerMessageHandler handler) {
-        this.frameHandler.setMessageHandler(handler);
+    public void setMessageHandlerOut(ServerMessageHandler handler) {
+        this.frameHandler.setHandlerOut(handler);
+    }
+
+    @Override
+    public void setMessageHandlerIn(ServerMessageHandler handler) {
+        this.frameHandler.setHandlerIn(handler);
     }
 
     @Override

@@ -344,6 +344,8 @@ public class ConfigLoader {
         flow.setDirectory("dir.flow.req", ".req");
         flow.setDirectory("dir.flow.rtn", ".rtn");
         flow.setDirectory("dir.flow.rsp", ".rsp");
+        flow.setDirectory("dir.flow.client_in", ".client_in");
+        flow.setDirectory("dir.flow.client_out", ".client_out");
         flow.setDirectory("dir.flow.err", ".err");
         flow.setDirectory("dir.flow.info", ".info");
 

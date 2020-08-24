@@ -78,7 +78,7 @@ public class RequestValidator extends RequestSuper {
             String requestID,
             int current,
             int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_USERAUTH_KEY);
+        var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
         if (attr == null) {
             reply(session,
                     toRtnOrder(request),
@@ -121,7 +121,7 @@ public class RequestValidator extends RequestSuper {
             String requestID,
             int current,
             int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_USERAUTH_KEY);
+        var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
         if (attr == null) {
             reply(session,
                     toOrderAction(request),

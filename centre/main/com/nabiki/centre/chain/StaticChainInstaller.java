@@ -61,6 +61,12 @@ public class StaticChainInstaller {
         chain.addAdaptor(new RequestValidator());
         chain.addAdaptor(new RequestExecutor());
         chain.addAdaptor(new SubscriptionAdaptor(router, rw, cfg));
-        chain.addAdaptor(new QueryAdaptor(cfg));
+        chain.addAdaptor(new QueryAdaptor());
+        // Install msg writer.
+        // Create msg in/out writer.
+        var msgWriter = new MsgInOutWriter(cfg);
+        server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
+        server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
+
     }
 }

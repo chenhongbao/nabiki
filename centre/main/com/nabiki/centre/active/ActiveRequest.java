@@ -29,7 +29,9 @@
 package com.nabiki.centre.active;
 
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.user.core.*;
+import com.nabiki.centre.user.core.FrozenAccount;
+import com.nabiki.centre.user.core.FrozenPositionDetail;
+import com.nabiki.centre.user.core.User;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
@@ -47,8 +49,7 @@ public class ActiveRequest {
     private final Map<String, FrozenPositionDetail> frozenPosition = new HashMap<>();
 
     private final String uuid = UUID.randomUUID().toString();
-    private final UserAccount userAccount;
-    private final UserPosition userPos;
+    private final User user;
     private final OrderProvider orderProvider;
     private final Config config;
     private final CInputOrder order;
@@ -56,20 +57,24 @@ public class ActiveRequest {
 
     private final CRspInfo execRsp = new CRspInfo();
 
-    ActiveRequest(CInputOrder order, User user, OrderProvider provider,
-                  Config cfg) {
-        this.userAccount = user.getUserAccount();
-        this.userPos = user.getUserPosition();
+    ActiveRequest(
+            CInputOrder order,
+            User user,
+            OrderProvider provider,
+            Config cfg) {
+        this.user = user;
         this.orderProvider = provider;
         this.config = cfg;
         this.order = Utils.deepCopy(order);
         this.action = null;
     }
 
-    ActiveRequest(CInputOrderAction action, User user,
-                  OrderProvider mgr, Config cfg) {
-        this.userAccount = user.getUserAccount();
-        this.userPos = user.getUserPosition();
+    ActiveRequest(
+            CInputOrderAction action,
+            User user,
+            OrderProvider mgr,
+            Config cfg) {
+        this.user = user;
         this.orderProvider = mgr;
         this.config = cfg;
         this.order = null;
@@ -92,6 +97,10 @@ public class ActiveRequest {
         return this.frozenPosition;
     }
 
+    public User getUser() {
+        return this.user;
+    }
+
     FrozenAccount getFrozenAccount() {
         if (this.frozenAccount.size() == 0)
             return null;
@@ -102,7 +111,7 @@ public class ActiveRequest {
         if (this.order == null)
             throw new IllegalStateException("no order to execute");
         // If the user is panic, some internal error occurred. Don't trade again.
-        var usrState = this.userAccount.getParent().getState();
+        var usrState = this.user.getUserAccount().getParent().getState();
         if (usrState == UserState.PANIC) {
             this.execRsp.ErrorID = ErrorCodes.INCONSISTENT_INFORMATION;
             this.execRsp.ErrorMsg = "internal error caused account panic";
@@ -220,8 +229,12 @@ public class ActiveRequest {
         Objects.requireNonNull(instrInfo.Instrument, "instrument null");
         Objects.requireNonNull(instrInfo.Margin, "margin null");
         Objects.requireNonNull(instrInfo.Commission, "commission null");
-        var frzAccount = this.userAccount.getOpenFrozenAccount(this.order,
-                instrInfo.Instrument, instrInfo.Margin, instrInfo.Commission);
+        var frzAccount = this.user.getUserAccount()
+                .getOpenFrozenAccount(
+                        this.order,
+                        instrInfo.Instrument,
+                        instrInfo.Margin,
+                        instrInfo.Commission);
         if (frzAccount == null) {
             this.execRsp.ErrorID = ErrorCodes.INSUFFICIENT_MONEY;
             this.execRsp.ErrorMsg = ErrorMessages.INSUFFICIENT_MONEY;
@@ -239,8 +252,12 @@ public class ActiveRequest {
                              InstrumentInfo instrInfo) {
         Objects.requireNonNull(instrInfo.Instrument, "instrument null");
         Objects.requireNonNull(instrInfo.Commission, "commission null");
-        var pds = this.userPos.peakCloseFrozen(order, instrInfo.Instrument,
-                instrInfo.Commission, this.config.getTradingDay());
+        var pds = this.user.getUserPosition()
+                .peakCloseFrozen(
+                        order,
+                        instrInfo.Instrument,
+                        instrInfo.Commission,
+                        this.config.getTradingDay());
         if (pds == null || pds.size() == 0) {
             this.execRsp.ErrorID = ErrorCodes.OVER_CLOSE_POSITION;
             this.execRsp.ErrorMsg = ErrorMessages.OVER_CLOSE_POSITION;
@@ -324,7 +341,7 @@ public class ActiveRequest {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen cash",
                                     rtn.OrderRef, null, null));
-                    this.userAccount.getParent().setPanic(
+                    this.user.getUserAccount().getParent().setPanic(
                             ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen cash null");
                     return;
@@ -341,7 +358,7 @@ public class ActiveRequest {
                     this.config.getLogger().severe(
                             Utils.formatLog("no frozen position",
                                     rtn.OrderRef, null, null));
-                    this.userAccount.getParent().setPanic(
+                    this.user.setPanic(
                             ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen position null");
                     return;
@@ -352,7 +369,7 @@ public class ActiveRequest {
                     this.config.getLogger().severe(
                             Utils.formatLog("frozen position not found",
                                     rtn.OrderRef, null, null));
-                    this.userAccount.getParent().setPanic(
+                    this.user.setPanic(
                             ErrorCodes.INCONSISTENT_INFORMATION,
                             "frozen position not found for order ref");
                     return;
@@ -408,7 +425,7 @@ public class ActiveRequest {
             this.config.getLogger().severe(
                     Utils.formatLog("no frozen cash",
                             trade.OrderRef, null, null));
-            this.userAccount.getParent().setPanic(
+            this.user.setPanic(
                     ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen cash null");
             return;
@@ -417,10 +434,15 @@ public class ActiveRequest {
         Objects.requireNonNull(depth, "depth market data null");
         // Update frozen account, user account and user position.
         // The frozen account handles the update of user account.
-        getFrozenAccount().applyOpenTrade(trade, instrInfo.Instrument,
+        getFrozenAccount().applyOpenTrade(
+                trade,
+                instrInfo.Instrument,
                 instrInfo.Commission);
-        this.userPos.applyOpenTrade(trade, instrInfo.Instrument,
-                instrInfo.Margin, depth.PreSettlementPrice);
+        this.user.getUserPosition().applyOpenTrade(
+                trade,
+                instrInfo.Instrument,
+                instrInfo.Margin,
+                depth.PreSettlementPrice);
     }
 
     private void closeTrade(CTrade trade, InstrumentInfo instrInfo) {
@@ -428,7 +450,7 @@ public class ActiveRequest {
             this.config.getLogger().severe(
                     Utils.formatLog("no frozen position",
                             trade.OrderRef, null, null));
-            this.userAccount.getParent().setPanic(
+            this.user.setPanic(
                     ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen position null");
             return;
@@ -440,7 +462,7 @@ public class ActiveRequest {
             this.config.getLogger().severe(
                     Utils.formatLog("frozen position not found",
                             trade.OrderRef, null, null));
-            this.userAccount.getParent().setPanic(
+            this.user.setPanic(
                     ErrorCodes.INCONSISTENT_INFORMATION,
                     "frozen position not found for order ref");
             return;
@@ -449,14 +471,16 @@ public class ActiveRequest {
             this.config.getLogger().severe(
                     Utils.formatLog("not enough frozen position",
                             trade.OrderRef, null, null));
-            this.userAccount.getParent().setPanic(
+            this.user.setPanic(
                     ErrorCodes.OVER_CLOSE_POSITION,
                     "not enough frozen position for trade");
             return;
         }
         // Check the frozen position OK, here won't throw exception.
         p.applyCloseTrade(trade, instrInfo.Instrument);
-        this.userAccount.applyTrade(trade, instrInfo.Instrument,
+        this.user.getUserAccount().applyTrade(
+                trade,
+                instrInfo.Instrument,
                 instrInfo.Commission);
     }
 }

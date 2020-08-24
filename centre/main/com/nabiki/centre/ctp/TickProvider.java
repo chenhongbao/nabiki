@@ -46,7 +46,7 @@ public class TickProvider {
     protected final Config config;
     protected final LoginConfig loginCfg;
     protected final CThostFtdcMdApi mdApi;
-    protected final MessageWriter msgWriter;
+    protected final ReqRspWriter msgWriter;
     protected final Set<MarketDataRouter> routers = new HashSet<>();
     protected final Set<CandleEngine> engines = new HashSet<>();
     protected final Set<String> subscribed = new HashSet<>();
@@ -67,7 +67,7 @@ public class TickProvider {
                 this.loginCfg.FlowDirectory,
                 this.loginCfg.IsUsingUDP,
                 this.loginCfg.IsMulticast);
-        this.msgWriter = new MessageWriter(this.config);
+        this.msgWriter = new ReqRspWriter(null, this.config);
         // Schedule action day updater.
         prepareActionDayUpdater();
     }

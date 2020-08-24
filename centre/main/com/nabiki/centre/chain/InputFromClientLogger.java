@@ -26,21 +26,21 @@
  * SOFTWARE.
  */
 
-package com.nabiki.iop;
+package com.nabiki.centre.chain;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
+import com.nabiki.iop.Message;
+import com.nabiki.iop.ServerMessageHandler;
+import com.nabiki.iop.ServerSession;
 
-public interface IOPServer {
-    void bind(InetSocketAddress address) throws IOException;
+public class InputFromClientLogger implements ServerMessageHandler {
+    private final MsgInOutWriter writer;
 
-    void setSessionAdaptor(ServerSessionAdaptor adaptor);
+    InputFromClientLogger(MsgInOutWriter writer) {
+        this.writer = writer;
+    }
 
-    void setMessageHandlerOut(ServerMessageHandler handler);
-    void setMessageHandlerIn(ServerMessageHandler handler);
-
-
-    void setLoginManager(LoginManager manager);
-
-    AdaptorChain getAdaptorChain();
+    @Override
+    public void onMessage(ServerSession session, Message message) {
+        this.writer.writeIn(message, session);
+    }
 }

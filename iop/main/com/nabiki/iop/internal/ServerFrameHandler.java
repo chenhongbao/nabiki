@@ -66,7 +66,9 @@ class ServerFrameHandler implements IoHandler {
 
     private ServerSessionAdaptor sessionAdaptor = new DefaultServerSessionAdaptor();
     private LoginManager loginManager = new DefaultLoginManager();
-    private ServerMessageHandler msgHandler = new DefaultServerMessageHandler();
+    private ServerMessageHandler
+            msgHandlerOut = new DefaultServerMessageHandler(),
+            msgHandlerIn = new DefaultServerMessageHandler();
 
     void setLoginManager(LoginManager manager) {
         this.loginManager = manager;
@@ -77,8 +79,12 @@ class ServerFrameHandler implements IoHandler {
         this.chain.setSessionAdaptor(this.sessionAdaptor);
     }
 
-    void setMessageHandler(ServerMessageHandler handler) {
-        this.msgHandler = handler;
+    void setHandlerOut(ServerMessageHandler handler) {
+        this.msgHandlerOut = handler;
+    }
+
+    void setHandlerIn(ServerMessageHandler handler) {
+        this.msgHandlerIn = handler;
     }
 
     AdaptorChain getAdaptorChain() {
@@ -174,13 +180,7 @@ class ServerFrameHandler implements IoHandler {
             body = OP.fromJson(new String(
                     frame.Body, StandardCharsets.UTF_8), Body.class);
             iopMessage = toMessage(body);
-            // First call message handler.
-            try {
-                this.msgHandler.onMessage(iopSession, iopMessage);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-            // Then call message adaptor chain.
+            // 1. call message adaptor chain.
             switch (frame.Type) {
                 case FrameType.REQUEST:
                     if (isLogin(session))
@@ -196,6 +196,12 @@ class ServerFrameHandler implements IoHandler {
                     throw new IllegalStateException(
                             "unknown frame type " + frame.Type);
             }
+            // 2. call message handler.
+            try {
+                this.msgHandlerIn.onMessage(iopSession, iopMessage);
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
         } catch (IOException e) {
             this.sessionAdaptor.doEvent(
                     iopSession, SessionEvent.BROKEN_BODY, body);
@@ -204,7 +210,25 @@ class ServerFrameHandler implements IoHandler {
 
     @Override
     public void messageSent(IoSession session, Object message) throws Exception {
-        // nothing.
+        if (!(message instanceof Frame))
+            throw new IllegalStateException("message is not frame");
+        Body body = null;
+        Message iopMessage;
+        ServerSessionImpl iopSession = ServerSessionImpl.from(session);
+        var frame = (Frame) message;
+        try {
+            body = OP.fromJson(new String(
+                    frame.Body, StandardCharsets.UTF_8), Body.class);
+            iopMessage = toMessage(body);
+            try {
+                this.msgHandlerOut.onMessage(iopSession, iopMessage);
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        } catch (IOException e) {
+            this.sessionAdaptor.doEvent(
+                    iopSession, SessionEvent.BROKEN_BODY, body);
+        }
     }
 
     @Override

@@ -58,7 +58,7 @@ public class OrderProvider {
     protected final AtomicInteger orderRef = new AtomicInteger(0);
     protected final Config config;
     protected final LoginConfig loginCfg;
-    protected final MessageWriter msgWriter;
+    protected final ReqRspWriter msgWriter;
     protected final CThostFtdcTraderApi api;
     protected final Thread orderDaemon = new Thread(new RequestDaemon());
     protected final List<String> instruments = new LinkedList<>();
@@ -86,7 +86,7 @@ public class OrderProvider {
         this.loginCfg = this.config.getLoginConfigs().get("trader");
         this.api = CThostFtdcTraderApi
                 .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
-        this.msgWriter = new MessageWriter(this.config);
+        this.msgWriter = new ReqRspWriter(this.mapper, this.config);
         this.pendingReqs = new LinkedBlockingQueue<>();
         // Start order daemon.
         this.orderDaemon.start();

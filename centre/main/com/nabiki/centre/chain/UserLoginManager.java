@@ -40,8 +40,9 @@ import java.util.Objects;
 
 public class UserLoginManager extends LoginManager {
     final static String FRONT_LOGINREQ_KEY = "front.loginreq";
-    final static String FRONT_USERAUTH_KEY = "front.userauth";
+    final static String FRONT_AUTH_KEY = "front.auth";
     final static String FRONT_ACTIVEUSR_KEY = "front.activeusr";
+    final static String FRONT_USERID_KEY = "front.userid";
 
     private final UserAuthManager authMgr;
     private final ActiveUserManager userMgr;
@@ -52,7 +53,7 @@ public class UserLoginManager extends LoginManager {
     }
 
     private boolean isLogin(ServerSession session) {
-        return session.getAttribute(FRONT_USERAUTH_KEY) != null;
+        return session.getAttribute(FRONT_AUTH_KEY) != null;
     }
 
     @Override
@@ -75,8 +76,9 @@ public class UserLoginManager extends LoginManager {
             return ErrorCodes.USER_NOT_FOUND;
         else {
             session.setAttribute(FRONT_LOGINREQ_KEY, req);
-            session.setAttribute(FRONT_USERAUTH_KEY, auth);
+            session.setAttribute(FRONT_AUTH_KEY, auth);
             session.setAttribute(FRONT_ACTIVEUSR_KEY, user);
+            session.setAttribute(FRONT_USERID_KEY, req.UserID);
             return ErrorCodes.NONE;
         }
     }
