@@ -547,8 +547,7 @@ public class OrderProvider {
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
         cancelInputOrder(inputOrder, rspInfo);
-        this.msgWriter.writeErr(inputOrder);
-        this.msgWriter.writeErr(rspInfo);
+        this.msgWriter.writeErr(inputOrder, rspInfo);
     }
 
     public void whenRspAuthenticate(
@@ -576,8 +575,7 @@ public class OrderProvider {
     public void whenRspOrderAction(CInputOrderAction inputOrderAction,
                                    CRspInfo rspInfo, int requestId,
                                    boolean isLast) {
-        this.msgWriter.writeErr(inputOrderAction);
-        this.msgWriter.writeErr(rspInfo);
+        this.msgWriter.writeErr(inputOrderAction, rspInfo);
         this.config.getLogger().warning(
                 Utils.formatLog("failed action", inputOrderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
@@ -592,8 +590,7 @@ public class OrderProvider {
         // Failed order results in canceling the order.
         // Set order status msg to error message.
         cancelInputOrder(inputOrder, rspInfo);
-        this.msgWriter.writeErr(inputOrder);
-        this.msgWriter.writeErr(rspInfo);
+        this.msgWriter.writeErr(inputOrder, rspInfo);
     }
 
     public void whenRspQryInstrument(CInstrument instrument,

@@ -150,21 +150,27 @@ public class ReqRspWriter {
                 "orderaction." + getTimeStamp() + ".json"));
     }
 
-    public void writeErr(CInputOrderAction err) {
+    public void writeErr(CInputOrderAction err, CRspInfo info) {
         write(OP.toJson(err), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
                 "action." + getTimeStamp() + ".json"));
+        write(OP.toJson(info), ensureFile(
+                getClientDir(this.errDir, err.OrderRef),
+                "info." + getTimeStamp() + ".json"));
     }
 
-    public void writeErr(CInputOrder err) {
+    public void writeErr(CInputOrder err, CRspInfo info) {
         write(OP.toJson(err), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
                 "inputorder." + getTimeStamp() + ".json"));
+        write(OP.toJson(info), ensureFile(
+                getClientDir(this.errDir, err.OrderRef),
+                "info." + getTimeStamp() + ".json"));
     }
 
     public void writeErr(CRspInfo err) {
         write(OP.toJson(err),
-                ensureFile(this.errDir,
+                ensureFile(getClientDir(this.errDir, ""),
                         "info." + getTimeStamp() + ".json"));
     }
 }
