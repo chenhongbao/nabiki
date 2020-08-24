@@ -498,10 +498,11 @@ public class OrderProvider {
                             null, r));
     }
 
-    protected void cancelInputOrder(CInputOrder inputOrder) {
+    protected void cancelInputOrder(CInputOrder inputOrder, CRspInfo info) {
         var cancel = toRtnOrder(inputOrder);
         // Order status.
         cancel.OrderStatus = OrderStatusType.CANCELED;
+        cancel.StatusMsg = info.ErrorMsg;
         cancel.OrderSubmitStatus = OrderSubmitStatusType.CANCEL_SUBMITTED;
         doOrder(cancel);
         // Write input order as normal cancel order.
@@ -527,7 +528,7 @@ public class OrderProvider {
     }
 
     public void whenErrRtnOrderAction(COrderAction orderAction,
-                                    CRspInfo rspInfo) {
+                                      CRspInfo rspInfo) {
         this.config.getLogger().warning(
                 Utils.formatLog("failed action", orderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
@@ -545,7 +546,7 @@ public class OrderProvider {
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        cancelInputOrder(inputOrder);
+        cancelInputOrder(inputOrder, rspInfo);
         this.msgWriter.writeErr(inputOrder);
         this.msgWriter.writeErr(rspInfo);
     }
@@ -565,7 +566,7 @@ public class OrderProvider {
     }
 
     public void whenRspError(CRspInfo rspInfo, int requestId,
-                           boolean isLast) {
+                             boolean isLast) {
         this.msgWriter.writeErr(rspInfo);
         this.config.getLogger().severe(
                 Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
@@ -583,20 +584,21 @@ public class OrderProvider {
     }
 
     public void whenRspOrderInsert(CInputOrder inputOrder,
-                                 CRspInfo rspInfo, int requestId,
-                                 boolean isLast) {
+                                   CRspInfo rspInfo, int requestId,
+                                   boolean isLast) {
         this.config.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        cancelInputOrder(inputOrder);
+        // Set order status msg to error message.
+        cancelInputOrder(inputOrder, rspInfo);
         this.msgWriter.writeErr(inputOrder);
         this.msgWriter.writeErr(rspInfo);
     }
 
     public void whenRspQryInstrument(CInstrument instrument,
-                                   CRspInfo rspInfo, int requestID,
-                                   boolean isLast) {
+                                     CRspInfo rspInfo, int requestID,
+                                     boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             var accepted = InstrumentFilter.accept(instrument.InstrumentID);
             if (accepted) {
@@ -678,8 +680,8 @@ public class OrderProvider {
     }
 
     public void whenRspUserLogin(CRspUserLogin rspUserLogin,
-                               CRspInfo rspInfo, int requestId,
-                               boolean isLast) {
+                                 CRspInfo rspInfo, int requestId,
+                                 boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             doSettlement();
             doRspLogin(rspUserLogin);
@@ -701,8 +703,8 @@ public class OrderProvider {
     }
 
     public void whenRspUserLogout(CUserLogout userLogout,
-                                CRspInfo rspInfo, int requestId,
-                                boolean isLast) {
+                                  CRspInfo rspInfo, int requestId,
+                                  boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.config.getLogger().fine(
                     Utils.formatLog("successful logout", null,
@@ -854,32 +856,24 @@ public class OrderProvider {
         protected int fillAndSendAction(CInputOrderAction action) {
             var instrInfo = config.getInstrInfo(action.InstrumentID);
             var rtn = mapper.getRtnOrder(action.OrderRef);
+            // Use order ref + front ID + session ID by default.
+            // Keep original order ref and instrument ID.
+            action.FrontID = rspLogin.FrontID;
+            action.SessionID = rspLogin.SessionID;
+            // Set common fields.
+            action.BrokerID = rspLogin.BrokerID;
+            action.InvestorID = rspLogin.UserID;
+            action.UserID = rspLogin.UserID;
+            // Action delete.
+            action.ActionFlag = ActionFlagType.DELETE;
+            // Set order sys ID if possible.
             if (rtn != null) {
-                action.BrokerID = rspLogin.BrokerID;
-                action.InvestorID = rspLogin.UserID;
-                action.UserID = rspLogin.UserID;
-                // Use order sys ID as first choice.
+                // Try OrderSysID.
                 action.OrderSysID = rtn.OrderSysID;
                 // Adjust flags.
-                action.ActionFlag = ActionFlagType.DELETE;
-                // Adjust other info.
-                action.OrderRef = null;
-                action.FrontID = 0;
-                action.SessionID = 0;
                 // Must need exchange id.
                 action.ExchangeID = rtn.ExchangeID;
             } else {
-                action.BrokerID = rspLogin.BrokerID;
-                action.InvestorID = rspLogin.UserID;
-                action.UserID = rspLogin.UserID;
-                // Use order ref + front ID + session ID.
-                // Keep original order ref and instrument ID.
-                action.FrontID = rspLogin.FrontID;
-                action.SessionID = rspLogin.SessionID;
-                // Adjust flags.
-                action.ActionFlag = ActionFlagType.DELETE;
-                // Adjust other info.
-                action.OrderSysID = null;
                 action.ExchangeID = (instrInfo.Instrument != null)
                         ? instrInfo.Instrument.ExchangeID : null;
             }

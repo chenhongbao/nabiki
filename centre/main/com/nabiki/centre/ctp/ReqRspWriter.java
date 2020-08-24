@@ -87,7 +87,11 @@ public class ReqRspWriter {
     }
 
     private String getClientUserID(String orderRef) {
-        return this.mapper.getActiveOrder(orderRef).getUser().getUserID();
+        var active = this.mapper.getActiveOrder(orderRef);
+        if (active == null)
+            return "null";
+        else
+            return active.getUser().getUserID();
     }
 
     private Path getClientDir(Path root, String orderRef) {

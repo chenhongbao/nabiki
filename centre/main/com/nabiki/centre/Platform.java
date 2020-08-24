@@ -238,9 +238,6 @@ public class Platform {
         // providers for more accurate report of the login/out ops, 
         // especially on login/out failure.
         private void start() {
-            // Debug
-            System.out.println(Thread.currentThread().getName() + " starts platform.");
-
             this.workingState = WorkingState.STARTING;
             // Trader logins.
             while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
@@ -301,7 +298,6 @@ public class Platform {
 
         @Override
         public void run() {
-            System.out.println(Thread.currentThread().getName() + ": " + this.workingState);
             try {
                 if (needStart())
                     start();

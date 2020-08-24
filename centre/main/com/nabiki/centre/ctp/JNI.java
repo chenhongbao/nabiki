@@ -471,8 +471,8 @@ public class JNI {
         jni.setUserID(local.UserID);
         jni.setOrderPriceType((char)local.OrderPriceType);
         jni.setDirection((char)local.Direction);
-        jni.setCombOffsetFlag(String.valueOf(local.CombOffsetFlag));
-        jni.setCombHedgeFlag(String.valueOf(local.CombHedgeFlag));
+        jni.setCombOffsetFlag(String.valueOf((char)local.CombOffsetFlag));
+        jni.setCombHedgeFlag(String.valueOf((char)local.CombHedgeFlag));
         jni.setLimitPrice(local.LimitPrice);
         jni.setVolumeTotalOriginal(local.VolumeTotalOriginal);
         jni.setTimeCondition((char)local.TimeCondition);
