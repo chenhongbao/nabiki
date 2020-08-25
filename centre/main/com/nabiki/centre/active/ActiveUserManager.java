@@ -74,10 +74,20 @@ public class ActiveUserManager implements Renewable {
         for (var i : this.config.getAllInstrInfo()) {
             // There may be some info missing, but it doesn't matter if we don't
             // have that position.
-            prep.prepare(i.Instrument);
-            prep.prepare(i.Commission);
-            prep.prepare(i.Margin);
-            prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
+            // It is possible for some instruments that don't have trade for whole
+            // day whose depth md is null. Need to catch exception here and keep
+            // settlement going.
+            try {
+                prep.prepare(i.Instrument);
+                prep.prepare(i.Commission);
+                prep.prepare(i.Margin);
+                prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
+            } catch (Throwable th) {
+                th.printStackTrace();
+                if (i != null && i.Instrument != null)
+                    this.config.getLogger().warning(
+                            "can't prepare settlement: " + i.Instrument.InstrumentID);
+            }
         }
         return prep;
     }

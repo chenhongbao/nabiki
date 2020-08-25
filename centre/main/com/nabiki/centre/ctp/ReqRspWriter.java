@@ -87,6 +87,8 @@ public class ReqRspWriter {
     }
 
     private String getClientUserID(String orderRef) {
+        if (orderRef == null || orderRef.length() < 1)
+            return "null";
         var active = this.mapper.getActiveOrder(orderRef);
         if (active == null)
             return "null";

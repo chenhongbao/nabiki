@@ -113,7 +113,11 @@ public class PlatformTest {
             fail(e.getMessage());
         }
 
-        sleep((int)TimeUnit.SECONDS.toMillis(5));
+        int hour;
+        do {
+            sleep((int) TimeUnit.SECONDS.toMillis(5));
+            hour = LocalTime.now().getHour();
+        } while ((15 < hour && hour < 21) || (3 < hour && hour < 9));
 
         // Test login.
         System.out.println("Test login");
@@ -164,7 +168,7 @@ public class PlatformTest {
             System.out.println(currentCount + "/" + totalCount);
         });
 
-        sleep((int)TimeUnit.SECONDS.toMillis(5));
+        sleep((int) TimeUnit.SECONDS.toMillis(5));
 
         // Subscribe md.
         System.out.println("Subscribe md");
