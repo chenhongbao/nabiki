@@ -168,52 +168,7 @@ public class PlatformTest {
             System.out.println(currentCount + "/" + totalCount);
         });
 
-        sleep((int) TimeUnit.SECONDS.toMillis(5));
-
-        // Subscribe md.
-        System.out.println("Subscribe md");
-
-        client.setListener(new MarketDataListener() {
-            @Override
-            public void onDepthMarketData(CDepthMarketData depth) {
-                System.out.println(OP.toJson(depth));
-            }
-
-            @Override
-            public void onCandle(CCandle candle) {
-                System.out.println(OP.toJson(candle));
-            }
-        });
-
-        var sub = new CSubMarketData();
-        sub.InstrumentID = new String[] {"c2101", "c2105" };
-        var rsp3 = client.subscribeMarketData(sub, UUID.randomUUID().toString());
-
-        rsp3.consume((object, rspInfo, currentCount, totalCount) -> {
-            System.out.println("Rsp subscribe");
-            System.out.println(OP.toJson(object));
-            System.out.println(OP.toJson(rspInfo));
-            System.out.println(currentCount + "/" + totalCount);
-        });
-
-        sleep((int)TimeUnit.SECONDS.toMillis(10));
-
-        // Un-subscribe md.
-        System.out.println("Un-subscribe md");
-
-        var unsub = new CUnsubMarketData();
-        unsub.InstrumentID = new String[] {"c2101", "c2105" };
-        var rsp4 = client.unSubscribeMarketData(unsub, UUID.randomUUID().toString());
-
-        rsp4.consume((object, rspInfo, currentCount, totalCount) -> {
-            System.out.println("Rsp un-subscribe");
-            System.out.println(OP.toJson(object));
-            System.out.println(OP.toJson(rspInfo));
-            System.out.println(currentCount + "/" + totalCount);
-        });
-
-        while (LocalTime.now().getHour() < 9)
-            sleep((int)TimeUnit.SECONDS.toMillis(5));
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
 
         // Insert order.
         System.out.println("Insert order");
@@ -302,6 +257,52 @@ public class PlatformTest {
                 System.out.println(currentCount + "/" + totalCount);
             });
         }
+
+        sleep((int)TimeUnit.SECONDS.toMillis(5));
+
+        // Subscribe md.
+        System.out.println("Subscribe md");
+
+        client.setListener(new MarketDataListener() {
+            @Override
+            public void onDepthMarketData(CDepthMarketData depth) {
+                System.out.println(OP.toJson(depth));
+            }
+
+            @Override
+            public void onCandle(CCandle candle) {
+                System.out.println(OP.toJson(candle));
+            }
+        });
+
+        var sub = new CSubMarketData();
+        sub.InstrumentID = new String[] {"c2101", "c2105" };
+        var rsp3 = client.subscribeMarketData(sub, UUID.randomUUID().toString());
+
+        rsp3.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp subscribe");
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+
+        // Un-subscribe md.
+        /*
+        sleep((int)TimeUnit.SECONDS.toMillis(10));
+
+        System.out.println("Un-subscribe md");
+
+        var unsub = new CUnsubMarketData();
+        unsub.InstrumentID = new String[] {"c2101", "c2105" };
+        var rsp4 = client.unSubscribeMarketData(unsub, UUID.randomUUID().toString());
+
+        rsp4.consume((object, rspInfo, currentCount, totalCount) -> {
+            System.out.println("Rsp un-subscribe");
+            System.out.println(OP.toJson(object));
+            System.out.println(OP.toJson(rspInfo));
+            System.out.println(currentCount + "/" + totalCount);
+        });
+        */
 
         try {
             new CountDownLatch(1).await();

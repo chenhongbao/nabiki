@@ -46,6 +46,7 @@ public class CandleEngine extends TimerTask {
     private final Config config;
     private final Timer timer = new Timer();
     private final Map<String, Product> products = new ConcurrentHashMap<>();
+    private final Map<String, Product> instrProducts = new ConcurrentHashMap<>();
     private final Set<MarketDataRouter> routers = new HashSet<>();
 
     private final AtomicBoolean working = new AtomicBoolean(false);
@@ -81,13 +82,17 @@ public class CandleEngine extends TimerTask {
     public void addInstrument(String instrID) {
         if (instrID == null || instrID.length() == 0)
             throw new IllegalArgumentException("illegal instr ID");
-        ensureProduct(Utils.getProductID(instrID)).registerInstr(instrID);
+        var product = ensureProduct(Utils.getProductID(instrID));
+        product.registerInstr(instrID);
+        this.instrProducts.put(instrID, product);
     }
 
     public void removeInstrument(String instrID) {
         if (instrID == null || instrID.length() == 0)
             throw new IllegalArgumentException("illegal instr ID");
-        ensureProduct(Utils.getProductID(instrID)).unregisterInstr(instrID);
+        var productID = Utils.getProductID(instrID);
+        if (this.products.containsKey(productID))
+            this.products.get(productID).unregisterInstr(instrID);
     }
 
     public void setupDurations() {
@@ -117,7 +122,10 @@ public class CandleEngine extends TimerTask {
     }
 
     public void update(CDepthMarketData md) {
-        ensureProduct(Utils.getProductID(md.InstrumentID)).update(md);
+        var product = this.instrProducts.get(md.InstrumentID);
+        if (product == null)
+            product = ensureProduct(Utils.getProductID(md.InstrumentID));
+        product.update(md);
     }
 
     @Override
@@ -200,10 +208,12 @@ public class CandleEngine extends TimerTask {
 
         public void update(CDepthMarketData md) {
             synchronized (this.candles) {
-                if (!this.candles.containsKey(md.InstrumentID))
-                    this.candles.put(md.InstrumentID,
-                            new SingleCandle(md.InstrumentID));
-                this.candles.get(md.InstrumentID).update(md);
+                var c =  this.candles.get(md.InstrumentID);
+                if (c == null) {
+                    c = new SingleCandle(md.InstrumentID);
+                    this.candles.put(md.InstrumentID, c);
+                }
+                c.update(md);
             }
         }
     }
