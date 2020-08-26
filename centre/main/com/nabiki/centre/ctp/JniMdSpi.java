@@ -29,14 +29,26 @@
 package com.nabiki.centre.ctp;
 
 import com.nabiki.ctp4j.*;
+import com.nabiki.objects.CDepthMarketData;
 
 import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class JniMdSpi extends CThostFtdcMdSpi {
     private final TickProvider provider;
+    private final BlockingQueue<CDepthMarketData> depths = new LinkedBlockingQueue<>();
+    private Thread depthUpdateThread;
 
     JniMdSpi(TickProvider provider) {
         this.provider = provider;
+        prepare();
+    }
+
+    private void prepare() {
+        // The update may take long time, so do it in another thread.
+        this.depthUpdateThread = new Thread(new DepthUpdateDaemon());
+        this.depthUpdateThread.start();
     }
 
     @Override
@@ -126,10 +138,26 @@ public class JniMdSpi extends CThostFtdcMdSpi {
     public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData) {
         try {
             Objects.requireNonNull(pDepthMarketData, "return md null");
-            this.provider.whenRtnDepthMarketData(JNI.toLocal(pDepthMarketData));
+            var depth = JNI.toLocal(pDepthMarketData);
+            if (!this.depths.offer(depth))
+                this.provider.config.getLogger()
+                        .warning("can't offer depth: " + depth.InstrumentID);
         } catch (Throwable th) {
             th.printStackTrace();
             this.provider.config.getLogger().warning(th.getMessage());
+        }
+    }
+
+    class DepthUpdateDaemon implements Runnable {
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    provider.whenRtnDepthMarketData(depths.take());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
