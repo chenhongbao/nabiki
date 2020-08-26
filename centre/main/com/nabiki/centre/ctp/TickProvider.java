@@ -238,14 +238,14 @@ public class TickProvider {
     public void whenFrontConnected() {
         this.isConnected = true;
         if (this.workingState == WorkingState.STARTING
-                || this.workingState == WorkingState.STARTED)
+                || this.workingState == WorkingState.STARTED) {
             doLogin();
+            this.config.getLogger().info("md reconnected");
+        }
     }
 
     public void whenFrontDisconnected(int reason) {
-        this.config.getLogger().warning(
-                Utils.formatLog("md disconnected", null, null,
-                        reason));
+        this.config.getLogger().warning("md disconnected");
         this.isLogin = false;
         this.isConnected = false;
         // If disconnected when or after provider stops, candle engine isn't working.
@@ -273,6 +273,7 @@ public class TickProvider {
             setWorking(true);
             // Signal login state changed.
             this.loginSignal.signal();
+            this.config.getLogger().info("md login");
             updateActionDay();
             // If there are instruments to subscribe, do it.
             // The subscribe method clears the container, so the instruments must be
@@ -296,6 +297,7 @@ public class TickProvider {
             setWorking(false);
             // Signal login state changed to logout.
             this.loginSignal.signal();
+            this.config.getLogger().info("md logout");
             // Clear last subscription on successful logout.
             this.subscribed.clear();
         } else {
@@ -315,6 +317,8 @@ public class TickProvider {
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        if (isLast)
+            this.config.getLogger().info("get last subscription rsp");
     }
 
     public void whenRspUnSubMarketData(
@@ -326,6 +330,8 @@ public class TickProvider {
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+        if (isLast)
+            this.config.getLogger().info("get last un-subscription rsp");
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {

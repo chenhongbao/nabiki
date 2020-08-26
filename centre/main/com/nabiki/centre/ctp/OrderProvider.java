@@ -512,18 +512,16 @@ public class OrderProvider {
     public void whenFrontConnected() {
         this.isConnected = true;
         if (this.workingState == WorkingState.STARTING
-                || this.workingState == WorkingState.STARTED)
+                || this.workingState == WorkingState.STARTED) {
             doAuthentication();
+            this.config.getLogger().info("trader reconnected");
+        }
     }
 
     public void whenFrontDisconnected(int reason) {
-        this.config.getLogger().warning(
-                Utils.formatLog("trader disconnected", null,
-                        null, reason));
+        this.config.getLogger().warning("trader disconnected");
         this.isConnected = false;
         this.isConfirmed = false;
-        // Clear trading day.
-        ConfigLoader.setTradingDay(null);
         // Don't change working state here because it may disconnect in half way.
     }
 
@@ -553,9 +551,10 @@ public class OrderProvider {
     public void whenRspAuthenticate(
             CRspAuthenticate rspAuthenticateField,
             CRspInfo rspInfo, int requestId, boolean isLast) {
-        if (rspInfo.ErrorID == 0)
+        if (rspInfo.ErrorID == 0) {
             doLogin();
-        else {
+            this.config.getLogger().info("trader authenticated");
+        } else {
             this.config.getLogger().severe(
                     Utils.formatLog("failed authentication", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
@@ -619,8 +618,10 @@ public class OrderProvider {
         // Signal request rtn.
         this.qryTask.signalRequest(requestID);
         // Signal last rsp.
-        if (this.qryInstrLast)
+        if (this.qryInstrLast) {
             this.lastRspSignal.signal();
+            this.config.getLogger().info("get last qry instrument rsp");
+        }
     }
 
     public void whenRspQryInstrumentCommissionRate(
@@ -659,9 +660,7 @@ public class OrderProvider {
             CSettlementInfoConfirm settlementInfoConfirm,
             CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.config.getLogger().fine(
-                    Utils.formatLog("successful login", null,
-                            rspInfo.ErrorMsg, rspInfo.ErrorID));
+            this.config.getLogger().info("trader confirm settlement");
             this.isConfirmed = true;
             this.workingState = WorkingState.STARTED;
             // Query instruments.
@@ -684,6 +683,7 @@ public class OrderProvider {
             doRspLogin(rspUserLogin);
             // Set trading day.
             ConfigLoader.setTradingDay(rspUserLogin.TradingDay);
+            this.config.getLogger().info("trader login");
             // Align time.
             this.timeAligner.align("SHFE", LocalTime.now(), rspLogin.SHFETime);
             this.timeAligner.align("CZCE", LocalTime.now(), rspLogin.CZCETime);
@@ -703,13 +703,9 @@ public class OrderProvider {
                                   CRspInfo rspInfo, int requestId,
                                   boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.config.getLogger().fine(
-                    Utils.formatLog("successful logout", null,
-                            rspInfo.ErrorMsg, rspInfo.ErrorID));
+            this.config.getLogger().info("trader logout");
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
-            // Clear trading day.
-            ConfigLoader.setTradingDay(null);
             // Signal logout.
             this.lastRspSignal.signal();
         } else {

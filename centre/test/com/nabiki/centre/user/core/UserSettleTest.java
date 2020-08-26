@@ -29,6 +29,7 @@
 package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.active.ActiveUser;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 import com.nabiki.objects.*;
@@ -49,8 +50,16 @@ public class UserSettleTest extends UserSuperTest {
         var active = new ActiveUser(user, provider, config);
         config.getDepthMarketData("c2101").SettlementPrice = settlementPrice;
 
+        var info = config.getInstrInfo("c2101");
+        SettlementPreparation prep = new SettlementPreparation();
+        prep.prepare(config.getTradingDay());
+        prep.prepare(config.getDepthMarketData("c2101"));
+        prep.prepare(info.Instrument);
+        prep.prepare(info.Margin);
+        prep.prepare(info.Commission);
+
         try {
-            active.settle();
+            user.settle(prep);
         } catch (Throwable th) {
             fail(th.getMessage());
         }

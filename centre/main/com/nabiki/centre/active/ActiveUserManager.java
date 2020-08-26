@@ -83,10 +83,11 @@ public class ActiveUserManager implements Renewable {
                 prep.prepare(i.Margin);
                 prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
             } catch (Throwable th) {
-                th.printStackTrace();
                 if (i != null && i.Instrument != null)
-                    this.config.getLogger().warning(
-                            "can't prepare settlement: " + i.Instrument.InstrumentID);
+                    this.config.getLogger()
+                            .warning("can't prepare settlement: "
+                                    + i.Instrument.InstrumentID
+                                    + ", " + th.getMessage());
             }
         }
         return prep;

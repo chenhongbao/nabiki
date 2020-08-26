@@ -32,7 +32,6 @@ import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.FrozenAccount;
 import com.nabiki.centre.user.core.FrozenPositionDetail;
 import com.nabiki.centre.user.core.User;
-import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
@@ -49,34 +48,6 @@ public class ActiveUser {
         this.user = user;
         this.config = cfg;
         this.orderProvider = orderProvider;
-    }
-
-    public void settle() {
-        // Prepare settlement prices.
-        var prep = new SettlementPreparation();
-        for (var instr : this.user.getUserPosition().getPositionInstrID()) {
-            var depth = this.config.getDepthMarketData(instr);
-            if (depth == null)
-                throw new NullPointerException("depth market data null");
-            if (!Utils.validPrice(depth.SettlementPrice))
-                throw new IllegalArgumentException(
-                        "no settlement price for " + instr);
-            prep.prepare(depth);
-        }
-        // Prepare instrument info set.
-        for (var instr : this.user.getUserPosition().getPositionInstrID()) {
-            var instrInfo = this.config.getInstrInfo(instr);
-            Objects.requireNonNull(instrInfo, "instr info null");
-            Objects.requireNonNull(instrInfo.Instrument, "instrument null");
-            Objects.requireNonNull(instrInfo.Margin, "margin null");
-            Objects.requireNonNull(instrInfo.Commission, "commission null");
-            // Set info.
-            prep.prepare(instrInfo.Instrument);
-            prep.prepare(instrInfo.Margin);
-            prep.prepare(instrInfo.Commission);
-        }
-        prep.prepare(config.getTradingDay());
-        this.user.settle(prep);
     }
 
     public CRspInfo getExecRsp(String uuid) {

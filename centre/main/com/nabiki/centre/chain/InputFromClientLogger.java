@@ -41,6 +41,14 @@ public class InputFromClientLogger implements ServerMessageHandler {
 
     @Override
     public void onMessage(ServerSession session, Message message) {
-        this.writer.writeIn(message, session);
+        switch (message.Type) {
+            case HEARTBEAT:
+            case FLOW_DEPTH:
+            case FLOW_CANDLE:
+                break;
+            default:
+                this.writer.writeIn(message, session);
+                break;
+        }
     }
 }

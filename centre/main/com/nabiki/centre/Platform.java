@@ -169,10 +169,10 @@ public class Platform {
     private class PlatformTask extends TimerTask {
         private final LocalTime start0 = LocalTime.of(20, 30),
                 start1 = LocalTime.of(8, 30),
-                stop0 = LocalTime.of(3, 0),
-                stop1 = LocalTime.of(15, 45);
-        private final LocalTime renewTime = LocalTime.of(20, 0),
-                settleTime = LocalTime.of(16, 0);
+                stop0 = LocalTime.of(2, 30),
+                stop1 = LocalTime.of(15, 30);
+        private final LocalTime renewTime = LocalTime.of(20, 25),
+                settleTime = LocalTime.of(15, 35);
 
         private WorkingState workingState = WorkingState.STOPPED;
         private UserState userState = UserState.SETTLED;
@@ -212,10 +212,12 @@ public class Platform {
 
         private void renew() {
             try {
+                config.getLogger().info("platform renewing");
                 authManager.renew();
                 userManager.renew();
                 ConfigLoader.config();
                 this.userState = UserState.RENEW;
+                config.getLogger().info("platform renewed");
             } catch (Throwable th) {
                 th.printStackTrace();
                 config.getLogger().severe("renew failed");
@@ -223,13 +225,15 @@ public class Platform {
         }
 
         private void settle() {
+            config.getLogger().info("platform settling");
             try {
                 authManager.settle();
                 userManager.settle();
                 this.userState = UserState.SETTLED;
+                config.getLogger().info("platform settled");
             } catch (Throwable th) {
                 th.printStackTrace();
-                config.getLogger().severe("settle failed");
+                config.getLogger().severe("settlement failed");
             }
         }
 
@@ -239,6 +243,7 @@ public class Platform {
         // especially on login/out failure.
         private void start() {
             this.workingState = WorkingState.STARTING;
+            config.getLogger().info("platform starting");
             // Trader logins.
             while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
                 orderProvider.login();
@@ -268,10 +273,12 @@ public class Platform {
             }
             // Change order provider state.
             this.workingState = WorkingState.STARTED;
+            config.getLogger().info("platform started");
         }
 
         private void stop() {
             this.workingState = WorkingState.STOPPING;
+            config.getLogger().info("platform stopping");
             // Trader logout.
             orderProvider.logout();
             // Wait for logout.
@@ -294,6 +301,7 @@ public class Platform {
             }
             // Change state.
             this.workingState = WorkingState.STOPPED;
+            config.getLogger().info("platform stopped");
         }
 
         @Override

@@ -72,6 +72,7 @@ public class SettlementPreparation {
     }
 
     public void prepare(String tradingDay) {
+        Objects.requireNonNull(tradingDay, "trading day null");
         this.tradingDay = tradingDay;
     }
 
