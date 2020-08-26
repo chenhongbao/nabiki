@@ -85,15 +85,15 @@ public class TickProvider {
     }
 
     public void register(CandleEngine engine) {
-        synchronized (this.engines) {
-            this.engines.add(engine);
-        }
+        // No need to sync on the object because the read and write are not
+        // concurrent.
+        this.engines.add(engine);
     }
 
     public void register(MarketDataRouter router) {
-        synchronized (this.routers) {
-            this.routers.add(router);
-        }
+        // No need to sync on the object because the read and write are not
+        // concurrent.
+        this.routers.add(router);
     }
 
     public void subscribe(Collection<String> instr) {
@@ -188,17 +188,13 @@ public class TickProvider {
     }
 
     private void registerInstrument(String instrID) {
-        synchronized (this.engines) {
-            for (var e : this.engines)
-                e.addInstrument(instrID);
-        }
+        for (var e : this.engines)
+            e.addInstrument(instrID);
     }
 
     private void setupDurations() {
-        synchronized (this.engines) {
-            for (var e : this.engines)
-                e.setupDurations();
-        }
+        for (var e : this.engines)
+            e.setupDurations();
     }
 
     private void doLogin() {
@@ -229,10 +225,8 @@ public class TickProvider {
     }
 
     private void setWorking(boolean working) {
-        synchronized (this.engines) {
-            for (var e : this.engines)
-                e.setWorking(working);
-        }
+        for (var e : this.engines)
+            e.setWorking(working);
     }
 
     public void whenFrontConnected() {
@@ -337,14 +331,10 @@ public class TickProvider {
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
         // Set action day to today.
         depthMarketData.ActionDay = this.actionDay;
-        synchronized (this.routers) {
-            for (var r : this.routers)
-                r.route(depthMarketData);
-        }
-        synchronized (this.engines) {
-            for (var e : this.engines)
-                e.update(depthMarketData);
-        }
+        for (var r : this.routers)
+            r.route(depthMarketData);
+        for (var e : this.engines)
+            e.update(depthMarketData);
         // Update config's depth.
         ConfigLoader.setDepthMarketData(depthMarketData);
     }

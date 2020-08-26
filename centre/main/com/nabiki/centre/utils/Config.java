@@ -34,25 +34,25 @@ import com.nabiki.objects.CDepthMarketData;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class Config {
     // Config's name -> LoginConfig
-    final Map<String, LoginConfig> login = new HashMap<>();
+    final Map<String, LoginConfig> login = new ConcurrentHashMap<>();
 
     // ProductID -> TradingHourKeeper
-    final Map<String, TradingHourKeeper> tradingHour = new HashMap<>();
+    final Map<String, TradingHourKeeper> tradingHour = new ConcurrentHashMap<>();
 
     // Instrument ID -> InstrumentInfo
-    final Map<String, InstrumentInfo> instrInfo = new HashMap<>();
+    final Map<String, InstrumentInfo> instrInfo = new ConcurrentHashMap<>();
 
     // Instrument ID -> Depth market data
-    final Map<String, CDepthMarketData> depths = new HashMap<>();
+    final Map<String, CDepthMarketData> depths = new ConcurrentHashMap<>();
 
-    final Map<String, Set<String>> products = new HashMap<>();
+    final Map<String, Set<String>> products = new ConcurrentHashMap<>();
 
     final Duration[] durations = new Duration[] {
             Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15),
@@ -73,9 +73,7 @@ public class Config {
      * @return {@link Map} of {@link LoginConfig#Name} and {@link LoginConfig}
      */
     public Map<String, LoginConfig> getLoginConfigs() {
-        synchronized (this.login) {
-            return this.login;
-        }
+        return this.login;
     }
 
     /**
@@ -89,12 +87,10 @@ public class Config {
      * @return trading hour configuration
      */
     public TradingHourKeeper getTradingHour(String proID, String instrID) {
-        synchronized (this.tradingHour) {
-            if (proID != null)
-                return this.tradingHour.get(proID);
-            else
-                return this.tradingHour.get(Utils.getProductID(instrID));
-        }
+        if (proID != null)
+            return this.tradingHour.get(proID);
+        else
+            return this.tradingHour.get(Utils.getProductID(instrID));
     }
 
     /**
@@ -123,9 +119,7 @@ public class Config {
      * @return instrument's information
      */
     public InstrumentInfo getInstrInfo(String instrID) {
-        synchronized (this.instrInfo) {
-            return this.instrInfo.get(instrID);
-        }
+        return this.instrInfo.get(instrID);
     }
 
     /**
@@ -134,9 +128,7 @@ public class Config {
      * @return all instrument info.
      */
     public Collection<InstrumentInfo> getAllInstrInfo() {
-        synchronized (this.instrInfo) {
-            return this.instrInfo.values();
-        }
+        return this.instrInfo.values();
     }
 
     /**
@@ -165,9 +157,7 @@ public class Config {
      * @return {@link CDepthMarketData} or {@code null} if not found
      */
     public CDepthMarketData getDepthMarketData(String instr) {
-        synchronized (this.depths) {
-            return this.depths.get(instr);
-        }
+        return this.depths.get(instr);
     }
 
     /**
@@ -177,9 +167,7 @@ public class Config {
      * @return instrument IDs of the specified product
      */
     public Set<String> getProduct(String productID) {
-        synchronized (this.products) {
-            return this.products.get(productID);
-        }
+        return this.products.get(productID);
     }
 
     /**

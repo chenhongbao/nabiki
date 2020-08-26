@@ -153,7 +153,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
+                    long cur0 = System.nanoTime();
                     provider.whenRtnDepthMarketData(depths.take());
+                    System.out.println("md update round time(ns): " + (System.nanoTime() - cur0));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
