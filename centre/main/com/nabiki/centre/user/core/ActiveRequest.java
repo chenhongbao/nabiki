@@ -26,12 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.active;
+package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.user.core.FrozenAccount;
-import com.nabiki.centre.user.core.FrozenPositionDetail;
-import com.nabiki.centre.user.core.User;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;

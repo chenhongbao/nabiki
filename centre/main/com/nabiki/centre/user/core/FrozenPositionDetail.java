@@ -53,7 +53,7 @@ public class FrozenPositionDetail {
     private ProcessStage stage = ProcessStage.ONGOING;
     private long tradedCount = 0;
 
-    public FrozenPositionDetail(UserPositionDetail parent,
+    FrozenPositionDetail(UserPositionDetail parent,
                                 CInvestorPositionDetail frzSinglePos,
                                 AccountFrozenCash frzCash,
                                 long frzCount) {
@@ -68,7 +68,7 @@ public class FrozenPositionDetail {
      *
      * @return frozen volume
      */
-    public long getFrozenVolume() {
+    long getFrozenVolume() {
         if (this.stage == ProcessStage.CANCELED)
             return 0;
         else
@@ -85,7 +85,7 @@ public class FrozenPositionDetail {
      * @param trade trade response
      * @param instr instrument
      */
-    public void applyCloseTrade(CTrade trade,
+    void applyCloseTrade(CTrade trade,
                                 CInstrument instr) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
@@ -100,7 +100,7 @@ public class FrozenPositionDetail {
     /**
      * Cancel a close order whose frozen volume is all released.
      */
-    public void cancel() {
+    void cancel() {
         this.stage = ProcessStage.CANCELED;
     }
 
@@ -111,7 +111,7 @@ public class FrozenPositionDetail {
      *
      * @return pre-calculated closed position detail for 1 volume.
      */
-    public CInvestorPositionDetail getSingleFrozenPosition() {
+    CInvestorPositionDetail getSingleFrozenPosition() {
         return Utils.deepCopy(this.frozenSinglePosition);
     }
 
@@ -119,7 +119,7 @@ public class FrozenPositionDetail {
      * Add this frozen position detail to its parent's frozen list. Then this
      * position is calculated as frozen.
      */
-    public void setFrozen() {
+    void setFrozen() {
         this.parent.addFrozenPosition(this);
     }
 

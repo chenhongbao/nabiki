@@ -28,7 +28,6 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.active.ActiveUser;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;

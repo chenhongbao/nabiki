@@ -43,7 +43,7 @@ public class UserAccount {
     private final CTradingAccount raw;
     private final List<FrozenAccount> frozenAccount = new LinkedList<>();
 
-    public UserAccount(CTradingAccount raw, User parent) {
+    UserAccount(CTradingAccount raw, User parent) {
         this.raw = Utils.deepCopy(raw);
         this.parent = parent;
     }
@@ -53,11 +53,11 @@ public class UserAccount {
      *
      * @return user object that owns this account
      */
-    public User getParent() {
+    User getParent() {
         return this.parent;
     }
 
-    public CTradingAccount copyRawAccount() {
+    CTradingAccount copyRawAccount() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -68,7 +68,7 @@ public class UserAccount {
      * @param instr instrument
      * @param comm  commission
      */
-    public void applyTrade(CTrade trade,
+    void applyTrade(CTrade trade,
                            CInstrument instr,
                            CInstrumentCommissionRate comm) {
         var cash = toTradedCash(trade, instr, comm);
@@ -78,7 +78,7 @@ public class UserAccount {
     /**
      * Cancel an open order and release all frozen cashes and commission.
      */
-    public void cancel() {
+    void cancel() {
         for (var acc : this.frozenAccount)
             acc.cancel();
     }
@@ -100,11 +100,11 @@ public class UserAccount {
      *
      * @param frz new frozen account
      */
-    public void addFrozenAccount(FrozenAccount frz) {
+    void addFrozenAccount(FrozenAccount frz) {
         this.frozenAccount.add(frz);
     }
 
-    public FrozenAccount getOpenFrozenAccount(
+    FrozenAccount getOpenFrozenAccount(
             CInputOrder order, CInstrument instr,
             CInstrumentMarginRate margin,
             CInstrumentCommissionRate comm) {
@@ -141,7 +141,7 @@ public class UserAccount {
             return new FrozenAccount(this, c, order.VolumeTotalOriginal);
     }
 
-    public void settle(PositionTradedCash settlement, String tradingDay) {
+    void settle(PositionTradedCash settlement, String tradingDay) {
         // Unset frozen account.
         cancel();
         // Calculate fields.

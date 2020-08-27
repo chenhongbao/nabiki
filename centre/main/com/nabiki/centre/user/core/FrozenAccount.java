@@ -45,7 +45,7 @@ public class FrozenAccount {
     private final AtomicBoolean frozenSet = new AtomicBoolean(false);
     private long tradedCount = 0;
 
-    public FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
+    FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
         this.parent = parent;
         this.singleFrzCash = single;
         this.totalFrozenCount = frzCount;
@@ -55,7 +55,7 @@ public class FrozenAccount {
      * Add this frozen account to its parent's frozen list. Then this account is
      * calculated as frozen.
      */
-    public void setFrozen() {
+    void setFrozen() {
         if (!this.frozenSet.get()) {
             this.parent.addFrozenAccount(this);
             this.frozenSet.set(true);
@@ -76,7 +76,7 @@ public class FrozenAccount {
     /**
      * Cancel an open order whose frozen account is also canceled.
      */
-    public void cancel() {
+    void cancel() {
         this.stage = ProcessStage.CANCELED;
     }
 
@@ -87,7 +87,7 @@ public class FrozenAccount {
      * @param instr instrument
      * @param comm commission
      */
-    public void applyOpenTrade(CTrade trade,
+    void applyOpenTrade(CTrade trade,
                                CInstrument instr,
                                CInstrumentCommissionRate comm) {
         if (trade.Volume < 0)

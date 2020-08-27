@@ -48,7 +48,7 @@ public class UserPositionDetail {
     private final CInvestorPositionDetail raw;
     private final List<FrozenPositionDetail> frozenPosition = new LinkedList<>();
 
-    public UserPositionDetail(CInvestorPositionDetail raw) {
+    UserPositionDetail(CInvestorPositionDetail raw) {
         this.raw = Utils.deepCopy(raw);
     }
 
@@ -59,7 +59,7 @@ public class UserPositionDetail {
      * @param single close info for 1 volume
      * @param tradeCnt closed volume
      */
-    public void closePosition(PositionTradedCash single,
+    void closePosition(PositionTradedCash single,
                               long tradeCnt) {
         this.raw.CloseAmount += single.CloseAmount * tradeCnt;
         this.raw.CloseProfitByDate += single.CloseProfitByDate * tradeCnt;
@@ -86,12 +86,12 @@ public class UserPositionDetail {
     /**
      * Cancel an close order whose frozen volume is released.
      */
-    public void cancel() {
+    void cancel() {
         for (var frz : this.frozenPosition)
             frz.cancel();
     }
 
-    public int getFrozenVolume() {
+    int getFrozenVolume() {
         int frozen = 0;
         for (var pd : frozenPosition)
             frozen += pd.getFrozenVolume();
@@ -103,7 +103,7 @@ public class UserPositionDetail {
      *
      * @return available volume to close
      */
-    public int getAvailableVolume() {
+    int getAvailableVolume() {
         return this.raw.Volume - getFrozenVolume();
     }
 
@@ -126,7 +126,7 @@ public class UserPositionDetail {
      *
      * @return a deep copy of original position detail
      */
-    public CInvestorPositionDetail copyRawPosition() {
+    CInvestorPositionDetail copyRawPosition() {
         return Utils.deepCopy(this.raw);
     }
 
@@ -137,7 +137,7 @@ public class UserPositionDetail {
      * @param tradingDay today's trading day
      * @return {@link CInvestorPosition}
      */
-    public CInvestorPosition getInvestorPosition(String tradingDay) {
+    CInvestorPosition getInvestorPosition(String tradingDay) {
         var r = new CInvestorPosition();
         // Only need the following 5 fields.
         r.YdPosition = 0;
@@ -176,7 +176,7 @@ public class UserPositionDetail {
      *
      * @param frzPosition new frozen position
      */
-    public void addFrozenPosition(FrozenPositionDetail frzPosition) {
+    void addFrozenPosition(FrozenPositionDetail frzPosition) {
         this.frozenPosition.add(frzPosition);
     }
 }

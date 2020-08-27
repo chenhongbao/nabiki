@@ -44,7 +44,7 @@ public class User {
 
     private UserState state = UserState.RENEW;
 
-    public User(CTradingAccount rawAccount,
+    User(CTradingAccount rawAccount,
                 Map<String, List<UserPositionDetail>> positions) {
         this.userID  = rawAccount.AccountID;
         this.userAccount = new UserAccount(rawAccount, this);
@@ -61,7 +61,7 @@ public class User {
      *
      * @return current trading account.
      */
-    public CTradingAccount getFeaturedAccount() {
+    CTradingAccount getFeaturedAccount() {
         var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
         var posFrzCash = this.userPosition.getPositionFrozenCash();
@@ -80,7 +80,7 @@ public class User {
         return total;
     }
 
-    public void setPanic(int code, String msg) {
+    void setPanic(int code, String msg) {
         this.state = UserState.PANIC;
         this.panicReason.ErrorID = code;
         this.panicReason.ErrorMsg = msg;
@@ -90,19 +90,19 @@ public class User {
         return this.panicReason;
     }
 
-    public UserState getState() {
+    UserState getState() {
         return this.state;
     }
 
-    public UserPosition getUserPosition() {
+    UserPosition getUserPosition() {
         return this.userPosition;
     }
 
-    public UserAccount getUserAccount() {
+    UserAccount getUserAccount() {
         return this.userAccount;
     }
 
-    public void settle(SettlementPreparation prep) {
+    void settle(SettlementPreparation prep) {
         // First position, then account.
         this.userPosition.settle(prep);
         this.userAccount.settle(this.userPosition.getMoneyAfterTrade(),

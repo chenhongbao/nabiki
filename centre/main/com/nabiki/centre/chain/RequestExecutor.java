@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.active.ActiveUser;
+import com.nabiki.centre.user.core.ActiveUser;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;

@@ -28,10 +28,10 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.active.ActiveUserManager;
 import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
+import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.iop.IOPServer;
 

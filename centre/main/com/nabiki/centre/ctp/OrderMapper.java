@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
-import com.nabiki.centre.active.ActiveRequest;
+import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CInputOrder;
 import com.nabiki.objects.COrder;

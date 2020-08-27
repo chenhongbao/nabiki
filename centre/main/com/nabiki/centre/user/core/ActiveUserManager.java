@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.active;
+package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.Renewable;
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.user.core.UserManager;
-import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 
 import java.nio.file.Path;
@@ -41,56 +39,29 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ActiveUserManager implements Renewable {
     private final OrderProvider provider;
     private final Config config;
-    private final Path dataDir;
     private final UserManager userMgr;
     private final Map<String, ActiveUser> users = new ConcurrentHashMap<>();
 
     public ActiveUserManager(OrderProvider provider, Config cfg, Path dataDir) {
         this.provider = provider;
         this.config = cfg;
-        this.dataDir = dataDir;
         this.userMgr = UserManager.create(dataDir);
+        createActive();
     }
 
-    private ActiveUser getOrCreate(String userID) {
-        ActiveUser active = this.users.get(userID);
-        if (active == null) {
+    private void createActive() {
+        for (var userID : this.userMgr.getAllUserID()) {
             var usr = this.userMgr.getUser(userID);
-            if (usr == null)
-                return null;
-            active = new ActiveUser(usr, this.provider, this.config);
-            this.users.put(userID, active);
+            if (usr != null)
+                this.users.put(userID,
+                        new ActiveUser(usr, this.provider, this.config));
+            else
+                this.config.getLogger().warning("null user");
         }
-        return active;
     }
 
     public ActiveUser getActiveUser(String userID) {
-        return getOrCreate(userID);
-    }
-
-    private SettlementPreparation prepare() {
-        SettlementPreparation prep = new SettlementPreparation();
-        prep.prepare(this.config.getTradingDay());
-        for (var i : this.config.getAllInstrInfo()) {
-            // There may be some info missing, but it doesn't matter if we don't
-            // have that position.
-            // It is possible for some instruments that don't have trade for whole
-            // day whose depth md is null. Need to catch exception here and keep
-            // settlement going.
-            try {
-                prep.prepare(i.Instrument);
-                prep.prepare(i.Commission);
-                prep.prepare(i.Margin);
-                prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
-            } catch (Throwable th) {
-                if (i != null && i.Instrument != null)
-                    this.config.getLogger()
-                            .warning("can't prepare settlement: "
-                                    + i.Instrument.InstrumentID
-                                    + ", " + th.getMessage());
-            }
-        }
-        return prep;
+        return this.users.get(userID);
     }
 
     @Override
@@ -101,9 +72,8 @@ public class ActiveUserManager implements Renewable {
 
     @Override
     public void settle() throws Exception {
-        this.users.clear();
-        // Prepare info.
-        this.userMgr.prepareSettlement(prepare());
+        for (var active : this.users.values())
+            active.settle();
         this.userMgr.settle();
     }
 }

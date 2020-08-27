@@ -28,8 +28,8 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.active.ActiveUserManager;
 import com.nabiki.centre.user.auth.UserAuthManager;
+import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.iop.LoginManager;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.ServerSession;

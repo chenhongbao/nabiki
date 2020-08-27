@@ -42,13 +42,9 @@ public class UserPosition {
     // Instrument ID -> Position detail.
     private final Map<String, List<UserPositionDetail>> positionMap = new HashMap<>();
 
-    public UserPosition(Map<String, List<UserPositionDetail>> map, User parent) {
+    UserPosition(Map<String, List<UserPositionDetail>> map, User parent) {
         this.positionMap.putAll(map);
         this.parent = parent;
-    }
-
-    User getParent() {
-        return this.parent;
     }
 
     /**
@@ -58,11 +54,11 @@ public class UserPosition {
      * @param instrID instrument ID
      * @return position details of the instrument
      */
-    public List<UserPositionDetail> getSpecificPosition(String instrID) {
+    List<UserPositionDetail> getSpecificPosition(String instrID) {
         return this.positionMap.get(instrID);
     }
 
-    public Map<String, List<UserPositionDetail>> getPositionMap() {
+    Map<String, List<UserPositionDetail>> getPositionMap() {
         return this.positionMap;
     }
 
@@ -78,7 +74,7 @@ public class UserPosition {
         return r;
     }
 
-    public PositionTradedCash getMoneyAfterTrade() {
+    PositionTradedCash getMoneyAfterTrade() {
         var r = new PositionTradedCash();
         r.Margin = 0.;
         r.CloseProfitByTrade = 0.;
@@ -97,7 +93,7 @@ public class UserPosition {
         return r;
     }
 
-    public void applyOpenTrade(CTrade trade,
+    void applyOpenTrade(CTrade trade,
                                CInstrument instr,
                                CInstrumentMarginRate margin,
                                double preSettlementPrice) {
@@ -116,7 +112,7 @@ public class UserPosition {
      * @param tradingDay trading day
      * @return list of frozen position detail if the order is sent successfully
      */
-    public List<FrozenPositionDetail> peakCloseFrozen(
+    List<FrozenPositionDetail> peakCloseFrozen(
             CInputOrder order,
             CInstrument instr,
             CInstrumentCommissionRate comm,
@@ -178,7 +174,7 @@ public class UserPosition {
      *
      * @param prep settlement information
      */
-    public void settle(SettlementPreparation prep) {
+    void settle(SettlementPreparation prep) {
         if (this.positionMap.size() == 0)
             return;
         // Place to keep the settled position.
@@ -213,7 +209,7 @@ public class UserPosition {
      *
      * @return set of instrument ID
      */
-    public Set<String> getPositionInstrID() {
+    Set<String> getPositionInstrID() {
         return this.positionMap.keySet();
     }
 

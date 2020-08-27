@@ -28,7 +28,6 @@
 
 package com.nabiki.centre;
 
-import com.nabiki.centre.active.ActiveUserManager;
 import com.nabiki.centre.chain.StaticChainInstaller;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.ctp.TickProvider;
@@ -36,6 +35,7 @@ import com.nabiki.centre.ctp.WorkingState;
 import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
+import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.ConfigLoader;

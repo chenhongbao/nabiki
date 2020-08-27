@@ -29,7 +29,6 @@
 package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.Renewable;
-import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 import com.nabiki.objects.CInvestorPositionDetail;
@@ -41,10 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserManager implements Renewable {
@@ -52,17 +48,20 @@ public class UserManager implements Renewable {
     private final Path dataDir;
 
     private static UserManager singleton;
-    private SettlementPreparation prep;
 
     private UserManager(Path dataDir) {
         Objects.requireNonNull(dataDir, "user data directory null");
         this.dataDir = dataDir;
     }
 
-    public static UserManager create(Path dataDir) {
+    static UserManager create(Path dataDir) {
         if (singleton == null)
             singleton = new UserManager(dataDir);
         return singleton;
+    }
+
+    Collection<String> getAllUserID() {
+        return this.users.keySet();
     }
 
     private void init(Path dir) {
@@ -200,12 +199,8 @@ public class UserManager implements Renewable {
         }
     }
 
-    public User getUser(String userID) {
+    User getUser(String userID) {
         return this.users.get(userID);
-    }
-
-    public void prepareSettlement(SettlementPreparation prep) {
-        this.prep = prep;
     }
 
     @Override
@@ -216,9 +211,6 @@ public class UserManager implements Renewable {
 
     @Override
     public void settle() throws Exception {
-        Objects.requireNonNull(this.prep, "settlement preparation null");
-        for (var user : this.users.values())
-            user.settle(this.prep);
         write(this.dataDir);
     }
 }

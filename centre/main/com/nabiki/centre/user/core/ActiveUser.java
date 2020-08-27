@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.active;
+package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.user.core.FrozenAccount;
-import com.nabiki.centre.user.core.FrozenPositionDetail;
-import com.nabiki.centre.user.core.User;
+import com.nabiki.centre.user.core.plain.SettlementPreparation;
 import com.nabiki.centre.utils.Config;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
@@ -135,6 +133,10 @@ public class ActiveUser {
             return getInstrPosition(instrID);
     }
 
+    void settle() {
+        this.user.settle(prepare());
+    }
+
     private List<CInvestorPosition> getInstrPosition(String instrID) {
         var ret = new LinkedList<CInvestorPosition>();
         if (instrID == null || instrID.length() == 0)
@@ -202,5 +204,30 @@ public class ActiveUser {
         a.UseMargin += b.UseMargin;
         a.YdPosition += b.YdPosition;
         return Utils.deepCopy(a);
+    }
+
+    private SettlementPreparation prepare() {
+        SettlementPreparation prep = new SettlementPreparation();
+        prep.prepare(this.config.getTradingDay());
+        for (var i : this.config.getAllInstrInfo()) {
+            // There may be some info missing, but it doesn't matter if we don't
+            // have that position.
+            // It is possible for some instruments that don't have trade for whole
+            // day whose depth md is null. Need to catch exception here and keep
+            // settlement going.
+            try {
+                prep.prepare(i.Instrument);
+                prep.prepare(i.Commission);
+                prep.prepare(i.Margin);
+                prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
+            } catch (Throwable th) {
+                if (i != null && i.Instrument != null)
+                    this.config.getLogger()
+                            .warning("can't prepare settlement: "
+                                    + i.Instrument.InstrumentID
+                                    + ", " + th.getMessage());
+            }
+        }
+        return prep;
     }
 }
