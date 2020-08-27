@@ -270,10 +270,6 @@ public class Utils {
                 Files.createDirectories(parent);
             if (!Files.exists(path))
                 Files.createFile(path);
-            else if (!Files.isRegularFile(path)) {
-                Files.delete(path);
-                path.toFile().createNewFile();
-            }
         }
         return path.toFile();
     }

@@ -70,8 +70,10 @@ public class UserAuthManager implements Renewable {
                     var profile = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
                             UserAuthProfile.class);
-                    if (profile.UserID != null)
+                    if (profile != null && profile.UserID != null)
                         r.add(profile);
+                    else
+                        throw new IOException("invalid auth json");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

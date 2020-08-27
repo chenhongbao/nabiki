@@ -31,6 +31,7 @@ package com.nabiki.centre.user.auth;
 import com.nabiki.iop.x.OP;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.LinkedList;
 
 public class UserAuthProfileTest {
@@ -50,5 +51,18 @@ public class UserAuthProfileTest {
         profile.InstrumentAuths.add(auth);
 
         System.out.println(OP.toJson(profile));
+    }
+
+    @Test
+    public void renew_settle() {
+        var dir = Path.of("C:/Users/chenh/Desktop/.root/.user");
+        var auth = new UserAuthManager(dir);
+
+        try {
+            auth.renew();
+            auth.settle();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
