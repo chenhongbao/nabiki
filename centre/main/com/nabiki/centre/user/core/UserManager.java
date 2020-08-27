@@ -49,7 +49,7 @@ public class UserManager implements Renewable {
 
     private static UserManager singleton;
 
-    private UserManager(Path dataDir) {
+    UserManager(Path dataDir) {
         Objects.requireNonNull(dataDir, "user data directory null");
         this.dataDir = dataDir;
     }
@@ -152,21 +152,9 @@ public class UserManager implements Renewable {
         position.SettlementPrice = 0;
     }
 
-    // Clear all files and dirs under the specified path.
-    private void clearDir(Path dir) throws IOException {
-        if (dir == null || !dir.toFile().isDirectory())
-            return;
-        for (var f : Objects.requireNonNull(dir.toFile().listFiles()))
-            if (f.isFile())
-                Files.deleteIfExists(f.toPath());
-            else if (f.isDirectory())
-                clearDir(f.toPath());
-    }
-
     private void write(Path dir) throws IOException {
         for (var user : this.users.values()) {
             var userDir = Path.of(dir.toString(), user.getUserID());
-            clearDir(userDir);
             writeUser(userDir, user);
         }
     }
