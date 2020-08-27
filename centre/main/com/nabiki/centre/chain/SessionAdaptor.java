@@ -30,7 +30,7 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.ServerSessionAdaptor;
 import com.nabiki.iop.SessionEvent;
@@ -38,11 +38,11 @@ import com.nabiki.iop.x.OP;
 
 public class SessionAdaptor extends ServerSessionAdaptor {
     private final MarketDataRouter router;
-    private final Config config;
+    private final Global global;
 
-    SessionAdaptor(MarketDataRouter router, Config cfg) {
+    SessionAdaptor(MarketDataRouter router, Global cfg) {
         this.router = router;
-        this.config = cfg;
+        this.global = cfg;
     }
 
     @Override
@@ -52,22 +52,22 @@ public class SessionAdaptor extends ServerSessionAdaptor {
             Object eventObject) {
         switch (event) {
             case ERROR:
-                this.config.getLogger().warning(
+                this.global.getLogger().warning(
                         ((Throwable) eventObject).getMessage());
                 break;
             case MISS_HEARTBEAT:
-                this.config.getLogger().warning(
+                this.global.getLogger().warning(
                         "miss heartbeat(" + eventObject + ")");
                 break;
             case MESSAGE_NOT_DONE:
-                this.config.getLogger().warning("message not processed");
-                this.config.getLogger().warning(OP.toJson(eventObject));
+                this.global.getLogger().warning("message not processed");
+                this.global.getLogger().warning(OP.toJson(eventObject));
                 break;
             case STRANGE_MESSAGE:
             case BROKEN_BODY:
-                this.config.getLogger().warning("fail parsing message: "
+                this.global.getLogger().warning("fail parsing message: "
                         + event);
-                this.config.getLogger().warning(OP.toJson(eventObject));
+                this.global.getLogger().warning(OP.toJson(eventObject));
                 break;
             case CLOSED:
             case INPUT_CLOSED:
@@ -75,15 +75,15 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                         SubscriptionAdaptor.FRONT_MDRECEIVER_KEY);
                 if (recv != null)
                     this.router.removeReceiver((MarketDataReceiver) recv);
-                this.config.getLogger().info(
+                this.global.getLogger().info(
                         "session closed(" + session.getRemoteAddress() + ")");
                 break;
             case CREATED:
-                this.config.getLogger().info(
+                this.global.getLogger().info(
                         "session created(" + session.getRemoteAddress() + ")");
                 break;
             case OPENED:
-                this.config.getLogger().info(
+                this.global.getLogger().info(
                         "session opened(" + session.getRemoteAddress() + ")");
                 break;
             case IDLE:

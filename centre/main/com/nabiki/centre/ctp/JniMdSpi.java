@@ -57,7 +57,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenFrontConnected();
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -67,7 +67,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenFrontDisconnected(nReason);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -80,7 +80,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -93,7 +93,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenRspUserLogout(JNI.toLocal(pUserLogout), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -104,7 +104,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenRspError(JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -117,7 +117,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenRspSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -130,7 +130,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             this.provider.whenRspUnSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -140,11 +140,11 @@ public class JniMdSpi extends CThostFtdcMdSpi {
             Objects.requireNonNull(pDepthMarketData, "return md null");
             var depth = JNI.toLocal(pDepthMarketData);
             if (!this.depths.offer(depth))
-                this.provider.config.getLogger()
+                this.provider.global.getLogger()
                         .warning("can't offer depth: " + depth.InstrumentID);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.provider.config.getLogger().warning(th.getMessage());
+            this.provider.global.getLogger().warning(th.getMessage());
         }
     }
 
@@ -153,8 +153,7 @@ public class JniMdSpi extends CThostFtdcMdSpi {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    var depth = depths.take();
-                    provider.whenRtnDepthMarketData(depth);
+                    provider.whenRtnDepthMarketData(depths.take());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

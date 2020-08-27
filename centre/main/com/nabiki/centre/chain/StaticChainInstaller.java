@@ -32,7 +32,7 @@ import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.IOPServer;
 
 import java.util.Objects;
@@ -43,28 +43,28 @@ public class StaticChainInstaller {
             UserAuthManager auth,
             ActiveUserManager user,
             MarketDataRouter router,
-            Config cfg) {
+            Global global) {
         Objects.requireNonNull(server, "iop server null");
         Objects.requireNonNull(auth, "user auth manager null");
         Objects.requireNonNull(user, "active user manager null");
         Objects.requireNonNull(router, "md router null");
         Objects.requireNonNull(router, "md router null");
         // Install candle writer.
-        var rw = new CandleRW(cfg);
+        var rw = new CandleRW(global);
         router.addReceiver(rw);
         // Install login manager.
         server.setLoginManager(new UserLoginManager(auth, user));
         // Install session adaptor.
-        server.setSessionAdaptor(new SessionAdaptor(router, cfg));
+        server.setSessionAdaptor(new SessionAdaptor(router, global));
         // Install adaptors.
         var chain = server.getAdaptorChain();
         chain.addAdaptor(new RequestValidator());
-        chain.addAdaptor(new RequestExecutor());
-        chain.addAdaptor(new SubscriptionAdaptor(router, rw, cfg));
-        chain.addAdaptor(new QueryAdaptor());
+        chain.addAdaptor(new RequestExecutor(global));
+        chain.addAdaptor(new SubscriptionAdaptor(router, rw, global));
+        chain.addAdaptor(new QueryAdaptor(global));
         // Install msg writer.
         // Create msg in/out writer.
-        var msgWriter = new MsgInOutWriter(cfg);
+        var msgWriter = new MsgInOutWriter(global);
         server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
         server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
 

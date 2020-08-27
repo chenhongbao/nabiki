@@ -37,8 +37,8 @@ import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.centre.user.core.plain.UserState;
-import com.nabiki.centre.utils.Config;
-import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.iop.IOP;
 import com.nabiki.iop.x.SystemStream;
 
@@ -84,7 +84,7 @@ public class Platform {
         return Integer.parseInt(getArgument(args, prefix));
     }
 
-    private Config config;
+    private Global global;
     private CandleEngine candleEngine;
     private OrderProvider orderProvider;
     private TickProvider tickProvider;
@@ -102,13 +102,13 @@ public class Platform {
 
     private void providers() {
         // Set order provider.
-        this.orderProvider = new OrderProvider(this.config);
+        this.orderProvider = new OrderProvider(this.global);
         this.orderProvider.initialize();
         // Prepare candle engine.
-        this.candleEngine = new CandleEngine(this.config);
+        this.candleEngine = new CandleEngine(this.global);
         this.candleEngine.registerRouter(this.router);
         // Set tick provider.
-        this.tickProvider = new TickProvider(this.config);
+        this.tickProvider = new TickProvider(this.global);
         this.tickProvider.register(this.candleEngine);
         this.tickProvider.register(this.router);
         this.tickProvider.initialize();
@@ -118,13 +118,13 @@ public class Platform {
         // Server.
         var server = IOP.createServer();
         StaticChainInstaller.install(
-                server, this.authManager, this.userManager, router, config);
+                server, this.authManager, this.userManager, router, global);
         server.bind(new InetSocketAddress(host, port));
     }
 
     private void managers() {
         // Set auth/user manager.
-        var userDir = config.getRootDirectory()
+        var userDir = global.getRootDirectory()
                 .recursiveGet("dir.user")
                 .iterator()
                 .next()
@@ -132,13 +132,13 @@ public class Platform {
         this.authManager = new UserAuthManager(userDir);
         this.userManager = new ActiveUserManager(
                 orderProvider,
-                config,
+                global,
                 userDir);
     }
 
     private void system() throws IOException {
         // Set system's output and error output.
-        var dir = this.config.getRootDirectory()
+        var dir = this.global.getRootDirectory()
                 .recursiveGet("dir.log")
                 .iterator()
                 .next();
@@ -149,9 +149,9 @@ public class Platform {
     }
 
     public void start(String[] args) throws IOException {
-        // Set config.
-        ConfigLoader.rootPath = getArgument(args, "--root");
-        this.config = ConfigLoader.config();
+        // Set global.
+        GlobalConfig.rootPath = getArgument(args, "--root");
+        this.global = GlobalConfig.config();
         system();
         providers();
         managers();
@@ -212,28 +212,28 @@ public class Platform {
 
         private void renew() {
             try {
-                config.getLogger().info("platform renewing");
+                global.getLogger().info("platform renewing");
                 authManager.renew();
                 userManager.renew();
-                ConfigLoader.config();
+                GlobalConfig.config();
                 this.userState = UserState.RENEW;
-                config.getLogger().info("platform renewed");
+                global.getLogger().info("platform renewed");
             } catch (Throwable th) {
                 th.printStackTrace();
-                config.getLogger().severe("renew failed");
+                global.getLogger().severe("renew failed");
             }
         }
 
         private void settle() {
-            config.getLogger().info("platform settling");
+            global.getLogger().info("platform settling");
             try {
                 authManager.settle();
                 userManager.settle();
                 this.userState = UserState.SETTLED;
-                config.getLogger().info("platform settled");
+                global.getLogger().info("platform settled");
             } catch (Throwable th) {
                 th.printStackTrace();
-                config.getLogger().severe("settlement failed");
+                global.getLogger().severe("settlement failed");
             }
         }
 
@@ -243,7 +243,7 @@ public class Platform {
         // especially on login/out failure.
         private void start() {
             this.workingState = WorkingState.STARTING;
-            config.getLogger().info("platform starting");
+            global.getLogger().info("platform starting");
             // Trader logins.
             while (orderProvider.getWorkingState() == WorkingState.STOPPED) {
                 orderProvider.login();
@@ -251,12 +251,12 @@ public class Platform {
                 try {
                     if (!orderProvider.waitLastInstrument(
                             TimeUnit.MINUTES.toMillis(1)))
-                        config.getLogger().info("query instrument timeout");
+                        global.getLogger().info("query instrument timeout");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 if (orderProvider.getWorkingState() != WorkingState.STARTED)
-                    config.getLogger().severe("trader didn't start up");
+                    global.getLogger().severe("trader didn't start up");
             }
             // Md logins.
             while (tickProvider.getWorkingState() == WorkingState.STOPPED) {
@@ -264,7 +264,7 @@ public class Platform {
                 try {
                     if (WorkingState.STARTED != tickProvider.waitWorkingState(
                             TimeUnit.MINUTES.toMillis(1)))
-                        config.getLogger().info("wait md login timeout");
+                        global.getLogger().info("wait md login timeout");
                     else
                         tickProvider.subscribe(orderProvider.getInstruments());
                 } catch (InterruptedException e) {
@@ -273,19 +273,19 @@ public class Platform {
             }
             // Change order provider state.
             this.workingState = WorkingState.STARTED;
-            config.getLogger().info("platform started");
+            global.getLogger().info("platform started");
         }
 
         private void stop() {
             this.workingState = WorkingState.STOPPING;
-            config.getLogger().info("platform stopping");
+            global.getLogger().info("platform stopping");
             // Trader logout.
             orderProvider.logout();
             // Wait for logout.
             try {
                 if (WorkingState.STOPPED != orderProvider.waitWorkingState(
                         TimeUnit.MINUTES.toMillis(1)))
-                    config.getLogger().severe("trader logout timeout");
+                    global.getLogger().severe("trader logout timeout");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -295,13 +295,13 @@ public class Platform {
             try {
                 if (WorkingState.STOPPED != tickProvider.waitWorkingState(
                         TimeUnit.MINUTES.toMillis(1)))
-                    config.getLogger().severe("md logout timeout");
+                    global.getLogger().severe("md logout timeout");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             // Change state.
             this.workingState = WorkingState.STOPPED;
-            config.getLogger().info("platform stopped");
+            global.getLogger().info("platform stopped");
         }
 
         @Override
@@ -317,7 +317,7 @@ public class Platform {
                     settle();
             } catch (Throwable th) {
                 th.printStackTrace();
-                config.getLogger().severe(th.getMessage());
+                global.getLogger().severe(th.getMessage());
             }
         }
     }

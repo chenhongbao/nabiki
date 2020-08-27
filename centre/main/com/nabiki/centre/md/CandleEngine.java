@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.md;
 
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CandleEngine extends TimerTask {
     private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
-    private final Config config;
+    private final Global global;
     private final Timer timer = new Timer();
     private final Map<String, Product> products = new ConcurrentHashMap<>();
     private final Map<String, Product> instrProducts = new ConcurrentHashMap<>();
@@ -51,8 +51,8 @@ public class CandleEngine extends TimerTask {
 
     private final AtomicBoolean working = new AtomicBoolean(false);
 
-    public CandleEngine(Config cfg) {
-        this.config = cfg;
+    public CandleEngine(Global cfg) {
+        this.global = cfg;
         prepare();
     }
 
@@ -97,7 +97,7 @@ public class CandleEngine extends TimerTask {
 
     public void setupDurations() {
         for (var p : this.products.values())
-            for (var du : this.config.getDurations())
+            for (var du : this.global.getDurations())
                 p.registerDuration(du);
     }
 
@@ -137,23 +137,23 @@ public class CandleEngine extends TimerTask {
         var now = getRoundTime(
                 LocalTime.now(),
                 (int)TimeUnit.MILLISECONDS.toSeconds(MILLIS));
-        var hours = this.config.getAllTradingHour();
+        var hours = this.global.getAllTradingHour();
         for (var e : this.products.entrySet()) {
             var h = hours.get(e.getKey());
             if (h == null) {
-                this.config.getLogger().warning(
-                        Utils.formatLog("trading hour config null", e.getKey(),
+                this.global.getLogger().warning(
+                        Utils.formatLog("trading hour global null", e.getKey(),
                                 null, null));
                 continue;
             }
-            for (var du : this.config.getDurations()) {
+            for (var du : this.global.getDurations()) {
                 if (h.contains(du, now))
                     for (var r : this.routers) {
                         try {
                             r.route(e.getValue().pop(du));
                         } catch (Throwable th) {
                             th.printStackTrace();
-                            config.getLogger().severe(th.getMessage());
+                            global.getLogger().severe(th.getMessage());
                         }
                     }
             }
@@ -190,7 +190,7 @@ public class CandleEngine extends TimerTask {
             var r = new HashSet<CCandle>();
             synchronized (this.candles) {
                 for (var c : this.candles.values())
-                    r.add(c.peak(du, config.getTradingDay()));
+                    r.add(c.peak(du, global.getTradingDay()));
             }
             return r;
         }
@@ -201,7 +201,7 @@ public class CandleEngine extends TimerTask {
             var r = new HashSet<CCandle>();
             synchronized (this.candles) {
                 for (var c : this.candles.values())
-                    r.add(c.pop(du, config.getTradingDay()));
+                    r.add(c.pop(du, global.getTradingDay()));
             }
             return r;
         }

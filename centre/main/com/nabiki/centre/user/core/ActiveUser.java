@@ -30,7 +30,7 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
@@ -39,13 +39,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUser {
     private final User user;
-    private final Config config;
+    private final Global global;
     private final OrderProvider orderProvider;
     private final Map<String, ActiveRequest> requests = new ConcurrentHashMap<>();
 
-    public ActiveUser(User user, OrderProvider orderProvider, Config cfg) {
+    public ActiveUser(User user, OrderProvider orderProvider, Global cfg) {
         this.user = user;
-        this.config = cfg;
+        this.global = cfg;
         this.orderProvider = orderProvider;
     }
 
@@ -59,13 +59,13 @@ public class ActiveUser {
 
     public String insertOrder(CInputOrder order) {
         var active = new ActiveRequest(order, this.user, this.orderProvider,
-                this.config);
+                this.global);
         this.requests.put(active.getRequestUUID(), active);
         try {
             active.execOrder();
         } catch (Throwable th) {
             th.printStackTrace();
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed order insertion", order.UserID,
                             th.getMessage(), null));
         }
@@ -74,13 +74,13 @@ public class ActiveUser {
 
     public String orderAction(CInputOrderAction action) {
         var active = new ActiveRequest(action, this.user, this.orderProvider,
-                this.config);
+                this.global);
         this.requests.put(active.getRequestUUID(), active);
         try {
             active.execAction();
         } catch (Throwable th) {
             th.printStackTrace();
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed order action", action.UserID,
                             th.getMessage(), null));
         }
@@ -122,7 +122,7 @@ public class ActiveUser {
         // Call user's method directly, sync here.
         synchronized (this.user) {
             var account = this.user.getFeaturedAccount();
-            account.TradingDay = this.config.getTradingDay();
+            account.TradingDay = this.global.getTradingDay();
             return account;
         }
     }
@@ -154,7 +154,7 @@ public class ActiveUser {
         var usrPos = this.user.getUserPosition().getSpecificPosition(instrID);
         if (usrPos == null || usrPos.size() == 0)
             return ret;
-        var tradingDay = this.config.getTradingDay();
+        var tradingDay = this.global.getTradingDay();
         if (tradingDay == null || tradingDay.length() == 0)
             throw new IllegalArgumentException("trading day null");
         CInvestorPosition lp = null, sp = null;
@@ -176,11 +176,11 @@ public class ActiveUser {
         }
         // Add to result set.
         if (lp != null) {
-            lp.TradingDay = this.config.getTradingDay();
+            lp.TradingDay = this.global.getTradingDay();
             ret.add(lp);
         }
         if (sp != null) {
-            sp.TradingDay = this.config.getTradingDay();
+            sp.TradingDay = this.global.getTradingDay();
             ret.add(sp);
         }
         return ret;
@@ -218,8 +218,8 @@ public class ActiveUser {
 
     private SettlementPreparation prepare() {
         SettlementPreparation prep = new SettlementPreparation();
-        prep.prepare(this.config.getTradingDay());
-        for (var i : this.config.getAllInstrInfo()) {
+        prep.prepare(this.global.getTradingDay());
+        for (var i : this.global.getAllInstrInfo()) {
             // There may be some info missing, but it doesn't matter if we don't
             // have that position.
             // It is possible for some instruments that don't have trade for whole
@@ -229,10 +229,10 @@ public class ActiveUser {
                 prep.prepare(i.Instrument);
                 prep.prepare(i.Commission);
                 prep.prepare(i.Margin);
-                prep.prepare(this.config.getDepthMarketData(i.Instrument.InstrumentID));
+                prep.prepare(this.global.getDepthMarketData(i.Instrument.InstrumentID));
             } catch (Throwable th) {
                 if (i != null && i.Instrument != null)
-                    this.config.getLogger()
+                    this.global.getLogger()
                             .warning("can't prepare settlement: "
                                     + i.Instrument.InstrumentID
                                     + ", " + th.getMessage());

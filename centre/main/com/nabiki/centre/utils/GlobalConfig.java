@@ -32,6 +32,7 @@ import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.centre.utils.plain.TradingHourConfig;
 import com.nabiki.iop.x.OP;
+import com.nabiki.iop.x.PerformanceMeasure;
 import com.nabiki.objects.CDepthMarketData;
 import com.nabiki.objects.CInstrument;
 import com.nabiki.objects.CInstrumentCommissionRate;
@@ -47,57 +48,57 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class ConfigLoader {
+public class GlobalConfig {
     public static String rootPath;
 
     static AtomicBoolean configLoaded = new AtomicBoolean(false);
-    final static Config config = new Config();
+    final static Global GLOBAL = new Global();
 
     /**
-     * Get single {@link com.nabiki.centre.utils.Config} instance. If the instance
+     * Get single {@link Global} instance. If the instance
      * exists, the method first clears the internal data then initializes again.
      *
-     * @return instance of {@link com.nabiki.centre.utils.Config}
+     * @return instance of {@link Global}
      * @throws IOException fail to read or process configuration files, or content
      *                     in the configuration file is corrupted or invalid
      */
-    public static Config config() throws IOException {
-        synchronized (config) {
-            // Clear old config.
+    public static Global config() throws IOException {
+        synchronized (GLOBAL) {
+            // Clear old GLOBAL.
             if (configLoaded.get())
                 clearConfig();
             loadConfig();
         }
-        return config;
+        return GLOBAL;
     }
 
     public static void setDepthMarketData(CDepthMarketData md) {
-        config.depths.put(md.InstrumentID, md);
+        GLOBAL.depths.put(md.InstrumentID, md);
     }
 
     public static void setTradingDay(String day) {
-        config.tradingDay = day;
+        GLOBAL.tradingDay = day;
     }
 
     public static void setInstrConfig(CInstrument instr) {
-        synchronized (config.instrInfo) {
-            if (!config.instrInfo.containsKey(instr.InstrumentID))
-                config.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(instr.InstrumentID).Instrument = instr;
+        synchronized (GLOBAL.instrInfo) {
+            if (!GLOBAL.instrInfo.containsKey(instr.InstrumentID))
+                GLOBAL.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
+            GLOBAL.instrInfo.get(instr.InstrumentID).Instrument = instr;
         }
         // Set the product and its instruments.
         var pid = Utils.getProductID(instr.InstrumentID);
-        synchronized (config.products) {
-            if (!config.products.containsKey(pid))
-                config.products.put(pid, new HashSet<>());
-            config.products.get(pid).add(instr.InstrumentID);
+        synchronized (GLOBAL.products) {
+            if (!GLOBAL.products.containsKey(pid))
+                GLOBAL.products.put(pid, new HashSet<>());
+            GLOBAL.products.get(pid).add(instr.InstrumentID);
         }
     }
 
     private static void setProductConfig(
             CInstrumentMarginRate margin,
             String productID) {
-        var instruments = config.getProduct(productID);
+        var instruments = GLOBAL.getProduct(productID);
         if (instruments == null)
             return;
         for (var instrument : instruments) {
@@ -111,10 +112,10 @@ public class ConfigLoader {
 
     public static void setSingleConfig(
             CInstrumentMarginRate margin) {
-        synchronized (config.instrInfo) {
-            if (!config.instrInfo.containsKey(margin.InstrumentID))
-                config.instrInfo.put(margin.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(margin.InstrumentID).Margin = margin;
+        synchronized (GLOBAL.instrInfo) {
+            if (!GLOBAL.instrInfo.containsKey(margin.InstrumentID))
+                GLOBAL.instrInfo.put(margin.InstrumentID, new InstrumentInfo());
+            GLOBAL.instrInfo.get(margin.InstrumentID).Margin = margin;
         }
     }
 
@@ -132,7 +133,7 @@ public class ConfigLoader {
     private static void setProductConfig(
             CInstrumentCommissionRate commission,
             String productID) {
-        var instruments = config.getProduct(productID);
+        var instruments = GLOBAL.getProduct(productID);
         if (instruments == null)
             return;
         for (var instrument : instruments) {
@@ -149,10 +150,10 @@ public class ConfigLoader {
 
     private static void setSingleConfig(
             CInstrumentCommissionRate commission) {
-        synchronized (config.instrInfo) {
-            if (!config.instrInfo.containsKey(commission.InstrumentID))
-                config.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
-            config.instrInfo.get(commission.InstrumentID).Commission = commission;
+        synchronized (GLOBAL.instrInfo) {
+            if (!GLOBAL.instrInfo.containsKey(commission.InstrumentID))
+                GLOBAL.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
+            GLOBAL.instrInfo.get(commission.InstrumentID).Commission = commission;
         }
     }
 
@@ -168,7 +169,7 @@ public class ConfigLoader {
     }
 
     private static void setInstrConfig() {
-        var dirs = config.getRootDirectory()
+        var dirs = GLOBAL.getRootDirectory()
                 .recursiveGet("dir.flow.info");
         if (dirs.size() == 0)
             return;
@@ -182,8 +183,8 @@ public class ConfigLoader {
                                 CInstrument.class));
                     }
                 } catch (IOException e) {
-                    config.getLogger().warning(
-                            Utils.formatLog("failed instr config",
+                    GLOBAL.getLogger().warning(
+                            Utils.formatLog("failed instr GLOBAL",
                                     null, e.getMessage(), null));
                 }
                 return false;
@@ -205,8 +206,8 @@ public class ConfigLoader {
                                 CInstrumentMarginRate.class));
                     }
                 } catch (IOException e) {
-                    config.getLogger().warning(
-                            Utils.formatLog("failed instr config",
+                    GLOBAL.getLogger().warning(
+                            Utils.formatLog("failed instr GLOBAL",
                                     null, e.getMessage(), null));
                 }
                 return false;
@@ -215,19 +216,20 @@ public class ConfigLoader {
     }
 
     /*
-     Only clear the config-defined settings. For those updated in runtime, don't
+     Only clear the GLOBAL-defined settings. For those updated in runtime, don't
      clear them.
      */
     private static void clearConfig() {
-        config.tradingHour.clear();
-        config.login.clear();
+        GLOBAL.tradingHour.clear();
+        GLOBAL.login.clear();
     }
 
     private static void loadConfig() throws IOException {
         // First create dirs, then logger.
         setDirectories();
         setLogger();
-        // Config below uses logger to keep error info.
+        setPerformanceMeasure();
+        // Global below uses logger to keep error info.
         setLoginConfig();
         setTradingHourConfig();
         setInstrConfig();
@@ -235,8 +237,12 @@ public class ConfigLoader {
         configLoaded.set(true);
     }
 
+    private static void setPerformanceMeasure() {
+        GLOBAL.performanceMeasure = new PerformanceMeasure();
+    }
+
     private static void setTradingHourConfig() throws IOException {
-        var s = config.getRootDirectory().recursiveGet("dir.cfg.hour");
+        var s = GLOBAL.getRootDirectory().recursiveGet("dir.cfg.hour");
         if (s.size() == 0)
             throw new IOException("directory for trading hour configs not found");
         // Iterate over all dirs.
@@ -253,7 +259,7 @@ public class ConfigLoader {
                     Objects.requireNonNull(c);
                     Objects.requireNonNull(c.TradingHour);
                     Objects.requireNonNull(c.ProductID);
-                    // Empty config.
+                    // Empty GLOBAL.
                     if (c.TradingHour.size() == 0 || c.ProductID.size() == 0)
                         return false;
                     // Prepare parameters to construct keeper.
@@ -264,20 +270,20 @@ public class ConfigLoader {
                         hours[index++] = new TradingHourKeeper
                                 .TradingHour(hour.From, hour.To);
                     var h = new TradingHourKeeper(hours);
-                    // Save mapping into config.
+                    // Save mapping into GLOBAL.
                     // All product IDs are lower case.
                     for (var p : c.ProductID)
-                        config.tradingHour.put(p, h);
+                        GLOBAL.tradingHour.put(p, h);
                 } catch (IOException | NullPointerException e) {
-                    config.getLogger().warning(
-                            Utils.formatLog("failed trading hour config",
+                    GLOBAL.getLogger().warning(
+                            Utils.formatLog("failed trading hour GLOBAL",
                                     null, e.getMessage(), null));
                 }
                 return false;
             });
         }
-        // Write sample config.
-        if (config.tradingHour.size() == 0) {
+        // Write sample GLOBAL.
+        if (GLOBAL.tradingHour.size() == 0) {
             var cfg = s.iterator().next();
             cfg.setFile("cfg.hour.sample", "hour.sample.json");
             Utils.writeText(OP.toJson(new TradingHourConfig()),
@@ -285,15 +291,15 @@ public class ConfigLoader {
                     false);
         } else {
             // Set hour keepers.
-            for (var keeper : config.tradingHour.values()) {
-                for (var du : config.durations)
+            for (var keeper : GLOBAL.tradingHour.values()) {
+                for (var du : GLOBAL.durations)
                     keeper.sample(du);
             }
         }
     }
 
     private static void setLoginConfig() throws IOException {
-        var s = config.getRootDirectory().recursiveGet("dir.cfg.login");
+        var s = GLOBAL.getRootDirectory().recursiveGet("dir.cfg.login");
         if (s.size() == 0)
             throw new IOException("directory for login configs not found");
         // Iterate over all files under dir.
@@ -306,17 +312,17 @@ public class ConfigLoader {
                     var c = OP.fromJson(
                             Utils.readText(file, StandardCharsets.UTF_8),
                             LoginConfig.class);
-                    config.login.put(c.Name, c);
+                    GLOBAL.login.put(c.Name, c);
                 } catch (IOException e) {
-                    config.getLogger().warning(
-                            Utils.formatLog("failed login config",
+                    GLOBAL.getLogger().warning(
+                            Utils.formatLog("failed login GLOBAL",
                                     null, e.getMessage(), null));
                 }
                 return false;
             });
         }
         // Write a configuration sample.
-        if (config.login.size() == 0) {
+        if (GLOBAL.login.size() == 0) {
             var cfg = s.iterator().next();
             cfg.setFile("cfg.login.sample", "login.sample.json");
             Utils.writeText(OP.toJson(new LoginConfig()),
@@ -349,15 +355,15 @@ public class ConfigLoader {
         flow.setDirectory("dir.flow.err", ".err");
         flow.setDirectory("dir.flow.info", ".info");
 
-        // Set config.
-        config.rootDirectory = root;
+        // Set GLOBAL.
+        GLOBAL.rootDirectory = root;
     }
 
     private static void setLogger() {
-        if (Config.logger == null) {
+        if (Global.logger == null) {
             // Get logging directory.
             String fp;
-            var iter = config.getRootDirectory().recursiveGet("dir.log")
+            var iter = GLOBAL.getRootDirectory().recursiveGet("dir.log")
                     .iterator();
             if (!iter.hasNext())
                 fp = "system.log";
@@ -369,12 +375,12 @@ public class ConfigLoader {
                 // File and format.
                 var fh = new FileHandler(fp, true);
                 fh.setFormatter(new SimpleFormatter());
-                // Get logger with config's name.
-                Config.logger = Logger.getLogger(Config.class.getCanonicalName());
-                Config.logger.addHandler(fh);
-                Config.logger.setUseParentHandlers(false);
+                // Get logger with GLOBAL's name.
+                Global.logger = Logger.getLogger(Global.class.getCanonicalName());
+                Global.logger.addHandler(fh);
+                Global.logger.setUseParentHandlers(false);
             } catch (IOException e) {
-                Config.logger = Logger.getGlobal();
+                Global.logger = Logger.getGlobal();
             }
         }
     }

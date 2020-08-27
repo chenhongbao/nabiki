@@ -31,7 +31,7 @@ package com.nabiki.centre.chain;
 import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerMessageAdaptor;
@@ -78,12 +78,12 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     static String FRONT_MDRECEIVER_KEY = "front.mdrecv";
     private final MarketDataRouter router;
     private final CandleRW candlRW;
-    private final Config config;
+    private final Global global;
 
-    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Config cfg) {
+    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global cfg) {
         this.router = router;
         this.candlRW = rw;
-        this.config = cfg;
+        this.global = cfg;
     }
 
     private static Message toMessage(CDepthMarketData depth) {
@@ -147,10 +147,10 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         if (instrID == null)
             return r;
         for (var s : instrID) {
-            if (this.config.getInstrInfo(s) != null)
+            if (this.global.getInstrInfo(s) != null)
                 r.add(s);
             else
-                this.config.getLogger().warning("unknown instrument: " + s);
+                this.global.getLogger().warning("unknown instrument: " + s);
         }
         return r;
     }

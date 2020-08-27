@@ -29,8 +29,8 @@
 package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.utils.Config;
-import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
@@ -46,7 +46,7 @@ import static org.junit.Assert.fail;
 
 public class UserSuperTest {
 
-    protected Config config;
+    protected Global global;
     protected User user;
     protected OrderProvider provider;
     protected final String flowDir = "C:\\Users\\chenh\\Desktop\\.root";
@@ -69,10 +69,10 @@ public class UserSuperTest {
     }
 
     protected void prepare() {
-        ConfigLoader.rootPath = flowDir;
+        GlobalConfig.rootPath = flowDir;
 
         try {
-            this.config = ConfigLoader.config();
+            this.global = GlobalConfig.config();
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -110,9 +110,9 @@ public class UserSuperTest {
         margin.LongMarginRatioByVolume = 0.0D;
         margin.LongMarginRatioByMoney = 0.05D;
 
-        ConfigLoader.setInstrConfig(instrument);
-        ConfigLoader.setInstrConfig(commission);
-        ConfigLoader.setInstrConfig(margin);
+        GlobalConfig.setInstrConfig(instrument);
+        GlobalConfig.setInstrConfig(commission);
+        GlobalConfig.setInstrConfig(margin);
 
         //
         // Set trading day.
@@ -121,7 +121,7 @@ public class UserSuperTest {
         if (LocalTime.now().getHour() >= 21)
             tradingDay = tradingDay.plusDays(1);
 
-        ConfigLoader.setTradingDay(Utils.getDay(tradingDay, null));
+        GlobalConfig.setTradingDay(Utils.getDay(tradingDay, null));
 
         //
         // Set depth market data.
@@ -148,7 +148,7 @@ public class UserSuperTest {
         depth.UpdateTime = Utils.getTime(LocalTime.now(), null);
         depth.UpdateMillisec = 500;
 
-        ConfigLoader.setDepthMarketData(depth);
+        GlobalConfig.setDepthMarketData(depth);
 
         //
         // Set position.
@@ -169,7 +169,7 @@ public class UserSuperTest {
         p.CloseAmount = 0;
         p.CloseProfitByDate = 0;
         p.CloseProfitByTrade = 0;
-        p.LastSettlementPrice = config.getDepthMarketData(p.InstrumentID).PreSettlementPrice;
+        p.LastSettlementPrice = global.getDepthMarketData(p.InstrumentID).PreSettlementPrice;
         p.HedgeFlag = CombHedgeFlagType.SPECULATION;
 
         // History position.
@@ -234,7 +234,7 @@ public class UserSuperTest {
         //
         // Create provider.
         //
-        provider = new OrderProvider(config);
+        provider = new OrderProvider(global);
         var rspInfo = new CRspInfo();
         rspInfo.ErrorID = 0;
         provider.whenRspSettlementInfoConfirm(

@@ -57,7 +57,7 @@ public class UserCloseTest extends UserSuperTest {
         assertEquals(frzCash.FrozenMargin, 0, 0.0);
 
         // Test position info.
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var positions = active.getPosition("c2101");
         for (var p : positions) {
             if (p.PosiDirection == PosiDirectionType.LONG) {
@@ -65,14 +65,14 @@ public class UserCloseTest extends UserSuperTest {
                 assertEquals(p.YdPosition, 20);
                 assertEquals(p.TodayPosition, 20);
                 assertEquals(p.PreSettlementPrice,
-                        config.getDepthMarketData("c2101").PreSettlementPrice,
+                        global.getDepthMarketData("c2101").PreSettlementPrice,
                         0.0);
             } else {
                 assertEquals(p.Position, 40);
                 assertEquals(p.YdPosition, 20);
                 assertEquals(p.TodayPosition, 20);
                 assertEquals(p.PreSettlementPrice,
-                        config.getDepthMarketData("c2101").PreSettlementPrice,
+                        global.getDepthMarketData("c2101").PreSettlementPrice,
                         0.0);
             }
         }
@@ -91,7 +91,7 @@ public class UserCloseTest extends UserSuperTest {
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
         order.Direction = DirectionType.DIRECTION_BUY;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         // Test order exec state.
@@ -113,13 +113,13 @@ public class UserCloseTest extends UserSuperTest {
         assertEquals(sgFrzPos.Volume, 1);
         assertEquals(sgFrzPos.Margin,
                 sgFrzPos.MarginRateByMoney * sgFrzPos.LastSettlementPrice
-                        * config.getInstrInfo("c2101").Instrument.VolumeMultiple,
+                        * global.getInstrInfo("c2101").Instrument.VolumeMultiple,
                 0.0);
 
         var frzCash = p.getSingleFrozenCash();
         assertEquals(frzCash.FrozenCommission,
                 order.VolumeTotalOriginal
-                        * config.getInstrInfo("c2101").Commission.CloseRatioByVolume,
+                        * global.getInstrInfo("c2101").Commission.CloseRatioByVolume,
                 0.0);
     }
 
@@ -136,7 +136,7 @@ public class UserCloseTest extends UserSuperTest {
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
         order.Direction = DirectionType.DIRECTION_BUY;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         sleep(1000);
@@ -162,7 +162,7 @@ public class UserCloseTest extends UserSuperTest {
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
         order.Direction = DirectionType.DIRECTION_BUY;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         sleep(1000);
@@ -188,10 +188,10 @@ public class UserCloseTest extends UserSuperTest {
             var sgFrzPos = p.getSingleFrozenPosition();
             var sgFrzCash = p.getSingleFrozenCash();
 
-            if (sgFrzPos.TradingDay.compareTo(config.getTradingDay()) == 0) {
+            if (sgFrzPos.TradingDay.compareTo(global.getTradingDay()) == 0) {
                 assertEquals(p.getFrozenVolume(), 10);
                 assertEquals(sgFrzCash.FrozenCommission,
-                        config.getInstrInfo("c2101").Commission.CloseTodayRatioByVolume,
+                        global.getInstrInfo("c2101").Commission.CloseTodayRatioByVolume,
                         0.0);
             } else {
                 assertEquals(p.getFrozenVolume(), 20);
@@ -201,7 +201,7 @@ public class UserCloseTest extends UserSuperTest {
             assertEquals(sgFrzPos.Volume, 1);
             assertEquals(sgFrzPos.Margin,
                     sgFrzPos.MarginRateByMoney * sgFrzPos.LastSettlementPrice
-                            * config.getInstrInfo("c2101").Instrument.VolumeMultiple,
+                            * global.getInstrInfo("c2101").Instrument.VolumeMultiple,
                     0.0);
             // Count total.
             totalCloseVolume += p.getFrozenVolume();
@@ -233,7 +233,7 @@ public class UserCloseTest extends UserSuperTest {
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
-        rtnOrder.TradingDay = config.getTradingDay();
+        rtnOrder.TradingDay = global.getTradingDay();
 
         // Update rtn order.
         provider.whenRtnOrder(rtnOrder);
@@ -399,7 +399,7 @@ public class UserCloseTest extends UserSuperTest {
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
         order.Direction = DirectionType.DIRECTION_BUY;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         sleep(1000);
@@ -431,7 +431,7 @@ public class UserCloseTest extends UserSuperTest {
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
-        rtnOrder.TradingDay = config.getTradingDay();
+        rtnOrder.TradingDay = global.getTradingDay();
 
         // Update rtn order.
         provider.whenRtnOrder(rtnOrder);

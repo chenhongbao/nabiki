@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 import com.nabiki.objects.*;
@@ -41,22 +41,22 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ReqRspWriter {
-    private final Config config;
+    private final Global global;
     private final OrderMapper mapper;
     private final Path reqDir, rtnDir, infoDir, errDir;
     private final DateTimeFormatter formatter
             = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSSSSS");
 
-    public ReqRspWriter(OrderMapper mapper, Config cfg) {
+    public ReqRspWriter(OrderMapper mapper, Global cfg) {
         this.mapper = mapper;
-        this.config = cfg;
+        this.global = cfg;
         this.reqDir = getPath(cfg, "dir.flow.req");
         this.rtnDir = getPath(cfg, "dir.flow.rtn");
         this.infoDir = getPath(cfg, "dir.flow.info");
         this.errDir = getPath(cfg, "dir.flow.err");
     }
 
-    private Path getPath(Config cfg, String key) {
+    private Path getPath(Global cfg, String key) {
         var dirs = cfg.getRootDirectory().recursiveGet(key);
         if (dirs.size() > 0)
             return dirs.iterator().next().path();
@@ -68,7 +68,7 @@ public class ReqRspWriter {
         try {
             Utils.writeText(text, file, StandardCharsets.UTF_8, false);
         } catch (IOException e) {
-            this.config.getLogger()
+            this.global.getLogger()
                     .warning(file.toString() + ". " + e.getMessage());
         }
     }
@@ -80,7 +80,7 @@ public class ReqRspWriter {
             Utils.createFile(r, false);
             return r.toFile();
         } catch (IOException e) {
-            this.config.getLogger().warning(root.toString() + "/" + fn + ". "
+            this.global.getLogger().warning(root.toString() + "/" + fn + ". "
                     + e.getMessage());
             return new File(".failover");
         }

@@ -37,13 +37,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class ConfigTest {
-    static Config config;
+public class GlobalTest {
+    static Global global;
 
     static {
-        ConfigLoader.rootPath = "C:\\Users\\chenh\\Desktop\\app_root";
+        GlobalConfig.rootPath = "C:\\Users\\chenh\\Desktop\\app_root";
         try {
-            config = ConfigLoader.config();
+            global = GlobalConfig.config();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -51,7 +51,7 @@ public class ConfigTest {
 
     @Test
     public void dirs() {
-        var cfg = config.getRootDirectory();
+        var cfg = global.getRootDirectory();
         Assert.assertFalse("shouldn't be empty", cfg.isEmpty());
 
         // Test default directory layout.
@@ -68,16 +68,16 @@ public class ConfigTest {
 
     @Test
     public void cfg() {
-        var hour = config.getRootDirectory().recursiveGet("cfg.hour.sample");
+        var hour = global.getRootDirectory().recursiveGet("cfg.hour.sample");
 
-        // Test sample config existence.
-        Assert.assertEquals("should have at least on config file",
+        // Test sample GLOBAL existence.
+        Assert.assertEquals("should have at least on GLOBAL file",
                 1, hour.size());
         var h = hour.iterator().next();
         Assert.assertTrue("should be file", h.isFile());
         Assert.assertFalse("should has sample content", h.isEmpty());
 
-        // Test sample config content validity.
+        // Test sample GLOBAL content validity.
         try {
             var hourCfg = OP.fromJson(Utils.readText(h.file(),
                     StandardCharsets.UTF_8), TradingHourConfig.class);
@@ -85,16 +85,16 @@ public class ConfigTest {
             Assert.fail(e.getMessage());
         }
 
-        var login = config.getRootDirectory().recursiveGet("cfg.login.sample");
+        var login = global.getRootDirectory().recursiveGet("cfg.login.sample");
 
-        // Test sample config existence.
-        Assert.assertEquals("should have at least on config file",
+        // Test sample GLOBAL existence.
+        Assert.assertEquals("should have at least on GLOBAL file",
                 1, login.size());
         var l = login.iterator().next();
         Assert.assertTrue("should be file", l.isFile());
         Assert.assertFalse("should has sample content", l.isEmpty());
 
-        // Test sample config content validity.
+        // Test sample GLOBAL content validity.
         try {
             var loginCfg = OP.fromJson(Utils.readText(l.file(),
                     StandardCharsets.UTF_8), LoginConfig.class);
@@ -105,7 +105,7 @@ public class ConfigTest {
 
     @Test
     public void log() {
-        var logs = config.getRootDirectory().recursiveGet("dir.log");
+        var logs = global.getRootDirectory().recursiveGet("dir.log");
 
         Assert.assertEquals("should have 1 element",
                 1, logs.size());
@@ -113,6 +113,6 @@ public class ConfigTest {
                 logs.iterator().next().isFile());
 
         // Test logger.
-        config.getLogger().info("This is a junit test.");
+        global.getLogger().info("This is a junit test.");
     }
 }

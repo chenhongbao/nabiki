@@ -30,8 +30,8 @@ package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.md.MarketDataRouter;
-import com.nabiki.centre.utils.Config;
-import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
@@ -43,7 +43,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class TickProvider {
-    protected final Config config;
+    protected final Global global;
     protected final LoginConfig loginCfg;
     protected final CThostFtdcMdApi mdApi;
     protected final ReqRspWriter msgWriter;
@@ -61,14 +61,14 @@ public class TickProvider {
     protected String actionDay;
     protected JniMdSpi spi;
 
-    public TickProvider(Config cfg) {
-        this.config = cfg;
-        this.loginCfg = this.config.getLoginConfigs().get("md");
+    public TickProvider(Global global) {
+        this.global = global;
+        this.loginCfg = this.global.getLoginConfigs().get("md");
         this.mdApi = CThostFtdcMdApi.CreateFtdcMdApi(
                 this.loginCfg.FlowDirectory,
                 this.loginCfg.IsUsingUDP,
                 this.loginCfg.IsMulticast);
-        this.msgWriter = new ReqRspWriter(null, this.config);
+        this.msgWriter = new ReqRspWriter(null, this.global);
         // Schedule action day updater.
         prepareActionDayUpdater();
     }
@@ -123,7 +123,7 @@ public class TickProvider {
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(1));
                 } catch (InterruptedException e) {
-                    this.config.getLogger().warning(
+                    this.global.getLogger().warning(
                             Utils.formatLog("failed sleep", null,
                                     e.getMessage(), null));
                 }
@@ -206,7 +206,7 @@ public class TickProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed login request", null,
                             null, r));
     }
@@ -219,7 +219,7 @@ public class TickProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed logout request", null,
                             null, r));
     }
@@ -234,12 +234,12 @@ public class TickProvider {
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED) {
             doLogin();
-            this.config.getLogger().info("md reconnected");
+            this.global.getLogger().info("md reconnected");
         }
     }
 
     public void whenFrontDisconnected(int reason) {
-        this.config.getLogger().warning("md disconnected");
+        this.global.getLogger().warning("md disconnected");
         this.isLogin = false;
         this.isConnected = false;
         // If disconnected when or after provider stops, candle engine isn't working.
@@ -252,7 +252,7 @@ public class TickProvider {
     public void whenRspError(CRspInfo rspInfo, int requestId,
                            boolean isLast) {
         this.msgWriter.writeErr(rspInfo);
-        this.config.getLogger().severe(
+        this.global.getLogger().severe(
                 Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
                         rspInfo.ErrorID));
     }
@@ -267,7 +267,7 @@ public class TickProvider {
             setWorking(true);
             // Signal login state changed.
             this.loginSignal.signal();
-            this.config.getLogger().info("md login");
+            this.global.getLogger().info("md login");
             updateActionDay();
             // If there are instruments to subscribe, do it.
             // The subscribe method clears the container, so the instruments must be
@@ -275,7 +275,7 @@ public class TickProvider {
             if (this.subscribed.size() > 0)
                 subscribe(new HashSet<>(this.subscribed));
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -291,11 +291,11 @@ public class TickProvider {
             setWorking(false);
             // Signal login state changed to logout.
             this.loginSignal.signal();
-            this.config.getLogger().info("md logout");
+            this.global.getLogger().info("md logout");
             // Clear last subscription on successful logout.
             this.subscribed.clear();
         } else {
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed logout", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -306,36 +306,43 @@ public class TickProvider {
             CSpecificInstrument specificInstrument,
             CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID != 0) {
-            this.config.getLogger().warning(Utils.formatLog(
+            this.global.getLogger().warning(Utils.formatLog(
                     "failed subscription", specificInstrument.InstrumentID,
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
         if (isLast)
-            this.config.getLogger().info("get last subscription rsp");
+            this.global.getLogger().info("get last subscription rsp");
     }
 
     public void whenRspUnSubMarketData(
             CSpecificInstrument specificInstrument,
             CRspInfo rspInfo, int nRequestID, boolean isLast) {
         if (rspInfo.ErrorID != 0) {
-            this.config.getLogger().warning(Utils.formatLog(
+            this.global.getLogger().warning(Utils.formatLog(
                     "failed un-subscription", specificInstrument.InstrumentID,
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
         if (isLast)
-            this.config.getLogger().info("get last un-subscription rsp");
+            this.global.getLogger().info("get last un-subscription rsp");
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
         // Set action day to today.
         depthMarketData.ActionDay = this.actionDay;
+        // Measure performance.
+        var max = this.global.getPerformanceMeasure().start("when.md.max");
+        var avr = this.global.getPerformanceMeasure().start("when.md.avr");
+        // Update.
         for (var r : this.routers)
             r.route(depthMarketData);
         for (var e : this.engines)
             e.update(depthMarketData);
-        // Update config's depth.
-        ConfigLoader.setDepthMarketData(depthMarketData);
+        // End measurement.
+        max.endWithMax();
+        avr.end();
+        // Update global's depth.
+        GlobalConfig.setDepthMarketData(depthMarketData);
     }
 }

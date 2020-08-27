@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.IOPSession;
 import com.nabiki.iop.Message;
@@ -42,17 +42,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MsgInOutWriter {
-    private final Config config;
+    private final Global global;
     private final Path inDir, outDir;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-    MsgInOutWriter(Config cfg) {
-        this.config = cfg;
+    MsgInOutWriter(Global cfg) {
+        this.global = cfg;
         this.inDir = getPath(cfg, "dir.flow.client_in");
         this.outDir = getPath(cfg, "dir.flow.client_out");
     }
 
-    private Path getPath(Config cfg, String key) {
+    private Path getPath(Global cfg, String key) {
         var dirs = cfg.getRootDirectory().recursiveGet(key);
         if (dirs.size() > 0)
             return dirs.iterator().next().path();
@@ -64,7 +64,7 @@ public class MsgInOutWriter {
         try {
             Utils.writeText(text, file, StandardCharsets.UTF_8, false);
         } catch (IOException e) {
-            this.config.getLogger()
+            this.global.getLogger()
                     .warning(file.toString() + ". " + e.getMessage());
         }
     }
@@ -76,7 +76,7 @@ public class MsgInOutWriter {
             Utils.createFile(r, false);
             return r.toFile();
         } catch (IOException e) {
-            this.config.getLogger().warning(root.toString() + "/" + fn + ". "
+            this.global.getLogger().warning(root.toString() + "/" + fn + ". "
                     + e.getMessage());
             return new File(".failover");
         }

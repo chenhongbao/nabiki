@@ -28,7 +28,7 @@
 
 package com.nabiki.centre.md;
 
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
@@ -45,12 +45,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CandleRW extends CandleAccess implements MarketDataReceiver {
     private final Path candleDir;
-    private final Config config;
+    private final Global global;
     private final Map<String, Map<Integer, File>> files = new ConcurrentHashMap<>();
 
-    public CandleRW(Config cfg) {
-        this.config = cfg;
-        this.candleDir = getPath(this.config);
+    public CandleRW(Global cfg) {
+        this.global = cfg;
+        this.candleDir = getPath(this.global);
         loadInstrFiles();
     }
 
@@ -65,7 +65,7 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
                     getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
                 } catch (Throwable th) {
                     th.printStackTrace();
-                    config.getLogger().warning(
+                    global.getLogger().warning(
                             "incorrect candle file name: " + n);
                 }
             }
@@ -73,7 +73,7 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
         });
     }
 
-    private Path getPath(Config cfg) {
+    private Path getPath(Global cfg) {
         var dirs = cfg.getRootDirectory().recursiveGet("dir.cdl");
         if (dirs.size() > 0)
             return dirs.iterator().next().path();
@@ -122,7 +122,7 @@ public class CandleRW extends CandleAccess implements MarketDataReceiver {
         try {
             super.write(getFile(candle.InstrumentID, candle.Minute), candle);
         } catch (IOException e) {
-            config.getLogger().warning(
+            global.getLogger().warning(
                     "fail writing candle " + candle.InstrumentID
                             + "(" + candle.Minute + ")");
         }

@@ -30,7 +30,7 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.Renewable;
 import com.nabiki.centre.ctp.OrderProvider;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -38,13 +38,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUserManager implements Renewable {
     private final OrderProvider provider;
-    private final Config config;
+    private final Global global;
     private final UserManager userMgr;
     private final Map<String, ActiveUser> users = new ConcurrentHashMap<>();
 
-    public ActiveUserManager(OrderProvider provider, Config cfg, Path dataDir) {
+    public ActiveUserManager(OrderProvider provider, Global cfg, Path dataDir) {
         this.provider = provider;
-        this.config = cfg;
+        this.global = cfg;
         this.userMgr = UserManager.create(dataDir);
     }
 
@@ -53,9 +53,9 @@ public class ActiveUserManager implements Renewable {
             var usr = this.userMgr.getUser(userID);
             if (usr != null)
                 this.users.put(userID,
-                        new ActiveUser(usr, this.provider, this.config));
+                        new ActiveUser(usr, this.provider, this.global));
             else
-                this.config.getLogger().warning("null user");
+                this.global.getLogger().warning("null user");
         }
     }
 

@@ -30,7 +30,7 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.plain.UserState;
-import com.nabiki.centre.utils.Config;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.iop.x.OP;
@@ -48,7 +48,7 @@ public class ActiveRequest {
     private final String uuid = UUID.randomUUID().toString();
     private final User user;
     private final OrderProvider orderProvider;
-    private final Config config;
+    private final Global global;
     private final CInputOrder order;
     private final CInputOrderAction action;
 
@@ -58,10 +58,10 @@ public class ActiveRequest {
             CInputOrder order,
             User user,
             OrderProvider provider,
-            Config cfg) {
+            Global cfg) {
         this.user = user;
         this.orderProvider = provider;
-        this.config = cfg;
+        this.global = cfg;
         this.order = Utils.deepCopy(order);
         this.action = null;
     }
@@ -70,10 +70,10 @@ public class ActiveRequest {
             CInputOrderAction action,
             User user,
             OrderProvider mgr,
-            Config cfg) {
+            Global cfg) {
         this.user = user;
         this.orderProvider = mgr;
-        this.config = cfg;
+        this.global = cfg;
         this.order = null;
         this.action = Utils.deepCopy(action);
     }
@@ -130,7 +130,7 @@ public class ActiveRequest {
             this.execRsp.ErrorMsg = ErrorMessages.NOT_INITED;
             return;
         }
-        var instrInfo = this.config.getInstrInfo(this.order.InstrumentID);
+        var instrInfo = this.global.getInstrInfo(this.order.InstrumentID);
         if (instrInfo == null) {
             this.execRsp.ErrorID = ErrorCodes.INSTRUMENT_NOT_FOUND;
             this.execRsp.ErrorMsg = ErrorMessages.INSTRUMENT_NOT_FOUND;
@@ -148,7 +148,7 @@ public class ActiveRequest {
                     insertClose(this.order, instrInfo);
                     break;
                 default:
-                    this.config.getLogger().warning("unknown offset flag: "
+                    this.global.getLogger().warning("unknown offset flag: "
                             + this.order.CombOffsetFlag);
                     break;
             }
@@ -206,7 +206,7 @@ public class ActiveRequest {
 
     private boolean isValidVolume(CInputOrder order) {
         int minVol, maxVol;
-        var instrInfo = this.config.getInstrInfo(order.InstrumentID);
+        var instrInfo = this.global.getInstrInfo(order.InstrumentID);
         if (instrInfo == null || instrInfo.Instrument == null) {
             minVol = 1;
             maxVol = Integer.MAX_VALUE;
@@ -219,7 +219,7 @@ public class ActiveRequest {
     }
 
     private boolean isValidPrice(CInputOrder order) {
-        var depth = this.config.getDepthMarketData(order.InstrumentID);
+        var depth = this.global.getDepthMarketData(order.InstrumentID);
         if (depth == null)
             return true;
         else
@@ -270,7 +270,7 @@ public class ActiveRequest {
                         order,
                         instrInfo.Instrument,
                         instrInfo.Commission,
-                        this.config.getTradingDay());
+                        this.global.getTradingDay());
         if (pds == null || pds.size() == 0) {
             this.execRsp.ErrorID = ErrorCodes.OVER_CLOSE_POSITION;
             this.execRsp.ErrorMsg = ErrorMessages.OVER_CLOSE_POSITION;
@@ -307,7 +307,7 @@ public class ActiveRequest {
         Objects.requireNonNull(cls, "failed deep copy");
         cls.VolumeTotalOriginal = (int) pd.getFrozenVolume();
         if (pd.getSingleFrozenPosition().TradingDay
-                .compareTo(this.config.getTradingDay()) != 0) {
+                .compareTo(this.global.getTradingDay()) != 0) {
             // Yesterday.
             cls.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE_YESTERDAY;
         } else {
@@ -346,7 +346,7 @@ public class ActiveRequest {
             case OrderStatusType.UNKNOWN:
                 break;
             default:
-                this.config.getLogger().warning("unknown order status: "
+                this.global.getLogger().warning("unknown order status: "
                         + this.order.CombOffsetFlag);
                 break;
         }
@@ -357,7 +357,7 @@ public class ActiveRequest {
             case CombOffsetFlagType.OFFSET_OPEN:
                 // Cancel cash.
                 if (this.frozenAccount == null) {
-                    this.config.getLogger().severe(
+                    this.global.getLogger().severe(
                             Utils.formatLog("no frozen cash",
                                     rtn.OrderRef, null, null));
                     this.user.getUserAccount().getParent().setPanic(
@@ -374,7 +374,7 @@ public class ActiveRequest {
             case CombOffsetFlagType.OFFSET_FORCE_OFF:
             case CombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
                 if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
-                    this.config.getLogger().severe(
+                    this.global.getLogger().severe(
                             Utils.formatLog("no frozen position",
                                     rtn.OrderRef, null, null));
                     this.user.setPanic(
@@ -385,7 +385,7 @@ public class ActiveRequest {
                 // Cancel position.
                 var p = this.frozenPosition.get(rtn.OrderRef);
                 if (p == null) {
-                    this.config.getLogger().severe(
+                    this.global.getLogger().severe(
                             Utils.formatLog("frozen position not found",
                                     rtn.OrderRef, null, null));
                     this.user.setPanic(
@@ -396,7 +396,7 @@ public class ActiveRequest {
                 p.cancel();
                 break;
             default:
-                this.config.getLogger().warning("unknown offset flag: "
+                this.global.getLogger().warning("unknown offset flag: "
                         + this.order.CombOffsetFlag);
                 break;
         }
@@ -421,7 +421,7 @@ public class ActiveRequest {
     private void directUpdateTrade(CTrade trade) {
         if (trade == null)
             throw new NullPointerException("return trade null");
-        var instrInfo = this.config.getInstrInfo(trade.InstrumentID);
+        var instrInfo = this.global.getInstrInfo(trade.InstrumentID);
         Objects.requireNonNull(instrInfo, "instr info null");
         Objects.requireNonNull(instrInfo.Instrument, "instrument null");
         Objects.requireNonNull(instrInfo.Margin, "margin null");
@@ -439,7 +439,7 @@ public class ActiveRequest {
                 closeTrade(trade, instrInfo);
                 break;
             default:
-                this.config.getLogger().warning("unknown offset flag: "
+                this.global.getLogger().warning("unknown offset flag: "
                         + this.order.CombOffsetFlag);
                 break;
         }
@@ -447,7 +447,7 @@ public class ActiveRequest {
 
     private void openTrade(CTrade trade, InstrumentInfo instrInfo) {
         if (this.frozenAccount == null) {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("no frozen cash",
                             trade.OrderRef, null, null));
             this.user.setPanic(
@@ -455,7 +455,7 @@ public class ActiveRequest {
                     "frozen cash null");
             return;
         }
-        var depth = this.config.getDepthMarketData(trade.InstrumentID);
+        var depth = this.global.getDepthMarketData(trade.InstrumentID);
         Objects.requireNonNull(depth, "depth market data null");
         // Update frozen account, user account and user position.
         // The frozen account handles the update of user account.
@@ -472,7 +472,7 @@ public class ActiveRequest {
 
     private void closeTrade(CTrade trade, InstrumentInfo instrInfo) {
         if (this.frozenPosition == null || this.frozenPosition.size() == 0) {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("no frozen position",
                             trade.OrderRef, null, null));
             this.user.setPanic(
@@ -484,7 +484,7 @@ public class ActiveRequest {
         // The frozen position handles the update of user position.
         var p = this.frozenPosition.get(trade.OrderRef);
         if (p == null) {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("frozen position not found",
                             trade.OrderRef, null, null));
             this.user.setPanic(
@@ -493,7 +493,7 @@ public class ActiveRequest {
             return;
         }
         if (p.getFrozenVolume() < trade.Volume) {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("not enough frozen position",
                             trade.OrderRef, null, null));
             this.user.setPanic(

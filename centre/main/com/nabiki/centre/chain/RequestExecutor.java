@@ -29,6 +29,7 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.core.ActiveUser;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
@@ -38,7 +39,9 @@ import com.nabiki.objects.*;
 import java.util.UUID;
 
 public class RequestExecutor extends RequestSuper {
-    RequestExecutor() {
+    private final Global global;
+    RequestExecutor(Global global) {
+        this.global = global;
     }
 
     @Override
@@ -62,7 +65,14 @@ public class RequestExecutor extends RequestSuper {
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         } else {
             var activeUser = (ActiveUser)attr;
+            // Measure performance.
+            var max = this.global.getPerformanceMeasure().start("order.insert.max");
+            var avr = this.global.getPerformanceMeasure().start("order.insert.avr");
+            // Order insert.
             var uuid = activeUser.insertOrder(request);
+            // End measurement.
+            max.endWithMax();
+            avr.end();
             // Build response.
             var o = toRtnOrder(request);
             rsp.RspInfo = activeUser.getExecRsp(uuid);
@@ -99,7 +109,14 @@ public class RequestExecutor extends RequestSuper {
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
         } else {
             var activeUser = (ActiveUser)attr;
+            // Measure performance.
+            var max = this.global.getPerformanceMeasure().start("order.insert.max");
+            var avr = this.global.getPerformanceMeasure().start("order.insert.avr");
+            // Order action.
             var uuid = activeUser.orderAction(request);
+            // End measurement.
+            max.endWithMax();
+            avr.end();
             // Build response.
             var o = toOrderAction(request);
             o.OrderLocalID = request.OrderSysID;

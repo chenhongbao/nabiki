@@ -46,13 +46,13 @@ public class UserSettleTest extends UserSuperTest {
     private void checkSettle() {
         double settlementPrice = 2120.0D;
 
-        var active = new ActiveUser(user, provider, config);
-        config.getDepthMarketData("c2101").SettlementPrice = settlementPrice;
+        var active = new ActiveUser(user, provider, global);
+        global.getDepthMarketData("c2101").SettlementPrice = settlementPrice;
 
-        var info = config.getInstrInfo("c2101");
+        var info = global.getInstrInfo("c2101");
         SettlementPreparation prep = new SettlementPreparation();
-        prep.prepare(config.getTradingDay());
-        prep.prepare(config.getDepthMarketData("c2101"));
+        prep.prepare(global.getTradingDay());
+        prep.prepare(global.getDepthMarketData("c2101"));
         prep.prepare(info.Instrument);
         prep.prepare(info.Margin);
         prep.prepare(info.Commission);
@@ -64,15 +64,15 @@ public class UserSettleTest extends UserSuperTest {
         }
 
         // Get instrument info.
-        var instrument = config.getInstrInfo("c2101").Instrument;
-        var margin = config.getInstrInfo("c2101").Margin;
+        var instrument = global.getInstrInfo("c2101").Instrument;
+        var margin = global.getInstrInfo("c2101").Margin;
         int totalVolume = 0;
 
         var positions = user.getUserPosition().getSpecificPosition("c2101");
         for (var position : positions) {
             var rawPosition = position.copyRawPosition();
             double profitByDate, profitByTrade;
-            if (rawPosition.TradingDay.compareTo(config.getTradingDay()) != 0)
+            if (rawPosition.TradingDay.compareTo(global.getTradingDay()) != 0)
                 profitByDate = (rawPosition.SettlementPrice - rawPosition.LastSettlementPrice)
                         * rawPosition.Volume * instrument.VolumeMultiple;
             else
@@ -139,10 +139,10 @@ public class UserSettleTest extends UserSuperTest {
         var renewUser = userManager.getUser("0001");
 
         // Check account.
-        var renewActive = new ActiveUser(renewUser, provider, config);
+        var renewActive = new ActiveUser(renewUser, provider, global);
         var renewAccount = renewActive.getTradingAccount();
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var account = active.getTradingAccount();
 
         assertEquals(renewAccount.PreMargin, account.CurrMargin, 0.01);
@@ -186,7 +186,7 @@ public class UserSettleTest extends UserSuperTest {
         order.CombHedgeFlag = CombHedgeFlagType.SPECULATION;
         order.Direction = DirectionType.DIRECTION_SELL;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         // Sleep and wait for the thread to take request.
@@ -218,7 +218,7 @@ public class UserSettleTest extends UserSuperTest {
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
-        rtnOrder.TradingDay = config.getTradingDay();
+        rtnOrder.TradingDay = global.getTradingDay();
 
         // Update rtn order.
         provider.whenRtnOrder(rtnOrder);
@@ -275,7 +275,7 @@ public class UserSettleTest extends UserSuperTest {
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
         order.Direction = DirectionType.DIRECTION_BUY;
 
-        var active = new ActiveUser(user, provider, config);
+        var active = new ActiveUser(user, provider, global);
         var uuid = active.insertOrder(order);
 
         sleep(1000);
@@ -307,7 +307,7 @@ public class UserSettleTest extends UserSuperTest {
         rtnOrder.InsertDate = Utils.getDay(LocalDate.now(), null);
         rtnOrder.InsertTime = Utils.getTime(LocalTime.now(), null);
         rtnOrder.UpdateTime = Utils.getTime(LocalTime.now(), null);
-        rtnOrder.TradingDay = config.getTradingDay();
+        rtnOrder.TradingDay = global.getTradingDay();
 
         // Update rtn order.
         provider.whenRtnOrder(rtnOrder);

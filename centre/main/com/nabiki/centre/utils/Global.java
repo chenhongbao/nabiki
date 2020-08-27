@@ -30,6 +30,7 @@ package com.nabiki.centre.utils;
 
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
+import com.nabiki.iop.x.PerformanceMeasure;
 import com.nabiki.objects.CDepthMarketData;
 
 import java.time.Duration;
@@ -39,8 +40,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-public class Config {
-    // Config's name -> LoginConfig
+public class Global {
+    // Global's name -> LoginConfig
     final Map<String, LoginConfig> login = new ConcurrentHashMap<>();
 
     // ProductID -> TradingHourKeeper
@@ -61,10 +62,20 @@ public class Config {
     };
 
     static Logger logger;
+    PerformanceMeasure performanceMeasure;
     String tradingDay;
     EasyFile rootDirectory;
 
-    Config() {
+    Global() {
+    }
+
+    /**
+     * Get global performance measure.
+     *
+     * @return global performance measure.
+     */
+    public PerformanceMeasure getPerformanceMeasure() {
+        return this.performanceMeasure;
     }
 
     /**
@@ -147,7 +158,7 @@ public class Config {
      * @return {@link Logger} with default setting
      */
     public Logger getLogger() {
-        return Config.logger;
+        return Global.logger;
     }
 
     /**

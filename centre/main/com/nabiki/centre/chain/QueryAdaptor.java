@@ -29,6 +29,7 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.core.ActiveUser;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerMessageAdaptor;
@@ -39,7 +40,10 @@ import com.nabiki.objects.*;
 import java.util.UUID;
 
 public class QueryAdaptor extends ServerMessageAdaptor {
-    public QueryAdaptor() {
+    private final Global global;
+
+    public QueryAdaptor(Global global) {
+        this.global = global;
     }
 
     @Override
@@ -62,7 +66,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
         } else {
             var activeUser = (ActiveUser) attr;
+            // Performance measurement.
+            var max = this.global.getPerformanceMeasure().start("qry.account.max");
+            var var = this.global.getPerformanceMeasure().start("qry.account.avr");
+            // Qry account.
             rsp.Body = activeUser.getTradingAccount();
+            // End measurement.
+            max.endWithMax();
+            var.end();
             rsp.RspInfo.ErrorID = ErrorCodes.NONE;
         }
         rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
@@ -92,7 +103,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             session.sendResponse(rsp);
         } else {
             var activeUser = (ActiveUser) attr;
+            // Performance measurement.
+            var max = this.global.getPerformanceMeasure().start("qry.rtnorder.max");
+            var var = this.global.getPerformanceMeasure().start("qry.rtnorder.avr");
+            // Qry rtn order.
             var orders = activeUser.getRtnOrder(query.OrderSysID);
+            // End measurement.
+            max.endWithMax();
+            var.end();
             if (orders == null || orders.size() == 0) {
                 // No rtn orders found.
                 rsp.CurrentCount = 1;
@@ -140,7 +158,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             session.sendResponse(rsp);
         } else {
             var activeUser = (ActiveUser)attr;
+            // Performance measurement.
+            var max = this.global.getPerformanceMeasure().start("qry.position.max");
+            var var = this.global.getPerformanceMeasure().start("qry.position.avr");
+            // Qry position.
             var positions = activeUser.getPosition(query.InstrumentID);
+            // End measurement.
+            max.endWithMax();
+            var.end();
             if (positions == null || positions.size() == 0) {
                 rsp.CurrentCount = 1;
                 rsp.TotalCount = 1;

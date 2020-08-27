@@ -29,8 +29,8 @@
 package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.user.core.ActiveRequest;
-import com.nabiki.centre.utils.Config;
-import com.nabiki.centre.utils.ConfigLoader;
+import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class OrderProvider {
     protected final OrderMapper mapper = new OrderMapper();
     protected final AtomicInteger orderRef = new AtomicInteger(0);
-    protected final Config config;
+    protected final Global global;
     protected final LoginConfig loginCfg;
     protected final ReqRspWriter msgWriter;
     protected final CThostFtdcTraderApi api;
@@ -84,12 +84,12 @@ public class OrderProvider {
     // SPI.
     protected JniTraderSpi spi;
 
-    public OrderProvider(Config cfg) {
-        this.config = cfg;
-        this.loginCfg = this.config.getLoginConfigs().get("trader");
+    public OrderProvider(Global global) {
+        this.global = global;
+        this.loginCfg = this.global.getLoginConfigs().get("trader");
         this.api = CThostFtdcTraderApi
                 .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
-        this.msgWriter = new ReqRspWriter(this.mapper, this.config);
+        this.msgWriter = new ReqRspWriter(this.mapper, this.global);
         this.pendingReqs = new LinkedBlockingQueue<>();
         // Start order daemon.
         this.orderDaemon.start();
@@ -101,7 +101,7 @@ public class OrderProvider {
 
     private boolean estimateQueryCount() {
         int estimatedQueryCount = 0;
-        for (var i : config.getAllInstrInfo()) {
+        for (var i : global.getAllInstrInfo()) {
             if (i == null)
                 continue;
             if (i.Instrument == null)
@@ -112,7 +112,7 @@ public class OrderProvider {
                 ++estimatedQueryCount;
         }
         if (estimatedQueryCount > 0)
-            config.getLogger().info(
+            global.getLogger().info(
                     "estimated query count: " + estimatedQueryCount);
         return estimatedQueryCount != 0;
     }
@@ -162,7 +162,7 @@ public class OrderProvider {
         try {
             this.orderDaemon.join(5000);
         } catch (InterruptedException e) {
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed join order daemon",
                             null, e.getMessage(), null));
         }
@@ -272,10 +272,10 @@ public class OrderProvider {
     protected static final int CONT_TRADE_BEG = 21;
 
     protected boolean isOver(String instrID) {
-        var hour = this.config.getTradingHour(null, instrID);
+        var hour = this.global.getTradingHour(null, instrID);
         if (hour == null)
             throw new IllegalArgumentException("invalid instr for trading hour");
-        var depth = this.config.getDepthMarketData(instrID);
+        var depth = this.global.getDepthMarketData(instrID);
         if (depth == null)
             throw new IllegalStateException("depth market data not found");
         var depthTradingDay = Utils.parseDay(depth.TradingDay, null);
@@ -343,7 +343,7 @@ public class OrderProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed login request", null,
                             null, r));
     }
@@ -356,7 +356,7 @@ public class OrderProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed logout request", null,
                             null, r));
     }
@@ -372,7 +372,7 @@ public class OrderProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed authentication", null,
                             null, r));
     }
@@ -387,7 +387,7 @@ public class OrderProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed confirm settlement", null,
                             null, r));
     }
@@ -441,7 +441,7 @@ public class OrderProvider {
     protected void doOrder(COrder rtn) {
         var active = this.mapper.getActiveOrder(rtn.OrderRef);
         if (active == null) {
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("active order not found", rtn.OrderRef,
                             null, null));
             return;
@@ -457,7 +457,7 @@ public class OrderProvider {
             active.updateRtnOrder(rtn);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed update rtn order", rtn.OrderRef,
                             th.getMessage(), null));
         }
@@ -466,7 +466,7 @@ public class OrderProvider {
     protected void doTrade(CTrade trade) {
         var active = this.mapper.getActiveOrder(trade.OrderRef);
         if (active == null) {
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("active order not found", trade.OrderRef,
                             null, null));
             return;
@@ -481,7 +481,7 @@ public class OrderProvider {
             active.updateTrade(trade);
         } catch (Throwable th) {
             th.printStackTrace();
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed update rtn trade", trade.OrderRef,
                             th.getMessage(), null));
         }
@@ -493,7 +493,7 @@ public class OrderProvider {
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed query instrument", null,
                             null, r));
     }
@@ -514,12 +514,12 @@ public class OrderProvider {
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED) {
             doAuthentication();
-            this.config.getLogger().info("trader reconnected");
+            this.global.getLogger().info("trader reconnected");
         }
     }
 
     public void whenFrontDisconnected(int reason) {
-        this.config.getLogger().warning("trader disconnected");
+        this.global.getLogger().warning("trader disconnected");
         this.isConnected = false;
         this.isConfirmed = false;
         // Don't change working state here because it may disconnect in half way.
@@ -527,7 +527,7 @@ public class OrderProvider {
 
     public void whenErrRtnOrderAction(COrderAction orderAction,
                                       CRspInfo rspInfo) {
-        this.config.getLogger().warning(
+        this.global.getLogger().warning(
                 Utils.formatLog("failed action", orderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Rewrite the local ID.
@@ -540,7 +540,7 @@ public class OrderProvider {
 
     public void whenErrRtnOrderInsert(CInputOrder inputOrder,
                                       CRspInfo rspInfo) {
-        this.config.getLogger().severe(
+        this.global.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
@@ -553,9 +553,9 @@ public class OrderProvider {
             CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             doLogin();
-            this.config.getLogger().info("trader authenticated");
+            this.global.getLogger().info("trader authenticated");
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed authentication", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -566,7 +566,7 @@ public class OrderProvider {
     public void whenRspError(CRspInfo rspInfo, int requestId,
                              boolean isLast) {
         this.msgWriter.writeErr(rspInfo);
-        this.config.getLogger().severe(
+        this.global.getLogger().severe(
                 Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
                         rspInfo.ErrorID));
     }
@@ -575,7 +575,7 @@ public class OrderProvider {
                                    CRspInfo rspInfo, int requestId,
                                    boolean isLast) {
         this.msgWriter.writeErr(inputOrderAction, rspInfo);
-        this.config.getLogger().warning(
+        this.global.getLogger().warning(
                 Utils.formatLog("failed action", inputOrderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
     }
@@ -583,7 +583,7 @@ public class OrderProvider {
     public void whenRspOrderInsert(CInputOrder inputOrder,
                                    CRspInfo rspInfo, int requestId,
                                    boolean isLast) {
-        this.config.getLogger().severe(
+        this.global.getLogger().severe(
                 Utils.formatLog("failed order insertion", inputOrder.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
@@ -599,7 +599,7 @@ public class OrderProvider {
             var accepted = InstrumentFilter.accept(instrument.InstrumentID);
             if (accepted) {
                 this.msgWriter.writeInfo(instrument);
-                ConfigLoader.setInstrConfig(instrument);
+                GlobalConfig.setInstrConfig(instrument);
             }
             // Sync on instrument set.
             synchronized (this.instruments) {
@@ -610,7 +610,7 @@ public class OrderProvider {
                 this.qryInstrLast = isLast;
             }
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed instrument query", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -620,7 +620,7 @@ public class OrderProvider {
         // Signal last rsp.
         if (this.qryInstrLast) {
             this.lastRspSignal.signal();
-            this.config.getLogger().info("get last qry instrument rsp");
+            this.global.getLogger().info("get last qry instrument rsp");
         }
     }
 
@@ -629,9 +629,9 @@ public class OrderProvider {
             CRspInfo rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeInfo(instrumentCommissionRate);
-            ConfigLoader.setInstrConfig(instrumentCommissionRate);
+            GlobalConfig.setInstrConfig(instrumentCommissionRate);
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed commission query", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -645,9 +645,9 @@ public class OrderProvider {
             CRspInfo rspInfo, int requestID, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
             this.msgWriter.writeInfo(instrumentMarginRate);
-            ConfigLoader.setInstrConfig(instrumentMarginRate);
+            GlobalConfig.setInstrConfig(instrumentMarginRate);
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed margin query", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -660,13 +660,13 @@ public class OrderProvider {
             CSettlementInfoConfirm settlementInfoConfirm,
             CRspInfo rspInfo, int requestId, boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.config.getLogger().info("trader confirm settlement");
+            this.global.getLogger().info("trader confirm settlement");
             this.isConfirmed = true;
             this.workingState = WorkingState.STARTED;
             // Query instruments.
             doQueryInstr();
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed settlement confirm", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -682,8 +682,8 @@ public class OrderProvider {
             doSettlement();
             doRspLogin(rspUserLogin);
             // Set trading day.
-            ConfigLoader.setTradingDay(rspUserLogin.TradingDay);
-            this.config.getLogger().info("trader login");
+            GlobalConfig.setTradingDay(rspUserLogin.TradingDay);
+            this.global.getLogger().info("trader login");
             // Align time.
             this.timeAligner.align("SHFE", LocalTime.now(), rspLogin.SHFETime);
             this.timeAligner.align("CZCE", LocalTime.now(), rspLogin.CZCETime);
@@ -691,7 +691,7 @@ public class OrderProvider {
             this.timeAligner.align("FFEX", LocalTime.now(), rspLogin.FFEXTime);
             this.timeAligner.align("INE", LocalTime.now(), rspLogin.INETime);
         } else {
-            this.config.getLogger().severe(
+            this.global.getLogger().severe(
                     Utils.formatLog("failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -703,13 +703,13 @@ public class OrderProvider {
                                   CRspInfo rspInfo, int requestId,
                                   boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            this.config.getLogger().info("trader logout");
+            this.global.getLogger().info("trader logout");
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
             // Signal logout.
             this.lastRspSignal.signal();
         } else {
-            this.config.getLogger().warning(
+            this.global.getLogger().warning(
                     Utils.formatLog("failed logout", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
@@ -717,7 +717,14 @@ public class OrderProvider {
     }
 
     public void whenRtnOrder(COrder order) {
+        // Measure performance.
+        var max = this.global.getPerformanceMeasure().start("when.order.max");
+        var avr = this.global.getPerformanceMeasure().start("when.order.avr");
+        // Process order.
         doOrder(order);
+        // End measurement.
+        max.endWithMax();
+        avr.end();
         // The codes below follow the doXXX method because the parameter's fields
         // were rewritten by the method, with local IDs.
         this.msgWriter.writeRtn(order);
@@ -725,7 +732,14 @@ public class OrderProvider {
     }
 
     public void whenRtnTrade(CTrade trade) {
+        // Measure performance.
+        var max = this.global.getPerformanceMeasure().start("when.trade.max");
+        var avr = this.global.getPerformanceMeasure().start("when.trade.avr");
+        // Process order.
         doTrade(trade);
+        // End measurement.
+        max.endWithMax();
+        avr.end();
         // The writing method must follow the doXXX method because the fields are
         // rewritten with local IDs.
         this.msgWriter.writeRtn(trade);
@@ -772,7 +786,7 @@ public class OrderProvider {
                             || workingState == WorkingState.STOPPED)
                         break;
                     else
-                        config.getLogger().warning(
+                        global.getLogger().warning(
                                 Utils.formatLog("order daemon interrupted",
                                         null, e.getMessage(),
                                         null));
@@ -847,7 +861,7 @@ public class OrderProvider {
         }
 
         protected int fillAndSendAction(CInputOrderAction action) {
-            var instrInfo = config.getInstrInfo(action.InstrumentID);
+            var instrInfo = global.getInstrInfo(action.InstrumentID);
             var rtn = mapper.getRtnOrder(action.OrderRef);
             // Use order ref + front ID + session ID by default.
             // Keep original order ref and instrument ID.
@@ -876,15 +890,15 @@ public class OrderProvider {
         }
 
         protected boolean canTrade(String instrID) {
-            var hour = config.getTradingHour(null, instrID);
+            var hour = global.getTradingHour(null, instrID);
             if (hour == null) {
-                config.getLogger().warning(
-                        Utils.formatLog("trading hour config null", instrID,
+                global.getLogger().warning(
+                        Utils.formatLog("trading hour global null", instrID,
                                 null, null));
                 return false;
             }
             LocalTime now;
-            var ins = config.getInstrInfo(instrID);
+            var ins = global.getInstrInfo(instrID);
             if (ins != null && ins.Instrument != null)
                 now = timeAligner.getAlignTime(ins.Instrument.ExchangeID,
                         LocalTime.now());
@@ -912,7 +926,7 @@ public class OrderProvider {
                 hint = "failed sending action";
             } else
                 return;
-            config.getLogger().warning(
+            global.getLogger().warning(
                     Utils.formatLog(hint, ref, null, r));
         }
     }
@@ -947,12 +961,12 @@ public class OrderProvider {
                         doQuery();
                     } catch (Throwable th) {
                         th.printStackTrace();
-                        config.getLogger().warning(th.getMessage());
+                        global.getLogger().warning(th.getMessage());
                     }
                 }
                 // Sleep 1 second between queries.
                 try {
-                    Thread.sleep(1000);
+                    TimeUnit.MILLISECONDS.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -962,7 +976,7 @@ public class OrderProvider {
         protected void doQuery() {
             String ins = randomGet();
             int reqID;
-            var in = config.getInstrInfo(ins);
+            var in = global.getInstrInfo(ins);
             // Query margin.
             if (in.Margin == null) {
                 var req = new CQryInstrumentMarginRate();
@@ -975,14 +989,14 @@ public class OrderProvider {
                         JNI.toJni(req),
                         reqID);
                 if (r != 0) {
-                    config.getLogger().warning(
+                    global.getLogger().warning(
                             Utils.formatLog("failed query margin",
                                     null, ins, r));
                 } else {
                     // Sleep up tp some seconds.
                     try {
                         if (!waitRequestRsp(qryWaitMillis, reqID))
-                            config.getLogger().warning("query margin timeout");
+                            global.getLogger().warning("query margin timeout");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -1005,14 +1019,14 @@ public class OrderProvider {
                         JNI.toJni(req0),
                         reqID);
                 if (r != 0) {
-                    config.getLogger().warning(
+                    global.getLogger().warning(
                             Utils.formatLog("failed query commission",
                                     null, ins, r));
                 } else {
                     // Sleep up tp some seconds.
                     try {
                         if (!waitRequestRsp(qryWaitMillis, reqID))
-                            config.getLogger().warning("query margin timeout");
+                            global.getLogger().warning("query margin timeout");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

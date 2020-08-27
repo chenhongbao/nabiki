@@ -26,29 +26,42 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.utils.plain;
+package com.nabiki.iop.x;
 
-import com.nabiki.iop.x.OP;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.LinkedList;
+import java.time.LocalTime;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
-public class LoginConfigTest {
+public class PerformanceMeasureTest {
     @Test
     public void basic() {
-        var config = new LoginConfig();
-        config.BrokerID = "9999";
-        config.UserID = "0001";
-        config.AppID = "test_appid";
-        config.AuthCode = "test_authcode";
-        config.Name = "test login global";
-        config.UserProductInfo = "test product info";
-        config.IsMulticast = false;
-        config.IsUsingUDP = false;
-        config.FrontAddresses = new LinkedList<>();
-        config.FrontAddresses.add("tcp://test.address.com:8080/");
+        var measure = new PerformanceMeasure();
+        var diff = measure.start("wait.lag");
 
-        System.out.println(OP.toJson(config));
+        long sleep = Math.abs(new Random().nextInt(5000));
+        try {
+            TimeUnit.MILLISECONDS.sleep(sleep);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            diff.end();
+        }
+
+        Assert.assertEquals(sleep * 1.0D, measure.getMeasure("wait.lag").toMillis(), 15.0D);
+
+        LocalTime s = LocalTime.now();
+        LocalTime e;
+        try {
+            TimeUnit.MILLISECONDS.sleep(sleep);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        } finally {
+            e = LocalTime.now();
+        }
+
+        Assert.assertEquals(sleep * 1.0D, measure.measure("wait.local", s, e).toMillis(), 15.0D);
     }
-
 }
