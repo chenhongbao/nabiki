@@ -177,7 +177,7 @@ public class PlatformTest {
         order.InstrumentID = "c2101";
         order.BrokerID = "9999";
         order.ExchangeID = "DCE";
-        order.LimitPrice = 2350;
+        order.LimitPrice = 2250;
         order.VolumeTotalOriginal = 1;
         order.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
         order.Direction = DirectionType.DIRECTION_SELL;

@@ -58,6 +58,8 @@ public class UserAuthManager  {
                 profiles.put(auth.UserID, auth);
             return false;
         });
+        if (this.profiles.size() < 1)
+            throw new IllegalStateException("no user auth");
     }
 
     private Collection<UserAuthProfile> readUser(Path userDir) {
@@ -85,8 +87,20 @@ public class UserAuthManager  {
     private void write(Path dir) throws IOException {
         for (var user : this.profiles.values()) {
             var userDir = Path.of(dir.toString(), user.UserID);
-            writeUser(userDir, user);
+            try {
+                writeUser(userDir, user);
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
         }
+    }
+
+    private void checkWriteSuccess(Path p, String content) throws IOException {
+        if (!p.toFile().exists())
+            throw new IllegalStateException("fail creating auth file: " + p);
+        var text = Utils.readText(p.toFile(), StandardCharsets.UTF_8);
+        if (text.compareTo(content) != 0)
+            throw new IllegalStateException("auth write wrong content");
     }
 
     private void writeUser(Path userDir, UserAuthProfile profile)
@@ -94,11 +108,13 @@ public class UserAuthManager  {
         var path = Path.of(userDir.toString(),
                 "auth." + profile.UserID + ".json");
         Utils.createFile(userDir, true);
+        var json = OP.toJson(profile);
         Utils.writeText(
-                OP.toJson(profile),
+                json,
                 path.toFile(),
                 StandardCharsets.UTF_8,
                 false);
+        checkWriteSuccess(path, json);
     }
 
     public UserAuthProfile getAuthProfile(String userID) {
