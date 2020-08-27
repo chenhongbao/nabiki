@@ -35,12 +35,13 @@ import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUser {
     private final User user;
     private final Config config;
     private final OrderProvider orderProvider;
-    private final Map<String, ActiveRequest> requests = new HashMap<>();
+    private final Map<String, ActiveRequest> requests = new ConcurrentHashMap<>();
 
     public ActiveUser(User user, OrderProvider orderProvider, Config cfg) {
         this.user = user;
@@ -102,39 +103,48 @@ public class ActiveUser {
     }
 
     public Map<String, FrozenPositionDetail> getFrozenPositionDetail(String uuid) {
-        var o = this.requests.get(uuid);
-        if (o != null)
-            return o.getFrozenPosition();
+        var active = this.requests.get(uuid);
+        if (active != null)
+            return active.getFrozenPosition();
         else
             return null;
     }
 
     public FrozenAccount getFrozenAccount(String uuid) {
-        var o = this.requests.get(uuid);
-        if (o != null)
-            return o.getFrozenAccount();
+        var active = this.requests.get(uuid);
+        if (active != null)
+            return active.getFrozenAccount();
         else
             return null;
     }
 
     public CTradingAccount getTradingAccount() {
-        var account = this.user.getFeaturedAccount();
-        account.TradingDay = this.config.getTradingDay();
-        return account;
+        // Call user's method directly, sync here.
+        synchronized (this.user) {
+            var account = this.user.getFeaturedAccount();
+            account.TradingDay = this.config.getTradingDay();
+            return account;
+        }
     }
 
     public List<CInvestorPosition> getPosition(String instrID) {
-        if (instrID == null || instrID.length() == 0) {
-            var ret = new LinkedList<CInvestorPosition>();
-            for (var instr : this.user.getUserPosition().getPositionMap().keySet())
-                ret.addAll(getInstrPosition(instr));
-            return ret;
-        } else
-            return getInstrPosition(instrID);
+        // Manipulate user's internal data, so sync here.
+        synchronized (this.user) {
+            if (instrID == null || instrID.length() == 0) {
+                var ret = new LinkedList<CInvestorPosition>();
+                for (var instr : this.user.getUserPosition().getPositionMap().keySet())
+                    ret.addAll(getInstrPosition(instr));
+                return ret;
+            } else
+                return getInstrPosition(instrID);
+        }
     }
 
     void settle() {
-        this.user.settle(prepare());
+        // Call user's method directly, sync here.
+        synchronized (this.user) {
+            this.user.settle(prepare());
+        }
     }
 
     private List<CInvestorPosition> getInstrPosition(String instrID) {

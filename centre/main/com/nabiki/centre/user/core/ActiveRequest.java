@@ -91,7 +91,9 @@ public class ActiveRequest {
     }
 
     Map<String, FrozenPositionDetail> getFrozenPosition() {
-        return this.frozenPosition;
+        synchronized (this.user) {
+            return this.frozenPosition;
+        }
     }
 
     public User getUser() {
@@ -99,12 +101,20 @@ public class ActiveRequest {
     }
 
     FrozenAccount getFrozenAccount() {
-        if (this.frozenAccount.size() == 0)
-            return null;
-        return this.frozenAccount.values().iterator().next();
+        synchronized (this.user) {
+            if (this.frozenAccount.size() == 0)
+                return null;
+            return this.frozenAccount.values().iterator().next();
+        }
     }
 
     void execOrder() {
+        synchronized (this.user) {
+            directExecOrder();
+        }
+    }
+
+    private void directExecOrder() {
         if (this.order == null)
             throw new IllegalStateException("no order to execute");
         // If the user is panic, some internal error occurred. Don't trade again.
@@ -146,6 +156,12 @@ public class ActiveRequest {
     }
 
     void execAction() {
+        synchronized (this.user) {
+            directExecAction();
+        }
+    }
+
+    private void directExecAction() {
         if (this.action == null)
             throw new IllegalStateException("no action to execute");
         if (this.action.OrderSysID == null || this.action.OrderSysID.length() < 1) {
@@ -281,7 +297,9 @@ public class ActiveRequest {
     }
 
     public CRspInfo getExecRsp() {
-        return this.execRsp;
+        synchronized (this.user) {
+            return this.execRsp;
+        }
     }
 
     private CInputOrder toCloseOrder(FrozenPositionDetail pd) {
@@ -306,6 +324,12 @@ public class ActiveRequest {
      * @param rtn return order
      */
     public void updateRtnOrder(COrder rtn) {
+        synchronized (this.user) {
+            directUpdateRtnOrder(rtn);
+        }
+    }
+
+    private void directUpdateRtnOrder(COrder rtn) {
         if (rtn == null)
             throw new NullPointerException("return order null");
         switch ((char) rtn.OrderStatus) {
@@ -326,8 +350,6 @@ public class ActiveRequest {
                         + this.order.CombOffsetFlag);
                 break;
         }
-
-
     }
 
     private void cancelOrder(COrder rtn) {
@@ -391,6 +413,12 @@ public class ActiveRequest {
      * @param trade trade response
      */
     public void updateTrade(CTrade trade) {
+        synchronized (this.user) {
+            directUpdateTrade(trade);
+        }
+    }
+
+    private void directUpdateTrade(CTrade trade) {
         if (trade == null)
             throw new NullPointerException("return trade null");
         var instrInfo = this.config.getInstrInfo(trade.InstrumentID);

@@ -33,19 +33,23 @@ import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CInputOrder;
 import com.nabiki.objects.COrder;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OrderMapper {
     private final Map<String, ActiveRequest>
-            detRef2Active = new HashMap<>(); // Detail ref -> alive order
+            detRef2Active = new ConcurrentHashMap<>(); // ref -> active order
     private final Map<String, ActiveRequest>
-            uuid2Active = new HashMap<>();   // UUID -> alive order
+            uuid2Active = new ConcurrentHashMap<>();   // UUID -> active order
     private final Map<String, Set<String>>
-            uuid2DetRef = new HashMap<>();     // UUID -> detail ref
+            uuid2DetRef = new ConcurrentHashMap<>();     // UUID -> ref
     private final Map<String, COrder>
-            detRef2Rtn = new HashMap<>();   // Detail ref -> detail rtn order
+            detRef2Rtn = new ConcurrentHashMap<>();   // ref -> rtn order
     private final Map<String, CInputOrder>
-            detRef2Det = new HashMap<>();   // Detail ref -> detail order
+            detRef2Det = new ConcurrentHashMap<>();   // ref -> input order
 
     public OrderMapper() {
     }

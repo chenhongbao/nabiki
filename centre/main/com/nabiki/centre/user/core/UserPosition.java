@@ -36,11 +36,13 @@ import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UserPosition {
     private final User parent;
     // Instrument ID -> Position detail.
-    private final Map<String, List<UserPositionDetail>> positionMap = new HashMap<>();
+    private final Map<String, List<UserPositionDetail>> positionMap
+            = new ConcurrentHashMap<>();
 
     UserPosition(Map<String, List<UserPositionDetail>> map, User parent) {
         this.positionMap.putAll(map);

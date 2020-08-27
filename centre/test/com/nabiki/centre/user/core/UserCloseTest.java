@@ -253,9 +253,10 @@ public class UserCloseTest extends UserSuperTest {
         // It inits 2 input orders, so there are 2 rtn orders.
         assertEquals(active.getRtnOrder(uuid).size(), 2);
 
-        var rtnOrder0 = active.getRtnOrder(uuid).iterator().next();
-        assertNotNull(rtnOrder0);
-        assertEquals(rtnOrder0.UpdateTime, rtnOrder.UpdateTime);
+        for (var o : active.getRtnOrder(uuid)) {
+            if (o.OrderRef.compareTo(rtnOrder.OrderRef) == 0)
+                assertEquals(o.UpdateTime, rtnOrder.UpdateTime);
+        }
 
         // Construct rtn trade.
         var rtnTrade = new CTrade();
