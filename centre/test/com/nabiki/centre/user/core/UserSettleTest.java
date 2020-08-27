@@ -132,7 +132,7 @@ public class UserSettleTest extends UserSuperTest {
     private void checkRenewUser() {
         var userManager = UserManager.create(Path.of(flowDir, ".user"));
         try {
-            userManager.renew();
+            userManager.load();
         } catch (Exception e) {
             fail(e.getMessage());
         }

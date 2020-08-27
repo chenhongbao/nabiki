@@ -28,7 +28,6 @@
 
 package com.nabiki.centre.user.auth;
 
-import com.nabiki.centre.Renewable;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 
@@ -42,7 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class UserAuthManager implements Renewable {
+public class UserAuthManager  {
     private final Map<String, UserAuthProfile> profiles = new ConcurrentHashMap<>();
     private final Path dataDir;
 
@@ -95,23 +94,23 @@ public class UserAuthManager implements Renewable {
         var path = Path.of(userDir.toString(),
                 "auth." + profile.UserID + ".json");
         Utils.createFile(userDir, true);
-        Utils.writeText(OP.toJson(profile),
-                Utils.createFile(path, false),
-                StandardCharsets.UTF_8, false);
+        Utils.writeText(
+                OP.toJson(profile),
+                path.toFile(),
+                StandardCharsets.UTF_8,
+                false);
     }
 
     public UserAuthProfile getAuthProfile(String userID) {
         return this.profiles.get(userID);
     }
 
-    @Override
-    public void renew() throws Exception {
+    public void load() throws Exception {
         this.profiles.clear();
         init(this.dataDir);
     }
 
-    @Override
-    public void settle() throws Exception {
+    public void flush() throws Exception {
         write(this.dataDir);
     }
 }

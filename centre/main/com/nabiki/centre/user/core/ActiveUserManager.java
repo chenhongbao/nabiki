@@ -28,7 +28,6 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.Renewable;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.utils.Global;
 
@@ -36,7 +35,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ActiveUserManager implements Renewable {
+public class ActiveUserManager {
     private final OrderProvider provider;
     private final Global global;
     private final UserManager userMgr;
@@ -63,17 +62,15 @@ public class ActiveUserManager implements Renewable {
         return this.users.get(userID);
     }
 
-    @Override
     public void renew() throws Exception {
         this.users.clear();
-        this.userMgr.renew();
+        this.userMgr.load();
         createActive();
     }
 
-    @Override
     public void settle() throws Exception {
         for (var active : this.users.values())
             active.settle();
-        this.userMgr.settle();
+        this.userMgr.flush();
     }
 }

@@ -213,21 +213,21 @@ public class Platform {
         private void renew() {
             try {
                 global.getLogger().info("platform renewing");
-                authManager.renew();
+                authManager.load();
                 userManager.renew();
                 GlobalConfig.config();
                 this.userState = UserState.RENEW;
                 global.getLogger().info("platform renewed");
             } catch (Throwable th) {
                 th.printStackTrace();
-                global.getLogger().severe("renew failed");
+                global.getLogger().severe("load failed");
             }
         }
 
         private void settle() {
             global.getLogger().info("platform settling");
             try {
-                authManager.settle();
+                authManager.flush();
                 userManager.settle();
                 this.userState = UserState.SETTLED;
                 global.getLogger().info("platform settled");

@@ -28,7 +28,6 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.Renewable;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.x.OP;
 import com.nabiki.objects.CInvestorPositionDetail;
@@ -43,7 +42,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class UserManager implements Renewable {
+public class UserManager {
     private final Map<String, User> users = new ConcurrentHashMap<>();
     private final Path dataDir;
 
@@ -191,14 +190,12 @@ public class UserManager implements Renewable {
         return this.users.get(userID);
     }
 
-    @Override
-    public void renew() throws Exception {
+    void load() throws Exception {
         this.users.clear();
         init(this.dataDir);
     }
 
-    @Override
-    public void settle() throws Exception {
+    void flush() throws Exception {
         write(this.dataDir);
     }
 }

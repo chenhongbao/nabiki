@@ -59,8 +59,8 @@ public class UserAuthProfileTest {
         var auth = new UserAuthManager(dir);
 
         try {
-            auth.renew();
-            auth.settle();
+            auth.load();
+            auth.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }
