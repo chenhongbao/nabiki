@@ -534,8 +534,7 @@ public class OrderProvider {
         var active = this.mapper.getActiveOrder(orderAction.OrderRef);
         if (active != null)
             orderAction.OrderLocalID = active.getRequestUUID();
-        this.msgWriter.writeErr(orderAction);
-        this.msgWriter.writeErr(rspInfo);
+        this.msgWriter.writeErr(orderAction, rspInfo);
     }
 
     public void whenErrRtnOrderInsert(CInputOrder inputOrder,

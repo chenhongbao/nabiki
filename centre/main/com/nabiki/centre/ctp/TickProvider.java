@@ -331,17 +331,11 @@ public class TickProvider {
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
         // Set action day to today.
         depthMarketData.ActionDay = this.actionDay;
-        // Measure performance.
-        var max = this.global.getPerformanceMeasure().start("when.md.max");
-        var avr = this.global.getPerformanceMeasure().start("when.md.avr");
-        // Update.
+        // Route md and update candle engines.
         for (var r : this.routers)
             r.route(depthMarketData);
         for (var e : this.engines)
             e.update(depthMarketData);
-        // End measurement.
-        max.endWithMax();
-        avr.end();
         // Update global's depth.
         GlobalConfig.setDepthMarketData(depthMarketData);
     }

@@ -107,72 +107,75 @@ public class ReqRspWriter {
     public void writeRtn(COrder rtn) {
         write(OP.toJson(rtn), ensureFile(
                 getClientDir(this.rtnDir, rtn.OrderRef),
-                "order." + getTimeStamp() + ".json"));
+                "Order." + getTimeStamp() + ".json"));
     }
 
     public void writeRtn(CTrade rtn) {
         write(OP.toJson(rtn), ensureFile(
                 getClientDir(this.rtnDir, rtn.OrderRef),
-                "trade." + getTimeStamp() + ".json"));
+                "Trade." + getTimeStamp() + ".json"));
     }
 
     public void writeReq(CInputOrder req) {
         write(OP.toJson(req), ensureFile(
                 getClientDir(this.reqDir, req.OrderRef),
-                "inputorder." + getTimeStamp() + ".json"));
+                "InputOrder." + getTimeStamp() + ".json"));
     }
 
     public void writeReq(CInputOrderAction req) {
         write(OP.toJson(req), ensureFile(
                 getClientDir(this.reqDir, req.OrderRef),
-                "action." + getTimeStamp() + ".json"));
+                "InputOrderAction." + getTimeStamp() + ".json"));
     }
 
     public void writeInfo(CInstrumentMarginRate rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
-                        "margin." + rsp.InstrumentID + ".json"));
+                        "Margin." + rsp.InstrumentID + ".json"));
     }
 
     public void writeInfo(CInstrumentCommissionRate rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
-                        "commission." + rsp.InstrumentID + ".json"));
+                        "Commission." + rsp.InstrumentID + ".json"));
     }
 
     public void writeInfo(CInstrument rsp) {
         write(OP.toJson(rsp),
                 ensureFile(this.infoDir,
-                        "instrument." + rsp.InstrumentID + ".json"));
+                        "Instrument." + rsp.InstrumentID + ".json"));
     }
 
-    public void writeErr(COrderAction err) {
+    public void writeErr(COrderAction err, CRspInfo info) {
         write(OP.toJson(err), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
-                "orderaction." + getTimeStamp() + ".json"));
+                "OrderAction." + getTimeStamp() + ".json"));
+        write(OP.toJson(info), ensureFile(
+                getClientDir(this.errDir, err.OrderRef),
+                "RspInfo." + getTimeStamp() + ".json"));
     }
 
     public void writeErr(CInputOrderAction err, CRspInfo info) {
         write(OP.toJson(err), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
-                "action." + getTimeStamp() + ".json"));
+                "InputOrderAction." + getTimeStamp() + ".json"));
         write(OP.toJson(info), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
-                "info." + getTimeStamp() + ".json"));
+                "RspInfo." + getTimeStamp() + ".json"));
     }
 
     public void writeErr(CInputOrder err, CRspInfo info) {
         write(OP.toJson(err), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
-                "inputorder." + getTimeStamp() + ".json"));
+                "InputOrder." + getTimeStamp() + ".json"));
         write(OP.toJson(info), ensureFile(
                 getClientDir(this.errDir, err.OrderRef),
-                "info." + getTimeStamp() + ".json"));
+                "RspInfo." + getTimeStamp() + ".json"));
     }
 
     public void writeErr(CRspInfo err) {
         write(OP.toJson(err),
                 ensureFile(getClientDir(this.errDir, ""),
-                        "info." + getTimeStamp() + ".json"));
+                        "RspInfo." + getTimeStamp() + ".json"));
     }
 }

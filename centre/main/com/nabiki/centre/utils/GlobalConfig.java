@@ -177,14 +177,14 @@ public class GlobalConfig {
         for (var d : dirs) {
             d.path().toFile().listFiles(file -> {
                 try {
-                    if (file.getName().startsWith("instrument")) {
+                    if (file.getName().startsWith("Instrument.")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
                                 CInstrument.class));
                     }
                 } catch (IOException e) {
                     GLOBAL.getLogger().warning(
-                            Utils.formatLog("failed instr GLOBAL",
+                            Utils.formatLog("failed instr config",
                                     null, e.getMessage(), null));
                 }
                 return false;
@@ -196,18 +196,18 @@ public class GlobalConfig {
         for (var d : dirs) {
             d.path().toFile().listFiles(file -> {
                 try {
-                    if (file.getName().startsWith("commission")) {
+                    if (file.getName().startsWith("Commission.")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
                                 CInstrumentCommissionRate.class));
-                    } else if (file.getName().startsWith("margin")) {
+                    } else if (file.getName().startsWith("Margin.")) {
                         setInstrConfig(OP.fromJson(
                                 Utils.readText(file, StandardCharsets.UTF_8),
                                 CInstrumentMarginRate.class));
                     }
                 } catch (IOException e) {
                     GLOBAL.getLogger().warning(
-                            Utils.formatLog("failed instr GLOBAL",
+                            Utils.formatLog("failed instr config",
                                     null, e.getMessage(), null));
                 }
                 return false;

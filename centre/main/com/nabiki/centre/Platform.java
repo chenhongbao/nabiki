@@ -304,6 +304,15 @@ public class Platform {
             global.getLogger().info("platform stopped");
         }
 
+        private void checkPerformance() {
+            var m = global.getPerformanceMeasure().getAllMeasures();
+            for (var entry : m.entrySet()) {
+                var ms = entry.getValue().toMillis();
+                global.getLogger().info(
+                        "performance, " + entry.getKey() + ": " + ms + "ms");
+            }
+        }
+
         @Override
         public void run() {
             try {
@@ -313,8 +322,10 @@ public class Platform {
                     stop();
                 if (needRenew())
                     renew();
-                if (needSettle())
+                if (needSettle()) {
                     settle();
+                    checkPerformance();
+                }
             } catch (Throwable th) {
                 th.printStackTrace();
                 global.getLogger().severe(th.getMessage());
