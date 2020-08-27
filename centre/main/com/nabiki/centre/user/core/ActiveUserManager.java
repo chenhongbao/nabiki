@@ -46,7 +46,6 @@ public class ActiveUserManager implements Renewable {
         this.provider = provider;
         this.config = cfg;
         this.userMgr = UserManager.create(dataDir);
-        createActive();
     }
 
     private void createActive() {
@@ -68,6 +67,7 @@ public class ActiveUserManager implements Renewable {
     public void renew() throws Exception {
         this.users.clear();
         this.userMgr.renew();
+        createActive();
     }
 
     @Override

@@ -266,12 +266,12 @@ public class PlatformTest {
         client.setListener(new MarketDataListener() {
             @Override
             public void onDepthMarketData(CDepthMarketData depth) {
-                System.out.println(OP.toJson(depth));
+                System.out.println("depth update time: " + depth.UpdateTime);
             }
 
             @Override
             public void onCandle(CCandle candle) {
-                System.out.println(OP.toJson(candle));
+                System.out.println("candle(" + candle.Minute + ") update time: " + candle.UpdateTime);
             }
         });
 
