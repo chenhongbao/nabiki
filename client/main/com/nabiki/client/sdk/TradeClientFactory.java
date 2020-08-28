@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.sdk;
 
-import java.util.logging.Logger;
+public interface TradeClientFactory {
+    TradeClient get();
 
-public interface LoggerFactory {
-    Logger get(String name);
-
-    void unget(Logger logger);
+    void unget(TradeClient client);
 }

@@ -28,8 +28,16 @@
 
 package com.nabiki.client;
 
-public interface DataPersistenceFactory {
-    DataPersistence get();
+import com.nabiki.client.container.TradingFacility;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
-    void unget(DataPersistence object);
+public abstract class Trader extends TradingFacility {
+    public abstract void onStart();
+
+    public abstract void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
+
+    public abstract void onCandle(CCandle candle, boolean isTrading);
+
+    public abstract void onStop();
 }

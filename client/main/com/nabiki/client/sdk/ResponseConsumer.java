@@ -26,10 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.sdk;
 
-public interface TradeClientFactory {
-    TradeClient get();
+import com.nabiki.objects.CRspInfo;
 
-    void unget(TradeClient client);
+public interface ResponseConsumer<T> {
+    void accept(T object, CRspInfo rspInfo, int currentCount, int totalCount);
 }

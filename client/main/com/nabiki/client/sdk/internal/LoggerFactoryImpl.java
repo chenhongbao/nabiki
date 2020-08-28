@@ -26,9 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.LoggerFactory;
+import com.nabiki.client.sdk.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;

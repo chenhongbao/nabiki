@@ -26,10 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.Response;
-import com.nabiki.client.ResponseConsumer;
+import com.nabiki.client.sdk.Response;
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.objects.CRspInfo;
 
 import java.util.Map;

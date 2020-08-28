@@ -26,33 +26,13 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk;
 
-import com.nabiki.client.DataPersistence;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
-import java.io.Serializable;
-import java.util.Objects;
+public interface MarketDataListener {
+    void onDepthMarketData(CDepthMarketData depth);
 
-class DataPersistenceImpl implements DataPersistence {
-    private final DataPersistenceAccess access;
-
-    DataPersistenceImpl(DataPersistenceAccess access) {
-        Objects.requireNonNull(access, "data persistence writer null");
-        this.access = access;
-    }
-
-    @Override
-    public boolean put(String key, Serializable data) {
-        return this.access.write(key, data);
-    }
-
-    @Override
-    public boolean remove(String key) {
-        return this.access.remove(key);
-    }
-
-    @Override
-    public Object get(String key) {
-        return this.access.read(key);
-    }
+    void onCandle(CCandle candle);
 }

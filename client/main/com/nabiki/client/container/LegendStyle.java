@@ -26,14 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.container;
 
-import java.io.Serializable;
-
-public interface DataPersistence {
-    boolean put(String key, Serializable data);
-
-    boolean remove(String key);
-
-    Object get(String key);
+public interface LegendStyle {
 }

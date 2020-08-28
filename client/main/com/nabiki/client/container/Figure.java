@@ -26,10 +26,22 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.container;
 
-import com.nabiki.objects.CRspInfo;
-
-public interface ResponseConsumer<T> {
-    void accept(T object, CRspInfo rspInfo, int currentCount, int totalCount);
+public interface Figure {
+    void setStyle(String name, DotStyle style);
+    void setStyle(String name, LineStyle style);
+    void setStyle(TextStyle style);
+    void setStyle(LegendStyle style);
+    void dot(double price);
+    void dot(double price, int index);
+    void dot(String name, double price);
+    void dot(String name, double price, int index);
+    void lineTo(double price);
+    void lineTo(double price, int index);
+    void lineTo(String name, double price);
+    void lineTo(String name, double price, int index);
+    void text(String content, double price, int index);
+    void setLegend(String name, String description, String... vars);
+    void ring(boolean repeated);
 }

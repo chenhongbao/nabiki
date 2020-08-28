@@ -26,9 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.TradeClientListener;
+import com.nabiki.client.sdk.TradeClientListener;
 import com.nabiki.iop.ClientSession;
 import com.nabiki.iop.ClientSessionAdaptor;
 import com.nabiki.iop.SessionEvent;

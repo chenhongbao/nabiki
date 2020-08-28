@@ -26,13 +26,31 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.objects.CCandle;
-import com.nabiki.objects.CDepthMarketData;
+import com.nabiki.client.sdk.TradeClient;
+import com.nabiki.client.sdk.TradeClientFactory;
 
-public interface MarketDataListener {
-    void onDepthMarketData(CDepthMarketData depth);
+public class TradeClientFactoryImpl
+        extends ServiceCounter implements TradeClientFactory {
+    @Override
+    public TradeClient get() {
+        var r = new TradeClientImpl();
+        super.add(r);
+        return r;
+    }
 
-    void onCandle(CCandle candle);
+    @Override
+    public void unget(TradeClient client) {
+        super.remove(client);
+    }
+
+    @Override
+    public void release() {
+        super.forEach(client -> {
+            if (client instanceof TradeClient)
+                ((TradeClient) client).close();
+        });
+        super.clear();
+    }
 }

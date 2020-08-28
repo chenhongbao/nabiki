@@ -26,35 +26,37 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk;
 
-import com.nabiki.client.DataPersistence;
-import com.nabiki.client.DataPersistenceFactory;
+import com.nabiki.objects.*;
 
-public class DataPersistenceFactoryImpl
-        extends ServiceCounter implements DataPersistenceFactory {
-    private final static DataPersistenceAccess access = new DataPersistenceAccess();
+import java.io.IOException;
+import java.net.InetSocketAddress;
 
-    public DataPersistenceFactoryImpl() {}
+public interface TradeClient {
+    void setListener(TradeClientListener clientListener);
 
-    @Override
-    public DataPersistence get() {
-        var o = new DataPersistenceImpl(access);
-        synchronized (this) {
-            super.add(o);
-        }
-        return o;
-    }
+    void setListener(MarketDataListener listener);
 
-    @Override
-    public void unget(DataPersistence object) {
-        synchronized (this) {
-            super.remove(object);
-        }
-    }
+    void open(InetSocketAddress address) throws IOException;
 
-    @Override
-    public void release() {
-        access.flush();
-    }
+    void close();
+
+    Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
+
+    Response<COrder> orderInsert(CInputOrder order, String requestID);
+
+    Response<COrderAction> orderAction(CInputOrderAction action, String requestID);
+
+    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID);
+
+    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID);
+
+    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID);
+
+    Response<COrder> queryOrder(CQryOrder query, String requestID);
+
+    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID);
+
+    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID);
 }

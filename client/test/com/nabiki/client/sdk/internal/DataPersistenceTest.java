@@ -26,10 +26,10 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.DataPersistence;
-import com.nabiki.client.DataPersistenceFactory;
+import com.nabiki.client.sdk.DataPersistence;
+import com.nabiki.client.sdk.DataPersistenceFactory;
 import org.junit.Test;
 
 import java.time.LocalDateTime;

@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.sdk;
 
 import com.nabiki.objects.CRspInfo;
 

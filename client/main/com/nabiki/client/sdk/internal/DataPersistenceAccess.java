@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
 import java.io.*;
 import java.nio.file.Files;

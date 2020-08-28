@@ -26,12 +26,12 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.MarketDataListener;
-import com.nabiki.client.Response;
-import com.nabiki.client.TradeClient;
-import com.nabiki.client.TradeClientListener;
+import com.nabiki.client.sdk.MarketDataListener;
+import com.nabiki.client.sdk.Response;
+import com.nabiki.client.sdk.TradeClient;
+import com.nabiki.client.sdk.TradeClientListener;
 import com.nabiki.iop.*;
 import com.nabiki.objects.*;
 

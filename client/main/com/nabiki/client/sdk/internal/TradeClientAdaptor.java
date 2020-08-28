@@ -26,9 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.MarketDataListener;
+import com.nabiki.client.sdk.MarketDataListener;
 import com.nabiki.iop.ClientMessageAdaptor;
 import com.nabiki.objects.*;
 

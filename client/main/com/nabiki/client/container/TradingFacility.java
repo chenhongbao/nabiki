@@ -26,37 +26,38 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.container;
 
-import com.nabiki.objects.*;
+import com.nabiki.objects.CInvestorPosition;
+import com.nabiki.objects.CTradingAccount;
+import com.nabiki.objects.CombOffsetFlagType;
+import com.nabiki.objects.DirectionType;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.util.Collection;
 
-public interface TradeClient {
-    void setListener(TradeClientListener clientListener);
+public class TradingFacility extends FiguringFacility {
+    protected double orderInsert(
+            String instrumentID,
+            double price,
+            int volume,
+            DirectionType direction,
+            CombOffsetFlagType offset) {
+        // TODO orderInsert
+        return 0.0D;
+    }
 
-    void setListener(MarketDataListener listener);
+    protected Collection<CInvestorPosition> getPosition() {
+        // TODO getPosition
+        return null;
+    }
 
-    void open(InetSocketAddress address) throws IOException;
+    protected Collection<CInvestorPosition> getPosition(String instrumentID) {
+        // TODO getPosition
+        return null;
+    }
 
-    void close();
-
-    Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
-
-    Response<COrder> orderInsert(CInputOrder order, String requestID);
-
-    Response<COrderAction> orderAction(CInputOrderAction action, String requestID);
-
-    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID);
-
-    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID);
-
-    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID);
-
-    Response<COrder> queryOrder(CQryOrder query, String requestID);
-
-    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID);
-
-    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID);
+    protected CTradingAccount getAccount() {
+        // TODO getAccount
+        return null;
+    }
 }

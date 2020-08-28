@@ -26,31 +26,33 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk.internal;
 
-import com.nabiki.client.TradeClient;
-import com.nabiki.client.TradeClientFactory;
+import com.nabiki.client.sdk.DataPersistence;
 
-public class TradeClientFactoryImpl
-        extends ServiceCounter implements TradeClientFactory {
-    @Override
-    public TradeClient get() {
-        var r = new TradeClientImpl();
-        super.add(r);
-        return r;
+import java.io.Serializable;
+import java.util.Objects;
+
+class DataPersistenceImpl implements DataPersistence {
+    private final DataPersistenceAccess access;
+
+    DataPersistenceImpl(DataPersistenceAccess access) {
+        Objects.requireNonNull(access, "data persistence writer null");
+        this.access = access;
     }
 
     @Override
-    public void unget(TradeClient client) {
-        super.remove(client);
+    public boolean put(String key, Serializable data) {
+        return this.access.write(key, data);
     }
 
     @Override
-    public void release() {
-        super.forEach(client -> {
-            if (client instanceof TradeClient)
-                ((TradeClient) client).close();
-        });
-        super.clear();
+    public boolean remove(String key) {
+        return this.access.remove(key);
+    }
+
+    @Override
+    public Object get(String key) {
+        return this.access.read(key);
     }
 }

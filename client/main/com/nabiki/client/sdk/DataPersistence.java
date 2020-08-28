@@ -26,10 +26,14 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.internal;
+package com.nabiki.client.sdk;
 
-import java.util.HashSet;
+import java.io.Serializable;
 
-public abstract class ServiceCounter extends HashSet<Object> {
-    public abstract void release();
+public interface DataPersistence {
+    boolean put(String key, Serializable data);
+
+    boolean remove(String key);
+
+    Object get(String key);
 }
