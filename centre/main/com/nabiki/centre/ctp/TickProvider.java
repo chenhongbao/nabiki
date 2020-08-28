@@ -42,7 +42,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class TickProvider {
+public class TickProvider implements Connectable {
     protected final Global global;
     protected final LoginConfig loginCfg;
     protected final CThostFtdcMdApi mdApi;
@@ -96,6 +96,11 @@ public class TickProvider {
         this.routers.add(router);
     }
 
+    @Override
+    public boolean isConnected() {
+        return this.isConnected;
+    }
+
     public void subscribe(Collection<String> instr) {
         if (instr == null || instr.size() == 0)
             return;
@@ -133,10 +138,11 @@ public class TickProvider {
         setupDurations();
     }
 
-    public void initialize() {
+    @Override
+    public void connect() {
         /*
          IMPORTANT!
-         Kept reference to SPI so GC won't release the object, hence the underlining
+         Kept reference to SPI so GC won't disconnect the object, hence the underlining
          C++ objects.
          */
         this.spi = new JniMdSpi(this);
@@ -146,7 +152,8 @@ public class TickProvider {
         this.mdApi.Init();
     }
 
-    public void release() {
+    @Override
+    public void disconnect() {
         // Set states.
         this.isLogin = false;
         this.isConnected = false;

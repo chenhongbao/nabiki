@@ -43,7 +43,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -53,14 +52,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * {@code AliveOrderManager} keeps the status of all alive orders, interacts with
  * JNI interfaces and invoke callback methods to process responses.
  */
-public class OrderProvider {
+public class OrderProvider implements Connectable{
     protected final OrderMapper mapper = new OrderMapper();
     protected final AtomicInteger orderRef = new AtomicInteger(0);
     protected final Global global;
     protected final LoginConfig loginCfg;
     protected final ReqRspWriter msgWriter;
     protected final CThostFtdcTraderApi api;
-    protected final Thread orderDaemon = new Thread(new RequestDaemon());
+    protected final Thread orderDaemon = new Thread(new RequestDaemon(this));
     protected final List<String> instruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
     protected final TimeAligner timeAligner = new TimeAligner();
@@ -74,7 +73,7 @@ public class OrderProvider {
     protected final Signal lastRspSignal = new Signal();
 
     // Query instrument info.
-    protected final QueryTask qryTask = new QueryTask();
+    protected final QueryTask qryTask = new QueryTask(this);
     protected final Thread qryDaemon = new Thread(this.qryTask);
     protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
@@ -97,6 +96,11 @@ public class OrderProvider {
         if (estimateQueryCount())
             this.qryDaemon.start();
 
+    }
+
+    @Override
+    public boolean isConnected() {
+        return this.isConnected;
     }
 
     private boolean estimateQueryCount() {
@@ -143,7 +147,8 @@ public class OrderProvider {
     /**
      * Initialize connection to remote counter.
      */
-    public void initialize() {
+    @Override
+    public void connect() {
         configTrader();
         this.api.Init();
     }
@@ -151,7 +156,8 @@ public class OrderProvider {
     /**
      * Disconnect the trader api and release resources.
      */
-    public void release() {
+    @Override
+    public void disconnect() {
         // Set states.
         this.isConfirmed = false;
         this.isConnected = false;
@@ -742,302 +748,5 @@ public class OrderProvider {
         // The writing method must follow the doXXX method because the fields are
         // rewritten with local IDs.
         this.msgWriter.writeRtn(trade);
-    }
-
-    protected static class PendingRequest {
-        final ActiveRequest active;
-        final CInputOrder order;
-        final CInputOrderAction action;
-
-        PendingRequest(CInputOrder order, ActiveRequest active) {
-            this.order = order;
-            this.action = null;
-            this.active = active;
-        }
-
-        PendingRequest(CInputOrderAction action, ActiveRequest active) {
-            this.order = null;
-            this.action = action;
-            this.active = active;
-        }
-    }
-
-    protected class RequestDaemon implements Runnable {
-        protected final int MAX_REQ_PER_SEC = 5;
-        protected int sendCnt = 0;
-        protected long threshold = TimeUnit.SECONDS.toMillis(1);
-        protected long timeStamp = System.currentTimeMillis();
-
-        @Override
-        public void run() {
-
-            while (!Thread.interrupted()) {
-                try {
-                    var pend = trySendRequest();
-                    // Pending request is not sent, enqueue the request for next
-                    // loop.
-                    if (pend != null) {
-                        Thread.sleep(threshold);
-                        pendingReqs.offer(pend);
-                    }
-                } catch (InterruptedException e) {
-                    if (workingState == WorkingState.STOPPING
-                            || workingState == WorkingState.STOPPED)
-                        break;
-                    else
-                        global.getLogger().warning(
-                                Utils.formatLog("order daemon interrupted",
-                                        null, e.getMessage(),
-                                        null));
-                }
-            }
-        }
-
-        private PendingRequest trySendRequest() throws InterruptedException {
-            PendingRequest pend = null;
-            while (pend == null)
-                pend = pendingReqs.poll(1, TimeUnit.DAYS);
-            // Await time out, or notified by new request.
-            // Instrument not trading.
-            if (!canTrade(getInstrID(pend))) {
-                return pend;
-            }
-            int r = 0;
-            // Send order or action.
-            // Fill and send order at first place so its fields are filled.
-            if (pend.action != null) {
-                r = fillAndSendAction(pend.action);
-                if (r == 0)
-                    msgWriter.writeReq(pend.action);
-            } else if (pend.order != null) {
-                r = fillAndSendOrder(pend.order);
-                if (r == 0)
-                    msgWriter.writeReq(pend.order);
-            }
-            // Check send ret code.
-            // If fail sending the request, add it back to queue and sleep
-            // for some time.
-            if (r != 0) {
-                warn(r, pend);
-                return pend;
-            }
-            // Flow control.
-            long curTimeStamp = System.currentTimeMillis();
-            long diffTimeStamp = threshold - (curTimeStamp - timeStamp);
-            if (diffTimeStamp > 0) {
-                ++sendCnt;
-                if (sendCnt > MAX_REQ_PER_SEC) {
-                    Thread.sleep(diffTimeStamp);
-                    timeStamp = System.currentTimeMillis();
-                }
-            } else {
-                sendCnt = 0;
-                timeStamp = System.currentTimeMillis();
-            }
-            // Return null, indicates the request has been sent.
-            // Otherwise, enqueue the request and wait.
-            return null;
-        }
-
-        protected int fillAndSendOrder(CInputOrder input) {
-            // Set correct users.
-            input.BrokerID = rspLogin.BrokerID;
-            input.UserID = rspLogin.UserID;
-            input.InvestorID = rspLogin.UserID;
-            // Adjust flags.
-            input.CombHedgeFlag = CombHedgeFlagType.SPECULATION;
-            input.ContingentCondition = ContingentConditionType.IMMEDIATELY;
-            input.ForceCloseReason = ForceCloseReasonType.NOT_FORCE_CLOSE;
-            input.IsAutoSuspend = 0;
-            input.MinVolume = 1;
-            input.OrderPriceType = OrderPriceTypeType.LIMIT_PRICE;
-            input.StopPrice = 0;
-            input.TimeCondition = TimeConditionType.GFD;
-            input.VolumeCondition = VolumeConditionType.ANY_VOLUME;
-            return api.ReqOrderInsert(
-                    JNI.toJni(input),
-                    Utils.getIncrementID());
-        }
-
-        protected int fillAndSendAction(CInputOrderAction action) {
-            var instrInfo = global.getInstrInfo(action.InstrumentID);
-            var rtn = mapper.getRtnOrder(action.OrderRef);
-            // Use order ref + front ID + session ID by default.
-            // Keep original order ref and instrument ID.
-            action.FrontID = rspLogin.FrontID;
-            action.SessionID = rspLogin.SessionID;
-            // Set common fields.
-            action.BrokerID = rspLogin.BrokerID;
-            action.InvestorID = rspLogin.UserID;
-            action.UserID = rspLogin.UserID;
-            // Action delete.
-            action.ActionFlag = ActionFlagType.DELETE;
-            // Set order sys ID if possible.
-            if (rtn != null) {
-                // Try OrderSysID.
-                action.OrderSysID = rtn.OrderSysID;
-                // Adjust flags.
-                // Must need exchange id.
-                action.ExchangeID = rtn.ExchangeID;
-            } else {
-                action.ExchangeID = (instrInfo.Instrument != null)
-                        ? instrInfo.Instrument.ExchangeID : null;
-            }
-            return api.ReqOrderAction(
-                    JNI.toJni(action),
-                    Utils.getIncrementID());
-        }
-
-        protected boolean canTrade(String instrID) {
-            var hour = global.getTradingHour(null, instrID);
-            if (hour == null) {
-                global.getLogger().warning(
-                        Utils.formatLog("trading hour global null", instrID,
-                                null, null));
-                return false;
-            }
-            LocalTime now;
-            var ins = global.getInstrInfo(instrID);
-            if (ins != null && ins.Instrument != null)
-                now = timeAligner.getAlignTime(ins.Instrument.ExchangeID,
-                        LocalTime.now());
-            else
-                now = LocalTime.now();
-            return isConfirmed && hour.contains(now.minusSeconds(1));
-        }
-
-        protected String getInstrID(PendingRequest pend) {
-            if (pend.action != null)
-                return pend.action.InstrumentID;
-            else if (pend.order != null)
-                return pend.order.InstrumentID;
-            else
-                return null;
-        }
-
-        protected void warn(int r, PendingRequest pend) {
-            String ref, hint;
-            if (pend.order != null) {
-                ref = pend.order.OrderRef;
-                hint = "failed sending order";
-            } else if (pend.action != null) {
-                ref = pend.action.OrderRef;
-                hint = "failed sending action";
-            } else
-                return;
-            global.getLogger().warning(
-                    Utils.formatLog(hint, ref, null, r));
-        }
-    }
-
-    protected class QueryTask implements Runnable {
-        protected final Random rand = new Random();
-
-        // Wait last request return.
-        protected final Signal lastRtn = new Signal();
-        protected final AtomicInteger lastID = new AtomicInteger(0);
-
-        QueryTask() {
-        }
-
-        void signalRequest(int requestID) {
-            if (this.lastID.get() == requestID)
-                this.lastRtn.signal();
-        }
-
-        private boolean waitRequestRsp(
-                long millis, int requestID) throws InterruptedException {
-            this.lastID.set(requestID);
-            return this.lastRtn.waitSignal(millis);
-        }
-
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                if (qryInstrLast && isConfirmed) {
-                    try {
-                        doQuery();
-                    } catch (Throwable th) {
-                        th.printStackTrace();
-                        global.getLogger().warning(th.getMessage());
-                    }
-                }
-                // Sleep 1 second between queries.
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        protected void doQuery() {
-            String ins = randomGet();
-            int reqID;
-            var in = global.getInstrInfo(ins);
-            // Query margin.
-            if (in.Margin == null) {
-                var req = new CQryInstrumentMarginRate();
-                req.BrokerID = loginCfg.BrokerID;
-                req.InvestorID = loginCfg.UserID;
-                req.HedgeFlag = CombHedgeFlagType.SPECULATION;
-                req.InstrumentID = ins;
-                reqID = Utils.getIncrementID();
-                int r = api.ReqQryInstrumentMarginRate(
-                        JNI.toJni(req),
-                        reqID);
-                if (r != 0) {
-                    global.getLogger().warning(
-                            Utils.formatLog("failed query margin",
-                                    null, ins, r));
-                } else {
-                    // Sleep up tp some seconds.
-                    try {
-                        if (!waitRequestRsp(qryWaitMillis, reqID))
-                            global.getLogger().warning("query margin timeout");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            // Sleep 1 second between queries.
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            // Query commission.
-            if (in.Commission == null) {
-                var req0 = new CQryInstrumentCommissionRate();
-                req0.BrokerID = loginCfg.BrokerID;
-                req0.InvestorID = loginCfg.UserID;
-                req0.InstrumentID = ins;
-                reqID = Utils.getIncrementID();
-                var r = api.ReqQryInstrumentCommissionRate(
-                        JNI.toJni(req0),
-                        reqID);
-                if (r != 0) {
-                    global.getLogger().warning(
-                            Utils.formatLog("failed query commission",
-                                    null, ins, r));
-                } else {
-                    // Sleep up tp some seconds.
-                    try {
-                        if (!waitRequestRsp(qryWaitMillis, reqID))
-                            global.getLogger().warning("query margin timeout");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        protected String randomGet() {
-            synchronized (instruments) {
-                return instruments.get(
-                        Math.abs(rand.nextInt()) % instruments.size());
-            }
-        }
     }
 }
