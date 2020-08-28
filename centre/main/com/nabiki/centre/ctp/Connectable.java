@@ -34,4 +34,6 @@ public interface Connectable {
     void disconnect();
 
     boolean isConnected();
+
+    boolean waitConnected(long millis);
 }

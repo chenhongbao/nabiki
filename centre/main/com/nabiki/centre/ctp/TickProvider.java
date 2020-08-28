@@ -56,7 +56,7 @@ public class TickProvider implements Connectable {
     protected WorkingState workingState = WorkingState.STOPPED;
 
     // Login signal.
-    protected final Signal loginSignal = new Signal();
+    protected final Signal stateSignal = new Signal();
 
     protected String actionDay;
     protected JniMdSpi spi;
@@ -99,6 +99,17 @@ public class TickProvider implements Connectable {
     @Override
     public boolean isConnected() {
         return this.isConnected;
+    }
+
+    @Override
+    public boolean waitConnected(long millis) {
+        try {
+            this.stateSignal.waitSignal(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            return isConnected();
+        }
     }
 
     public void subscribe(Collection<String> instr) {
@@ -182,7 +193,7 @@ public class TickProvider implements Connectable {
     }
 
     public WorkingState waitWorkingState(long millis) throws InterruptedException {
-        this.loginSignal.waitSignal(millis);
+        this.stateSignal.waitSignal(millis);
         return this.workingState;
     }
 
@@ -238,6 +249,7 @@ public class TickProvider implements Connectable {
 
     public void whenFrontConnected() {
         this.isConnected = true;
+        this.stateSignal.signal();
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED) {
             doLogin();
@@ -273,7 +285,7 @@ public class TickProvider implements Connectable {
             // Candle engine starts working.
             setWorking(true);
             // Signal login state changed.
-            this.loginSignal.signal();
+            this.stateSignal.signal();
             this.global.getLogger().info("md login");
             updateActionDay();
             // If there are instruments to subscribe, do it.
@@ -297,7 +309,7 @@ public class TickProvider implements Connectable {
             this.workingState = WorkingState.STOPPED;
             setWorking(false);
             // Signal login state changed to logout.
-            this.loginSignal.signal();
+            this.stateSignal.signal();
             this.global.getLogger().info("md logout");
             // Clear last subscription on successful logout.
             this.subscribed.clear();

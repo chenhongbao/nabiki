@@ -51,7 +51,7 @@ public class Signal {
     public void signal() {
         this.lock.lock();
         try {
-            this.cond.signal();
+            this.cond.signalAll();
         } finally {
             this.lock.unlock();
         }

@@ -70,7 +70,7 @@ public class OrderProvider implements Connectable{
     protected CRspUserLogin rspLogin;
 
     // Wait last instrument.
-    protected final Signal lastRspSignal = new Signal();
+    protected final Signal stateSignal = new Signal();
 
     // Query instrument info.
     protected final QueryTask qryTask = new QueryTask(this);
@@ -101,6 +101,17 @@ public class OrderProvider implements Connectable{
     @Override
     public boolean isConnected() {
         return this.isConnected;
+    }
+
+    @Override
+    public boolean waitConnected(long millis) {
+        try {
+            this.stateSignal.waitSignal(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            return isConnected();
+        }
     }
 
     private boolean estimateQueryCount() {
@@ -204,12 +215,12 @@ public class OrderProvider implements Connectable{
 
     public boolean waitLastInstrument(long millis) throws InterruptedException {
         if (!this.qryInstrLast)
-            this.lastRspSignal.waitSignal(millis);
+            this.stateSignal.waitSignal(millis);
         return this.qryInstrLast;
     }
 
     public WorkingState waitWorkingState(long millis) throws InterruptedException {
-        this.lastRspSignal.waitSignal(millis);
+        this.stateSignal.waitSignal(millis);
         return this.workingState;
     }
 
@@ -517,6 +528,7 @@ public class OrderProvider implements Connectable{
 
     public void whenFrontConnected() {
         this.isConnected = true;
+        this.stateSignal.signal();
         if (this.workingState == WorkingState.STARTING
                 || this.workingState == WorkingState.STARTED) {
             doAuthentication();
@@ -624,7 +636,7 @@ public class OrderProvider implements Connectable{
         this.qryTask.signalRequest(requestID);
         // Signal last rsp.
         if (this.qryInstrLast) {
-            this.lastRspSignal.signal();
+            this.stateSignal.signal();
             this.global.getLogger().info("get last qry instrument rsp");
         }
     }
@@ -712,7 +724,7 @@ public class OrderProvider implements Connectable{
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
             // Signal logout.
-            this.lastRspSignal.signal();
+            this.stateSignal.signal();
         } else {
             this.global.getLogger().warning(
                     Utils.formatLog("failed logout", null,

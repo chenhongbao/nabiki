@@ -115,24 +115,20 @@ class PlatformTask extends TimerTask {
         }
     }
 
-    private void connect(Connectable conn) {
-        boolean init = false;
-        while (!conn.isConnected()) {
-            if (init)
-                throw new IllegalStateException("connect failed");
-            init = true;
+    private boolean connect(Connectable conn) {
+        if (!conn.isConnected()) {
             conn.connect();
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            return conn.waitConnected(TimeUnit.SECONDS.toMillis(5));
         }
+        return true;
     }
 
     private void startTrader() {
         try {
-            connect(P.orderProvider);
+            if (!connect(P.orderProvider)) {
+                this.global.getLogger().warning("trader connect failed");
+                return;
+            }
             P.orderProvider.login();
             // Wait query instruments completed.
             if (!P.orderProvider.waitLastInstrument(
@@ -147,7 +143,10 @@ class PlatformTask extends TimerTask {
 
     private void startMd() {
         try {
-            connect(P.tickProvider);
+            if (!connect(P.tickProvider)) {
+                this.global.getLogger().warning("md connect failed");
+                return;
+            }
             P.tickProvider.login();
             if (WorkingState.STARTED != P.tickProvider.waitWorkingState(
                     TimeUnit.MINUTES.toMillis(1)))
