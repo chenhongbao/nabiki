@@ -212,12 +212,14 @@ class PlatformTask extends TimerTask {
             stopMd();
         // Change state.
         if (P.orderProvider.getWorkingState() == WorkingState.STOPPED
-                && P.tickProvider.getWorkingState() == WorkingState.STOPPED) {
-            this.workingState = WorkingState.STOPPED;
+                && P.tickProvider.getWorkingState() == WorkingState.STOPPED)
             this.global.getLogger().info("platform stopped");
-        } else {
-            this.global.getLogger().warning("platform doesn't stop");
-        }
+        else
+            this.global.getLogger()
+                    .warning("platform doesn't stop, wait for disconnect");
+        // Front is disconnected automatically after remote shutdown, so no
+        // need to force all logout here.
+        this.workingState = WorkingState.STOPPED;
     }
 
     private void checkPerformance() {

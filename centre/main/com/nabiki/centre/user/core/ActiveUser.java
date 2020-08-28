@@ -229,7 +229,14 @@ public class ActiveUser {
                 prep.prepare(i.Instrument);
                 prep.prepare(i.Commission);
                 prep.prepare(i.Margin);
-                prep.prepare(this.global.getDepthMarketData(i.Instrument.InstrumentID));
+                var depth = this.global.getDepthMarketData(i.Instrument.InstrumentID);
+                if (Utils.validPrice(depth.SettlementPrice))
+                    prep.prepare(depth);
+                else
+                    this.global.getLogger()
+                            .warning("no settlement price("
+                                    + depth.SettlementPrice + "): "
+                                    + i.Instrument.InstrumentID);
             } catch (Throwable th) {
                 if (i != null && i.Instrument != null)
                     this.global.getLogger()

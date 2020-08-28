@@ -189,7 +189,7 @@ public class UserPosition {
             Objects.requireNonNull(depthSettle, "depth settlement null");
             var settlementPrice = depthSettle.SettlementPrice;
             if (!Utils.validPrice(settlementPrice))
-                throw new IllegalStateException("no settlement price for " + id);
+                throw new IllegalStateException("no settlement price: " + id);
             // Get information.
             var instr = prep.getInstrument(id);
             var margin = prep.getMargin(id);
