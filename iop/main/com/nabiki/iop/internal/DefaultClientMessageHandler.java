@@ -144,6 +144,15 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                         message.CurrentCount,
                         message.TotalCount);
                 break;
+            case RSP_QRY_MD:
+                adaptor.doRspQryDepthMarketData(
+                        (CDepthMarketData) message.Body,
+                        message.RspInfo,
+                        message.RequestID,
+                        message.ResponseID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
             case RSP_QRY_ACCOUNT:
                 adaptor.doRspQryAccount(
                         (CTradingAccount) message.Body,

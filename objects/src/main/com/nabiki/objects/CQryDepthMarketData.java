@@ -26,37 +26,11 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.objects;
 
-import com.nabiki.objects.*;
+public class CQryDepthMarketData {
+    public String InstrumentID;
+    public String ExchangeID;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
-public interface TradeClient {
-    void setListener(TradeClientListener clientListener);
-
-    void setListener(MarketDataListener listener);
-
-    void open(InetSocketAddress address) throws IOException;
-
-    void close();
-
-    Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
-
-    Response<COrder> orderInsert(CInputOrder order, String requestID);
-
-    Response<COrderAction> orderAction(CInputOrderAction action, String requestID);
-
-    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID);
-
-    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID);
-
-    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID);
-
-    Response<COrder> queryOrder(CQryOrder query, String requestID);
-
-    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID);
-
-    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID);
+    public CQryDepthMarketData() {}
 }

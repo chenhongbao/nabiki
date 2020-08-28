@@ -95,6 +95,14 @@ public abstract class ServerMessageAdaptor {
             int total) {
     }
 
+    public void doQryDepthMarketData(
+            ServerSession session,
+            CQryDepthMarketData query,
+            String requestID,
+            int current,
+            int total) {
+    }
+
     public void doQryAccount(
             ServerSession session,
             CQryTradingAccount query,

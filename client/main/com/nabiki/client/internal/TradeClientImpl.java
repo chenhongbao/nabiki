@@ -147,6 +147,16 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
+    public Response<CDepthMarketData> queryDepthMarketData(
+            CQryDepthMarketData query, String requestID) {
+        return send(
+                MessageType.QRY_MD,
+                query,
+                requestID,
+                CDepthMarketData.class);
+    }
+
+    @Override
     public Response<CInvestorPosition> queryPosition(
             CQryInvestorPosition query, String requestID) {
         query.InvestorID = this.lastLoginReq.UserID;

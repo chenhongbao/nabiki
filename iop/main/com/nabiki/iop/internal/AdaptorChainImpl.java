@@ -151,6 +151,14 @@ class AdaptorChainImpl implements AdaptorChain {
                         message.CurrentCount,
                         message.TotalCount);
                 break;
+            case QRY_MD:
+                adaptor.doQryDepthMarketData(
+                        session,
+                        (CQryDepthMarketData) message.Body,
+                        message.RequestID,
+                        message.CurrentCount,
+                        message.TotalCount);
+                break;
             case QRY_ACCOUNT:
                 adaptor.doQryAccount(
                         session,

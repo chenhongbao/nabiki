@@ -126,6 +126,17 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
     }
 
     @Override
+    public void doRspQryDepthMarketData(
+            CDepthMarketData rsp,
+            CRspInfo info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
+    }
+
+    @Override
     public void doRspQryAccount(
             CTradingAccount rsp,
             CRspInfo info,

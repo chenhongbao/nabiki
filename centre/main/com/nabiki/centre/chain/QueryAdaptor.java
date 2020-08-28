@@ -188,4 +188,30 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         }
         session.done();
     }
+
+    @Override
+    public void doQryDepthMarketData(
+            ServerSession session,
+            CQryDepthMarketData query,
+            String requestID,
+            int current,
+            int total) {
+        var depth = this.global.getDepthMarketData(query.InstrumentID);
+        var rsp = new Message();
+        rsp.Type = MessageType.RSP_QRY_MD;
+        rsp.RequestID = requestID;
+        rsp.ResponseID = UUID.randomUUID().toString();
+        rsp.RspInfo = new CRspInfo();
+        rsp.CurrentCount = 1;
+        rsp.TotalCount = 1;
+        if (depth == null) {
+            rsp.Body = new CDepthMarketData();
+            rsp.RspInfo.ErrorID = ErrorCodes.INSTRUMENT_NOT_FOUND;
+        } else {
+            rsp.Body = depth;
+            rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+        }
+        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        session.sendResponse(rsp);
+    }
 }

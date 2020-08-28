@@ -48,6 +48,8 @@ public enum MessageType implements java.io.Serializable {
     RSP_REQ_ORDER_INSERT,
     REQ_ORDER_ACTION,
     RSP_REQ_ORDER_ACTION,
+    QRY_MD,
+    RSP_QRY_MD,
     QRY_ACCOUNT,
     RSP_QRY_ACCOUNT,
     QRY_ORDER,

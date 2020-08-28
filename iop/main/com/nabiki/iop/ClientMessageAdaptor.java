@@ -121,6 +121,15 @@ public abstract class ClientMessageAdaptor {
             int total) {
     }
 
+    public void doRspQryDepthMarketData(
+            CDepthMarketData rsp,
+            CRspInfo info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+    }
+
     public void doRspQryAccount(
             CTradingAccount rsp,
             CRspInfo info,
