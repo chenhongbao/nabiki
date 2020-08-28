@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.container;
+package com.nabiki.client.ui;
 
-public interface LineStyle {
+public class LegendStyle {
 }

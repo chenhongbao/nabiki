@@ -28,7 +28,5 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.container.DotStyle;
-
-public class UIDotStyle implements DotStyle {
+public class UIDotStyle extends DotStyle {
 }

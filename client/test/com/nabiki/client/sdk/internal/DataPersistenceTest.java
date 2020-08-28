@@ -67,7 +67,7 @@ public class DataPersistenceTest {
         pers.put("long", l);
         pers.put("double", d);
 
-        // Test container.
+        // Test headless.
         pers.put("list", id);
         pers.put("map", idMap);
 
@@ -76,7 +76,7 @@ public class DataPersistenceTest {
     }
 
     private static void initValue() {
-        // Test container.
+        // Test headless.
         for (int x = 0; x < 10; ++x) {
             var str = String.valueOf(x);
             id.add(str);

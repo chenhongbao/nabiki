@@ -26,9 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.headless;
+package com.nabiki.client.ui;
 
-import com.nabiki.client.container.DotStyle;
-
-public class HeadlessDotStyle implements DotStyle {
+public class TextStyle {
 }

@@ -26,9 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.container;
+package com.nabiki.client.ui;
 
-public class FiguringFacility {
-    // TODO figure
-    protected Figure figure;
+public class DotStyle {
 }

@@ -26,22 +26,17 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.container;
+package com.nabiki.client.headless;
 
-public interface Figure {
-    void setStyle(String name, DotStyle style);
-    void setStyle(String name, LineStyle style);
-    void setStyle(TextStyle style);
-    void setStyle(LegendStyle style);
-    void dot(double price);
-    void dot(double price, int index);
-    void dot(String name, double price);
-    void dot(String name, double price, int index);
-    void lineTo(double price);
-    void lineTo(double price, int index);
-    void lineTo(String name, double price);
-    void lineTo(String name, double price, int index);
-    void text(String content, double price, int index);
-    void setLegend(String name, String description, String... vars);
-    void ring(boolean repeated);
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
+
+public abstract class HeadlessTrader extends TradeFacility {
+    public abstract void onStart();
+
+    public abstract void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
+
+    public abstract void onCandle(CCandle candle, boolean isTrading);
+
+    public abstract void onStop();
 }

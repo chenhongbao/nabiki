@@ -26,18 +26,18 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.ui;
 
-import com.nabiki.client.container.TradingFacility;
-import com.nabiki.objects.CCandle;
-import com.nabiki.objects.CDepthMarketData;
-
-public abstract class Trader extends TradingFacility {
-    public abstract void onStart();
-
-    public abstract void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
-
-    public abstract void onCandle(CCandle candle, boolean isTrading);
-
-    public abstract void onStop();
+public interface Figure {
+    void setStyle(String name, DotStyle style);
+    void setStyle(String name, LineStyle style);
+    void setStyle(TextStyle style);
+    void setStyle(LegendStyle style);
+    void dot(double price);
+    void dot(String name, double price);
+    void lineTo(double price);
+    void lineTo(String name, double price);
+    void text(String content, double price);
+    void setLegend(String name, String description, String... vars);
+    void ring(boolean repeated);
 }

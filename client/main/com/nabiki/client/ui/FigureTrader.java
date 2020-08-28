@@ -26,38 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.container;
+package com.nabiki.client.ui;
 
-import com.nabiki.objects.CInvestorPosition;
-import com.nabiki.objects.CTradingAccount;
-import com.nabiki.objects.CombOffsetFlagType;
-import com.nabiki.objects.DirectionType;
+import com.nabiki.client.headless.HeadlessTrader;
 
-import java.util.Collection;
-
-public class TradingFacility extends FiguringFacility {
-    protected double orderInsert(
-            String instrumentID,
-            double price,
-            int volume,
-            DirectionType direction,
-            CombOffsetFlagType offset) {
-        // TODO orderInsert
-        return 0.0D;
-    }
-
-    protected Collection<CInvestorPosition> getPosition() {
-        // TODO getPosition
-        return null;
-    }
-
-    protected Collection<CInvestorPosition> getPosition(String instrumentID) {
-        // TODO getPosition
-        return null;
-    }
-
-    protected CTradingAccount getAccount() {
-        // TODO getAccount
-        return null;
-    }
+public abstract class FigureTrader extends HeadlessTrader implements Figure {
 }

@@ -175,6 +175,7 @@ class TradeClientImpl implements TradeClient {
                 = query.AccountID
                 = this.lastLoginReq.UserID;
         query.BrokerID  = this.lastLoginReq.BrokerID;
+        query.CurrencyID = "CNY";
         return send(
                 MessageType.QRY_ACCOUNT,
                 query,
