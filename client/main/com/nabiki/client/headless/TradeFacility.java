@@ -32,6 +32,7 @@ import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.*;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -40,6 +41,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class TradeFacility {
     private TradeClient client;
+    private String userID, password;
+    private final Collection<String> instruments = new LinkedList<>();
 
     private String getRequestID() {
         return UUID.randomUUID().toString();
@@ -99,6 +102,15 @@ public class TradeFacility {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    public void setUser(String userID, String password) {
+        this.userID = userID;
+        this.password = password;
+    }
+
+    public void subscribe(String... instruments) {
+        this.instruments.addAll(Arrays.asList(instruments));
     }
 
     public void orderInsert(String instrumentID, String exchangeID, double price,

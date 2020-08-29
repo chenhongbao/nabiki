@@ -28,5 +28,5 @@
 
 package com.nabiki.client.ui;
 
-public class UIDotStyle extends DotStyle {
+public class BarStyle {
 }
