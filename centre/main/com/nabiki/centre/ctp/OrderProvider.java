@@ -533,7 +533,8 @@ public class OrderProvider implements Connectable{
                 || this.workingState == WorkingState.STARTED) {
             doAuthentication();
             this.global.getLogger().info("trader reconnected");
-        }
+        }  else
+            this.global.getLogger().info("trader connected");
     }
 
     public void whenFrontDisconnected(int reason) {

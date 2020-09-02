@@ -177,13 +177,15 @@ public class TickProvider implements Connectable {
     public void login() {
         if (!this.isConnected)
             throw new IllegalStateException("not connected");
+        if (isLogin)
+            throw new IllegalStateException("duplicated login");
         this.workingState = WorkingState.STARTING;
         doLogin();
     }
 
     public void logout() {
         if (!this.isLogin)
-            throw new IllegalStateException("repeated logout");
+            throw new IllegalStateException("duplicated logout");
         this.workingState = WorkingState.STOPPING;
         doLogout();
     }
@@ -254,7 +256,8 @@ public class TickProvider implements Connectable {
                 || this.workingState == WorkingState.STARTED) {
             doLogin();
             this.global.getLogger().info("md reconnected");
-        }
+        } else
+            this.global.getLogger().info("md connected");
     }
 
     public void whenFrontDisconnected(int reason) {

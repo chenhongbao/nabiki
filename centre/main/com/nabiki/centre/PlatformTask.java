@@ -191,28 +191,14 @@ class PlatformTask extends TimerTask {
         }
     }
 
-    private void stopMd() {
-        try {
-            P.tickProvider.logout();
-            // Wait for logout.
-            if (WorkingState.STOPPED != P.tickProvider.waitWorkingState(
-                    TimeUnit.MINUTES.toMillis(1)))
-                this.global.getLogger().severe("md logout timeout");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void stop() {
         this.workingState = WorkingState.STOPPING;
         this.global.getLogger().info("platform stopping");
         if (P.orderProvider.getWorkingState() != WorkingState.STOPPED)
             stopTrader();
-        if (P.tickProvider.getWorkingState() != WorkingState.STOPPED)
-            stopMd();
+        // Don't stop md because its logout return CTP error(77).
         // Change state.
-        if (P.orderProvider.getWorkingState() == WorkingState.STOPPED
-                && P.tickProvider.getWorkingState() == WorkingState.STOPPED)
+        if (P.orderProvider.getWorkingState() == WorkingState.STOPPED)
             this.global.getLogger().info("platform stopped");
         else
             this.global.getLogger()
