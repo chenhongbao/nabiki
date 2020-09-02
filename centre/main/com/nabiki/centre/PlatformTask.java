@@ -134,6 +134,10 @@ class PlatformTask extends TimerTask {
             if (!P.orderProvider.waitLastInstrument(
                     TimeUnit.MINUTES.toMillis(1)))
                 this.global.getLogger().info("query instrument timeout");
+            else
+                // Update subscription so at next reconnect it will subscribe the
+                // new instruments.
+                P.tickProvider.setSubscription(P.orderProvider.getInstruments());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -151,8 +155,13 @@ class PlatformTask extends TimerTask {
             if (WorkingState.STARTED != P.tickProvider.waitWorkingState(
                     TimeUnit.MINUTES.toMillis(1)))
                 this.global.getLogger().info("wait md login timeout");
-            else
-                P.tickProvider.subscribe(P.orderProvider.getInstruments());
+            else {
+                // This code works when first startup.
+                // For later reconnect, it will use the internal instruments set by
+                // order provider after qry all instruments.
+                P.tickProvider.setSubscription(P.orderProvider.getInstruments());
+                P.tickProvider.subscribe();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

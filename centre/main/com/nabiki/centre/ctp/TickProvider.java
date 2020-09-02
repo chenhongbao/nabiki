@@ -112,23 +112,22 @@ public class TickProvider implements Connectable {
         }
     }
 
-    public void subscribe(Collection<String> instr) {
-        if (instr == null || instr.size() == 0)
-            return;
-        // Clear subscribed instruments in last call.
+    public void setSubscription(Collection<String> instr) {
         this.subscribed.clear();
+        this.subscribed.addAll(instr);
+    }
+
+    public void subscribe() {
         // Prepare new subscription.
         var ins = new String[50];
         int count = -1;
-        var iter = instr.iterator();
+        var iter = this.subscribed.iterator();
         while (true) {
             while (iter.hasNext() && ++count < 50) {
                 var i= iter.next();
                 // Initialize instrument ID in candle engine.
                 registerInstrument(i);
                 ins[count] = i;
-                // Save instruments for reconnection and re-subscription.
-                this.subscribed.add(i);
             }
             // Subscribe batch.
             subscribeBatch(ins, count);
@@ -295,7 +294,7 @@ public class TickProvider implements Connectable {
             // The subscribe method clears the container, so the instruments must be
             // kept in another container.
             if (this.subscribed.size() > 0)
-                subscribe(new HashSet<>(this.subscribed));
+                subscribe();
         } else {
             this.global.getLogger().severe(
                     Utils.formatLog("failed login", null,
