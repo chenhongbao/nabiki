@@ -155,13 +155,11 @@ class PlatformTask extends TimerTask {
             if (WorkingState.STARTED != P.tickProvider.waitWorkingState(
                     TimeUnit.MINUTES.toMillis(1)))
                 this.global.getLogger().info("wait md login timeout");
-            else {
-                // This code works when first startup.
+            else
+                // This code works on first startup.
                 // For later reconnect, it will use the internal instruments set by
                 // order provider after qry all instruments.
-                P.tickProvider.setSubscription(P.orderProvider.getInstruments());
                 P.tickProvider.subscribe();
-            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -174,6 +172,8 @@ class PlatformTask extends TimerTask {
     private void start() {
         this.workingState = WorkingState.STARTING;
         this.global.getLogger().info("platform starting");
+        // Start order provider first because it qry available instruments used
+        // in subscription in tick provider.
         if (P.orderProvider.getWorkingState() != WorkingState.STARTED)
             startTrader();
         if (P.tickProvider.getWorkingState() != WorkingState.STARTED)

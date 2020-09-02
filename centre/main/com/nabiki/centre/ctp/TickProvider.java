@@ -113,34 +113,40 @@ public class TickProvider implements Connectable {
     }
 
     public void setSubscription(Collection<String> instr) {
-        this.subscribed.clear();
-        this.subscribed.addAll(instr);
+        synchronized (this.subscribed) {
+            this.subscribed.clear();
+            this.subscribed.addAll(instr);
+        }
     }
 
     public void subscribe() {
+        if (this.subscribed.size() == 0)
+            throw new IllegalStateException("no instrument to subscribe");
         // Prepare new subscription.
         var ins = new String[50];
         int count = -1;
-        var iter = this.subscribed.iterator();
-        while (true) {
-            while (iter.hasNext() && ++count < 50) {
-                var i= iter.next();
-                // Initialize instrument ID in candle engine.
-                registerInstrument(i);
-                ins[count] = i;
-            }
-            // Subscribe batch.
-            subscribeBatch(ins, count);
-            count = -1;
-            if (!iter.hasNext())
-                break;
-            else {
-                try {
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-                } catch (InterruptedException e) {
-                    this.global.getLogger().warning(
-                            Utils.formatLog("failed sleep", null,
-                                    e.getMessage(), null));
+        synchronized (this.subscribed) {
+            var iter = this.subscribed.iterator();
+            while (true) {
+                while (iter.hasNext() && ++count < 50) {
+                    var i = iter.next();
+                    // Initialize instrument ID in candle engine.
+                    registerInstrument(i);
+                    ins[count] = i;
+                }
+                // Subscribe batch.
+                subscribeBatch(ins, count);
+                count = -1;
+                if (!iter.hasNext())
+                    break;
+                else {
+                    try {
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+                    } catch (InterruptedException e) {
+                        this.global.getLogger().warning(
+                                Utils.formatLog("failed sleep", null,
+                                        e.getMessage(), null));
+                    }
                 }
             }
         }
@@ -291,10 +297,8 @@ public class TickProvider implements Connectable {
             this.global.getLogger().info("md login");
             updateActionDay();
             // If there are instruments to subscribe, do it.
-            // The subscribe method clears the container, so the instruments must be
-            // kept in another container.
-            if (this.subscribed.size() > 0)
-                subscribe();
+            // The subscribe method uses instruments set by order provider.
+            subscribe();
         } else {
             this.global.getLogger().severe(
                     Utils.formatLog("failed login", null,
