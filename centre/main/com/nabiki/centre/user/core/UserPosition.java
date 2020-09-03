@@ -186,15 +186,15 @@ public class UserPosition {
             var id = entry.getKey();
             // Acquire settlement price.
             var depthSettle = prep.getDepth(id);
-            Objects.requireNonNull(depthSettle, "depth settlement null");
+            Objects.requireNonNull(depthSettle, "settled depth null: " + id);
             var settlementPrice = depthSettle.SettlementPrice;
             if (!Utils.validPrice(settlementPrice))
                 throw new IllegalStateException("no settlement price: " + id);
             // Get information.
             var instr = prep.getInstrument(id);
             var margin = prep.getMargin(id);
-            Objects.requireNonNull(instr, "instrument null");
-            Objects.requireNonNull(margin, "margin null");
+            Objects.requireNonNull(instr, "instrument null: " + id);
+            Objects.requireNonNull(margin, "margin null: " + id);
             // Settle specific instrument.
             var r = settleSpecificInstrument(entry.getValue(), settlementPrice,
                     instr.VolumeMultiple, prep.getTradingDay());
