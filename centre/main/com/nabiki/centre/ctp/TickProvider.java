@@ -39,6 +39,7 @@ import com.nabiki.ctp4j.CThostFtdcMdApi;
 import com.nabiki.objects.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -199,9 +200,22 @@ public class TickProvider implements Connectable {
         return this.workingState;
     }
 
-    public WorkingState waitWorkingState(long millis) throws InterruptedException {
-        this.stateSignal.waitSignal(millis);
-        return this.workingState;
+    public boolean waitWorkingState(WorkingState stateToWait, long millis) {
+        var wait = millis;
+        var beg = System.currentTimeMillis();
+        while (this.workingState != stateToWait) {
+            try {
+                this.stateSignal.waitSignal(wait);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            var elapse = System.currentTimeMillis() - beg;
+            if (elapse < wait)
+                wait -= elapse;
+            else
+                break;
+        }
+        return this.workingState == stateToWait;
     }
 
     private void updateActionDay() {
@@ -252,6 +266,12 @@ public class TickProvider implements Connectable {
     private void setWorking(boolean working) {
         for (var e : this.engines)
             e.setWorking(working);
+    }
+
+    private boolean isTrading(String instrumentID) {
+        var keeper = this.global.getTradingHour(
+                null, instrumentID);
+        return keeper != null && keeper.contains(LocalTime.now());
     }
 
     public void whenFrontConnected() {
@@ -354,6 +374,11 @@ public class TickProvider implements Connectable {
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
+        // Filter re-sent md of last night between subscription and market open.
+        // It is not sent specially when you subscribe near market opens, but
+        // it is always sent when you subscribe early before market opens.
+        if (!isTrading(depthMarketData.InstrumentID))
+            return;
         // Set action day to today.
         depthMarketData.ActionDay = this.actionDay;
         // Route md and update candle engines.

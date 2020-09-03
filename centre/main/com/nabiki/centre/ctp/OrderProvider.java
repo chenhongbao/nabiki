@@ -69,8 +69,9 @@ public class OrderProvider implements Connectable{
             qryInstrLast = false;
     protected CRspUserLogin rspLogin;
 
-    // Wait last instrument.
-    protected final Signal stateSignal = new Signal();
+    // Wait and signaling.
+    protected final Signal stateSignal = new Signal(),
+            qryLastInstrSignal = new Signal();
 
     // Query instrument info.
     protected final QueryTask qryTask = new QueryTask(this);
@@ -215,13 +216,26 @@ public class OrderProvider implements Connectable{
 
     public boolean waitLastInstrument(long millis) throws InterruptedException {
         if (!this.qryInstrLast)
-            this.stateSignal.waitSignal(millis);
+            this.qryLastInstrSignal.waitSignal(millis);
         return this.qryInstrLast;
     }
 
-    public WorkingState waitWorkingState(long millis) throws InterruptedException {
-        this.stateSignal.waitSignal(millis);
-        return this.workingState;
+    public boolean waitWorkingState(WorkingState stateToWait, long millis) {
+        var wait = millis;
+        var beg = System.currentTimeMillis();
+        while (this.workingState != stateToWait) {
+            try {
+                this.stateSignal.waitSignal(wait);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            var elapse = System.currentTimeMillis() - beg;
+            if (elapse < wait)
+                wait -= elapse;
+            else
+                break;
+        }
+        return this.workingState == stateToWait;
     }
 
     /**
@@ -637,7 +651,7 @@ public class OrderProvider implements Connectable{
         this.qryTask.signalRequest(requestID);
         // Signal last rsp.
         if (this.qryInstrLast) {
-            this.stateSignal.signal();
+            this.qryLastInstrSignal.signal();
             this.global.getLogger().info("get last qry instrument rsp");
         }
     }

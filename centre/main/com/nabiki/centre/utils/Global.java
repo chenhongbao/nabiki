@@ -46,6 +46,8 @@ public class Global {
 
     // ProductID -> TradingHourKeeper
     final Map<String, TradingHourKeeper> tradingHour = new ConcurrentHashMap<>();
+    // Instrument ID -> TradingHourKeeper
+    final Map<String, TradingHourKeeper> instrTradingHour = new ConcurrentHashMap<>();
 
     // Instrument ID -> InstrumentInfo
     final Map<String, InstrumentInfo> instrInfo = new ConcurrentHashMap<>();
@@ -98,10 +100,22 @@ public class Global {
      * @return trading hour configuration
      */
     public TradingHourKeeper getTradingHour(String proID, String instrID) {
+        TradingHourKeeper keeper = null;
         if (proID != null)
-            return this.tradingHour.get(proID);
-        else
-            return this.tradingHour.get(Utils.getProductID(instrID));
+            keeper = this.tradingHour.get(proID);
+        if (keeper == null && instrID != null) {
+            keeper = this.instrTradingHour.get(instrID);
+            if (keeper == null) {
+                var pid = Utils.getProductID(instrID);
+                keeper = this.tradingHour.get(pid);
+                // Cache instrument id mapping to hour keeper, so it doesn't need to
+                // extract product id at next call.
+                // Just go instrument id mapping.
+                if (keeper != null)
+                    this.instrTradingHour.put(instrID, keeper);
+            }
+        }
+        return keeper;
     }
 
     /**

@@ -131,8 +131,7 @@ class PlatformTask extends TimerTask {
             }
             P.orderProvider.login();
             // Wait query instruments completed.
-            if (!P.orderProvider.waitLastInstrument(
-                    TimeUnit.MINUTES.toMillis(1)))
+            if (!P.orderProvider.waitLastInstrument(TimeUnit.MINUTES.toMillis(1)))
                 this.global.getLogger().info("query instrument timeout");
             else
                 // Update subscription so at next reconnect it will subscribe the
@@ -152,16 +151,18 @@ class PlatformTask extends TimerTask {
                 return;
             }
             P.tickProvider.login();
-            if (WorkingState.STARTED != P.tickProvider.waitWorkingState(
-                    TimeUnit.MINUTES.toMillis(1)))
+            var r = P.tickProvider.waitWorkingState(
+                    WorkingState.STARTED,
+                    TimeUnit.MINUTES.toMillis(1));
+            if (!r)
                 this.global.getLogger().info("wait md login timeout");
             else
                 // This code works on first startup.
                 // For later reconnect, it will use the internal instruments set by
                 // order provider after qry all instruments.
                 P.tickProvider.subscribe();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Throwable th) {
+            th.printStackTrace();
         }
     }
 
@@ -192,11 +193,13 @@ class PlatformTask extends TimerTask {
         try {
             P.orderProvider.logout();
             // Wait for logout.
-            if (WorkingState.STOPPED != P.orderProvider.waitWorkingState(
-                    TimeUnit.MINUTES.toMillis(1)))
+            var r = P.orderProvider.waitWorkingState(
+                    WorkingState.STOPPED,
+                    TimeUnit.MINUTES.toMillis(1));
+            if (!r)
                 this.global.getLogger().severe("trader logout timeout");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Throwable th) {
+            th.printStackTrace();
         }
     }
 
