@@ -374,19 +374,22 @@ public class TickProvider implements Connectable {
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
+        // Update global depth.
+        GlobalConfig.setDepthMarketData(depthMarketData);
         // Filter re-sent md of last night between subscription and market open.
         // It is not sent specially when you subscribe near market opens, but
         // it is always sent when you subscribe early before market opens.
-        if (!isTrading(depthMarketData.InstrumentID))
-            return;
-        // Set action day to today.
-        depthMarketData.ActionDay = this.actionDay;
-        // Route md and update candle engines.
-        for (var r : this.routers)
-            r.route(depthMarketData);
-        for (var e : this.engines)
-            e.update(depthMarketData);
-        // Update global's depth.
-        GlobalConfig.setDepthMarketData(depthMarketData);
+        // [IMPORTANT]
+        // But please note that this condition filters out the settlement ticks,
+        // so need to save the tick before this clause.
+        if (isTrading(depthMarketData.InstrumentID)) {
+            // Set action day to today.
+            depthMarketData.ActionDay = this.actionDay;
+            // Route md and update candle engines.
+            for (var r : this.routers)
+                r.route(depthMarketData);
+            for (var e : this.engines)
+                e.update(depthMarketData);
+        }
     }
 }
