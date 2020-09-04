@@ -50,7 +50,8 @@ public class TickProvider implements Connectable {
     protected final ReqRspWriter msgWriter;
     protected final Set<MarketDataRouter> routers = new HashSet<>();
     protected final Set<CandleEngine> engines = new HashSet<>();
-    protected final Set<String> subscribed = new HashSet<>();
+    protected final Set<String> toSubscribe = new HashSet<>(),
+            subscribed = new HashSet<>();
 
     protected boolean isConnected = false,
             isLogin = false;
@@ -114,20 +115,20 @@ public class TickProvider implements Connectable {
     }
 
     public void setSubscription(Collection<String> instr) {
-        synchronized (this.subscribed) {
-            this.subscribed.clear();
-            this.subscribed.addAll(instr);
+        synchronized (this.toSubscribe) {
+            this.toSubscribe.clear();
+            this.toSubscribe.addAll(instr);
         }
     }
 
     public void subscribe() {
-        if (this.subscribed.size() == 0)
+        if (this.toSubscribe.size() == 0)
             throw new IllegalStateException("no instrument to subscribe");
         // Prepare new subscription.
         var ins = new String[50];
         int count = -1;
-        synchronized (this.subscribed) {
-            var iter = this.subscribed.iterator();
+        synchronized (this.toSubscribe) {
+            var iter = this.toSubscribe.iterator();
             while (true) {
                 while (iter.hasNext() && ++count < 50) {
                     var i = iter.next();
@@ -338,13 +339,26 @@ public class TickProvider implements Connectable {
             this.stateSignal.signal();
             this.global.getLogger().info("md logout");
             // Clear last subscription on successful logout.
-            this.subscribed.clear();
+            this.toSubscribe.clear();
         } else {
             this.global.getLogger().warning(
                     Utils.formatLog("failed logout", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
+    }
+
+    private void checkSubscription() {
+        if (this.subscribed.size() == this.toSubscribe.size())
+            this.global.getLogger().info(
+                    "subscribe all " + this.toSubscribe.size() + "instruments");
+        else {
+            for (var in0 : this.toSubscribe)
+                if (!this.subscribed.contains(in0))
+                    this.global.getLogger().warning(in0 + " not subscribed");
+        }
+        // Clear.
+        this.subscribed.clear();
     }
 
     public void whenRspSubMarketData(
@@ -355,9 +369,11 @@ public class TickProvider implements Connectable {
                     "failed subscription", specificInstrument.InstrumentID,
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
+        } else {
+            this.subscribed.add(specificInstrument.InstrumentID);
         }
         if (isLast)
-            this.global.getLogger().info("get last subscription rsp");
+            checkSubscription();
     }
 
     public void whenRspUnSubMarketData(
@@ -369,8 +385,6 @@ public class TickProvider implements Connectable {
                     rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }
-        if (isLast)
-            this.global.getLogger().info("get last un-subscription rsp");
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
