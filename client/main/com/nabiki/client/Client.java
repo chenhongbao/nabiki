@@ -26,7 +26,24 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.ui;
+package com.nabiki.client;
 
-public class LineStyle {
+import com.nabiki.client.ui.FigureTrader;
+import com.nabiki.client.ui.HeadlessTrader;
+
+import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
+
+public interface Client {
+    void start(HeadlessTrader trader);
+
+    void start(FigureTrader trader);
+
+    void start(HeadlessTrader trader, InetSocketAddress serverAddress);
+
+    void start(FigureTrader trader, InetSocketAddress serverAddress);
+
+    void noExit();
+
+    void exitAt(LocalDateTime dateTime);
 }

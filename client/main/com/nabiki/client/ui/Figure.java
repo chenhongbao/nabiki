@@ -28,19 +28,5 @@
 
 package com.nabiki.client.ui;
 
-public interface FigureFacility {
-    void bind(String instrumentID);
-    void target(String chartName);
-    void setStyle(String dotName, DotStyle style);
-    void setStyle(String lineName, LineStyle style);
-    void setStyle(String barName, BarStyle style);
-    void setStyle(TextStyle style);
-    void setStyle(LegendStyle style);
-    void dot(String dotName, double price);
-    void lineTo(String lineName, double price);
-    void bar(String barName, double value);
-    void bar(String barName, double top, double bottom);
-    void text(String content, double price);
-    void setLegend(String name, String description, String... vars);
-    void ring(boolean repeated);
+public interface Figure {
 }

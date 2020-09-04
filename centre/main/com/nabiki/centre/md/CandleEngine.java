@@ -140,7 +140,7 @@ public class CandleEngine extends TimerTask {
         var hours = this.global.getAllTradingHour();
         // Measure performance.
         var max = global.getPerformanceMeasure().start("candle.run.max");
-        var avr = global.getPerformanceMeasure().start("candle.run.avr");
+        var cur = global.getPerformanceMeasure().start("candle.run.cur");
         // Generate candles.
         for (var e : this.products.entrySet()) {
             var h = hours.get(e.getKey());
@@ -164,7 +164,7 @@ public class CandleEngine extends TimerTask {
         }
         // End measurement.
         max.endWithMax();
-        avr.end();
+        cur.end();
     }
 
     class Product {

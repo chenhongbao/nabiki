@@ -26,12 +26,12 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.headless;
+package com.nabiki.client.ui;
 
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 
-public abstract class HeadlessTrader extends TradeFacility {
+public abstract class HeadlessTrader extends AbstractTrade {
     public abstract void onStart();
 
     public abstract void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);

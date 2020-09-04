@@ -68,12 +68,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             var activeUser = (ActiveUser) attr;
             // Performance measurement.
             var max = this.global.getPerformanceMeasure().start("qry.account.max");
-            var var = this.global.getPerformanceMeasure().start("qry.account.avr");
+            var cur = this.global.getPerformanceMeasure().start("qry.account.cur");
             // Qry account.
             rsp.Body = activeUser.getTradingAccount();
             // End measurement.
             max.endWithMax();
-            var.end();
+            cur.end();
             rsp.RspInfo.ErrorID = ErrorCodes.NONE;
         }
         rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
@@ -105,12 +105,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             var activeUser = (ActiveUser) attr;
             // Performance measurement.
             var max = this.global.getPerformanceMeasure().start("qry.rtnorder.max");
-            var var = this.global.getPerformanceMeasure().start("qry.rtnorder.avr");
+            var cur = this.global.getPerformanceMeasure().start("qry.rtnorder.cur");
             // Qry rtn order.
             var orders = activeUser.getRtnOrder(query.OrderSysID);
             // End measurement.
             max.endWithMax();
-            var.end();
+            cur.end();
             if (orders == null || orders.size() == 0) {
                 // No rtn orders found.
                 rsp.CurrentCount = 1;
@@ -160,12 +160,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             var activeUser = (ActiveUser)attr;
             // Performance measurement.
             var max = this.global.getPerformanceMeasure().start("qry.position.max");
-            var var = this.global.getPerformanceMeasure().start("qry.position.avr");
+            var cur = this.global.getPerformanceMeasure().start("qry.position.cur");
             // Qry position.
             var positions = activeUser.getPosition(query.InstrumentID);
             // End measurement.
             max.endWithMax();
-            var.end();
+            cur.end();
             if (positions == null || positions.size() == 0) {
                 rsp.CurrentCount = 1;
                 rsp.TotalCount = 1;

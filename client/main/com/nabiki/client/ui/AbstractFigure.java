@@ -28,5 +28,5 @@
 
 package com.nabiki.client.ui;
 
-public class TextStyle {
+public class AbstractFigure extends AbstractTrade implements Figure {
 }

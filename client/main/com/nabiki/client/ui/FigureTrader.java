@@ -28,7 +28,5 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.headless.HeadlessTrader;
-
-public abstract class FigureTrader extends HeadlessTrader implements FigureFacility {
+public abstract class FigureTrader extends AbstractFigure {
 }

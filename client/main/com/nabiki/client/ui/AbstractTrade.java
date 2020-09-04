@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.headless;
+package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
@@ -39,7 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class TradeFacility {
+public abstract class AbstractTrade implements Trade {
     private TradeClient client;
     private String userID, password;
     private final Collection<String> instruments = new LinkedList<>();
@@ -104,15 +104,18 @@ public class TradeFacility {
         }
     }
 
+    @Override
     public void setUser(String userID, String password) {
         this.userID = userID;
         this.password = password;
     }
 
+    @Override
     public void subscribe(String... instruments) {
         this.instruments.addAll(Arrays.asList(instruments));
     }
 
+    @Override
     public void orderInsert(String instrumentID, String exchangeID, double price,
                             int volume, char direction, char offset) {
         var req = new CInputOrder();
@@ -133,10 +136,12 @@ public class TradeFacility {
         waitTrade(instrumentID, exchangeID, rspOrder.OrderLocalID);
     }
 
+    @Override
     public Collection<CInvestorPosition> getPosition() {
         return getPosition("", "");
     }
 
+    @Override
     public Collection<CInvestorPosition> getPosition(
             String instrumentID, String exchangeID) {
         var qry = new CQryInvestorPosition();
@@ -146,6 +151,7 @@ public class TradeFacility {
                 5, TimeUnit.SECONDS);
     }
 
+    @Override
     public CTradingAccount getAccount()  {
         var qry = new CQryTradingAccount();
         var rsp = get(

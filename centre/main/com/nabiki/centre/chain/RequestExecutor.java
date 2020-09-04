@@ -67,12 +67,12 @@ public class RequestExecutor extends RequestSuper {
             var activeUser = (ActiveUser)attr;
             // Measure performance.
             var max = this.global.getPerformanceMeasure().start("order.insert.max");
-            var avr = this.global.getPerformanceMeasure().start("order.insert.avr");
+            var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
             // Order insert.
             var uuid = activeUser.insertOrder(request);
             // End measurement.
             max.endWithMax();
-            avr.end();
+            cur.end();
             // Build response.
             var o = toRtnOrder(request);
             rsp.RspInfo = activeUser.getExecRsp(uuid);
@@ -111,12 +111,12 @@ public class RequestExecutor extends RequestSuper {
             var activeUser = (ActiveUser)attr;
             // Measure performance.
             var max = this.global.getPerformanceMeasure().start("order.insert.max");
-            var avr = this.global.getPerformanceMeasure().start("order.insert.avr");
+            var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
             // Order action.
             var uuid = activeUser.orderAction(request);
             // End measurement.
             max.endWithMax();
-            avr.end();
+            cur.end();
             // Build response.
             var o = toOrderAction(request);
             o.OrderLocalID = request.OrderSysID;

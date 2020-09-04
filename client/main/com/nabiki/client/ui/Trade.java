@@ -28,5 +28,23 @@
 
 package com.nabiki.client.ui;
 
-public class LegendStyle {
+import com.nabiki.objects.CInvestorPosition;
+import com.nabiki.objects.CTradingAccount;
+
+import java.util.Collection;
+
+public interface Trade {
+    void setUser(String userID, String password);
+
+    void subscribe(String... instruments);
+
+    void orderInsert(String instrumentID, String exchangeID, double price,
+                     int volume, char direction, char offset);
+
+    Collection<CInvestorPosition> getPosition();
+
+    Collection<CInvestorPosition> getPosition(
+            String instrumentID, String exchangeID);
+
+    CTradingAccount getAccount();
 }
