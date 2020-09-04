@@ -242,6 +242,7 @@ class PlatformTask extends TimerTask {
             if (needSettle()) {
                 settle();
                 checkPerformance();
+                P.tickProvider.checkSubscription();
             }
         } catch (Throwable th) {
             th.printStackTrace();

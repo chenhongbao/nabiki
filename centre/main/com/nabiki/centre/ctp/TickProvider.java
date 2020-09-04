@@ -348,7 +348,7 @@ public class TickProvider implements Connectable {
         }
     }
 
-    private void checkSubscription() {
+    public void checkSubscription() {
         if (this.subscribed.size() == this.toSubscribe.size())
             this.global.getLogger().info(
                     "subscribe all " + this.toSubscribe.size() + "instruments");
@@ -372,8 +372,6 @@ public class TickProvider implements Connectable {
         } else {
             this.subscribed.add(specificInstrument.InstrumentID);
         }
-        if (isLast)
-            checkSubscription();
     }
 
     public void whenRspUnSubMarketData(
