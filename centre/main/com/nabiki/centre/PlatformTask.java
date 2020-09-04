@@ -43,8 +43,9 @@ import java.util.concurrent.TimeUnit;
 class PlatformTask extends TimerTask {
     private final Platform P;
     private final Global global;
-    private final LocalTime start0 = LocalTime.of(20, 30),
-            start1 = LocalTime.of(8, 30),
+    // Start login later because Time return in login rsp is invalid at an early time.
+    private final LocalTime start0 = LocalTime.of(20, 45),
+            start1 = LocalTime.of(8, 45),
             stop0 = LocalTime.of(2, 30),
             stop1 = LocalTime.of(15, 30);
     private final LocalTime renewTime = LocalTime.of(20, 25),

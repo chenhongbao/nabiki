@@ -45,7 +45,12 @@ public class TimeAligner {
     }
 
     void align(String name, LocalTime local, String remote) {
-        align(name, local, LocalTime.parse(remote, this.formatter));
+        try {
+            align(name, local, LocalTime.parse(remote, this.formatter));
+        } catch (Throwable th) {
+            th.printStackTrace();
+            align(name, local, local);
+        }
     }
 
     LocalTime getAlignTime(String name, LocalTime now) {
