@@ -40,6 +40,7 @@ public class LoggingConsole extends JDialog {
     JPanel clientCtrl;
     JCheckBox autoScroll;
     static final SimpleFormatter formatter = new SimpleFormatter();
+    static final int textAreaMargin = 5;
 
     LoggingConsole() {
         addComponentsToPane();
@@ -65,21 +66,22 @@ public class LoggingConsole extends JDialog {
                     scrollBottom();
             }
         });
-
         clientCtrl = new JPanel();
         clientCtrl.setLayout(new FlowLayout(FlowLayout.RIGHT));
         clientCtrl.add(autoScroll);
-
+        // Text area.
         displayArea = new JTextArea();
         displayArea.setEditable(false);
-
+        displayArea.setMargin(new Insets(
+                textAreaMargin, textAreaMargin, textAreaMargin, textAreaMargin));
+        // Scroll pane.
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         JScrollPane scrollPane = new JScrollPane(displayArea);
         scrollPane.setPreferredSize(new Dimension(600, screenSize.height * 2 / 3));
-
+        // Add components to dialog.
         getContentPane().add(scrollPane, BorderLayout.CENTER);
         getContentPane().add(clientCtrl, BorderLayout.PAGE_END);
-
+        // Title.
         super.setTitle("日志监视");
     }
 }
