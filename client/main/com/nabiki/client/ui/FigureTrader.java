@@ -28,5 +28,15 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
+
 public abstract class FigureTrader extends AbstractFigure {
+    public abstract void onStart();
+
+    public abstract void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
+
+    public abstract void onCandle(CCandle candle, boolean isTrading);
+
+    public abstract void onStop();
 }

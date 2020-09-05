@@ -30,19 +30,41 @@ package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
+import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public abstract class AbstractTrade implements Trade {
     private TradeClient client;
     private String userID, password;
     private final Collection<String> instruments = new LinkedList<>();
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
+
+    protected AbstractTrade() {
+        prepare();
+    }
+
+    private void prepare() {
+        try {
+            logger.addHandler(new SimpleFileHandler());
+            logger.setUseParentHandlers(false);
+            // Set default err/out.
+            SystemStream.setErr("err.log");
+            SystemStream.setOut("out.log");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private String getRequestID() {
         return UUID.randomUUID().toString();
@@ -111,6 +133,11 @@ public abstract class AbstractTrade implements Trade {
     }
 
     @Override
+    public String[] getUser() {
+        return new String[] {this.userID, this.password};
+    }
+
+    @Override
     public void subscribe(String... instruments) {
         this.instruments.addAll(Arrays.asList(instruments));
     }
@@ -161,5 +188,27 @@ public abstract class AbstractTrade implements Trade {
         if (rsp.size() != 1)
             throw new RuntimeException("invalid rsp size: " + rsp.size());
         return rsp.iterator().next();
+    }
+
+    @Override
+    public Logger getLogger() {
+        return this.logger;
+    }
+
+    @Override
+    public TradeClient getClient() {
+        return this.client;
+    }
+
+    @Override
+    public void setClient(TradeClient client) {
+        this.client = client;
+    }
+
+    static class SimpleFileHandler extends FileHandler {
+        public SimpleFileHandler() throws IOException, SecurityException {
+            super("default.log");
+            super.setFormatter(new SimpleFormatter());
+        }
     }
 }

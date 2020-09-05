@@ -28,5 +28,33 @@
 
 package com.nabiki.client.ui;
 
-public class AbstractFigure extends AbstractTrade implements Figure {
+import java.awt.*;
+import java.util.logging.Logger;
+
+public abstract class AbstractFigure extends AbstractTrade implements Figure {
+    @Override
+    public void setLine(String name, Color color) {
+
+    }
+
+    @Override
+    public void setDot(String name, Color color) {
+
+    }
+
+    @Override
+    public void stick(double open, double high, double low, double close, String xLabel) {
+
+    }
+
+    @Override
+    public void draw(String name, Double value) {
+
+    }
+
+    @Override
+    public Logger getLogger() {
+        // TODO return UI logger
+        return super.getLogger();
+    }
 }

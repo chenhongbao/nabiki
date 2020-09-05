@@ -28,5 +28,14 @@
 
 package com.nabiki.client.ui;
 
+import java.awt.*;
+
 public interface Figure {
+    void setLine(String name, Color color);
+
+    void setDot(String name, Color color);
+
+    void stick(double open, double high, double low, double close, String xLabel);
+
+    void draw(String name, Double value);
 }

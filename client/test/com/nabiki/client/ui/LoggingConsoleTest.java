@@ -28,33 +28,64 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.TradeClient;
-import com.nabiki.objects.CInvestorPosition;
-import com.nabiki.objects.CTradingAccount;
+import org.junit.Test;
 
-import java.util.Collection;
+import java.time.LocalTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-public interface Trade {
-    void setUser(String userID, String password);
+public class LoggingConsoleTest {
+    LoggingConsole console = new LoggingConsole();
+    Logger logger = Logger.getLogger(this.getClass().getName());
 
-    String[] getUser();
+    class UILoggingHandler extends Handler {
 
-    void subscribe(String... instruments);
+        @Override
+        public void publish(LogRecord record) {
+            console.append(record);
+        }
 
-    void orderInsert(String instrumentID, String exchangeID, double price,
-                     int volume, char direction, char offset);
+        @Override
+        public void flush() {
 
-    Collection<CInvestorPosition> getPosition();
+        }
 
-    Collection<CInvestorPosition> getPosition(
-            String instrumentID, String exchangeID);
+        @Override
+        public void close() throws SecurityException {
 
-    CTradingAccount getAccount();
+        }
+    }
 
-    Logger getLogger();
+    @Test
+    public void basic() {
+        logger.setUseParentHandlers(false);
+        logger.addHandler(new UILoggingHandler());
 
-    TradeClient getClient();
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                console.pack();
+                console.setVisible(true);
+            }
+        });
 
-    void setClient(TradeClient client);
+        new Thread(() -> {
+            while (true) {
+                logger.info(LocalTime.now().toString());
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        try {
+            new CountDownLatch(1).await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }
