@@ -59,17 +59,29 @@ class PlatformTask extends TimerTask {
         this.global = global;
     }
 
+    private boolean isWorkday() {
+        var day = LocalDate.now();
+        return day.getDayOfWeek() != DayOfWeek.SATURDAY
+                && day.getDayOfWeek() != DayOfWeek.SUNDAY;
+    }
+
+    private boolean isRenewTime() {
+        return isWorkday() && LocalTime.now().isAfter(this.renewTime);
+    }
+
     private boolean needRenew() {
         // Renew at some time of day, or at platform startup.
-        return (LocalTime.now().isAfter(this.renewTime)
-                || this.workingState == WorkingState.STARTED)
+        return (isRenewTime() || this.workingState == WorkingState.STARTED)
                 && this.userState != UserState.RENEW;
     }
 
-    private boolean needSettle() {
+    private boolean isSettleTime() {
         var n = LocalTime.now();
-        return n.isAfter(this.settleTime) && n.isBefore(this.renewTime)
-                && this.userState != UserState.SETTLED;
+        return isWorkday() && n.isAfter(this.settleTime) && n.isBefore(this.renewTime);
+    }
+
+    private boolean needSettle() {
+        return isSettleTime() && this.userState != UserState.SETTLED;
     }
 
     private boolean needStart() {
