@@ -386,6 +386,11 @@ public class TickProvider implements Connectable {
     }
 
     public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
+        // Set day.
+        // CZCE's trading day is natural day, here unify them. No need to test the
+        // exchange id because directly assign the reference saves more time.
+        depthMarketData.TradingDay = this.global.getTradingDay();
+        depthMarketData.ActionDay = this.actionDay;
         // Update global depth.
         GlobalConfig.setDepthMarketData(depthMarketData);
         // Filter re-sent md of last night between subscription and market open.
@@ -395,8 +400,6 @@ public class TickProvider implements Connectable {
         // But please note that this condition filters out the settlement ticks,
         // so need to save the tick before this clause.
         if (isTrading(depthMarketData.InstrumentID)) {
-            // Set action day to today.
-            depthMarketData.ActionDay = this.actionDay;
             // Route md and update candle engines.
             for (var r : this.routers)
                 r.route(depthMarketData);
