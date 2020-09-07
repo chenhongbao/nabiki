@@ -29,32 +29,87 @@
 package com.nabiki.client.ui;
 
 import java.awt.*;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public abstract class AbstractFigure extends AbstractTrade implements Figure {
+    static class UILoggingHandler extends Handler {
+        private final UIPrinter printer;
+
+        UILoggingHandler(UIPrinter printer) {
+            this.printer = printer;
+        }
+
+        @Override
+        public void publish(LogRecord record) {
+            printer.appendLog(record);
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() throws SecurityException {
+        }
+    }
+
+    private final ChartMainFrame main;
+    private String instrumentID;
+    private int minute;
+
+    protected AbstractFigure() {
+        main = new ChartMainFrame();
+        logger.addHandler(new UILoggingHandler(main.getUIPrinter()));
+        System.setOut(new UIPrintStream(main.getUIPrinter(), true));
+        System.setErr(new UIPrintStream(main.getUIPrinter(), false));
+    }
+
     @Override
     public void setLine(String name, Color color) {
-
+        main.getChartController().createLine(name, color);
     }
 
     @Override
     public void setDot(String name, Color color) {
-
+        main.getChartController().createDot(name, color);
     }
 
     @Override
     public void stick(double open, double high, double low, double close, String xLabel) {
-
+        main.getChartController().append(open, high, low, close, xLabel);
     }
 
     @Override
     public void draw(String name, Double value) {
+        main.getChartController().append(name, value);
+    }
 
+    @Override
+    public String getBoundInstrumentID() {
+        return instrumentID;
+    }
+
+    @Override
+    public int getBoundMinute() {
+        return minute;
+    }
+
+    @Override
+    public void bind(String instrumentID, int minute) {
+        this.instrumentID = instrumentID;
+        this.minute = minute;
     }
 
     @Override
     public Logger getLogger() {
-        // TODO return UI logger
-        return super.getLogger();
+        return logger;
+    }
+
+    @Override
+    public void update() {
+        this.main.getChart().getChart().paint();
+        this.main.getChart().updateUI();
     }
 }

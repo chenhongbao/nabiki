@@ -28,22 +28,12 @@
 
 package com.nabiki.client.ui;
 
-import java.awt.*;
+import java.util.logging.LogRecord;
 
-public interface Figure {
-    void bind(String instrumentID, int minute);
+public interface UIPrinter {
+    void appendOut(String msg);
 
-    String getBoundInstrumentID();
+    void appendErr(String msg);
 
-    int getBoundMinute();
-
-    void setLine(String name, Color color);
-
-    void setDot(String name, Color color);
-
-    void stick(double open, double high, double low, double close, String xLabel);
-
-    void draw(String name, Double value);
-
-    void update();
+    void appendLog(LogRecord log);
 }

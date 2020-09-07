@@ -28,22 +28,34 @@
 
 package com.nabiki.client.ui;
 
-import java.awt.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
-public interface Figure {
-    void bind(String instrumentID, int minute);
+public class UIMessageOutputStream extends OutputStream {
+    private final UIPrinter printer;
+    private final boolean isOut;
+    private final byte[] bytes = new byte[1024 * 16];
+    private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
-    String getBoundInstrumentID();
+    public UIMessageOutputStream(UIPrinter printer, boolean isOut) {
+        this.isOut = isOut;
+        this.printer = printer;
+    }
 
-    int getBoundMinute();
+    @Override
+    public void write(int b) throws IOException {
+        buffer.put((byte)b);
+    }
 
-    void setLine(String name, Color color);
-
-    void setDot(String name, Color color);
-
-    void stick(double open, double high, double low, double close, String xLabel);
-
-    void draw(String name, Double value);
-
-    void update();
+    @Override
+    public void flush() throws IOException {
+        buffer.flip();
+        var str = new String(bytes, buffer.position(), buffer.remaining());
+        buffer.clear();
+        if (isOut)
+            printer.appendOut(str);
+        else
+            printer.appendErr(str);
+    }
 }

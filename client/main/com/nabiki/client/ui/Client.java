@@ -28,64 +28,23 @@
 
 package com.nabiki.client.ui;
 
-import org.junit.Test;
+import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
 
-import java.time.LocalTime;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+public class Client {
+    public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
 
-public class LoggingConsoleTest {
-    LoggingConsole console = new LoggingConsole();
-    Logger logger = Logger.getLogger(this.getClass().getName());
-
-    class UILoggingHandler extends Handler {
-
-        @Override
-        public void publish(LogRecord record) {
-            console.append(record);
-        }
-
-        @Override
-        public void flush() {
-
-        }
-
-        @Override
-        public void close() throws SecurityException {
-
-        }
     }
 
-    @Test
-    public void basic() {
-        logger.setUseParentHandlers(false);
-        logger.addHandler(new UILoggingHandler());
+    public void start(FigureTrader trader, InetSocketAddress serverAddress) {
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                console.pack();
-                console.setVisible(true);
-            }
-        });
+    }
 
-        new Thread(() -> {
-            while (true) {
-                logger.info(LocalTime.now().toString());
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    public void noExit() {
 
-        try {
-            new CountDownLatch(1).await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    }
+
+    public void exitAt(LocalDateTime dateTime) {
+
     }
 }

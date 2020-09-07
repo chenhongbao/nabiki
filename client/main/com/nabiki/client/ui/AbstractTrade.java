@@ -48,7 +48,7 @@ public abstract class AbstractTrade implements Trade {
     private TradeClient client;
     private String userID, password;
     private final Collection<String> instruments = new LinkedList<>();
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    protected final Logger logger = Logger.getLogger(this.getClass().getName());
 
     protected AbstractTrade() {
         prepare();

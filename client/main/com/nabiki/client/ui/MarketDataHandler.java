@@ -26,24 +26,17 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client;
+package com.nabiki.client.ui;
 
-import com.nabiki.client.ui.FigureTrader;
-import com.nabiki.client.ui.HeadlessTrader;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
-import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
+public interface MarketDataHandler {
+    void onStart();
 
-public interface Client {
-    void start(HeadlessTrader trader);
+    void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
 
-    void start(FigureTrader trader);
+    void onCandle(CCandle candle, boolean isTrading);
 
-    void start(HeadlessTrader trader, InetSocketAddress serverAddress);
-
-    void start(FigureTrader trader, InetSocketAddress serverAddress);
-
-    void noExit();
-
-    void exitAt(LocalDateTime dateTime);
+    void onStop();
 }
