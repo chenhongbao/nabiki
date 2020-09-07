@@ -46,10 +46,15 @@ public class TimeAligner {
 
     void align(String name, LocalTime local, String remote) {
         try {
-            align(name, local, LocalTime.parse(remote, this.formatter));
+            // The string represents the unavailable login time.
+            // It returns from specific exchange.
+            if (remote.compareTo("--:--:--") == 0)
+                align(name, local, local);
+            else
+                align(name, local, LocalTime.parse(remote, this.formatter));
         } catch (Throwable th) {
+            System.err.println("fail parsing login time for " + name);
             th.printStackTrace();
-            align(name, local, local);
         }
     }
 
