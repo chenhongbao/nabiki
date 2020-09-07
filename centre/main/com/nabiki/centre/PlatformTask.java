@@ -48,14 +48,13 @@ class PlatformTask extends TimerTask {
 
     // Try several times when starting.
     public static final LocalTime[] whenStart = new LocalTime[]{
-            LocalTime.of(20, 45),
-            LocalTime.of(20, 47),
-            LocalTime.of(20, 49),
-            LocalTime.of(20, 51),
-            LocalTime.of(20, 53),
-            LocalTime.of(20, 55)
+            LocalTime.of(8, 45),
+            LocalTime.of(20, 45)
     };
-    public static final LocalTime whenStop = LocalTime.of(15, 30);
+    public static final LocalTime[] whenStop = new LocalTime[] {
+            LocalTime.of(2, 35),
+            LocalTime.of(15, 30)
+    };
     public static final LocalTime whenRenew = LocalTime.of(20, 30);
     public static final LocalTime whenSettle = LocalTime.of(15, 35);
 
@@ -83,14 +82,18 @@ class PlatformTask extends TimerTask {
         if (this.workingState == WorkingState.STARTED)
             return false;
         var startNow = global.getArgument(Global.CMD_START_NOW_PREFIX);
-        if ( startNow != null && startNow.compareToIgnoreCase("true") == 0)
+        if ( startNow != null && startNow.compareToIgnoreCase("true") == 0) {
+            // So it won't start again right after stopped.
+            GlobalConfig.setArgument(Global.CMD_START_NOW_PREFIX, "false");
             return true;
-        else
+        } else
             return Utils.isWorkday() && Utils.equalsAny(now(), whenStart);
     }
 
     private boolean needStop() {
-        return Utils.isWorkday() && Utils.equalsAny(now(), whenStop)
+        // No need to check work day because it depends on whether the platform
+        // starts prior to being stopped.
+        return Utils.equalsAny(now(), whenStop)
                 && this.workingState != WorkingState.STOPPED;
     }
 

@@ -113,9 +113,8 @@ public class OrderProvider implements Connectable{
             this.stateSignal.waitSignal(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            return isConnected();
         }
+        return isConnected();
     }
 
     private boolean estimateQueryCount() {
@@ -210,6 +209,8 @@ public class OrderProvider implements Connectable{
         if (!this.isConfirmed)
             throw new IllegalStateException("repeated logout");
         this.workingState = WorkingState.STOPPING;
+        // Set candle working state.
+        this.candleEngine.setWorking(false);
         doLogout();
     }
 
@@ -743,8 +744,6 @@ public class OrderProvider implements Connectable{
             this.global.getLogger().info("trader logout");
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
-            // Set candle working state.
-            this.candleEngine.setWorking(false);
             // Signal logout.
             this.stateSignal.signal();
         } else {
