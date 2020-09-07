@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class GlobalConfig {
-    public static String rootPath;
+    public static String ROOT_PATH;
 
     static AtomicBoolean configLoaded = new AtomicBoolean(false);
     final static Global GLOBAL = new Global();
@@ -70,6 +70,10 @@ public class GlobalConfig {
             loadConfig();
         }
         return GLOBAL;
+    }
+
+    public static void setArgument(String prefix, String argument) {
+        GLOBAL.args.put(prefix, argument);
     }
 
     public static void setDepthMarketData(CDepthMarketData md) {
@@ -332,9 +336,9 @@ public class GlobalConfig {
     }
 
     private static void setDirectories() throws IOException {
-        if (rootPath == null)
-            rootPath = "";
-        var root = new EasyFile(rootPath, false);
+        if (ROOT_PATH == null)
+            ROOT_PATH = "";
+        var root = new EasyFile(ROOT_PATH, false);
         root.setDirectory("dir.cfg", ".cfg");
         root.setDirectory("dir.flow", ".flow");
         root.setDirectory("dir.cdl", ".cdl");

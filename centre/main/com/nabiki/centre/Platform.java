@@ -37,6 +37,7 @@ import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.GlobalConfig;
+import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.IOP;
 import com.nabiki.iop.x.SystemStream;
 
@@ -86,23 +87,6 @@ public class Platform {
         }
     }
 
-    public static String getArgument(String[] args, String prefix) {
-        String value = null;
-        for (var arg : args) {
-            if (arg.trim().compareTo(prefix.trim()) == 0) {
-                value = "";
-                continue;
-            }
-            if (value != null)
-                return arg.trim();
-        }
-        return value;
-    }
-
-    public static int getIntArgument(String[] args, String prefix) {
-        return Integer.parseInt(getArgument(args, prefix));
-    }
-
     Global global;
     CandleEngine candleEngine;
     OrderProvider orderProvider;
@@ -120,18 +104,24 @@ public class Platform {
     }
 
     private void providers() {
-        // Set order provider.
-        this.orderProvider = new OrderProvider(this.global);
         // Prepare candle engine.
-        this.candleEngine = new CandleEngine(this.global);
-        this.candleEngine.registerRouter(this.router);
+        this.candleEngine = new CandleEngine(
+                this.router,
+                this.global);
+        // Set order provider.
+        this.orderProvider = new OrderProvider(
+                this.candleEngine,
+                this.global);
         // Set tick provider.
-        this.tickProvider = new TickProvider(this.global);
-        this.tickProvider.register(this.candleEngine);
-        this.tickProvider.register(this.router);
+        this.tickProvider = new TickProvider(
+                this.router,
+                this.candleEngine,
+                this.global);
     }
 
-    private void server(String host, int port) throws IOException {
+    private void server() throws IOException {
+        String host = this.global.getArgument("--host");
+        int port = Integer.parseInt(this.global.getArgument("--port"));
         // Server.
         var server = IOP.createServer();
         StaticChainInstaller.install(
@@ -165,15 +155,29 @@ public class Platform {
                 ("file.log.out", "system.out.log").file());
     }
 
-    public void start(String[] args) throws IOException {
-        // Set global.
-        GlobalConfig.rootPath = getArgument(args, "--root");
+    private void setArguments(String[] args) {
+        var prefix = new String[] {
+                Global.CMD_ROOT_PREFIX,
+                Global.CMD_HOST_PREFIX,
+                Global.CMD_PORT_PREFIX,
+                Global.CMD_START_NOW_PREFIX
+        };
+        for (var pre : prefix)
+            GlobalConfig.setArgument(pre, Utils.getArgument(args, pre));
+    }
+
+    private void initConfig(String root) throws IOException {
+        GlobalConfig.ROOT_PATH = root;
         this.global = GlobalConfig.config();
+    }
+
+    public void start(String[] args) throws IOException {
+        setArguments(args);
+        initConfig(Utils.getArgument(args, Global.CMD_ROOT_PREFIX));
         system();
         providers();
         managers();
-        server(getArgument(args, "--host"),
-                getIntArgument(args, "--port"));
+        server();
     }
 
     public void task() {

@@ -41,7 +41,7 @@ public class GlobalTest {
     static Global global;
 
     static {
-        GlobalConfig.rootPath = "C:\\Users\\chenh\\Desktop\\app_root";
+        GlobalConfig.ROOT_PATH = "C:\\Users\\chenh\\Desktop\\app_root";
         try {
             global = GlobalConfig.config();
         } catch (IOException e) {

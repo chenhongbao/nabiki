@@ -69,7 +69,7 @@ public class UserSuperTest {
     }
 
     protected void prepare() {
-        GlobalConfig.rootPath = flowDir;
+        GlobalConfig.ROOT_PATH = flowDir;
 
         try {
             this.global = GlobalConfig.config();
@@ -234,7 +234,7 @@ public class UserSuperTest {
         //
         // Create provider.
         //
-        provider = new OrderProvider(global);
+        provider = new OrderProvider(null, global);
         var rspInfo = new CRspInfo();
         rspInfo.ErrorID = 0;
         provider.whenRspSettlementInfoConfirm(

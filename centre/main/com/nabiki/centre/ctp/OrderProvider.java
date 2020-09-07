@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
+import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.GlobalConfig;
@@ -56,6 +57,7 @@ public class OrderProvider implements Connectable{
     protected final OrderMapper mapper = new OrderMapper();
     protected final AtomicInteger orderRef = new AtomicInteger(0);
     protected final Global global;
+    protected final CandleEngine candleEngine;
     protected final LoginConfig loginCfg;
     protected final ReqRspWriter msgWriter;
     protected final CThostFtdcTraderApi api;
@@ -84,8 +86,9 @@ public class OrderProvider implements Connectable{
     // SPI.
     protected JniTraderSpi spi;
 
-    public OrderProvider(Global global) {
+    public OrderProvider(CandleEngine cdl, Global global) {
         this.global = global;
+        this.candleEngine = cdl;
         this.loginCfg = this.global.getLoginConfigs().get("trader");
         this.api = CThostFtdcTraderApi
                 .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
@@ -695,6 +698,8 @@ public class OrderProvider implements Connectable{
             this.global.getLogger().info("trader confirm settlement");
             this.isConfirmed = true;
             this.workingState = WorkingState.STARTED;
+            // Set candle working state.
+            this.candleEngine.setWorking(true);
             // Query instruments.
             doQueryInstr();
         } else {
@@ -738,6 +743,8 @@ public class OrderProvider implements Connectable{
             this.global.getLogger().info("trader logout");
             this.isConfirmed = false;
             this.workingState = WorkingState.STOPPED;
+            // Set candle working state.
+            this.candleEngine.setWorking(false);
             // Signal logout.
             this.stateSignal.signal();
         } else {

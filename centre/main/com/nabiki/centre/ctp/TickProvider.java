@@ -46,10 +46,10 @@ import java.util.concurrent.TimeUnit;
 public class TickProvider implements Connectable {
     protected final Global global;
     protected final LoginConfig loginCfg;
+    protected final MarketDataRouter router;
+    protected final CandleEngine engine;
     protected final CThostFtdcMdApi mdApi;
     protected final ReqRspWriter msgWriter;
-    protected final Set<MarketDataRouter> routers = new HashSet<>();
-    protected final Set<CandleEngine> engines = new HashSet<>();
     protected final Set<String> toSubscribe = new HashSet<>(),
             subscribed = new HashSet<>();
 
@@ -63,8 +63,10 @@ public class TickProvider implements Connectable {
     protected String actionDay;
     protected JniMdSpi spi;
 
-    public TickProvider(Global global) {
+    public TickProvider(MarketDataRouter router, CandleEngine engine, Global global) {
         this.global = global;
+        this.router = router;
+        this.engine = engine;
         this.loginCfg = this.global.getLoginConfigs().get("md");
         this.mdApi = CThostFtdcMdApi.CreateFtdcMdApi(
                 this.loginCfg.FlowDirectory,
@@ -86,18 +88,6 @@ public class TickProvider implements Connectable {
         },  m - System.currentTimeMillis() % m, m);
     }
 
-    public void register(CandleEngine engine) {
-        // No need to sync on the object because the read and write are not
-        // concurrent.
-        this.engines.add(engine);
-    }
-
-    public void register(MarketDataRouter router) {
-        // No need to sync on the object because the read and write are not
-        // concurrent.
-        this.routers.add(router);
-    }
-
     @Override
     public boolean isConnected() {
         return this.isConnected;
@@ -109,9 +99,8 @@ public class TickProvider implements Connectable {
             this.stateSignal.waitSignal(millis);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            return isConnected();
         }
+        return isConnected();
     }
 
     public void setSubscription(Collection<String> instr) {
@@ -176,7 +165,6 @@ public class TickProvider implements Connectable {
         this.isLogin = false;
         this.isConnected = false;
         this.workingState = WorkingState.STOPPED;
-        setWorking(false);
         // Release resources.
         this.mdApi.Release();
     }
@@ -228,13 +216,11 @@ public class TickProvider implements Connectable {
     }
 
     private void registerInstrument(String instrID) {
-        for (var e : this.engines)
-            e.addInstrument(instrID);
+        engine.addInstrument(instrID);
     }
 
     private void setupDurations() {
-        for (var e : this.engines)
-            e.setupDurations();
+        engine.setupDurations();
     }
 
     private void doLogin() {
@@ -264,11 +250,6 @@ public class TickProvider implements Connectable {
                             null, r));
     }
 
-    private void setWorking(boolean working) {
-        for (var e : this.engines)
-            e.setWorking(working);
-    }
-
     private boolean isTrading(String instrumentID) {
         var keeper = this.global.getTradingHour(
                 null, instrumentID);
@@ -290,11 +271,6 @@ public class TickProvider implements Connectable {
         this.global.getLogger().warning("md disconnected");
         this.isLogin = false;
         this.isConnected = false;
-        // If disconnected when or after provider stops, candle engine isn't working.
-        // But if disconnected in work time, it is still working.
-        if (this.workingState == WorkingState.STOPPING
-                || this.workingState == WorkingState.STOPPED)
-            setWorking(false);
     }
 
     public void whenRspError(CRspInfo rspInfo, int requestId,
@@ -311,8 +287,6 @@ public class TickProvider implements Connectable {
         if (rspInfo.ErrorID == 0) {
             this.isLogin = true;
             this.workingState = WorkingState.STARTED;
-            // Candle engine starts working.
-            setWorking(true);
             // Signal login state changed.
             this.stateSignal.signal();
             this.global.getLogger().info("md login");
@@ -334,7 +308,6 @@ public class TickProvider implements Connectable {
         if (rspInfo.ErrorID == 0) {
             this.isLogin = false;
             this.workingState = WorkingState.STOPPED;
-            setWorking(false);
             // Signal login state changed to logout.
             this.stateSignal.signal();
             this.global.getLogger().info("md logout");
@@ -401,10 +374,8 @@ public class TickProvider implements Connectable {
         // so need to save the tick before this clause.
         if (isTrading(depthMarketData.InstrumentID)) {
             // Route md and update candle engines.
-            for (var r : this.routers)
-                r.route(depthMarketData);
-            for (var e : this.engines)
-                e.update(depthMarketData);
+            router.route(depthMarketData);
+            engine.update(depthMarketData);
         }
     }
 }

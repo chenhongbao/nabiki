@@ -32,6 +32,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -107,6 +108,39 @@ public class Utils {
      */
     public static boolean validPrice(double price) {
         return 0.0D < price && price < Double.MAX_VALUE;
+    }
+
+    /**
+     * Check if today is work day.
+     * @return {@code true} if today is work day.
+     */
+    public static boolean isWorkday() {
+        var day = LocalDate.now();
+        return day.getDayOfWeek() != DayOfWeek.SATURDAY
+                && day.getDayOfWeek() != DayOfWeek.SUNDAY;
+    }
+
+    public static boolean equalsAny(LocalTime now, LocalTime... others) {
+        if (now == null || others.length == 0)
+            return false;
+        for (var time : others) {
+            if (now.equals(time))
+                return true;
+        }
+        return false;
+    }
+
+    public static String getArgument(String[] args, String prefix) {
+        String value = null;
+        for (var arg : args) {
+            if (arg.trim().compareTo(prefix.trim()) == 0) {
+                value = "";
+                continue;
+            }
+            if (value != null)
+                return arg.trim();
+        }
+        return value;
     }
 
     /**

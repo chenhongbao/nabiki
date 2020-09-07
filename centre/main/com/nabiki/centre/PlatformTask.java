@@ -33,9 +33,8 @@ import com.nabiki.centre.ctp.WorkingState;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.GlobalConfig;
+import com.nabiki.centre.utils.Utils;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -43,61 +42,55 @@ import java.util.concurrent.TimeUnit;
 class PlatformTask extends TimerTask {
     private final Platform P;
     private final Global global;
-    // Start login later because Time return in login rsp is invalid at an early time.
-    private final LocalTime start0 = LocalTime.of(20, 45),
-            start1 = LocalTime.of(8, 45),
-            stop0 = LocalTime.of(2, 30),
-            stop1 = LocalTime.of(15, 30);
-    private final LocalTime renewTime = LocalTime.of(20, 25),
-            settleTime = LocalTime.of(15, 35);
 
     private WorkingState workingState = WorkingState.STOPPED;
     private UserState userState = UserState.SETTLED;
+
+    // Try several times when starting.
+    public static final LocalTime[] whenStart = new LocalTime[]{
+            LocalTime.of(20, 45),
+            LocalTime.of(20, 47),
+            LocalTime.of(20, 49),
+            LocalTime.of(20, 51),
+            LocalTime.of(20, 53),
+            LocalTime.of(20, 55)
+    };
+    public static final LocalTime whenStop = LocalTime.of(15, 30);
+    public static final LocalTime whenRenew = LocalTime.of(20, 30);
+    public static final LocalTime whenSettle = LocalTime.of(15, 35);
 
     public PlatformTask(Platform p, Global global) {
         this.P = p;
         this.global = global;
     }
 
-    private boolean isWorkday() {
-        var day = LocalDate.now();
-        return day.getDayOfWeek() != DayOfWeek.SATURDAY
-                && day.getDayOfWeek() != DayOfWeek.SUNDAY;
-    }
-
-    private boolean isRenewTime() {
-        return isWorkday() && LocalTime.now().isAfter(this.renewTime);
+    private LocalTime now() {
+        var now = LocalTime.now();
+        return LocalTime.of(now.getHour(), now.getMinute());
     }
 
     private boolean needRenew() {
-        // Renew at some time of day, or at platform startup.
-        return (isRenewTime() || this.workingState == WorkingState.STARTED)
+        return Utils.isWorkday() && Utils.equalsAny(now(), whenRenew)
                 && this.userState != UserState.RENEW;
     }
 
-    private boolean isSettleTime() {
-        var n = LocalTime.now();
-        return isWorkday() && n.isAfter(this.settleTime) && n.isBefore(this.renewTime);
-    }
-
     private boolean needSettle() {
-        return isSettleTime() && this.userState != UserState.SETTLED;
+        return Utils.isWorkday() && Utils.equalsAny(now(), whenSettle)
+                && this.userState != UserState.SETTLED;
     }
 
     private boolean needStart() {
-        var day = LocalDate.now().getDayOfWeek();
-        var time = LocalTime.now();
-        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY)
+        if (this.workingState == WorkingState.STARTED)
             return false;
-        return ((time.isAfter(this.start0) || time.isBefore(this.stop0)) ||
-                (time.isAfter(this.start1) && time.isBefore(stop1)))
-                && this.workingState != WorkingState.STARTED;
+        var startNow = global.getArgument(Global.CMD_START_NOW_PREFIX);
+        if ( startNow != null && startNow.compareToIgnoreCase("true") == 0)
+            return true;
+        else
+            return Utils.isWorkday() && Utils.equalsAny(now(), whenStart);
     }
 
     private boolean needStop() {
-        var time = LocalTime.now();
-        return ((time.isAfter(this.stop0) && time.isBefore(this.start1)) ||
-                (time.isAfter(this.stop1) && time.isBefore(this.start0)))
+        return Utils.isWorkday() && Utils.equalsAny(now(), whenStop)
                 && this.workingState != WorkingState.STOPPED;
     }
 

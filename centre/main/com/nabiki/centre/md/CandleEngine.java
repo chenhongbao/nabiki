@@ -47,12 +47,13 @@ public class CandleEngine extends TimerTask {
     private final Timer timer = new Timer();
     private final Map<String, Product> products = new ConcurrentHashMap<>();
     private final Map<String, Product> instrProducts = new ConcurrentHashMap<>();
-    private final Set<MarketDataRouter> routers = new HashSet<>();
+    private final MarketDataRouter router;
 
     private final AtomicBoolean working = new AtomicBoolean(false);
 
-    public CandleEngine(Global cfg) {
+    public CandleEngine(MarketDataRouter router, Global cfg) {
         this.global = cfg;
+        this.router = router;
         prepare();
     }
 
@@ -70,6 +71,8 @@ public class CandleEngine extends TimerTask {
     }
 
     public void setWorking(boolean working) {
+        this.global.getLogger().info(
+                "candle engine: " + (working ? "working" : "stopped"));
         this.working.set(working);
     }
 
@@ -114,13 +117,6 @@ public class CandleEngine extends TimerTask {
         return p;
     }
 
-    public void registerRouter(MarketDataRouter router) {
-        if (router != null)
-            synchronized (this.routers) {
-                this.routers.add(router);
-            }
-    }
-
     public void update(CDepthMarketData md) {
         var product = this.instrProducts.get(md.InstrumentID);
         if (product == null)
@@ -152,13 +148,11 @@ public class CandleEngine extends TimerTask {
             }
             for (var du : this.global.getDurations()) {
                 if (h.contains(du, now))
-                    for (var r : this.routers) {
-                        try {
-                            r.route(e.getValue().pop(du));
-                        } catch (Throwable th) {
-                            th.printStackTrace();
-                            global.getLogger().severe(th.getMessage());
-                        }
+                    try {
+                        router.route(e.getValue().pop(du));
+                    } catch (Throwable th) {
+                        th.printStackTrace();
+                        global.getLogger().severe(th.getMessage());
                     }
             }
         }

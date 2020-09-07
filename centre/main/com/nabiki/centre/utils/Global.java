@@ -43,25 +43,30 @@ import java.util.logging.Logger;
 public class Global {
     // Global's name -> LoginConfig
     final Map<String, LoginConfig> login = new ConcurrentHashMap<>();
-
     // ProductID -> TradingHourKeeper
     final Map<String, TradingHourKeeper> tradingHour = new ConcurrentHashMap<>();
     // Instrument ID -> TradingHourKeeper
     final Map<String, TradingHourKeeper> instrTradingHour = new ConcurrentHashMap<>();
-
     // Instrument ID -> InstrumentInfo
     final Map<String, InstrumentInfo> instrInfo = new ConcurrentHashMap<>();
-
     // Instrument ID -> Depth market data
     final Map<String, CDepthMarketData> depths = new ConcurrentHashMap<>();
-
+    // Product ID -> Instrument ID of the product
     final Map<String, Set<String>> products = new ConcurrentHashMap<>();
+    // Commandline arguments: prefix -> argument
+    final Map<String, String> args = new ConcurrentHashMap<>();
 
     final Duration[] durations = new Duration[] {
             Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15),
             Duration.ofMinutes(30), Duration.ofHours(1), Duration.ofHours(2),
             Duration.ofHours(24)
     };
+
+    // Constants
+    public static final String CMD_ROOT_PREFIX = "--root";
+    public static final String CMD_HOST_PREFIX = "--host";
+    public static final String CMD_PORT_PREFIX = "--port";
+    public static final String CMD_START_NOW_PREFIX = "--start-now";
 
     static Logger logger;
     PerformanceMeasure performanceMeasure;
@@ -202,5 +207,14 @@ public class Global {
      */
     public Duration[] getDurations() {
         return this.durations;
+    }
+
+    /**
+     * Get command line argument with prefix.
+     * @param prefix prefix of the argument
+     * @return argument string
+     */
+    public String getArgument(String prefix) {
+        return this.args.get(prefix);
     }
 }
