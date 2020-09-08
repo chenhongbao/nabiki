@@ -141,9 +141,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
     @Override
     public void update(int figureID) {
-        var frame = getFrame(figureID);
-        frame.getChart().getChart().paint();
-        frame.getChart().updateUI();
+        getFrame(figureID).getChartController().update();
     }
 
     @Override

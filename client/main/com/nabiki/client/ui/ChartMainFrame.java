@@ -70,14 +70,6 @@ public class ChartMainFrame extends JFrame {
 		return ctrl;
 	}
 
-	public UIPrinter getUIPrinter() {
-		return logDialog;
-	}
-
-	public StickChartPanel getChart() {
-		return chart;
-	}
-
 	/**
 	 * Create the frame.
 	 */
