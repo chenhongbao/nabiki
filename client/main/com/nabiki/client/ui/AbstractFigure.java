@@ -61,6 +61,7 @@ public abstract class AbstractFigure extends AbstractTrade implements Figure {
 
     protected AbstractFigure() {
         main = new ChartMainFrame();
+        main.display();
         logger.addHandler(new UILoggingHandler(main.getUIPrinter()));
         System.setOut(new UIPrintStream(main.getUIPrinter(), true));
         System.setErr(new UIPrintStream(main.getUIPrinter(), false));
@@ -94,6 +95,14 @@ public abstract class AbstractFigure extends AbstractTrade implements Figure {
     @Override
     public int getBoundMinute() {
         return minute;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        if (title != null && title.length() > 0)
+            main.setTitle(title);
+        else
+            main.setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
     }
 
     @Override

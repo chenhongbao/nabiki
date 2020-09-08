@@ -28,22 +28,41 @@
 
 package com.nabiki.client.ui;
 
-import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
 
-public class Client extends AbstractClient {
-    public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
+import java.util.concurrent.TimeUnit;
+
+public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
+    private final AbstractFigure figure;
+
+    FigureMarketDataAdaptor(MarketDataHandler handler, AbstractFigure figure) {
+        super(handler);
+        this.figure = figure;
     }
 
-    public void start(FigureTrader trader, InetSocketAddress serverAddress) {
-
+    @Override
+    public void onDepthMarketData(CDepthMarketData depth) {
+        super.onDepthMarketData(depth);
     }
 
-    public void noExit() {
-
-    }
-
-    public void exitAt(LocalDateTime dateTime) {
-
+    @Override
+    public void onCandle(CCandle candle) {
+        var id = figure.getBoundInstrumentID();
+        var minute = figure.getBoundMinute();
+        if (id.compareToIgnoreCase(candle.InstrumentID) == 0
+                && minute == candle.Minute) {
+            var unit = (minute == TimeUnit.DAYS.toMinutes(1))
+                    ? "\u65E5" : (minute + "\u5206\u949F");
+            figure.stick(
+                    candle.OpenPrice,
+                    candle.HighestPrice,
+                    candle.LowestPrice,
+                    candle.ClosePrice,
+                    candle.UpdateTime);
+            super.onCandle(candle);
+            figure.setTitle(id + " -- " + unit);
+            figure.update();
+        }
     }
 }

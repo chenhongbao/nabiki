@@ -133,13 +133,23 @@ public abstract class AbstractTrade implements Trade {
     }
 
     @Override
-    public String[] getUser() {
-        return new String[] {this.userID, this.password};
+    public String getUserID() {
+        return userID;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override
     public void subscribe(String... instruments) {
         this.instruments.addAll(Arrays.asList(instruments));
+    }
+
+    @Override
+    public Collection<String> getSubscribe() {
+        return instruments;
     }
 
     @Override

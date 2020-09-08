@@ -37,6 +37,8 @@ public interface Figure {
 
     int getBoundMinute();
 
+    void setTitle(String title);
+
     void setLine(String name, Color color);
 
     void setDot(String name, Color color);

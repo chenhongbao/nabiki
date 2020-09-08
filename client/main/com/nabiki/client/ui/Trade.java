@@ -38,9 +38,13 @@ import java.util.logging.Logger;
 public interface Trade {
     void setUser(String userID, String password);
 
-    String[] getUser();
+    String getUserID();
+
+    String getPassword();
 
     void subscribe(String... instruments);
+
+    Collection<String> getSubscribe();
 
     void orderInsert(String instrumentID, String exchangeID, double price,
                      int volume, char direction, char offset);
