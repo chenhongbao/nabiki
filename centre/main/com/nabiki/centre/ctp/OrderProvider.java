@@ -226,18 +226,14 @@ public class OrderProvider implements Connectable{
 
     public boolean waitWorkingState(WorkingState stateToWait, long millis) {
         var wait = millis;
-        var beg = System.currentTimeMillis();
-        while (this.workingState != stateToWait) {
+        while (this.workingState != stateToWait && wait > 0) {
+            var beg = System.currentTimeMillis();
             try {
                 this.stateSignal.waitSignal(wait);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            var elapse = System.currentTimeMillis() - beg;
-            if (elapse < wait)
-                wait -= elapse;
-            else
-                break;
+            wait -= (System.currentTimeMillis() - beg);
         }
         return this.workingState == stateToWait;
     }
