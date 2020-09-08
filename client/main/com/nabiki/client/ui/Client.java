@@ -30,20 +30,53 @@ package com.nabiki.client.ui;
 
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Client extends AbstractClient {
+    private Trade trader;
+
     public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
+        this.trader = trader;
+        try {
+            super.startHeadless(trader, serverAddress);
+        } catch (Throwable th) {
+            th.printStackTrace();
+            trader.getLogger().severe(th.getMessage());
+        }
     }
 
     public void start(FigureTrader trader, InetSocketAddress serverAddress) {
-
+        this.trader = trader;
+        try {
+            super.startFigure(trader, serverAddress);
+        } catch (Throwable th) {
+            th.printStackTrace();
+            trader.getLogger().severe(th.getMessage());
+        }
     }
 
     public void noExit() {
-
+        while (true) {
+            try {
+                new CountDownLatch(1).await();
+            } catch (InterruptedException e) {
+                trader.getLogger().warning(e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 
     public void exitAt(LocalDateTime dateTime) {
-
+        if (dateTime == null) {
+            trader.getLogger().severe(
+                    "client exits immediately because exit time has passed");
+            return;
+        }
+       while (LocalDateTime.now().isBefore(dateTime))
+           try {
+               TimeUnit.SECONDS.sleep(1);
+           } catch (InterruptedException ignored) {
+           }
     }
 }

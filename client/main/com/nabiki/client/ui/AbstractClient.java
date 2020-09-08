@@ -180,7 +180,7 @@ public abstract class AbstractClient {
         }
     }
 
-    protected void start(HeadlessTrader trader, InetSocketAddress address) {
+    protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) {
         setHeadlessListeners(trader);
         openConnection(address);
         // Set trade client into trader.
@@ -190,7 +190,7 @@ public abstract class AbstractClient {
         reqSubscription(trader);
     }
 
-    protected void start(FigureTrader trader, InetSocketAddress address) {
+    protected void startFigure(FigureTrader trader, InetSocketAddress address) {
         setFigureListeners(trader);
         openConnection(address);
         // Set trade client into trader.
