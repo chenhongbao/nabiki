@@ -138,6 +138,7 @@ public class UserManager {
         account.FundMortgageOut = 0;
         account.PreMortgage = account.Mortgage;
         account.Mortgage = 0;
+        account.Commission = 0;
     }
 
     private void renewPosition(CInvestorPositionDetail position) {

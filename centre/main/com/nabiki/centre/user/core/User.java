@@ -73,8 +73,9 @@ public class User {
                 + posFrzCash.FrozenCommission;
         total.FrozenMargin = posFrzCash.FrozenMargin;
         total.CurrMargin = mnyTrade.Margin;
+        total.CloseProfit = mnyTrade.CloseProfitByDate;
         total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
-                + mnyTrade.CloseProfitByDate - total.Commission;
+                + total.CloseProfit - total.Commission;
         total.Available = total.Balance - total.CurrMargin - total.FrozenCommission
                 - total.FrozenCash;
         return total;
