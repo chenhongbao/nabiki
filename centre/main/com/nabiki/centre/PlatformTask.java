@@ -54,8 +54,10 @@ class PlatformTask extends TimerTask {
     public static final LocalTime[] whenStop = new LocalTime[] {
             // Remote server disconnects at around 2:33 am., so logout before
             // remote server becomes unavailable.
-            LocalTime.of(2, 30),
-            LocalTime.of(15, 30)
+            // Stop at 31 minutes to avoid the small chance that prevents
+            // generating candles for 2:30.
+            LocalTime.of(2, 31),
+            LocalTime.of(15, 35)
     };
 
     public PlatformTask(Platform p, Global global) {
