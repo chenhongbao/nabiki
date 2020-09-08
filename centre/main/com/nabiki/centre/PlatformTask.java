@@ -57,8 +57,6 @@ class PlatformTask extends TimerTask {
             LocalTime.of(2, 30),
             LocalTime.of(15, 30)
     };
-    public static final LocalTime whenRenew = LocalTime.of(20, 30);
-    public static final LocalTime whenSettle = LocalTime.of(15, 35);
 
     public PlatformTask(Platform p, Global global) {
         this.P = p;
@@ -68,16 +66,6 @@ class PlatformTask extends TimerTask {
     private LocalTime now() {
         var now = LocalTime.now();
         return LocalTime.of(now.getHour(), now.getMinute());
-    }
-
-    private boolean needRenew() {
-        return Utils.isWorkday() && Utils.equalsAny(now(), whenRenew)
-                && this.userState != UserState.RENEW;
-    }
-
-    private boolean needSettle() {
-        return Utils.isWorkday() && Utils.equalsAny(now(), whenSettle)
-                && this.userState != UserState.SETTLED;
     }
 
     private boolean needStart() {
@@ -153,6 +141,9 @@ class PlatformTask extends TimerTask {
         }
         if (P.orderProvider.getWorkingState() != WorkingState.STARTED)
             this.global.getLogger().severe("trader didn't start up");
+        else
+            // Renew user information.
+            renew();
     }
 
     private void startMd() {
@@ -229,6 +220,13 @@ class PlatformTask extends TimerTask {
         // Front is disconnected automatically after remote shutdown, so no
         // need to force all logout here.
         this.workingState = WorkingState.STOPPED;
+        //Settle user information after platform stops at the end of a trading day.
+        var hour = LocalTime.now().getHour();
+        if (14 < hour && hour < 21) {
+            settle();
+            checkPerformance();
+            P.tickProvider.checkSubscription();
+        }
     }
 
     private void checkPerformance() {
@@ -247,13 +245,6 @@ class PlatformTask extends TimerTask {
                 start();
             if (needStop())
                 stop();
-            if (needRenew())
-                renew();
-            if (needSettle()) {
-                settle();
-                checkPerformance();
-                P.tickProvider.checkSubscription();
-            }
         } catch (Throwable th) {
             th.printStackTrace();
             this.global.getLogger().severe(th.getMessage());

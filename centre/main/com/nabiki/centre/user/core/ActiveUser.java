@@ -230,6 +230,7 @@ public class ActiveUser {
                 prep.prepare(i.Commission);
                 prep.prepare(i.Margin);
                 var depth = this.global.getDepthMarketData(i.Instrument.InstrumentID);
+                Objects.requireNonNull(depth, "depth null");
                 if (Utils.validPrice(depth.SettlementPrice))
                     prep.prepare(depth);
                 else
