@@ -48,21 +48,23 @@ public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
 
     @Override
     public void onCandle(CCandle candle) {
-        var id = figure.getBoundInstrumentID();
-        var minute = figure.getBoundMinute();
-        if (id.compareToIgnoreCase(candle.InstrumentID) == 0
-                && minute == candle.Minute) {
-            var unit = (minute == TimeUnit.DAYS.toMinutes(1))
-                    ? "\u65E5" : (minute + "\u5206\u949F");
-            figure.stick(
-                    candle.OpenPrice,
-                    candle.HighestPrice,
-                    candle.LowestPrice,
-                    candle.ClosePrice,
-                    candle.UpdateTime);
-            super.onCandle(candle);
-            figure.setTitle(id + " -- " + unit);
-            figure.update();
+        for (var fid : figure.getFigureID()) {
+            var id = figure.getBoundInstrumentID(fid);
+            var minute = figure.getBoundMinute(fid);
+            if (id.compareToIgnoreCase(candle.InstrumentID) == 0
+                    && minute == candle.Minute) {
+                var unit = (minute == TimeUnit.DAYS.toMinutes(1))
+                        ? "\u65E5" : (minute + "\u5206\u949F");
+                figure.stick(fid,
+                        candle.OpenPrice,
+                        candle.HighestPrice,
+                        candle.LowestPrice,
+                        candle.ClosePrice,
+                        candle.UpdateTime);
+                super.onCandle(candle);
+                figure.setTitle(fid, id + " -- " + unit);
+                figure.update(fid);
+            }
         }
     }
 }

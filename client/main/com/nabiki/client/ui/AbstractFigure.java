@@ -29,11 +29,14 @@
 package com.nabiki.client.ui;
 
 import java.awt.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-public abstract class AbstractFigure extends AbstractTrade implements Figure {
+public abstract class AbstractFigure extends AbstractTrader implements Figure {
     static class UILoggingHandler extends Handler {
         private final UIPrinter printer;
 
@@ -55,60 +58,80 @@ public abstract class AbstractFigure extends AbstractTrade implements Figure {
         }
     }
 
-    private final ChartMainFrame main;
-    private String instrumentID;
-    private int minute;
+    private final Map<Integer, ChartMainFrame> mains = new ConcurrentHashMap<>();
+    private final LogDialog logDlg = new LogDialog();
 
     protected AbstractFigure() {
-        main = new ChartMainFrame();
-        main.display();
-        logger.addHandler(new UILoggingHandler(main.getUIPrinter()));
-        System.setOut(new UIPrintStream(main.getUIPrinter(), true));
-        System.setErr(new UIPrintStream(main.getUIPrinter(), false));
+        logger.addHandler(new UILoggingHandler(logDlg));
+        System.setOut(new UIPrintStream(logDlg, true));
+        System.setErr(new UIPrintStream(logDlg, false));
     }
 
-    @Override
-    public void setLine(String name, Color color) {
-        main.getChartController().createLine(name, color);
-    }
-
-    @Override
-    public void setDot(String name, Color color) {
-        main.getChartController().createDot(name, color);
-    }
-
-    @Override
-    public void stick(double open, double high, double low, double close, String xLabel) {
-        main.getChartController().append(open, high, low, close, xLabel);
-    }
-
-    @Override
-    public void draw(String name, Double value) {
-        main.getChartController().append(name, value);
-    }
-
-    @Override
-    public String getBoundInstrumentID() {
-        return instrumentID;
-    }
-
-    @Override
-    public int getBoundMinute() {
-        return minute;
-    }
-
-    @Override
-    public void setTitle(String title) {
-        if (title != null && title.length() > 0)
-            main.setTitle(title);
+    private ChartMainFrame getFrame(int figureID) {
+        var frame = mains.get(figureID);
+        if (frame == null)
+            throw new RuntimeException("no such figure ID: " + figureID);
         else
-            main.setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
+            return frame;
+    }
+
+    private void display(ChartMainFrame frame) {
+        EventQueue.invokeLater(() -> {
+            try {
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override
-    public void bind(String instrumentID, int minute) {
-        this.instrumentID = instrumentID;
-        this.minute = minute;
+    public void setLine(int figureID, String name, Color color) {
+        getFrame(figureID).getChartController().createLine(name, color);
+    }
+
+    @Override
+    public void setDot(int figureID, String name, Color color) {
+        getFrame(figureID).getChartController().createDot(name, color);
+    }
+
+    @Override
+    public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
+        getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
+    }
+
+    @Override
+    public void draw(int figureID, String name, Double value) {
+        getFrame(figureID).getChartController().append(name, value);
+    }
+
+    @Override
+    public String getBoundInstrumentID(int figureID) {
+        return getFrame(figureID).getInstrumentID();
+    }
+
+    @Override
+    public int getBoundMinute(int figureID) {
+        return getFrame(figureID).getMinute();
+    }
+
+    @Override
+    public void setTitle(int figureID, String title) {
+        if (title != null && title.length() > 0)
+            getFrame(figureID).setTitle(title);
+        else
+            getFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
+    }
+
+    @Override
+    public void setFigure(int figureID, String instrumentID, int minute) {
+        if (mains.containsKey(figureID))
+            throw new RuntimeException("figure(" + figureID + ") already exists");
+        var frame = new ChartMainFrame(logDlg);
+        frame.setInstrumentID(instrumentID);
+        frame.setMinute(minute);
+        display(frame);
+        mains.put(figureID, frame);
     }
 
     @Override
@@ -117,8 +140,21 @@ public abstract class AbstractFigure extends AbstractTrade implements Figure {
     }
 
     @Override
-    public void update() {
-        this.main.getChart().getChart().paint();
-        this.main.getChart().updateUI();
+    public void update(int figureID) {
+        var frame = getFrame(figureID);
+        frame.getChart().getChart().paint();
+        frame.getChart().updateUI();
+    }
+
+    @Override
+    public Set<Integer> getFigureID() {
+        return mains.keySet();
+    }
+
+    @Override
+    public void dispose(int figureID) {
+        var frame = getFrame(figureID);
+        frame.setVisible(false);
+        frame.dispose();
     }
 }

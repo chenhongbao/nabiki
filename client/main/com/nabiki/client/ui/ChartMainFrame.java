@@ -39,31 +39,31 @@ import java.awt.event.ActionListener;
 public class ChartMainFrame extends JFrame {
 	private final StickChartController ctrl;
 	private final JPanel contentPane;
-	private final LogDialog logDialog;
 	private final StickChartPanel chart;
-	private Thread daemon;
+
+	private final LogDialog logDialog;
+
+	private String instrumentID;
+	private int minute;
 
 	/**
 	 * Launch the application.
 	 */
-	public void display() {
-		daemon = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ChartMainFrame frame = new ChartMainFrame();
-							frame.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		daemon.setDaemon(true);
-		daemon.start();
+
+	public void setInstrumentID(String instrumentID) {
+		this.instrumentID = instrumentID;
+	}
+
+	public void setMinute(int minute) {
+		this.minute = minute;
+	}
+
+	public String getInstrumentID() {
+		return this.instrumentID;
+	}
+
+	public int getMinute() {
+		return this.minute;
 	}
 
 	public StickChartController getChartController() {
@@ -81,19 +81,21 @@ public class ChartMainFrame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ChartMainFrame() {
-		setTitle("\u56FE\u8868\u76D1\u63A7");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	public ChartMainFrame(LogDialog logDlg) {
+		// Set default ops.
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
+		// Content panel.
 		contentPane = new JPanel();
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
-		
+		// Tool bar.
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
 		contentPane.add(toolBar, BorderLayout.NORTH);
-		
+		// Buttons on toolbar.
+		// Print btn.
 		JButton printBtn = new JButton("\u6253\u5370");
 		printBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -101,7 +103,7 @@ public class ChartMainFrame extends JFrame {
 		});
 		printBtn.setToolTipText("\u5C06\u5F53\u524D\u884C\u60C5\u4FDD\u5B58\u81F3\u56FE\u7247");
 		toolBar.add(printBtn);
-		
+		// Reset btn.
 		JButton resetBtn = new JButton("\u91CD\u7F6E");
 		resetBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -110,7 +112,7 @@ public class ChartMainFrame extends JFrame {
 		});
 		resetBtn.setToolTipText("\u91CD\u7F6E\u884C\u60C5\u81F3\u6700\u53F3\u4FA7");
 		toolBar.add(resetBtn);
-		
+		// Most-left btn.
 		JButton mostLeftBtn = new JButton("\u6700\u5DE6");
 		mostLeftBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -120,7 +122,7 @@ public class ChartMainFrame extends JFrame {
 		});
 		mostLeftBtn.setToolTipText("\u56DE\u6EAF\u5386\u53F2\u884C\u60C5\u81F3\u6700\u5DE6\u4FA7");
 		toolBar.add(mostLeftBtn);
-		
+		// Left btn.
 		JButton goLeftBtn = new JButton("\u5411\u5DE6");
 		goLeftBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -129,7 +131,7 @@ public class ChartMainFrame extends JFrame {
 		});
 		goLeftBtn.setToolTipText("\u5411\u5DE6\u6D4F\u89C8\u5386\u53F2\u884C\u60C5");
 		toolBar.add(goLeftBtn);
-		
+		// Right btn.
 		JButton goRightBtn = new JButton("\u5411\u53F3");
 		goRightBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -138,7 +140,7 @@ public class ChartMainFrame extends JFrame {
 		});
 		goRightBtn.setToolTipText("\u5411\u53F3\u6D4F\u89C8\u884C\u60C5");
 		toolBar.add(goRightBtn);
-		
+		// Most-right btn.
 		JButton mostRightBtn = new JButton("\u6700\u53F3");
 		mostRightBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -147,10 +149,10 @@ public class ChartMainFrame extends JFrame {
 		});
 		mostRightBtn.setToolTipText("\u884C\u60C5\u6D4F\u89C8\u81F3\u6700\u53F3\u4FA7");
 		toolBar.add(mostRightBtn);
-		
+		// Separate blank.
 		JSeparator separator = new JSeparator();
 		toolBar.add(separator);
-		
+		// Log dialog btn.
 		JButton logBtn = new JButton("\u65E5\u5FD7");
 		logBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -160,13 +162,12 @@ public class ChartMainFrame extends JFrame {
 		});
 		logBtn.setToolTipText("\u6253\u5F00\u65E5\u5FD7\u7A97\u53E3");
 		toolBar.add(logBtn);
-
 		// Stick chart.
 		chart = new StickChartPanel();
 		contentPane.add(chart, BorderLayout.CENTER);
 		ctrl = new StickChartController(chart);
-		
-		logDialog = new LogDialog();
+		// Log dialog.
+		logDialog = logDlg;
 	}
 
 	private Point getLogDialogPosition() {

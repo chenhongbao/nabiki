@@ -29,6 +29,9 @@
 package com.nabiki.client.ui;
 
 public abstract class HeadlessTrader
-        extends AbstractTrade
+        extends AbstractTrader
         implements MarketDataHandler {
+    @Override
+    public void stop() {
+    }
 }

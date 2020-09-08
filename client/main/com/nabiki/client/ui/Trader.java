@@ -35,7 +35,7 @@ import com.nabiki.objects.CTradingAccount;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-public interface Trade {
+public interface Trader {
     void setUser(String userID, String password);
 
     String getUserID();
@@ -61,4 +61,6 @@ public interface Trade {
     TradeClient getClient();
 
     void setClient(TradeClient client);
+
+    void stop();
 }

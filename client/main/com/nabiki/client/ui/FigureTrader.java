@@ -31,4 +31,9 @@ package com.nabiki.client.ui;
 public abstract class FigureTrader
         extends AbstractFigure
         implements MarketDataHandler {
+    @Override
+    public void stop() {
+        for (var fid : getFigureID())
+            super.dispose(fid);
+    }
 }

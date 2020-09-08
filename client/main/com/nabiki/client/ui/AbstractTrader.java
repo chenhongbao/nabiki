@@ -44,13 +44,13 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public abstract class AbstractTrade implements Trade {
+public abstract class AbstractTrader implements Trader {
     private TradeClient client;
     private String userID, password;
     private final Collection<String> instruments = new LinkedList<>();
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    protected AbstractTrade() {
+    protected AbstractTrader() {
         prepare();
     }
 

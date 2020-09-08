@@ -34,10 +34,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class Client extends AbstractClient {
-    private Trade trader;
+    private Trader trader;
+    private MarketDataHandler handler;
 
     public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
         this.trader = trader;
+        this.handler = trader;
         try {
             super.startHeadless(trader, serverAddress);
         } catch (Throwable th) {
@@ -48,6 +50,7 @@ public class Client extends AbstractClient {
 
     public void start(FigureTrader trader, InetSocketAddress serverAddress) {
         this.trader = trader;
+        this.handler = trader;
         try {
             super.startFigure(trader, serverAddress);
         } catch (Throwable th) {
@@ -73,10 +76,21 @@ public class Client extends AbstractClient {
                     "client exits immediately because exit time has passed");
             return;
         }
-       while (LocalDateTime.now().isBefore(dateTime))
+       while (LocalDateTime.now().isBefore(dateTime)) {
            try {
                TimeUnit.SECONDS.sleep(1);
            } catch (InterruptedException ignored) {
            }
+       }
+       // Stop.
+       try {
+           handler.onStop();
+       } catch (Throwable th) {
+           th.printStackTrace();
+           trader.getLogger().warning(th.getMessage());
+       } finally {
+           super.stop();
+           trader.stop();
+       }
     }
 }

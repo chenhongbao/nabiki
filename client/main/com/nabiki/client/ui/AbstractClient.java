@@ -76,14 +76,14 @@ public abstract class AbstractClient {
         }
     }
 
-    private void reqLogin(Trade trade) {
+    private void reqLogin(Trader trader) {
         var lock = new ReentrantLock();
         var condition = lock.newCondition();
         var info = new AtomicReference<CRspInfo>();
         // Send login rsp.
         var login = new CReqUserLogin();
-        login.UserID = trade.getUserID();
-        login.Password = trade.getPassword();
+        login.UserID = trader.getUserID();
+        login.Password = trader.getPassword();
         var rsp = client.login(
                 login,
                 UUID.randomUUID().toString());
@@ -114,14 +114,14 @@ public abstract class AbstractClient {
                     "login failure[" + infoRsp.ErrorID + "], " + infoRsp.ErrorMsg);
     }
 
-    private void reqSubscription(Trade trade) {
+    private void reqSubscription(Trader trader) {
         var lock = new ReentrantLock();
         var condition = lock.newCondition();
         var info = new AtomicReference<CRspInfo>();
         var in = new AtomicReference<CSpecificInstrument>();
         // Request subscription.
         var reqSub = new CSubMarketData();
-        reqSub.InstrumentID = trade.getSubscribe().toArray(new String[0]);
+        reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
         var rsp = client.subscribeMarketData(
                 reqSub,
                 UUID.randomUUID().toString());
