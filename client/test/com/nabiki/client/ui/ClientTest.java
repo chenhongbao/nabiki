@@ -57,16 +57,12 @@ public class ClientTest {
             public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
                 System.out.println("trading: " + isTrading);
                 System.out.println(OP.toJson(depthMarketData));
-
-                getLogger().info("MD update time: " + depthMarketData.UpdateTime);
             }
 
             @Override
             public void onCandle(CCandle candle, boolean isTrading) {
-                System.out.println("trading: " + isTrading);
-                System.out.println(OP.toJson(candle));
-
-                getLogger().info("Candle update time: " + candle.UpdateTime);
+                if (candle.Minute == 60)
+                    getLogger().info(OP.toJson(candle));
             }
 
             @Override
