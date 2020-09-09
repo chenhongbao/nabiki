@@ -296,7 +296,7 @@ public class TickProvider implements Connectable {
             subscribe();
         } else {
             this.global.getLogger().severe(
-                    Utils.formatLog("failed login", null,
+                    Utils.formatLog("md failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
         }

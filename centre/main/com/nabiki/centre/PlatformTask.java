@@ -60,7 +60,7 @@ class PlatformTask extends TimerTask {
             LocalTime.of(15, 35)
     };
 
-    public PlatformTask(Platform p, Global global) {
+     PlatformTask(Platform p, Global global) {
         this.P = p;
         this.global = global;
     }

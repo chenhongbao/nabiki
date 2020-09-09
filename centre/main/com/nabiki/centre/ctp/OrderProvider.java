@@ -726,7 +726,7 @@ public class OrderProvider implements Connectable{
             this.timeAligner.align("INE", LocalTime.now(), rspLogin.INETime);
         } else {
             this.global.getLogger().severe(
-                    Utils.formatLog("failed login", null,
+                    Utils.formatLog("trader failed login", null,
                             rspInfo.ErrorMsg, rspInfo.ErrorID));
             this.msgWriter.writeErr(rspInfo);
             this.workingState = WorkingState.STOPPED;
