@@ -57,7 +57,8 @@ class PlatformTask extends TimerTask {
             // Stop at 31 minutes to avoid the small chance that prevents
             // generating candles for 2:30.
             LocalTime.of(2, 31),
-            LocalTime.of(15, 35)
+            // Wait enough time for settlement ticks sent by server.
+            LocalTime.of(15, 45)
     };
 
      PlatformTask(Platform p, Global global) {
