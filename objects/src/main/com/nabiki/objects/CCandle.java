@@ -41,6 +41,7 @@ public class CCandle implements java.io.Serializable {
     public String TradingDay;
     public String ActionDay;
     public String UpdateTime;
+    public String EndTime;
 
     public CCandle() {}
 }
