@@ -28,8 +28,7 @@
 
 package com.nabiki.client.ui;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 
 public class UIMessageOutputStream extends OutputStream {
@@ -37,6 +36,8 @@ public class UIMessageOutputStream extends OutputStream {
     private final boolean isOut;
     private final byte[] bytes = new byte[1024 * 16];
     private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    private final File outFile = new File("out.log"),
+            errFile = new File("err.log");
 
     public UIMessageOutputStream(UIPrinter printer, boolean isOut) {
         this.isOut = isOut;
@@ -53,9 +54,20 @@ public class UIMessageOutputStream extends OutputStream {
         buffer.flip();
         var str = new String(bytes, buffer.position(), buffer.remaining());
         buffer.clear();
-        if (isOut)
+        if (isOut) {
             printer.appendOut(str);
-        else
+            writeFile(str, outFile);
+        } else {
             printer.appendErr(str);
+            writeFile(str, errFile);
+        }
+    }
+
+    private void writeFile(String msg, File file) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))) {
+            pw.print(msg);
+            pw.flush();
+        } catch (IOException ignored) {
+        }
     }
 }

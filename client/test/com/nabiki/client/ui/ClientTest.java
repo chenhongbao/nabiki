@@ -28,7 +28,6 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.iop.x.OP;
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 import org.junit.Test;
@@ -55,14 +54,16 @@ public class ClientTest {
 
             @Override
             public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
-                System.out.println("trading: " + isTrading);
-                System.out.println(OP.toJson(depthMarketData));
+                System.out.println("trading: " + isTrading + ", " + depthMarketData.UpdateTime);
             }
 
             @Override
             public void onCandle(CCandle candle, boolean isTrading) {
-                if (candle.Minute == 60)
-                    getLogger().info(OP.toJson(candle));
+                if (candle.Minute == 60) {
+                    getLogger().info(candle.UpdateTime);
+                    System.out.println(candle.UpdateTime);
+                    draw(1, "close price", candle.ClosePrice);
+                }
             }
 
             @Override
