@@ -199,6 +199,9 @@ public class OrderProvider implements Connectable{
         if (this.isConfirmed)
             throw new IllegalStateException("repeated login");
         this.workingState = WorkingState.STARTING;
+        // Reset qry last instrument to false so it will wait for the completion
+        // of qry instruments.
+        this.qryInstrLast = false;
         doAuthentication();
     }
 
