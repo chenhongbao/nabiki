@@ -41,12 +41,12 @@ import java.util.Objects;
 public class CandleAccess {
     private static final String header = "InstrumentID,OpenPrice,HighestPrice," +
             "LowestPrice,ClosePrice,AveragePrice,OpenInterest,Volume,Minute," +
-            "TradingDay,ActionDay,UpdateTime" + System.lineSeparator();
+            "TradingDay,ActionDay,UpdateTime,EndTime" + System.lineSeparator();
 
     protected void write(File file, CCandle candle) {
         Objects.requireNonNull(file, "file null");
         Objects.requireNonNull(candle, "candle null");
-        var value = String.format("%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s%n",
+        var value = String.format("%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.0f,%d,%d,%s,%s,%s,%s%n",
                 candle.InstrumentID,
                 candle.OpenPrice,
                 candle.HighestPrice,
@@ -58,7 +58,8 @@ public class CandleAccess {
                 candle.Minute,
                 candle.TradingDay,
                 candle.ActionDay,
-                candle.UpdateTime);
+                candle.UpdateTime,
+                candle.EndTime);
         try (FileWriter fw = new FileWriter(file, true)) {
             if (file.length() == 0)
                 fw.write(header);
@@ -71,7 +72,7 @@ public class CandleAccess {
 
     private CCandle parse(String line) {
         String[] vars = line.split(",");
-        if (vars.length != 12)
+        if (vars.length != 13)
             return null;
         CCandle candle = new CCandle();
         candle.InstrumentID = vars[0];
@@ -86,6 +87,7 @@ public class CandleAccess {
         candle.TradingDay = vars[9];
         candle.ActionDay = vars[10];
         candle.UpdateTime = vars[11];
+        candle.EndTime = vars[12];
         return candle;
     }
 

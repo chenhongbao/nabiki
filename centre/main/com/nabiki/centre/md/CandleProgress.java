@@ -34,9 +34,12 @@ import com.nabiki.objects.CDepthMarketData;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 
 public class CandleProgress {
     private final CCandle candle = new CCandle();
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
     private int lastVolume = 0, lastVolumeUpdated = 0;
     private double lastClosePrice = 0.0D;
@@ -92,15 +95,27 @@ public class CandleProgress {
                         = this.candle.LowestPrice
                         = this.lastClosePrice;
             }
+            if (this.candle.EndTime == null)
+                this.candle.EndTime = "";
             return Utils.deepCopy(this.candle);
         }
     }
 
     public CCandle pop(String tradingDay) {
         var r = peak(tradingDay);
+        r.EndTime = getEndTime();
         this.lastVolume = this.lastVolumeUpdated;
         this.lastVolumeUpdated = 0;
         this.popped = true;
         return r;
+    }
+
+    private String getEndTime() {
+        var nowSec = LocalTime.now().toSecondOfDay();
+        var roundMinute = Math.round(
+                1.0D * nowSec / TimeUnit.MINUTES.toSeconds(1));
+        return LocalTime.ofSecondOfDay(
+                roundMinute * TimeUnit.MINUTES.toSeconds(1))
+                .format(formatter);
     }
 }
