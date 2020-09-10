@@ -141,6 +141,26 @@ public class ChartMainFrame extends JFrame {
 		});
 		mostRightBtn.setToolTipText("\u884C\u60C5\u6D4F\u89C8\u81F3\u6700\u53F3\u4FA7");
 		toolBar.add(mostRightBtn);
+		// Zoom in.
+		JButton zoomInBtn = new JButton("\u653E\u5927");
+		zoomInBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ctrl.zoomIn();
+			}
+		});
+		zoomInBtn.setToolTipText("\u653E\u5927\u4E00\u500D");
+		toolBar.add(zoomInBtn);
+		// Zoom out.
+		JButton zoomOutBtn = new JButton("\u7F29\u5C0F");
+		zoomOutBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ctrl.zoomOut();
+			}
+		});
+		zoomOutBtn.setToolTipText("\u7F29\u5C0F\u4E00\u500D");
+		toolBar.add(zoomOutBtn);
 		// Separate blank.
 		JSeparator separator = new JSeparator();
 		toolBar.add(separator);
