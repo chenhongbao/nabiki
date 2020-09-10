@@ -144,7 +144,7 @@ class PlatformTask extends TimerTask {
         }
         if (P.orderProvider.getWorkingState() != WorkingState.STARTED)
             this.global.getLogger().severe("trader didn't start up");
-        else
+        else if (this.userState == UserState.SETTLED)
             // Renew user information.
             renew();
     }
