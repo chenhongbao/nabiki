@@ -113,10 +113,15 @@ public abstract class AbstractTrader implements Trader {
         return rsp.iterator().next();
     }
 
-    private void waitTrade(String instrumentID, String exchangeID,
+    private boolean isOrderDone(COrder order) {
+        return order.OrderStatus == OrderStatusType.ALL_TRADED
+                || order.OrderStatus == OrderStatusType.CANCELED;
+    }
+
+    private char waitTrade(String instrumentID, String exchangeID,
                            String orderID)  {
         COrder rsp = null;
-        while (rsp == null || rsp.OrderStatus != OrderStatusType.ALL_TRADED) {
+        while (rsp == null || !isOrderDone(rsp)) {
             rsp = queryOrder(instrumentID, exchangeID, orderID);
             try {
                 TimeUnit.MILLISECONDS.sleep(250);
@@ -124,6 +129,7 @@ public abstract class AbstractTrader implements Trader {
                 throw new RuntimeException(e);
             }
         }
+        return (char)rsp.OrderStatus;
     }
 
     @Override
@@ -153,7 +159,7 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public void orderInsert(String instrumentID, String exchangeID, double price,
+    public char orderInsert(String instrumentID, String exchangeID, double price,
                             int volume, char direction, char offset) {
         var req = new CInputOrder();
         req.InstrumentID = instrumentID;
@@ -170,7 +176,7 @@ public abstract class AbstractTrader implements Trader {
         if (rsp.size() != 1)
             throw new RuntimeException("invalid rsp size: " + rsp.size());
         var rspOrder = rsp.iterator().next();
-        waitTrade(instrumentID, exchangeID, rspOrder.OrderLocalID);
+        return waitTrade(instrumentID, exchangeID, rspOrder.OrderLocalID);
     }
 
     @Override

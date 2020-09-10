@@ -60,7 +60,7 @@ public class ClientTest {
             @Override
             public void onCandle(CCandle candle, boolean isTrading) {
                 if (candle.Minute == 60) {
-                    getLogger().info(candle.UpdateTime);
+                    getLogger().info("trading: " + isTrading + ", " + candle.UpdateTime);
                     System.out.println(candle.UpdateTime);
                     draw(1, "close price", candle.ClosePrice);
                 }
