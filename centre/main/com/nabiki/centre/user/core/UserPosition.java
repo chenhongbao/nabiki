@@ -123,7 +123,7 @@ public class UserPosition {
             String tradingDay) {
         // Get position details.
         var avail = getSpecificPosition(order.InstrumentID);
-        if (avail == null)
+        if (avail == null || avail.size() == 0)
             return null;
         // Trading day not null.
         Objects.requireNonNull(tradingDay, "trading day null");
