@@ -751,12 +751,12 @@ public class OrderProvider implements Connectable{
     public void whenRtnOrder(COrder order) {
         // Measure performance.
         var max = this.global.getPerformanceMeasure().start("when.order.max");
-        var avr = this.global.getPerformanceMeasure().start("when.order.avr");
+        var cur = this.global.getPerformanceMeasure().start("when.order.cur");
         // Process order.
         doOrder(order);
         // End measurement.
         max.endWithMax();
-        avr.end();
+        cur.end();
         // The codes below follow the doXXX method because the parameter's fields
         // were rewritten by the method, with local IDs.
         this.msgWriter.writeRtn(order);
@@ -766,12 +766,12 @@ public class OrderProvider implements Connectable{
     public void whenRtnTrade(CTrade trade) {
         // Measure performance.
         var max = this.global.getPerformanceMeasure().start("when.trade.max");
-        var avr = this.global.getPerformanceMeasure().start("when.trade.avr");
+        var cur = this.global.getPerformanceMeasure().start("when.trade.cur");
         // Process order.
         doTrade(trade);
         // End measurement.
         max.endWithMax();
-        avr.end();
+        cur.end();
         // The writing method must follow the doXXX method because the fields are
         // rewritten with local IDs.
         this.msgWriter.writeRtn(trade);
