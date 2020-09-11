@@ -196,6 +196,9 @@ class PlatformTask extends TimerTask {
 
     private void stopTrader() {
         try {
+            // The CTP docs says it is not encouraged to release api.
+            // Users should wait reconnect and then login to reuse the api. So here
+            // just logout, don't disconnect.
             P.orderProvider.logout();
             // Wait for logout.
             var r = P.orderProvider.waitWorkingState(
