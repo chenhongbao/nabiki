@@ -249,9 +249,7 @@ public class OrderProvider implements Connectable{
      * @param active alive order
      * @return always return 0
      */
-    public int sendDetailOrder(
-            CInputOrder input,
-            ActiveRequest active) {
+    public int sendDetailOrder(CInputOrder input, ActiveRequest active) {
         // Set the initial rtn order.
         registerInitialOrderInsert(input, active);
         // Check time.
@@ -267,20 +265,17 @@ public class OrderProvider implements Connectable{
         }
     }
 
-    protected void registerInitialOrderInsert(
-            CInputOrder detail,
-            ActiveRequest active) {
-        var o = toRtnOrder(detail);
+    protected void registerInitialOrderInsert(CInputOrder input, ActiveRequest active) {
+        var o = toRtnOrder(input);
         o.OrderLocalID = active.getRequestUUID();
         o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
         o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
         // Register order.
-        this.mapper.register(detail, active);
+        this.mapper.register(input, active);
         this.mapper.register(o);
     }
 
-    protected void rspError(CInputOrder order, int code,
-                            String msg) {
+    protected void rspError(CInputOrder order, int code, String msg) {
         var rsp = new CRspInfo();
         rsp.ErrorID = code;
         rsp.ErrorMsg = msg;
@@ -467,11 +462,33 @@ public class OrderProvider implements Connectable{
         return r;
     }
 
+    protected boolean isOrderCompleted(String ref) {
+        var rtn0 = this.mapper.getRtnOrder(ref);
+        if (rtn0 == null) {
+            this.global.getLogger().warning(
+                    Utils.formatLog(
+                            "missing previous rtn order",
+                            ref, null, null));
+            return true;
+        }
+        if (rtn0.OrderStatus == OrderStatusType.ALL_TRADED
+                || rtn0.OrderStatus == OrderStatusType.CANCELED) {
+            this.global.getLogger().warning(
+                    Utils.formatLog(
+                            "no update to a completed order",
+                            ref, null, null));
+            return true;
+        } else
+            return false;
+    }
+
     protected void doOrder(COrder rtn) {
-        var active = this.mapper.getActiveOrder(rtn.OrderRef);
+        if (isOrderCompleted(rtn.OrderRef))
+            return;
+        var active = this.mapper.getActiveRequest(rtn.OrderRef);
         if (active == null) {
             this.global.getLogger().warning(
-                    Utils.formatLog("active order not found", rtn.OrderRef,
+                    Utils.formatLog("active request not found", rtn.OrderRef,
                             null, null));
             return;
         }
@@ -481,7 +498,6 @@ public class OrderProvider implements Connectable{
         rtn.InvestorID = active.getOriginOrder().InvestorID;
         rtn.AccountID = active.getOriginOrder().AccountID;
         rtn.OrderLocalID = active.getRequestUUID();
-
         try {
             active.updateRtnOrder(rtn);
         } catch (Throwable th) {
@@ -490,13 +506,19 @@ public class OrderProvider implements Connectable{
                     Utils.formatLog("failed update rtn order", rtn.OrderRef,
                             th.getMessage(), null));
         }
+        // The codes below follow the doXXX method because the parameter's fields
+        // were rewritten by the method, with local IDs.
+        this.msgWriter.writeRtn(rtn);
+        this.mapper.register(rtn);
     }
 
     protected void doTrade(CTrade trade) {
-        var active = this.mapper.getActiveOrder(trade.OrderRef);
+        if (isOrderCompleted(trade.OrderRef))
+            return;
+        var active = this.mapper.getActiveRequest(trade.OrderRef);
         if (active == null) {
             this.global.getLogger().warning(
-                    Utils.formatLog("active order not found", trade.OrderRef,
+                    Utils.formatLog("active request not found", trade.OrderRef,
                             null, null));
             return;
         }
@@ -505,7 +527,6 @@ public class OrderProvider implements Connectable{
         trade.UserID = active.getOriginOrder().UserID;
         trade.InvestorID = active.getOriginOrder().InvestorID;
         trade.OrderLocalID = active.getRequestUUID();
-
         try {
             active.updateTrade(trade);
         } catch (Throwable th) {
@@ -514,6 +535,9 @@ public class OrderProvider implements Connectable{
                     Utils.formatLog("failed update rtn trade", trade.OrderRef,
                             th.getMessage(), null));
         }
+        // The writing method must follow the doXXX method because the fields are
+        // rewritten with local IDs.
+        this.msgWriter.writeRtn(trade);
     }
 
     protected void doQueryInstr() {
@@ -534,8 +558,6 @@ public class OrderProvider implements Connectable{
         cancel.StatusMsg = info.ErrorMsg;
         cancel.OrderSubmitStatus = OrderSubmitStatusType.CANCEL_SUBMITTED;
         doOrder(cancel);
-        // Write input order as normal cancel order.
-        this.msgWriter.writeRtn(cancel);
     }
 
     public void whenFrontConnected() {
@@ -562,7 +584,7 @@ public class OrderProvider implements Connectable{
                 Utils.formatLog("failed action", orderAction.OrderRef,
                         rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Rewrite the local ID.
-        var active = this.mapper.getActiveOrder(orderAction.OrderRef);
+        var active = this.mapper.getActiveRequest(orderAction.OrderRef);
         if (active != null)
             orderAction.OrderLocalID = active.getRequestUUID();
         this.msgWriter.writeErr(orderAction, rspInfo);
@@ -757,10 +779,6 @@ public class OrderProvider implements Connectable{
         // End measurement.
         max.endWithMax();
         cur.end();
-        // The codes below follow the doXXX method because the parameter's fields
-        // were rewritten by the method, with local IDs.
-        this.msgWriter.writeRtn(order);
-        this.mapper.register(order);
     }
 
     public void whenRtnTrade(CTrade trade) {
@@ -772,8 +790,5 @@ public class OrderProvider implements Connectable{
         // End measurement.
         max.endWithMax();
         cur.end();
-        // The writing method must follow the doXXX method because the fields are
-        // rewritten with local IDs.
-        this.msgWriter.writeRtn(trade);
     }
 }

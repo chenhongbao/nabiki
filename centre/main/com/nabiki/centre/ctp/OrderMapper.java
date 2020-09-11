@@ -115,7 +115,7 @@ public class OrderMapper {
     Get alive order that issued the detail order with the specified detail order
     reference.
      */
-    public ActiveRequest getActiveOrder(String detailRef) {
+    public ActiveRequest getActiveRequest(String detailRef) {
         return this.detRef2Active.get(detailRef);
     }
 }
