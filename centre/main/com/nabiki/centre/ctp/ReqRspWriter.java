@@ -39,13 +39,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public class ReqRspWriter {
     private final Global global;
     private final OrderMapper mapper;
     private final Path reqDir, rtnDir, infoDir, errDir;
     private final DateTimeFormatter formatter
-            = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSSSSS");
+            = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss.SSS");
 
     public ReqRspWriter(OrderMapper mapper, Global cfg) {
         this.mapper = mapper;
@@ -101,7 +102,10 @@ public class ReqRspWriter {
     }
 
     private String getTimeStamp() {
-        return LocalDateTime.now().format(this.formatter);
+        // Add random string suffix to avoid sending requests between a very short
+        // time then files are over written.
+        return LocalDateTime.now().format(this.formatter) + "."
+                + UUID.randomUUID().toString().substring(0, 8);
     }
 
     public void writeRtn(COrder rtn) {
