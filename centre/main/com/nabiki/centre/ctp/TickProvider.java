@@ -48,7 +48,6 @@ public class TickProvider implements Connectable {
     protected final LoginConfig loginCfg;
     protected final MarketDataRouter router;
     protected final CandleEngine engine;
-    protected final CThostFtdcMdApi mdApi;
     protected final ReqRspWriter msgWriter;
     protected final Set<String> toSubscribe = new HashSet<>(),
             subscribed = new HashSet<>();
@@ -61,6 +60,7 @@ public class TickProvider implements Connectable {
     protected final Signal stateSignal = new Signal();
 
     protected String actionDay;
+    protected CThostFtdcMdApi api;
     protected JniMdSpi spi;
 
     public TickProvider(MarketDataRouter router, CandleEngine engine, Global global) {
@@ -68,16 +68,12 @@ public class TickProvider implements Connectable {
         this.router = router;
         this.engine = engine;
         this.loginCfg = this.global.getLoginConfigs().get("md");
-        this.mdApi = CThostFtdcMdApi.CreateFtdcMdApi(
-                this.loginCfg.FlowDirectory,
-                this.loginCfg.IsUsingUDP,
-                this.loginCfg.IsMulticast);
         this.msgWriter = new ReqRspWriter(null, this.global);
-        // Schedule action day updater.
-        prepareActionDayUpdater();
+        daemon();
     }
 
-    private void prepareActionDayUpdater() {
+    private void daemon() {
+        // Schedule action day updater.
         var m = TimeUnit.DAYS.toMillis(1);
         Timer dayUpdater = new Timer();
         dayUpdater.scheduleAtFixedRate(new TimerTask() {
@@ -147,16 +143,22 @@ public class TickProvider implements Connectable {
 
     @Override
     public void connect() {
+        if (this.api != null)
+            throw new IllegalStateException("need disconnect before connect");
         /*
          IMPORTANT!
          Kept reference to SPI so GC won't disconnect the object, hence the underlining
          C++ objects.
          */
+        this.api = CThostFtdcMdApi.CreateFtdcMdApi(
+                this.loginCfg.FlowDirectory,
+                this.loginCfg.IsUsingUDP,
+                this.loginCfg.IsMulticast);
         this.spi = new JniMdSpi(this);
-        this.mdApi.RegisterSpi(spi);
+        this.api.RegisterSpi(spi);
         for (var addr : this.loginCfg.FrontAddresses)
-            this.mdApi.RegisterFront(addr);
-        this.mdApi.Init();
+            this.api.RegisterFront(addr);
+        this.api.Init();
     }
 
     @Override
@@ -166,7 +168,9 @@ public class TickProvider implements Connectable {
         this.isConnected = false;
         this.workingState = WorkingState.STOPPED;
         // Release resources.
-        this.mdApi.Release();
+        this.api.Release();
+        this.api = null;
+        this.spi = null;
     }
 
     public void login() {
@@ -212,7 +216,7 @@ public class TickProvider implements Connectable {
     }
 
     private void subscribeBatch(String[] instr, int count) {
-        this.mdApi.SubscribeMarketData(instr, count);
+        this.api.SubscribeMarketData(instr, count);
     }
 
     private void registerInstrument(String instrID) {
@@ -228,7 +232,7 @@ public class TickProvider implements Connectable {
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
         req.Password = this.loginCfg.Password;
-        var r = this.mdApi.ReqUserLogin(
+        var r = this.api.ReqUserLogin(
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)
@@ -241,7 +245,7 @@ public class TickProvider implements Connectable {
         var req = new CUserLogout();
         req.BrokerID = this.loginCfg.BrokerID;
         req.UserID = this.loginCfg.UserID;
-        var r = this.mdApi.ReqUserLogout(
+        var r = this.api.ReqUserLogout(
                 JNI.toJni(req),
                 Utils.getIncrementID());
         if (r != 0)

@@ -60,7 +60,6 @@ public class OrderProvider implements Connectable{
     protected final CandleEngine candleEngine;
     protected final LoginConfig loginCfg;
     protected final ReqRspWriter msgWriter;
-    protected final CThostFtdcTraderApi api;
     protected final Thread orderDaemon = new Thread(new RequestDaemon(this));
     protected final List<String> instruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
@@ -83,23 +82,27 @@ public class OrderProvider implements Connectable{
     // State.
     protected WorkingState workingState = WorkingState.STOPPED;
 
-    // SPI.
+    protected CThostFtdcTraderApi api;
     protected JniTraderSpi spi;
 
     public OrderProvider(CandleEngine cdl, Global global) {
         this.global = global;
         this.candleEngine = cdl;
         this.loginCfg = this.global.getLoginConfigs().get("trader");
-        this.api = CThostFtdcTraderApi
-                .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
         this.msgWriter = new ReqRspWriter(this.mapper, this.global);
         this.pendingReqs = new LinkedBlockingQueue<>();
+        daemon();
+    }
+
+    private void daemon() {
         // Start order daemon.
+        this.orderDaemon.setDaemon(true);
         this.orderDaemon.start();
         // Start query timer task if it needs to query some info.
-        if (estimateQueryCount())
+        if (estimateQueryCount()) {
+            this.qryDaemon.setDaemon(true);
             this.qryDaemon.start();
-
+        }
     }
 
     @Override
@@ -144,26 +147,26 @@ public class OrderProvider implements Connectable{
         return this.mapper;
     }
 
-    protected void configTrader() {
-        for (var fa : this.loginCfg.FrontAddresses)
-            this.api.RegisterFront(fa);
-        this.api.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
-        this.api.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
-        /*
-         IMPORTANT!
-         Must kept reference to SPi explicitly so GC won't release the underlining
-         C++ objects.
-         */
-        this.spi = new JniTraderSpi(this);
-        this.api.RegisterSpi(spi);
-    }
-
     /**
      * Initialize connection to remote counter.
      */
     @Override
     public void connect() {
-        configTrader();
+        if (this.api != null)
+            throw new IllegalStateException("need disconnect before connect");
+        /*
+         IMPORTANT!
+         Must kept reference to SPi explicitly so GC won't release the underlining
+         C++ objects.
+         */
+        this.api = CThostFtdcTraderApi
+                .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
+        this.spi = new JniTraderSpi(this);
+        for (var fa : this.loginCfg.FrontAddresses)
+            this.api.RegisterFront(fa);
+        this.api.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
+        this.api.SubscribePublicTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
+        this.api.RegisterSpi(spi);
         this.api.Init();
     }
 
@@ -176,18 +179,10 @@ public class OrderProvider implements Connectable{
         this.isConfirmed = false;
         this.isConnected = false;
         this.workingState = WorkingState.STOPPED;
-        // Cancel threads.
-        this.qryDaemon.interrupt();
-        this.orderDaemon.interrupt();
-        try {
-            this.orderDaemon.join(5000);
-        } catch (InterruptedException e) {
-            this.global.getLogger().warning(
-                    Utils.formatLog("failed join order daemon",
-                            null, e.getMessage(), null));
-        }
         // Release resources.
         this.api.Release();
+        this.api = null;
+        this.spi = null;
     }
 
     /**
