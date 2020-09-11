@@ -29,6 +29,7 @@
 package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.Response;
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
@@ -74,14 +75,21 @@ public abstract class AbstractTrader implements Trader {
         var r = new LinkedList<T>();
         var lock = new ReentrantLock();
         var cond = lock.newCondition();
-        rsp.consume((object, rspInfo, currentCount, totalCount) -> {
-            r.add(object);
-            if (r.size() == totalCount) {
-                lock.lock();
-                try {
-                    cond.signal();
-                } finally {
-                    lock.unlock();
+        rsp.consume(new ResponseConsumer<T>() {
+            @Override
+            public void accept(
+                    T object,
+                    CRspInfo rspInfo,
+                    int currentCount,
+                    int totalCount) {
+                r.add(object);
+                if (r.size() == totalCount) {
+                    lock.lock();
+                    try {
+                        cond.signal();
+                    } finally {
+                        lock.unlock();
+                    }
                 }
             }
         });
@@ -223,7 +231,7 @@ public abstract class AbstractTrader implements Trader {
 
     static class SimpleFileHandler extends FileHandler {
         public SimpleFileHandler() throws IOException, SecurityException {
-            super("default.log");
+            super("default.log", true);
             super.setFormatter(new SimpleFormatter());
         }
     }
