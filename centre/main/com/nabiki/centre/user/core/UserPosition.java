@@ -57,6 +57,8 @@ public class UserPosition {
      * @return position details of the instrument
      */
     List<UserPositionDetail> getSpecificPosition(String instrID) {
+        if (!this.positionMap.containsKey(instrID))
+            this.positionMap.put(instrID, new LinkedList<>());
         return this.positionMap.get(instrID);
     }
 
@@ -96,9 +98,9 @@ public class UserPosition {
     }
 
     void applyOpenTrade(CTrade trade,
-                               CInstrument instr,
-                               CInstrumentMarginRate margin,
-                               double preSettlementPrice) {
+                        CInstrument instr,
+                        CInstrumentMarginRate margin,
+                        double preSettlementPrice) {
         getSpecificPosition(trade.InstrumentID)
                 .add(toUserPosition(trade, instr, margin, preSettlementPrice));
     }
@@ -108,9 +110,9 @@ public class UserPosition {
      * the user position detail. Only after the request is sent successfully, the
      * frozen position is added to the frozen list.
      *
-     * @param order input order, must be close order
-     * @param instr instrument
-     * @param comm commission
+     * @param order      input order, must be close order
+     * @param instr      instrument
+     * @param comm       commission
      * @param tradingDay trading day
      * @return list of frozen position detail if the order is sent successfully
      */
@@ -121,7 +123,8 @@ public class UserPosition {
             String tradingDay) {
         // Get position details.
         var avail = getSpecificPosition(order.InstrumentID);
-        Objects.requireNonNull(avail, "user position null");
+        if (avail == null)
+            return null;
         // Trading day not null.
         Objects.requireNonNull(tradingDay, "trading day null");
         // Calculate frozen position detail.
@@ -221,7 +224,7 @@ public class UserPosition {
             int volumeMultiple,
             String tradingDay) {
         // Settled position to bre return.
-        var settledPosition =  new LinkedList<UserPositionDetail>();
+        var settledPosition = new LinkedList<UserPositionDetail>();
         for (var p : position) {
             // Unset frozen position.
             p.cancel();

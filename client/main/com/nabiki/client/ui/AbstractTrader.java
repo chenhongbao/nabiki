@@ -35,10 +35,7 @@ import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.FileHandler;
@@ -71,8 +68,8 @@ public abstract class AbstractTrader implements Trader {
         return UUID.randomUUID().toString();
     }
 
-    private <T> Collection<T> get(Response<T> rsp, int timeout, TimeUnit unit) {
-        var r = new LinkedList<T>();
+    private <T> Map<T, CRspInfo> get(Response<T> rsp, int timeout, TimeUnit unit) {
+        var r = new HashMap<T, CRspInfo>();
         var lock = new ReentrantLock();
         var cond = lock.newCondition();
         rsp.consume(new ResponseConsumer<T>() {
@@ -82,7 +79,7 @@ public abstract class AbstractTrader implements Trader {
                     CRspInfo rspInfo,
                     int currentCount,
                     int totalCount) {
-                r.add(object);
+                r.put(object, rspInfo);
                 if (r.size() == totalCount) {
                     lock.lock();
                     try {
@@ -106,8 +103,9 @@ public abstract class AbstractTrader implements Trader {
         return r;
     }
 
-    private COrder queryOrder(String instrumentID, String exchangeID,
+    private Collection<COrder> queryOrder(String instrumentID, String exchangeID,
                               String orderID) {
+        var r = new HashSet<COrder>();
         var qry = new CQryOrder();
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
@@ -116,19 +114,27 @@ public abstract class AbstractTrader implements Trader {
                 this.client.queryOrder(qry, getRequestID()),
                 5,
                 TimeUnit.SECONDS);
-        if (rsp.size() != 1)
-            throw new RuntimeException("invalid rsp size: " + rsp.size());
-        return rsp.iterator().next();
+        for (var entry : rsp.entrySet()) {
+            if (entry.getValue().ErrorID != ErrorCodes.NONE)
+                throw new IllegalStateException(entry.getValue().ErrorMsg);
+            else
+                r.add(entry.getKey());
+        }
+        return r;
     }
 
-    private boolean isOrderDone(COrder order) {
-        return order.OrderStatus == OrderStatusType.ALL_TRADED
-                || order.OrderStatus == OrderStatusType.CANCELED;
+    private boolean isOrderDone(Collection<COrder> orders) {
+        for (var o : orders) {
+            if (o.OrderStatus != OrderStatusType.ALL_TRADED
+                    && o.OrderStatus != OrderStatusType.CANCELED)
+                return false;
+        }
+        return true;
     }
 
-    private char waitTrade(String instrumentID, String exchangeID,
+    private void waitTrade(String instrumentID, String exchangeID,
                            String orderID)  {
-        COrder rsp = null;
+        Collection<COrder> rsp = null;
         while (rsp == null || !isOrderDone(rsp)) {
             rsp = queryOrder(instrumentID, exchangeID, orderID);
             try {
@@ -137,7 +143,6 @@ public abstract class AbstractTrader implements Trader {
                 throw new RuntimeException(e);
             }
         }
-        return (char)rsp.OrderStatus;
     }
 
     @Override
@@ -167,7 +172,7 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public char orderInsert(String instrumentID, String exchangeID, double price,
+    public void orderInsert(String instrumentID, String exchangeID, double price,
                             int volume, char direction, char offset) {
         var req = new CInputOrder();
         req.InstrumentID = instrumentID;
@@ -183,8 +188,11 @@ public abstract class AbstractTrader implements Trader {
                 TimeUnit.SECONDS);
         if (rsp.size() != 1)
             throw new RuntimeException("invalid rsp size: " + rsp.size());
-        var rspOrder = rsp.iterator().next();
-        return waitTrade(instrumentID, exchangeID, rspOrder.OrderLocalID);
+        var entry = rsp.entrySet().iterator().next();
+        if (entry.getValue().ErrorID != ErrorCodes.NONE)
+            throw new IllegalStateException(entry.getValue().ErrorMsg);
+        else
+            waitTrade(instrumentID, exchangeID, entry.getKey().OrderLocalID);
     }
 
     @Override
@@ -195,11 +203,19 @@ public abstract class AbstractTrader implements Trader {
     @Override
     public Collection<CInvestorPosition> getPosition(
             String instrumentID, String exchangeID) {
+        var r = new LinkedList<CInvestorPosition>();
         var qry = new CQryInvestorPosition();
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
-        return get(this.client.queryPosition(qry, getRequestID()),
+        var rsp = get(this.client.queryPosition(qry, getRequestID()),
                 5, TimeUnit.SECONDS);
+        for (var entry : rsp.entrySet()) {
+            if (entry.getValue().ErrorID != ErrorCodes.NONE)
+                throw new IllegalStateException(entry.getValue().ErrorMsg);
+            else
+                r.add(entry.getKey());
+        }
+        return r;
     }
 
     @Override
@@ -211,7 +227,11 @@ public abstract class AbstractTrader implements Trader {
                 TimeUnit.SECONDS);
         if (rsp.size() != 1)
             throw new RuntimeException("invalid rsp size: " + rsp.size());
-        return rsp.iterator().next();
+        var entry = rsp.entrySet().iterator().next();
+        if (entry.getValue().ErrorID != ErrorCodes.NONE)
+            throw new IllegalStateException(entry.getValue().ErrorMsg);
+        else
+            return entry.getKey();
     }
 
     @Override

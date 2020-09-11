@@ -66,7 +66,6 @@ public class OrderMapper {
         this.uuid2DetRef.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
         this.uuid2DetRef.get(active.getRequestUUID()).add(order.OrderRef);
         this.detRef2Det.put(order.OrderRef, order);
-
     }
 
     /**

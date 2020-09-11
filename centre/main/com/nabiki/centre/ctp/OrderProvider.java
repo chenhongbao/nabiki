@@ -513,8 +513,8 @@ public class OrderProvider implements Connectable{
     }
 
     protected void doTrade(CTrade trade) {
-        if (isOrderCompleted(trade.OrderRef))
-            return;
+        // Don't filter completed order here because if return order arrives earlier
+        // than trade, the trade is not updated into system. So position is wrong.
         var active = this.mapper.getActiveRequest(trade.OrderRef);
         if (active == null) {
             this.global.getLogger().warning(

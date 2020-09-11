@@ -75,14 +75,18 @@ public class RequestExecutor extends RequestSuper {
             cur.end();
             // Build response.
             var o = toRtnOrder(request);
-            rsp.RspInfo = activeUser.getExecRsp(uuid);
-            if (rsp.RspInfo.ErrorID == ErrorCodes.NONE)
+            var info = activeUser.getExecRsp(uuid);
+            if (info.ErrorID == ErrorCodes.NONE) {
                 o.OrderLocalID = uuid;
-            else
+                o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+                o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
+            } else {
                 o.OrderLocalID = null;
-            o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
-            o.OrderStatus = OrderStatusType.UNKNOWN;
+                o.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
+                o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
+            }
             rsp.Body = o;
+            rsp.RspInfo = info;
         }
         session.sendResponse(rsp);
         session.done();

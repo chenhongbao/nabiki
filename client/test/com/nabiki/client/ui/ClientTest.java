@@ -29,7 +29,10 @@
 package com.nabiki.client.ui;
 
 import com.nabiki.iop.x.OP;
-import com.nabiki.objects.*;
+import com.nabiki.objects.CCandle;
+import com.nabiki.objects.CDepthMarketData;
+import com.nabiki.objects.CombOffsetFlagType;
+import com.nabiki.objects.DirectionType;
 import org.junit.Test;
 
 import java.awt.*;
@@ -37,11 +40,10 @@ import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class ClientTest {
+
     @Test
     public void basic() {
         var client = new Client();
@@ -67,33 +69,33 @@ public class ClientTest {
 
             private void open(CDepthMarketData depth) {
                 if (ma10 > ma20 && depth.LastPrice <= ma20) {
-                    var status = orderInsert(
-                            "c2101",
-                            "DCE",
-                            depth.AskPrice1,
-                            1,
-                            DirectionType.DIRECTION_BUY,
-                            CombOffsetFlagType.OFFSET_OPEN);
-                    if (status == OrderStatusType.ALL_TRADED) {
+                    try {
+                        orderInsert(
+                                "c2101",
+                                "DCE",
+                                depth.AskPrice1,
+                                1,
+                                DirectionType.DIRECTION_BUY,
+                                CombOffsetFlagType.OFFSET_OPEN);
                         currentPosition = 1;
                         limitPrice = depth.AskPrice1;
-                    } else {
-                        getLogger().warning("fail buy open");
+                    } catch (Throwable th) {
+                        getLogger().warning("fail buy open, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
                     }
                 } else if (ma10 < ma20 && depth.LastPrice >= ma20) {
-                    var status = orderInsert(
-                            "c2101",
-                            "DCE",
-                            depth.BidPrice1,
-                            1,
-                            DirectionType.DIRECTION_SELL,
-                            CombOffsetFlagType.OFFSET_OPEN);
-                    if (status == OrderStatusType.ALL_TRADED) {
+                    try {
+                        orderInsert(
+                                "c2101",
+                                "DCE",
+                                depth.BidPrice1,
+                                1,
+                                DirectionType.DIRECTION_SELL,
+                                CombOffsetFlagType.OFFSET_OPEN);
                         currentPosition = -1;
                         limitPrice = depth.BidPrice1;
-                    } else {
-                        getLogger().warning("fail sell open");
+                    } catch (Throwable th) {
+                        getLogger().warning("fail sell open, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
                     }
                 }
@@ -101,33 +103,33 @@ public class ClientTest {
 
             private void close(CDepthMarketData depth) {
                 if (currentPosition > 0 && depth.BidPrice1 > limitPrice) {
-                    var status = orderInsert(
-                            "c2101",
-                            "DCE",
-                            depth.BidPrice1,
-                            currentPosition,
-                            DirectionType.DIRECTION_SELL,
-                            CombOffsetFlagType.OFFSET_CLOSE);
-                    if (status == OrderStatusType.ALL_TRADED) {
+                    try {
+                        orderInsert(
+                                "c2101",
+                                "DCE",
+                                depth.BidPrice1,
+                                currentPosition,
+                                DirectionType.DIRECTION_SELL,
+                                CombOffsetFlagType.OFFSET_CLOSE);
                         currentPosition = 0;
                         limitPrice = 0;
-                    } else {
-                        getLogger().warning("fail sell close");
+                    } catch (Throwable th) {
+                        getLogger().warning("fail sell close, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
                     }
                 } else if (currentPosition < 0 && depth.AskPrice1 < limitPrice) {
-                    var status = orderInsert(
-                            "c2101",
-                            "DCE",
-                            depth.AskPrice1,
-                            currentPosition,
-                            DirectionType.DIRECTION_BUY,
-                            CombOffsetFlagType.OFFSET_CLOSE);
-                    if (status == OrderStatusType.ALL_TRADED) {
+                    try {
+                        orderInsert(
+                                "c2101",
+                                "DCE",
+                                depth.AskPrice1,
+                                currentPosition,
+                                DirectionType.DIRECTION_BUY,
+                                CombOffsetFlagType.OFFSET_CLOSE);
                         currentPosition = 0;
                         limitPrice = 0;
-                    } else {
-                        getLogger().warning("fail buy close");
+                    } catch (Throwable th) {
+                        getLogger().warning("fail buy close, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
                     }
                 }
@@ -146,10 +148,15 @@ public class ClientTest {
             public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
                 if (!isTrading)
                     return;
-                if (currentPosition == 0)
-                    open(depthMarketData);
-                else
-                    close(depthMarketData);
+                try {
+                    if (currentPosition == 0)
+                        open(depthMarketData);
+                    else
+                        close(depthMarketData);
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                    getLogger().severe(th.getMessage());
+                }
             }
 
             @Override
@@ -176,28 +183,31 @@ public class ClientTest {
     public void only_trade() {
         var client = new Client();
         client.start(new HeadlessTrader() {
-            private final Timer timer = new Timer();
+            private Thread daemon;
 
             @Override
             public void onStart() {
                 setUser("0001", "1234");
-                timer.schedule(new TimerTask() {
+                daemon = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        getLogger().info("send order");
-                        var status = orderInsert(
-                                "c2101",
-                                "DCE",
-                                2350,
-                                1,
-                                DirectionType.DIRECTION_SELL,
-                                CombOffsetFlagType.OFFSET_OPEN);
-                        if (status != OrderStatusType.ALL_TRADED)
-                            getLogger().warning("sell open failed");
-                        else
-                            getLogger().info("sell open traded");
+                        try {
+                            TimeUnit.SECONDS.sleep(5);
+                            orderInsert(
+                                    "c2101",
+                                    "DCE",
+                                    2350,
+                                    1,
+                                    DirectionType.DIRECTION_SELL,
+                                    CombOffsetFlagType.OFFSET_CLOSE);
+                            getLogger().info("all traded");
+                        } catch (Throwable th) {
+                            getLogger().warning("not traded");
+                            th.printStackTrace();
+                        }
                     }
-                }, TimeUnit.SECONDS.toMillis(5));
+                });
+                daemon.start();
             }
 
             @Override

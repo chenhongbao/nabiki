@@ -76,13 +76,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     }
 
     private void display(ChartMainFrame frame) {
-        EventQueue.invokeLater(() -> {
-            try {
-                frame.setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        frame.setVisible(true);
     }
 
     @Override

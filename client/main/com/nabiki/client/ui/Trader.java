@@ -46,7 +46,7 @@ public interface Trader {
 
     Collection<String> getSubscribe();
 
-    char orderInsert(String instrumentID, String exchangeID, double price,
+    void orderInsert(String instrumentID, String exchangeID, double price,
                      int volume, char direction, char offset);
 
     Collection<CInvestorPosition> getPosition();
