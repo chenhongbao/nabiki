@@ -28,8 +28,7 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.Response;
-import com.nabiki.client.sdk.ResponseConsumer;
+import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
@@ -37,7 +36,6 @@ import com.nabiki.objects.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -68,41 +66,6 @@ public abstract class AbstractTrader implements Trader {
         return UUID.randomUUID().toString();
     }
 
-    private <T> Map<T, CRspInfo> get(Response<T> rsp, int timeout, TimeUnit unit) {
-        var r = new HashMap<T, CRspInfo>();
-        var lock = new ReentrantLock();
-        var cond = lock.newCondition();
-        rsp.consume(new ResponseConsumer<T>() {
-            @Override
-            public void accept(
-                    T object,
-                    CRspInfo rspInfo,
-                    int currentCount,
-                    int totalCount) {
-                r.put(object, rspInfo);
-                if (r.size() == totalCount) {
-                    lock.lock();
-                    try {
-                        cond.signal();
-                    } finally {
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        // Wait signal.
-        lock.lock();
-        try {
-            if (!cond.await(timeout, unit))
-                throw new RuntimeException("wait rsp timeout");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-        return r;
-    }
-
     private Collection<COrder> queryOrder(String instrumentID, String exchangeID,
                               String orderID) {
         var r = new HashSet<COrder>();
@@ -110,7 +73,7 @@ public abstract class AbstractTrader implements Trader {
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
         qry.OrderSysID = orderID;
-        var rsp = get(
+        var rsp = ClientUtils.get(
                 this.client.queryOrder(qry, getRequestID()),
                 5,
                 TimeUnit.SECONDS);
@@ -182,7 +145,7 @@ public abstract class AbstractTrader implements Trader {
         req.Direction = (byte) direction;
         req.CombOffsetFlag = (byte) offset;
         // Process rsp.
-        var rsp = get(
+        var rsp = ClientUtils.get(
                 this.client.orderInsert(req, getRequestID()),
                 5,
                 TimeUnit.SECONDS);
@@ -207,7 +170,7 @@ public abstract class AbstractTrader implements Trader {
         var qry = new CQryInvestorPosition();
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
-        var rsp = get(this.client.queryPosition(qry, getRequestID()),
+        var rsp = ClientUtils.get(this.client.queryPosition(qry, getRequestID()),
                 5, TimeUnit.SECONDS);
         for (var entry : rsp.entrySet()) {
             if (entry.getValue().ErrorID != ErrorCodes.NONE)
@@ -221,7 +184,7 @@ public abstract class AbstractTrader implements Trader {
     @Override
     public CTradingAccount getAccount()  {
         var qry = new CQryTradingAccount();
-        var rsp = get(
+        var rsp = ClientUtils.get(
                 this.client.queryAccount(qry, getRequestID()),
                 5,
                 TimeUnit.SECONDS);

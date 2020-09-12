@@ -49,6 +49,9 @@ public class ClientPortal extends JFrame {
 	private final JTextField insertVolumeField;
 	private final JTable insertedOrderTable;
 
+	// Client backend.
+	private final Portal portal = new Portal();
+
 	/**
 	 * Launch the application.
 	 */
@@ -77,7 +80,7 @@ public class ClientPortal extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
-		loginDlg = new LoginDialog(this);
+		loginDlg = new LoginDialog(this, portal);
 		
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
