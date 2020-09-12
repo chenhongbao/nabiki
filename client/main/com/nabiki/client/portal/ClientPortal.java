@@ -37,20 +37,22 @@ import java.awt.event.ActionListener;
 
 public class ClientPortal extends JFrame {
 
-	private final JPanel contentPane;
-	private final JTable accountTable;
-	private final LoginDialog loginDlg;
-	private final JTextField instrumentField;
-	private final JTable positionTable;
-	private final JTable orderTable;
-	private final JTextField orderIDField;
-	private final JTextField insertInstrumentField;
-	private final JTextField insertPriceField;
-	private final JTextField insertVolumeField;
-	private final JTable insertedOrderTable;
+	final JPanel contentPane;
+	final JTable accountTable;
+	final LoginDialog loginDlg;
+	final JTextField instrumentField;
+	final JTable positionTable;
+	final JTable orderTable;
+	final JTextField orderIDField;
+	final JTextField insertInstrumentField;
+	final JTextField insertPriceField;
+	final JTextField insertVolumeField;
+	final JTable insertedOrderTable;
+	final JLabel userNameText;
+	final JLabel loginStateText;
 
 	// Client backend.
-	private final Portal portal = new Portal();
+	final Portal portal = new Portal();
 
 	/**
 	 * Launch the application.
@@ -164,7 +166,7 @@ public class ClientPortal extends JFrame {
 		sl_accountPanel.putConstraint(SpringLayout.WEST, userNameLabel, 10, SpringLayout.WEST, accountPanel);
 		accountPanel.add(userNameLabel);
 		
-		JLabel userNameText = new JLabel("\u65E0");
+		userNameText = new JLabel("\u65E0");
 		sl_accountPanel.putConstraint(SpringLayout.SOUTH, refreshBtn, 0, SpringLayout.SOUTH, userNameText);
 		sl_accountPanel.putConstraint(SpringLayout.NORTH, userNameText, 10, SpringLayout.NORTH, accountPanel);
 		sl_accountPanel.putConstraint(SpringLayout.WEST, userNameText, 10, SpringLayout.EAST, userNameLabel);
@@ -178,7 +180,7 @@ public class ClientPortal extends JFrame {
 		sl_accountPanel.putConstraint(SpringLayout.SOUTH, loginStateLabel, 0, SpringLayout.SOUTH, userNameLabel);
 		accountPanel.add(loginStateLabel);
 		
-		JLabel loginStateText = new JLabel("\u672A\u767B\u5F55");
+		loginStateText = new JLabel("\u672A\u767B\u5F55");
 		sl_accountPanel.putConstraint(SpringLayout.NORTH, refreshBtn, 0, SpringLayout.NORTH, loginStateText);
 		sl_accountPanel.putConstraint(SpringLayout.NORTH, loginStateText, 10, SpringLayout.NORTH, accountPanel);
 		sl_accountPanel.putConstraint(SpringLayout.WEST, loginStateText, 10, SpringLayout.EAST, loginStateLabel);

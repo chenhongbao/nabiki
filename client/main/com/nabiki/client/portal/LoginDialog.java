@@ -51,6 +51,7 @@ public class LoginDialog extends JDialog {
     private final JButton loginBtn;
     private final JButton logoutBtn;
     private final JButton cancelBtn;
+    private final ClientPortal owner;
 
     private void locateSelf() {
         var point = super.getParent().getLocation();
@@ -74,8 +75,9 @@ public class LoginDialog extends JDialog {
     /**
      * Create the dialog.
      */
-    public LoginDialog(Frame owner, Portal portal) {
+    public LoginDialog(ClientPortal owner, Portal portal) {
         super(owner, true);
+        this.owner = owner;
         this.portal = portal;
 
         setTitle("\u767B\u5F55\u670D\u52A1\u5668");
@@ -214,11 +216,17 @@ public class LoginDialog extends JDialog {
                 throw new RuntimeException(r.ErrorMsg);
             else {
                 showLoginResult("Login is successful.", Color.BLACK);
+                // Disable fields.
                 addrField.setEnabled(false);
                 userNameField.setEnabled(false);
                 pwdField.setEnabled(false);
+                // Enable logout.
                 logoutBtn.setEnabled(true);
+                // Hide dialog.
                 super.setVisible(false);
+                // Update login state on account panel.
+                owner.userNameText.setText(req.UserID);
+                owner.loginStateText.setText("\u767B\u5F55");
             }
         } catch (Throwable th) {
             showLoginResult("Login failed, " + th.getMessage(), Color.RED);
@@ -235,7 +243,11 @@ public class LoginDialog extends JDialog {
             loginBtn.setEnabled(true);
             logoutBtn.setEnabled(false);
             super.setVisible(false);
+            // Update login state on account panel.
+            owner.userNameText.setText("\u65E0");
+            owner.loginStateText.setText("\u767B\u51FA");
             showLoginResult("Logout is successful.", Color.BLACK);
+            super.setVisible(false);
         } catch (Throwable th) {
             showLoginResult("Logout failed, " + th.getMessage(), Color.RED);
         }
