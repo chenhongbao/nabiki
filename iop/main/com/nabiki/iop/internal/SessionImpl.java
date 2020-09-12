@@ -61,7 +61,7 @@ class SessionImpl {
 
     protected void close() {
         synchronized (this) {
-            if (this.session != null && this.session.isConnected()) {
+            if (!isClosed()) {
                 var future = this.session.closeNow();
                 // Once session is closed, don't use it again.
                 this.session = null;
@@ -75,7 +75,7 @@ class SessionImpl {
     }
 
     protected void fix() {
-        if (this.session.isClosing())
+        if (isClosed())
             throw new IllegalStateException("can't fix a closed session");
         if (this.session.isWriteSuspended())
             this.session.resumeWrite();
@@ -87,8 +87,8 @@ class SessionImpl {
         if (message == null)
             throw new NullPointerException("message null");
         synchronized (this) {
-            if (this.session == null)
-                throw new IllegalStateException("session null");
+            if (isClosed())
+                throw new IllegalStateException("session closed");
             // Get body bytes.
             var bytes = OP.toJson(message).getBytes(StandardCharsets.UTF_8);
             // Construct frame.
@@ -102,18 +102,26 @@ class SessionImpl {
     }
 
     protected void setAttribute(String key, Object attribute) {
-        this.session.setAttribute(key, attribute);
+        if (!isClosed())
+            this.session.setAttribute(key, attribute);
     }
 
     protected void removeAttribute(String key) {
-        this.session.setAttribute(key, null);
+        if (!isClosed())
+            this.session.setAttribute(key, null);
     }
 
     protected Object getAttribute(String key) {
-        return this.session.getAttribute(key);
+        if (!isClosed())
+            return this.session.getAttribute(key);
+        else
+            return null;
     }
 
     protected InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress)this.session.getRemoteAddress();
+        if (!isClosed())
+            return (InetSocketAddress)this.session.getRemoteAddress();
+        else
+            return null;
     }
 }
