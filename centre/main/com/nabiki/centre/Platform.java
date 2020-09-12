@@ -126,7 +126,11 @@ public class Platform {
         var server = IOP.createServer();
         StaticChainInstaller.install(
                 server, this.authMgr, this.userMgr, router, global);
-        server.bind(new InetSocketAddress(host, port));
+
+        if (host == null || host.trim().length() == 0)
+            server.bind(new InetSocketAddress(port));
+        else
+            server.bind(new InetSocketAddress(host, port));
     }
 
     private void managers() {
@@ -156,14 +160,18 @@ public class Platform {
     }
 
     private void setArguments(String[] args) {
-        var prefix = new String[] {
+        var prefix = new String[]{
                 Global.CMD_ROOT_PREFIX,
                 Global.CMD_HOST_PREFIX,
                 Global.CMD_PORT_PREFIX,
                 Global.CMD_START_NOW_PREFIX
         };
-        for (var pre : prefix)
-            GlobalConfig.setArgument(pre, Utils.getArgument(args, pre));
+        for (var pre : prefix) {
+            String arg = Utils.getArgument(args, pre);
+            if (arg == null)
+                arg = "";
+            GlobalConfig.setArgument(pre, arg);
+        }
     }
 
     private void initConfig(String root) throws IOException {
