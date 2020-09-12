@@ -41,12 +41,8 @@ import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.IOP;
 import com.nabiki.iop.x.SystemStream;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -60,33 +56,6 @@ import java.util.concurrent.TimeUnit;
  * </ul>
  */
 public class Platform {
-    static {
-        try {
-            System.loadLibrary("thostmduserapi_se");
-            System.loadLibrary("thosttraderapi_se");
-            System.loadLibrary("thostctpapi_se-6.3.19-P1");
-        } catch (Throwable th) {
-            writeLine(th.getMessage());
-            var cause = th.getCause();
-            while (cause != null) {
-                writeLine(cause.getMessage());
-                cause = cause.getCause();
-            }
-        }
-    }
-
-    private static void writeLine(String msg) {
-        try (FileWriter fw = new FileWriter(
-                new File("urgent.log"), true)) {
-            fw.write(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            fw.write("\t");
-            fw.write(msg);
-            fw.write(System.lineSeparator());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     Global global;
     CandleEngine candleEngine;
     OrderProvider orderProvider;
@@ -101,6 +70,17 @@ public class Platform {
     Platform() {
         this.timerPlat = new Timer();
         this.router = new MarketDataRouter();
+    }
+
+    private void loadDlls() {
+        try {
+            System.loadLibrary("thostmduserapi_se");
+            System.loadLibrary("thosttraderapi_se");
+            System.loadLibrary("thostctpapi_se-6.3.19-P1");
+        } catch (Throwable th) {
+            th.printStackTrace();
+            this.global.getLogger().severe(th.getMessage());
+        }
     }
 
     private void providers() {
@@ -156,6 +136,7 @@ public class Platform {
                 "file.log.err", "system.err.log").file());
         SystemStream.setOut(dir.setFile
                 ("file.log.out", "system.out.log").file());
+        loadDlls();
     }
 
     private void setArguments(String[] args) {

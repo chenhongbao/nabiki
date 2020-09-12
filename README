@@ -84,12 +84,18 @@ an initial account with no position before you trade.
 Please go to https://github.com/chenhongbao/nabiki_install for a reference install
 setup.
 
-3. Setting JNI Right
+3. Setting JNI right
 
 Use `-Djava.library.path=<path-to-dll>` to specify JNI DLLs. Please add the option
 before `-jar centre.jar` so JVM recognizes it.
 
 There are 3 DLLs, don't miss any one of them.
+
+4. Commandline arguments
+
+Use commandline option '--help' for detailed information.
+    
+	java -jar centre.jar --help
 
 Reference
 ---------
