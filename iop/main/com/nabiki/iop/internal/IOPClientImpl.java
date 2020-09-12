@@ -92,6 +92,8 @@ public class IOPClientImpl implements IOPClient {
         // TODO Should dispose it?
         // Server event repeats session closed infinitely.
         // this.connector.dispose();
+        this.connector = null;
+        this.session = null;
     }
 
     @Override

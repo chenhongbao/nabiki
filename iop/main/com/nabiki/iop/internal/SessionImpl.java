@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class SessionImpl {
     private static final String IOP_SESSION_KEY = "iop.session";
 
-    private final IoSession session;
+    private IoSession session;
     static AtomicInteger countX = new AtomicInteger(0);
 
     protected SessionImpl(IoSession ioSession) {
@@ -63,13 +63,15 @@ class SessionImpl {
         synchronized (this) {
             if (this.session != null && this.session.isConnected()) {
                 var future = this.session.closeNow();
+                // Once session is closed, don't use it again.
+                this.session = null;
                 future.awaitUninterruptibly();
             }
         }
     }
 
     protected boolean isClosed() {
-        return this.session.isClosing();
+        return this.session == null || this.session.isClosing();
     }
 
     protected void fix() {
