@@ -126,7 +126,6 @@ public class Platform {
         var server = IOP.createServer();
         StaticChainInstaller.install(
                 server, this.authMgr, this.userMgr, router, global);
-
         if (host == null || host.trim().length() == 0)
             server.bind(new InetSocketAddress(port));
         else
@@ -175,7 +174,10 @@ public class Platform {
     }
 
     private void initConfig(String root) throws IOException {
-        GlobalConfig.ROOT_PATH = root;
+        if (root == null || root.trim().length() == 0)
+            GlobalConfig.ROOT_PATH = "./";
+        else
+            GlobalConfig.ROOT_PATH = root;
         this.global = GlobalConfig.config();
     }
 
@@ -195,7 +197,39 @@ public class Platform {
                 MILLIS);
     }
 
+    private static boolean needHelp(String[] args) {
+        for (var arg : args)
+            if (arg.compareTo("--help") == 0) {
+                printHelp();
+                return true;
+            }
+        return false;
+    }
+
+    private static void printHelp() {
+        System.out.println("javaw[java] -Djava.library.path=<path-to-DLL> -jar <path-to-jar> --port <port> " +
+                "[--root <root-dir>] [--host <address-to-listen>] [--start-now <true-or-false>]");
+        System.out.println();
+        System.out.println("<path-to-DLL>    Path to dynamic linked library required by the app.");
+        System.out.println("                 It can be absolute path or relative path. Quoted with");
+        System.out.println("                 (\") if necessary.");
+        System.out.println("<path-to-jar>    Path to this app's jar.");
+        System.out.println("<port>           Port to listen on.");
+        System.out.println("<root-dir>       Path taken as root directory for all configuration");
+        System.out.println("                 and files. Quoted with (\") if necessary. If this option");
+        System.out.println("                 is undefined, it is the CWD of java application.");
+        System.out.println("<address-to-listen>");
+        System.out.println("                 The address that this server is bound to. If this");
+        System.out.println("                 option is undefined, server is bound to any local");
+        System.out.println("                 address, which usually includes both IPv4 and IPv6.");
+        System.out.println("<true-or-false>  true for server to initiate resources right after it ");
+        System.out.println("                 starts, and false for server to wait until market opens.");
+        System.out.println("                 If this option is undefined, it is like false.");
+    }
+
     public static void main(String[] args) {
+        if (needHelp(args))
+            return;
         try {
             var platform = new Platform();
             platform.start(args);
