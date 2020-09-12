@@ -45,14 +45,16 @@ public class IOPClientImpl implements IOPClient {
     private static final int DEFAULT_IDLE_SEC = 60;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
 
-    private final NioSocketConnector connector = new NioSocketConnector();
     private final ClientFrameHandler frameHandler = new ClientFrameHandler();
+
+    private NioSocketConnector connector;
     private ClientSessionImpl session;
 
     public IOPClientImpl() {
     }
 
     private IoSession io(InetSocketAddress connectAddress) throws IOException {
+        this.connector = new NioSocketConnector();
         this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
         // Set filters.
         var chain = this.connector.getFilterChain();
@@ -87,7 +89,9 @@ public class IOPClientImpl implements IOPClient {
     @Override
     public void disconnect() {
         this.session.close();
-        this.connector.dispose();
+        // TODO Should dispose it?
+        // Server event repeats session closed infinitely.
+        // this.connector.dispose();
     }
 
     @Override
