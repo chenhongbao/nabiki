@@ -167,10 +167,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
             max.endWithMax();
             cur.end();
             if (positions == null || positions.size() == 0) {
+                var p = new CInvestorPosition();
+                p.InstrumentID = query.InstrumentID;
                 rsp.CurrentCount = 1;
                 rsp.TotalCount = 1;
-                rsp.Body = new CInvestorPosition();
-                rsp.RspInfo.ErrorID = ErrorCodes.INSTRUMENT_NOT_FOUND;
+                rsp.Body = p;
+                // It's very common that there is no position of spec instrument.
+                // Don't report error.
+                rsp.RspInfo.ErrorID = ErrorCodes.NONE;
                 rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
                 session.sendResponse(rsp);
             } else {
