@@ -153,8 +153,8 @@ public class LoginDialog extends JDialog {
                         loginBtn,
                         logoutBtn,
                         loginResultTxt,
-                        owner.userNameText,
-                        owner.loginStateText,
+                        owner.accountPanel.userNameText,
+                        owner.accountPanel.loginStateText,
                         addrField,
                         userNameField,
                         pwdField
@@ -174,8 +174,8 @@ public class LoginDialog extends JDialog {
                         loginBtn,
                         logoutBtn,
                         loginResultTxt,
-                        owner.userNameText,
-                        owner.loginStateText,
+                        owner.accountPanel.userNameText,
+                        owner.accountPanel.loginStateText,
                         addrField,
                         userNameField,
                         pwdField
