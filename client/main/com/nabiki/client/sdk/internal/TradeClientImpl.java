@@ -81,6 +81,11 @@ class TradeClientImpl implements TradeClient {
         return rsp;
     }
 
+    private void requireLogin() {
+        if (lastLoginReq == null)
+            throw new NullPointerException("need login");
+    }
+
     @Override
     public Response<CRspUserLogin> login(
             CReqUserLogin request, String requestID) {
@@ -125,6 +130,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<COrder> orderInsert(
             CInputOrder order, String requestID) {
+        requireLogin();
         order.InvestorID
                 = order.UserID
                 = order.AccountID
@@ -140,6 +146,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<COrderAction> orderAction(
             CInputOrderAction action, String requestID) {
+        requireLogin();
         action.InvestorID
                 = action.UserID
                 = this.lastLoginReq.UserID;
@@ -154,6 +161,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CDepthMarketData> queryDepthMarketData(
             CQryDepthMarketData query, String requestID) {
+        requireLogin();
         return send(
                 MessageType.QRY_MD,
                 query,
@@ -164,6 +172,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CInvestorPosition> queryPosition(
             CQryInvestorPosition query, String requestID) {
+        requireLogin();
         query.InvestorID = this.lastLoginReq.UserID;
         query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
@@ -176,6 +185,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CTradingAccount> queryAccount(
             CQryTradingAccount query, String requestID) {
+        requireLogin();
         query.InvestorID
                 = query.AccountID
                 = this.lastLoginReq.UserID;
@@ -191,6 +201,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<COrder> queryOrder(
             CQryOrder query, String requestID) {
+        requireLogin();
         query.InvestorID = this.lastLoginReq.UserID;
         query.BrokerID  = this.lastLoginReq.BrokerID;
         return send(
@@ -203,6 +214,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CSpecificInstrument> subscribeMarketData(
             CSubMarketData subscription, String requestID) {
+        requireLogin();
         return send(
                 MessageType.SUB_MD,
                 subscription,
@@ -213,6 +225,7 @@ class TradeClientImpl implements TradeClient {
     @Override
     public Response<CSpecificInstrument> unSubscribeMarketData(
             CUnsubMarketData subscription, String requestID) {
+        requireLogin();
         return send(
                 MessageType.UNSUB_MD,
                 subscription,

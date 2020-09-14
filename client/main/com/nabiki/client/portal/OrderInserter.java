@@ -53,7 +53,7 @@ public class OrderInserter implements Runnable {
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
 
-    // Table columns.
+    // Table headers.
     private final String[] columns = new String[] {
             "\u65F6\u95F4", "\u62A5\u5355\u7F16\u53F7"
     };
