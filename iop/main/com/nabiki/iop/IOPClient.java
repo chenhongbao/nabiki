@@ -36,6 +36,8 @@ public interface IOPClient {
 
     void disconnect();
 
+    boolean isConnected();
+
     void setSessionAdaptor(ClientSessionAdaptor adaptor);
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor);

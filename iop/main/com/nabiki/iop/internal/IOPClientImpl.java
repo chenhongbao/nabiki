@@ -90,8 +90,11 @@ public class IOPClientImpl implements IOPClient {
     public void disconnect() {
         this.session.close();
         this.connector.dispose();
-        this.connector = null;
-        this.session = null;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return !this.session.isClosed();
     }
 
     @Override

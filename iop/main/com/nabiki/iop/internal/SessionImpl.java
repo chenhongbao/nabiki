@@ -71,7 +71,8 @@ class SessionImpl {
     }
 
     protected boolean isClosed() {
-        return this.session == null || this.session.isClosing();
+        return this.session == null || this.session.isClosing()
+                || !this.session.isConnected();
     }
 
     protected void fix() {
