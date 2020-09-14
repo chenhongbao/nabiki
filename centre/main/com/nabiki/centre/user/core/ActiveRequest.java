@@ -137,7 +137,7 @@ public class ActiveRequest {
         } else {
             switch (this.order.CombOffsetFlag) {
                 case CombOffsetFlagType.OFFSET_OPEN:
-                    insertOpen(this.order, instrInfo);
+                    insertOpen(Utils.deepCopy(this.order), instrInfo);
                     break;
                 case CombOffsetFlagType.OFFSET_CLOSE:
                 case CombOffsetFlagType.OFFSET_CLOSE_TODAY:
@@ -145,7 +145,7 @@ public class ActiveRequest {
                 case CombOffsetFlagType.OFFSET_FORCE_CLOSE:
                 case CombOffsetFlagType.OFFSET_FORCE_OFF:
                 case CombOffsetFlagType.OFFSET_LOCAL_FORCE_CLOSE:
-                    insertClose(this.order, instrInfo);
+                    insertClose(Utils.deepCopy(this.order), instrInfo);
                     break;
                 default:
                     this.global.getLogger().warning("unknown offset flag: "

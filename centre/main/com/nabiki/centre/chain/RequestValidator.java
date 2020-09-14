@@ -34,7 +34,10 @@ import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
-import com.nabiki.objects.*;
+import com.nabiki.objects.CInputOrder;
+import com.nabiki.objects.CRspInfo;
+import com.nabiki.objects.CombOffsetFlagType;
+import com.nabiki.objects.ErrorCodes;
 
 import java.util.UUID;
 
@@ -114,45 +117,7 @@ public class RequestValidator extends RequestSuper {
         session.done();
     }
 
-    @Override
-    public void doReqOrderAction(
-            ServerSession session,
-            CInputOrderAction request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
-        if (attr == null) {
-            reply(session,
-                    toOrderAction(request),
-                    requestID,
-                    MessageType.RSP_REQ_ORDER_ACTION,
-                    ErrorCodes.NOT_AUTHENT,
-                    OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
-        } else {
-            var auth = (UserAuthProfile) attr;
-            if (request.UserID == null
-                    || auth.UserID.compareTo(request.UserID) != 0) {
-                reply(session,
-                        toOrderAction(request),
-                        requestID,
-                        MessageType.RSP_REQ_ORDER_ACTION,
-                        ErrorCodes.USER_NOT_ACTIVE,
-                        OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
-            } else {
-                for (var instrAuth : auth.InstrumentAuths) {
-                    var instrumentID = request.InstrumentID;
-                    if (instrAuth.InstrumentID.compareTo(instrumentID) == 0)
-                        return;
-                }
-                reply(session,
-                        toOrderAction(request),
-                        requestID,
-                        MessageType.RSP_REQ_ORDER_ACTION,
-                        ErrorCodes.NO_TRADING_RIGHT,
-                        OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
-            }
-        }
-        session.done();
-    }
+    // No need to validate an order action because when request reaches here, user
+    // must be login. The insert is sent so it means the user has right to trade
+    // the instrument.
 }
