@@ -119,9 +119,14 @@ public class OrderInserter implements Runnable {
 
     private void insertOrder() {
         var req = new CInputOrder();
-        req.InstrumentID = instrumentField.getText().trim();
-        req.LimitPrice = Double.parseDouble(priceField.getText().trim());
-        req.VolumeTotalOriginal = Integer.parseInt(volumeField.getText().trim());
+
+        try {
+            req.InstrumentID = instrumentField.getText().trim();
+            req.LimitPrice = Double.parseDouble(priceField.getText().trim());
+            req.VolumeTotalOriginal = Integer.parseInt(volumeField.getText().trim());
+        } catch (Throwable th) {
+            throw new IllegalArgumentException("invalid parameters for order insert");
+        }
         switch (type) {
             case BUY_OPEN:
                 req.Direction = DirectionType.DIRECTION_BUY;
