@@ -69,14 +69,20 @@ public class SessionAdaptor extends ServerSessionAdaptor {
                         + event);
                 this.global.getLogger().warning(OP.toJson(eventObject));
                 break;
-            case CLOSED:
             case INPUT_CLOSED:
+                this.global.getLogger().info(
+                        "input closed(" + session.getRemoteAddress() + ")");
+                session.close();
+                break;
+            case CLOSED:
                 var recv = session.getAttribute(
                         SubscriptionAdaptor.FRONT_MDRECEIVER_KEY);
                 if (recv != null)
                     this.router.removeReceiver((MarketDataReceiver) recv);
                 this.global.getLogger().info(
                         "session closed(" + session.getRemoteAddress() + ")");
+                if (!session.isClosed())
+                    session.close();
                 break;
             case CREATED:
                 this.global.getLogger().info(

@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class SessionImpl {
     private static final String IOP_SESSION_KEY = "iop.session";
 
-    private IoSession session;
+    private final IoSession session;
     static AtomicInteger countX = new AtomicInteger(0);
 
     protected SessionImpl(IoSession ioSession) {
@@ -62,10 +62,10 @@ class SessionImpl {
     protected void close() {
         synchronized (this) {
             if (!isClosed()) {
-                var future = this.session.closeNow();
-                // Once session is closed, don't use it again.
-                this.session = null;
-                future.awaitUninterruptibly();
+                // Just close the session ans don't wait for the CloseFuture to
+                // return because it may continue checking input while waiting,
+                // causing dead lock.
+                this.session.closeNow();
             }
         }
     }
@@ -119,9 +119,6 @@ class SessionImpl {
     }
 
     protected InetSocketAddress getRemoteAddress() {
-        if (!isClosed())
-            return (InetSocketAddress)this.session.getRemoteAddress();
-        else
-            return null;
+        return (InetSocketAddress)this.session.getRemoteAddress();
     }
 }
