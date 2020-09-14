@@ -88,13 +88,22 @@ public class ClientPortal extends JFrame {
 		return toolBar;
 	}
 
+	private void setFrameSize() {
+		var size = Toolkit.getDefaultToolkit().getScreenSize();
+		var w = Math.min(1200, size.width);
+		var h = Math.min(900, size.width);
+		var x = (size.width - w) / 2;
+		var y = (size.height - h) / 2;
+		setBounds(x, y, w, h);
+	}
+
 	/**
 	 * Create the frame.
 	 */
 	public ClientPortal() {
 		setTitle("\u624B\u52A8\u64CD\u4F5C\u5165\u53E3");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 800, 600);
+		setFrameSize();
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -113,7 +122,7 @@ public class ClientPortal extends JFrame {
 		positionPanel = new PositionPanel(portal.getClient());
 		contentTabs.addTab("\u6301\u4ED3", null, positionPanel, "\u6301\u4ED3\u4FE1\u606F");
 		
-		queryOrderPanel = new QueryOrderPanel();
+		queryOrderPanel = new QueryOrderPanel(portal.getClient());
 		contentTabs.addTab("\u67E5\u8BE2\u62A5\u5355", null, queryOrderPanel, "\u67E5\u8BE2\u62A5\u5355");
 	}
 }

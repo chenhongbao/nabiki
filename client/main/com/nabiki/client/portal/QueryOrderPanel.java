@@ -28,31 +28,19 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.TradeClient;
+
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class QueryOrderPanel extends JPanel {
     private final JTable orderTable;
     private final JTextField orderIDField;
+    private final OrderUpdater orderUpdater;
+    private final OrderCanceler orderCanceler;
 
-    private final String[] headers = new String[] {
-        "\u62A5\u5355\u5F15\u7528",
-            "\u5408\u7EA6",
-            "\u9650\u4EF7",
-            "\u4E70\u5356",
-            "\u5F00\u5E73",
-            "\u603B\u91CF",
-            "\u5DF2\u6210",
-            "\u6392\u961F",
-            "\u63D0\u4EA4",
-            "\u6210\u4EA4",
-            "\u66F4\u65B0",
-            "\u65E5\u671F"
-    };
-
-    QueryOrderPanel() {
+    QueryOrderPanel(TradeClient client) {
         SpringLayout sl_queryOrderPanel = new SpringLayout();
         this.setLayout(sl_queryOrderPanel);
 
@@ -64,20 +52,12 @@ public class QueryOrderPanel extends JPanel {
         this.add(orderScrollPane);
 
         orderTable = new JTable();
-        orderTable.setModel(new DefaultTableModel(headers, 0) {
-            final Class[] columnTypes = new Class[] {
-                    String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class
-            };
-            public Class getColumnClass(int columnIndex) {
-                return columnTypes[columnIndex];
-            }
-            final boolean[] columnEditables = new boolean[] {
-                    false, false, false, false, false, false, false, false, false, false, false, false
-            };
-            public boolean isCellEditable(int row, int column) {
-                return columnEditables[column];
-            }
-        });
+        orderUpdater = new OrderUpdater(orderTable, client);
+        orderUpdater.start();
+
+        orderCanceler = new OrderCanceler(client, orderUpdater);
+        orderCanceler.start();
+
         orderScrollPane.setViewportView(orderTable);
 
         JLabel orderIDLabel = new JLabel("\u62A5\u5355\u7F16\u53F7:");
@@ -95,6 +75,7 @@ public class QueryOrderPanel extends JPanel {
         JButton queryOrderBtn = new JButton("\u67E5\u8BE2");
         queryOrderBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                orderUpdater.query(orderIDField.getText().trim());
             }
         });
         sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, queryOrderBtn, 0, SpringLayout.NORTH, orderIDField);
@@ -105,6 +86,7 @@ public class QueryOrderPanel extends JPanel {
         JButton cancelOrderBtn = new JButton("\u64A4\u5355");
         cancelOrderBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                orderCanceler.cancel(orderIDField.getText().trim());
             }
         });
         sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, cancelOrderBtn, 0, SpringLayout.NORTH, orderIDField);
