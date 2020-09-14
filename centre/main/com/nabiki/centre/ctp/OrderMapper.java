@@ -32,6 +32,7 @@ import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CInputOrder;
 import com.nabiki.objects.COrder;
+import com.nabiki.objects.OrderStatusType;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -52,6 +53,23 @@ public class OrderMapper {
             detRef2Det = new ConcurrentHashMap<>();   // ref -> input order
 
     public OrderMapper() {
+    }
+
+    public void settle() {
+        // Change unfilled orders' states.
+        for (var o : detRef2Rtn.values()) {
+            switch (o.OrderStatus) {
+                case OrderStatusType.PART_TRADED_QUEUEING:
+                    o.OrderStatus = OrderStatusType.PART_TRADED_NOT_QUEUEING;
+                    break;
+                case OrderStatusType.NO_TRADE_QUEUEING:
+                case OrderStatusType.NOT_TOUCHED:
+                case OrderStatusType.TOUCHED:
+                case OrderStatusType.UNKNOWN:
+                    o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
+                    break;
+            }
+        }
     }
 
     /**

@@ -109,6 +109,7 @@ class PlatformTask extends TimerTask {
         try {
             P.authMgr.flush();
             P.userMgr.settle();
+            P.orderProvider.getMapper().settle();
             this.userState = UserState.SETTLED;
             this.global.getLogger().info("platform settled");
         } catch (Throwable th) {
