@@ -38,15 +38,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-public class AccountUpdater implements Runnable {
+public class AccountUpdater extends Updater implements Runnable {
     private final JTable table;
     private final TradeClient client;
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
 
     // Table data model.
     private final Object[][] model = new Object[][]{
@@ -76,27 +71,22 @@ public class AccountUpdater implements Runnable {
         setupTable();
     }
 
+    public void update(String user) {
+        this.user = user;
+        super.fire();
+    }
+
     public void start() {
         daemon = new Thread(this);
         daemon.setDaemon(true);
         daemon.start();
     }
 
-    public void update(String user) {
-        this.user = user;
-        lock.lock();
-        try {
-            cond.signal();
-        } finally {
-            lock.unlock();
-        }
-    }
-
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                waitUpdateCmd();
+                super.waitFire();
                 queryAccount();
             } catch (Throwable th) {
                 showMsg(th.getMessage());
@@ -144,16 +134,6 @@ public class AccountUpdater implements Runnable {
 
     private void showMsg(String msg) {
        MessageDialog.showDefault(msg);
-    }
-
-    private void waitUpdateCmd() {
-        lock.lock();
-        try {
-            cond.await();
-        } catch (Throwable ignored) {
-        } finally {
-            lock.unlock();
-        }
     }
 
     private void setupTable() {

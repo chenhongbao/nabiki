@@ -30,10 +30,7 @@ package com.nabiki.client.portal;
 
 import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
-import com.nabiki.objects.CInputOrder;
-import com.nabiki.objects.COrder;
-import com.nabiki.objects.CombOffsetFlagType;
-import com.nabiki.objects.DirectionType;
+import com.nabiki.objects.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -41,17 +38,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-public class OrderInserter implements Runnable {
+public class OrderInserter extends Updater implements Runnable {
     private final TradeClient client;
     private final JTextField instrumentField, priceField, volumeField;
     private final JTable table;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
 
     // Table headers.
     private final String[] columns = new String[] {
@@ -79,16 +71,6 @@ public class OrderInserter implements Runnable {
         setupTable();
     }
 
-    private void waitUpdateCmd() {
-        lock.lock();
-        try {
-            cond.await();
-        } catch (Throwable ignored) {
-        } finally {
-            lock.unlock();
-        }
-    }
-
     public void start() {
         daemon = new Thread(this);
         daemon.setDaemon(true);
@@ -97,19 +79,14 @@ public class OrderInserter implements Runnable {
 
     public void insert(OrderType type) {
         this.type = type;
-        lock.lock();
-        try {
-            cond.signal();
-        } finally {
-            lock.unlock();
-        }
+        super.fire();
     }
 
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                waitUpdateCmd();
+                super.waitFire();
                 insertOrder();
             } catch (Throwable th) {
                 showMsg(th.getMessage());
@@ -156,7 +133,7 @@ public class OrderInserter implements Runnable {
         else {
             var order = rsp.keySet().iterator().next();
             var rspInfo = rsp.get(order);
-            if (rspInfo != null && rspInfo.ErrorID != 0)
+            if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)
                 showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
             else if (order == null)
                 showMsg("\u62A5\u5355\u54CD\u5E94\u8FD4\u56DE\u7A7A\u5F15\u7528");
