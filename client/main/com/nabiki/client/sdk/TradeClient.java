@@ -42,6 +42,8 @@ public interface TradeClient {
 
     void close();
 
+    boolean isClosed();
+
     Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
 
     Response<COrder> orderInsert(CInputOrder order, String requestID);

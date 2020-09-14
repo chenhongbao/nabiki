@@ -28,18 +28,11 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
-import com.nabiki.objects.CReqUserLogin;
-import com.nabiki.objects.ErrorCodes;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetSocketAddress;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class LoginDialog extends JDialog {
     private final Portal portal;
@@ -52,6 +45,7 @@ public class LoginDialog extends JDialog {
     private final JButton logoutBtn;
     private final JButton cancelBtn;
     private final ClientPortal owner;
+    private final JDialog self = this;
 
     private void locateSelf() {
         var point = super.getParent().getLocation();
@@ -152,7 +146,19 @@ public class LoginDialog extends JDialog {
         loginBtn = new JButton("\u767B\u5F55");
         loginBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                loginProcess();
+                new LoginOutWorker(
+                        true,
+                        self,
+                        portal.getClient(),
+                        loginBtn,
+                        logoutBtn,
+                        loginResultTxt,
+                        owner.userNameText,
+                        owner.loginStateText,
+                        addrField,
+                        userNameField,
+                        pwdField
+                ).start();
             }
         });
         buttonPane.add(loginBtn);
@@ -161,7 +167,19 @@ public class LoginDialog extends JDialog {
         logoutBtn = new JButton("\u9000\u51FA");
         logoutBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                logoutProcess();
+                new LoginOutWorker(
+                        false,
+                        self,
+                        portal.getClient(),
+                        loginBtn,
+                        logoutBtn,
+                        loginResultTxt,
+                        owner.userNameText,
+                        owner.loginStateText,
+                        addrField,
+                        userNameField,
+                        pwdField
+                ).start();
             }
         });
         logoutBtn.setEnabled(false);
@@ -176,80 +194,4 @@ public class LoginDialog extends JDialog {
         buttonPane.add(cancelBtn);
     }
 
-    private String getAddress(String address) {
-        return address.substring(0, address.indexOf(":"));
-    }
-
-    private int getPort(String address) {
-        return Integer.parseInt(address.substring(address.indexOf(":") + 1));
-    }
-
-    private void showLoginResult(String text, Color c) {
-        loginResultTxt.setText(text);
-    }
-
-    private void loginProcess() {
-        try {
-            loginBtn.setEnabled(false);
-            var address = addrField.getText().trim();
-            if (address.length() == 0)
-                throw new RuntimeException("Need server address.");
-            portal.getClient().open(new InetSocketAddress(
-                    getAddress(address), getPort(address)));
-        } catch (Throwable th) {
-            showLoginResult(th.getMessage(), Color.RED);
-            loginBtn.setEnabled(true);
-            return;
-        }
-        var req = new CReqUserLogin();
-        req.UserID = userNameField.getText().trim();
-        req.Password = pwdField.getText().trim();
-        try {
-            var rsp = ClientUtils.get(
-                    portal.getClient().login(req, UUID.randomUUID().toString()),
-                    10,
-                    TimeUnit.SECONDS);
-            if (rsp.size() == 0)
-                throw new RuntimeException("Empty login response.");
-            var r = rsp.values().iterator().next();
-            if (r.ErrorID != ErrorCodes.NONE)
-                throw new RuntimeException(r.ErrorMsg);
-            else {
-                showLoginResult("Login is successful.", Color.BLACK);
-                // Disable fields.
-                addrField.setEnabled(false);
-                userNameField.setEnabled(false);
-                pwdField.setEnabled(false);
-                // Enable logout.
-                logoutBtn.setEnabled(true);
-                // Hide dialog.
-                super.setVisible(false);
-                // Update login state on account panel.
-                owner.userNameText.setText(req.UserID);
-                owner.loginStateText.setText("\u767B\u5F55");
-            }
-        } catch (Throwable th) {
-            showLoginResult("Login failed, " + th.getMessage(), Color.RED);
-            loginBtn.setEnabled(true);
-        }
-    }
-
-    private void logoutProcess() {
-        try {
-            portal.getClient().close();
-            addrField.setEnabled(true);
-            userNameField.setEnabled(true);
-            pwdField.setEnabled(true);
-            loginBtn.setEnabled(true);
-            logoutBtn.setEnabled(false);
-            super.setVisible(false);
-            // Update login state on account panel.
-            owner.userNameText.setText("\u65E0");
-            owner.loginStateText.setText("\u767B\u51FA");
-            showLoginResult("Logout is successful.", Color.BLACK);
-            super.setVisible(false);
-        } catch (Throwable th) {
-            showLoginResult("Logout failed, " + th.getMessage(), Color.RED);
-        }
-    }
 }

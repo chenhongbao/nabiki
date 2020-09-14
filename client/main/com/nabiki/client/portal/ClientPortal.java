@@ -54,6 +54,8 @@ public class ClientPortal extends JFrame {
 	// Client backend.
 	final Portal portal = new Portal();
 
+	private final AccountUpdater accountUpdater;
+
 	/**
 	 * Launch the application.
 	 */
@@ -62,10 +64,19 @@ public class ClientPortal extends JFrame {
 			public void run() {
 				try {
 					ClientPortal frame = new ClientPortal();
+					locateWin(frame);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+			}
+
+			private void locateWin(JFrame frame) {
+				var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+				var frameSize = frame.getSize();
+				var x = (screenSize.width - frameSize.width) / 2;
+				var y = (screenSize.height - frameSize.height) / 2;
+				frame.setLocation(new Point(x, y));
 			}
 		});
 	}
@@ -109,41 +120,11 @@ public class ClientPortal extends JFrame {
 		contentTabs.addTab("\u8D26\u6237", null, accountPanel, "\u8D26\u6237\u4FE1\u606F");
 		SpringLayout sl_accountPanel = new SpringLayout();
 		accountPanel.setLayout(sl_accountPanel);
-		
+
+		// Initialize account table and its daemon.
 		accountTable = new JTable();
-		accountTable.setBackground(Color.WHITE);
-		accountTable.setModel(new DefaultTableModel(
-			new Object[][] {
-				{"\u7ECF\u7EAA\u5546", null, null},
-				{"\u8D26\u6237\u53F7", null, null},
-				{"\u6743\u76CA", null, null},
-				{"\u4FDD\u8BC1\u91D1", null, null},
-				{"\u53EF\u7528\u8D44\u91D1", null, null},
-				{"\u624B\u7EED\u8D39", null, null},
-				{"\u51BB\u7ED3\u624B\u7EED\u8D39", null, null},
-				{"\u51BB\u7ED3\u73B0\u91D1", null, null},
-				{"\u51BB\u7ED3\u4FDD\u8BC1\u91D1", null, null},
-				{"\u5E73\u4ED3\u5229\u6DA6", null, null},
-				{"\u6301\u4ED3\u5229\u6DA6", null, null},
-				{"\u4EA4\u6613\u65E5", null, null},
-			},
-			new String[] {
-				"\u5C5E\u6027", "\u4ECA\u65E5\u503C", "\u6628\u65E5\u503C"
-			}
-		) {
-			final Class[] columnTypes = new Class[] {
-				String.class, String.class, String.class
-			};
-			public Class getColumnClass(int columnIndex) {
-				return columnTypes[columnIndex];
-			}
-			final boolean[] columnEditables = new boolean[] {
-				false, false, false
-			};
-			public boolean isCellEditable(int row, int column) {
-				return columnEditables[column];
-			}
-		});
+		accountUpdater = new AccountUpdater(accountTable, portal.getClient());
+		accountUpdater.start();
 		
 		JScrollPane accountScrollPane = new JScrollPane(accountTable);
 		sl_accountPanel.putConstraint(SpringLayout.NORTH, accountScrollPane, 50, SpringLayout.NORTH, accountPanel);
@@ -156,6 +137,7 @@ public class ClientPortal extends JFrame {
 		JButton refreshBtn = new JButton("\u5237\u65B0");
 		refreshBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				accountUpdater.update(userNameText.getText().trim());
 			}
 		});
 		sl_accountPanel.putConstraint(SpringLayout.EAST, refreshBtn, -10, SpringLayout.EAST, accountPanel);

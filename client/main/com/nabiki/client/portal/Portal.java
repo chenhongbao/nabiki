@@ -29,12 +29,36 @@
 package com.nabiki.client.portal;
 
 import com.nabiki.client.sdk.TradeClient;
+import com.nabiki.client.sdk.TradeClientListener;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
 
 public class Portal {
     private final TradeClient client = new TradeClientFactoryImpl().get();
 
+    Portal() {
+        prepareClient();
+    }
+
     TradeClient getClient() {
         return client;
+    }
+
+    private void prepareClient() {
+        client.setListener(new TradeClientListener() {
+            @Override
+            public void onError(Throwable th) {
+
+            }
+
+            @Override
+            public void onClose() {
+
+            }
+
+            @Override
+            public void onOpen() {
+
+            }
+        });
     }
 }

@@ -118,6 +118,11 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
+    public boolean isClosed() {
+        return !this.client.isConnected();
+    }
+
+    @Override
     public Response<COrder> orderInsert(
             CInputOrder order, String requestID) {
         order.InvestorID
