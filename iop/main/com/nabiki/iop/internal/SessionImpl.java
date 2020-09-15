@@ -31,6 +31,7 @@ package com.nabiki.iop.internal;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.x.OP;
+import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
 
 import java.net.InetSocketAddress;
@@ -84,7 +85,7 @@ class SessionImpl {
             this.session.resumeRead();
     }
 
-    protected void send(Body message, int type) {
+    protected WriteFuture send(Body message, int type) {
         if (message == null)
             throw new NullPointerException("message null");
         synchronized (this) {
@@ -98,7 +99,7 @@ class SessionImpl {
             req.Length = bytes.length;
             req.Body = bytes;
             // Send frame.
-            this.session.write(req);
+            return this.session.write(req);
         }
     }
 
