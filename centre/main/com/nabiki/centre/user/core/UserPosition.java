@@ -135,14 +135,15 @@ public class UserPosition {
             // No need to calculate close profits and amount. They will be updated
             // on return trade.
             var rawPos = a.copyRawPosition();
-            if (rawPos.Direction == order.Direction)
+            // Must check current volume of the position detail. If it is ZERO,
+            // any value divided by ZERO will cause NaN.
+            if (rawPos.Direction == order.Direction || rawPos.Volume == 0)
                 continue;
             // Buy open -> sell close, sell open -> buy close.
             // The directions must be different.
             rawPos.ExchMargin /= 1.0D * rawPos.Volume;
             rawPos.Margin /= 1.0D * rawPos.Volume;
-            rawPos.Volume
-                    = rawPos.CloseVolume = 1;
+            rawPos.Volume = rawPos.CloseVolume = 1;
             // Commission.
             var frzCash = new AccountFrozenCash();
             if (rawPos.TradingDay.compareTo(tradingDay) == 0) {

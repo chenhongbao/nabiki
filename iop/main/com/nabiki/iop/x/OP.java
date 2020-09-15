@@ -46,6 +46,7 @@ public class OP {
                 .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
                 .serializeNulls()
                 .setPrettyPrinting()
+                .serializeSpecialFloatingPointValues() // Handle possible NaN.
                 .create();
     }
 
