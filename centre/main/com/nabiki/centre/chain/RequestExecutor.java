@@ -30,12 +30,15 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.core.ActiveUser;
 import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
 import com.nabiki.objects.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public class RequestExecutor extends RequestSuper {
@@ -85,6 +88,8 @@ public class RequestExecutor extends RequestSuper {
                 o.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
                 o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
             }
+            o.InsertDate = Utils.getDay(LocalDate.now(), null);
+            o.InsertTime = Utils.getTime(LocalTime.now(), null);
             rsp.Body = o;
             rsp.RspInfo = info;
         }

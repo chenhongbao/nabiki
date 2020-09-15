@@ -498,6 +498,13 @@ public class OrderProvider implements Connectable{
         rtn.InvestorID = active.getOriginOrder().InvestorID;
         rtn.AccountID = active.getOriginOrder().AccountID;
         rtn.OrderLocalID = active.getRequestUUID();
+        // Set time if it is not set.
+        if (rtn.UpdateTime == null || rtn.UpdateTime.length() == 0)
+            rtn.UpdateTime = Utils.getTime(LocalTime.now(), null);
+        if (rtn.OrderStatus == OrderStatusType.CANCELED) {
+            if (rtn.CancelTime == null || rtn.CancelTime.length() == 0)
+                rtn.CancelTime = Utils.getTime(LocalTime.now(), null);
+        }
         try {
             active.updateRtnOrder(rtn);
         } catch (Throwable th) {
