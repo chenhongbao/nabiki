@@ -176,17 +176,29 @@ public class ActiveRequest {
             this.execRsp.ErrorMsg = ErrorMessages.ORDER_NOT_FOUND;
             return;
         }
+        boolean hasSent = false;
         for (var ref : refs) {
             var realAction = Utils.deepCopy(this.action);
             Objects.requireNonNull(realAction, "action deep copy null");
-            realAction.OrderRef = ref;
             // Check order return.
             var rtn = mapper.getRtnOrder(ref);
             if (rtn != null && (rtn.OrderStatus == OrderStatusType.CANCELED
                     || rtn.OrderStatus == OrderStatusType.ALL_TRADED))
                 continue;
+            // Order ref to identify the sub-order to be canceled.
+            realAction.OrderRef = ref;
+            // Set instrument id and other info because validator doesn't check action.
+            realAction.InstrumentID = rtn.InstrumentID;
+            realAction.UserID = rtn.UserID;
+            // Set mark.
+            hasSent = true;
             if (send(realAction, this) != 0)
                 break;
+        }
+        // If there's no action sent, return error.
+        if (!hasSent) {
+            this.execRsp.ErrorID = ErrorCodes.INSUITABLE_ORDER_STATUS;
+            this.execRsp.ErrorMsg = ErrorMessages.INSUITABLE_ORDER_STATUS;
         }
     }
 
