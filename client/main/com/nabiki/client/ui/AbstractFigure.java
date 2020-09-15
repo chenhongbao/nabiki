@@ -79,6 +79,13 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
         frame.setVisible(true);
     }
 
+    private void checkZeroValue(int figureID, String name, double value) {
+        if (value == 0.0D)
+            System.err.print(String.format(
+                    "figure %d, plot %s, append zero value, possibly error",
+                    figureID, name));
+    }
+
     @Override
     public void setLine(int figureID, String name, Color color) {
         getFrame(figureID).getChartController().createLine(name, color);
@@ -91,11 +98,13 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
     @Override
     public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
+        checkZeroValue(figureID, "stick", open * high * low * close);
         getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
     }
 
     @Override
     public void draw(int figureID, String name, Double value) {
+        checkZeroValue(figureID, name, value);
         getFrame(figureID).getChartController().append(name, value);
     }
 
