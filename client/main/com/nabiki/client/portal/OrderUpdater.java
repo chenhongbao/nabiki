@@ -67,6 +67,10 @@ public class OrderUpdater extends Updater implements Runnable {
     }
 
     public void query(String orderID) {
+        if (orderID == null || orderID.length() == 0) {
+            showMsg("\u9700\u8981\u62a5\u5355\u7f16\u53f7");
+            return;
+        }
         this.orderID = orderID;
         super.fire();
     }

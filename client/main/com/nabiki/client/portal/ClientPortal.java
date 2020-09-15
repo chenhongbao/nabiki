@@ -28,11 +28,14 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.iop.x.SystemStream;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class ClientPortal extends JFrame {
 
@@ -49,6 +52,7 @@ public class ClientPortal extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		prepare();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -68,6 +72,16 @@ public class ClientPortal extends JFrame {
 				frame.setLocation(new Point(x, y));
 			}
 		});
+	}
+
+	private static void prepare() {
+		try {
+			// Set default err/out.
+			SystemStream.setErr("err.log");
+			SystemStream.setOut("out.log");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private JToolBar initToolbar() {

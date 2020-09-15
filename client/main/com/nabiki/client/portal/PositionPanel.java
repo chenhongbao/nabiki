@@ -37,6 +37,7 @@ import java.awt.event.ActionListener;
 public class PositionPanel extends JPanel {
     final PositionUpdater positionUpdater;
     final JTextField instrumentField;
+    final JCheckBox positionCatCheck;
     final JTable positionTable;
     final JComboBox positionTypeComb;
 
@@ -45,9 +46,11 @@ public class PositionPanel extends JPanel {
         SpringLayout sl_positionPanel = new SpringLayout();
         this.setLayout(sl_positionPanel);
 
-        JCheckBox positionCatCheck = new JCheckBox("\u6240\u6709\u6301\u4ED3");
+        positionCatCheck = new JCheckBox("\u6240\u6709\u6301\u4ED3");
         positionCatCheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                var check = (JCheckBox)e.getSource();
+                instrumentField.setEnabled(!check.isSelected());
             }
         });
         sl_positionPanel.putConstraint(SpringLayout.NORTH, positionCatCheck, 10, SpringLayout.NORTH, this);

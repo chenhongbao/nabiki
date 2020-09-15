@@ -34,7 +34,10 @@ import com.nabiki.objects.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.time.LocalTime;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +46,7 @@ public class OrderInserter extends Updater implements Runnable {
     private final TradeClient client;
     private final JTextField instrumentField, priceField, volumeField;
     private final JTable table;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
     // Table headers.
     private final String[] columns = new String[] {
@@ -164,11 +167,25 @@ public class OrderInserter extends Updater implements Runnable {
     }
 
     private void updateInsertedTable(COrder order) {
+        var timeStamp = LocalDateTime.now().format(formatter);
         var model = (DefaultTableModel) table.getModel();
         model.addRow(new Object[]{
-                LocalTime.now().format(formatter),
+                timeStamp,
                 order.OrderLocalID});
         model.fireTableDataChanged();
+        writeOrderID(timeStamp, order.OrderLocalID);
+    }
+
+    private void writeOrderID(String timeStamp, String id) {
+        try (PrintWriter pw = new PrintWriter(
+                new FileWriter("order_id.log", true))) {
+            pw.print(timeStamp);
+            pw.print("\t");
+            pw.println(id);
+            pw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void clearFields() {
