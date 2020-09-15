@@ -290,6 +290,10 @@ public class ActiveRequest {
         }
         // Send close request.
         for (var p : pds) {
+            if (p.getFrozenVolume() == 0)
+                continue;
+            else if (p.getFrozenVolume() < 0)
+                throw new IllegalStateException("negative frozen volume");
             var cls = toCloseOrder(p);
             cls.OrderRef = this.orderProvider.getOrderRef();
             var x = this.orderProvider.sendDetailOrder(cls, this);

@@ -162,9 +162,14 @@ public class UserPosition {
                     frzCash.FrozenCommission = comm.CloseRatioByVolume;
             }
             // Keep frozen position.
+            // If volume to freeze is zero or negative, then it would cause
+            // the close order has an invalid volume-total-original,
+            // being zero or negative.
             long vol = Math.min(a.getAvailableVolume(), volume);
-            var frz = new FrozenPositionDetail(a, rawPos, frzCash, vol);
-            r.add(frz);
+            if (vol > 0)
+                r.add(new FrozenPositionDetail(a, rawPos, frzCash, vol));
+            else if (vol < 0)
+                throw new IllegalStateException("negative frozen volume");
             // Reduce volume to zero.
             if ((volume -= vol) <= 0)
                 break;
