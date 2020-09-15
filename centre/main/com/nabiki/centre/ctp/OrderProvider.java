@@ -648,7 +648,7 @@ public class OrderProvider implements Connectable{
                                      CRspInfo rspInfo, int requestID,
                                      boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            var accepted = InstrumentFilter.accept(instrument.InstrumentID);
+            var accepted = InstrumentFilter.accept(instrument);
             if (accepted) {
                 this.msgWriter.writeInfo(instrument);
                 GlobalConfig.setInstrConfig(instrument);

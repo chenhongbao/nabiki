@@ -28,12 +28,31 @@
 
 package com.nabiki.centre.ctp;
 
+import com.nabiki.objects.CInstrument;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 public class InstrumentFilter {
     private static final Pattern pattern = Pattern.compile("[a-zA-Z]+\\d+");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    public static boolean accept(String instrumentID) {
-        return pattern.matcher(instrumentID).matches();
+    public static boolean accept(CInstrument instrument) {
+        if (instrument == null)
+            return false;
+        try {
+            // Filter the option/swap instrument.
+            if (!pattern.matcher(instrument.InstrumentID).matches())
+                return false;
+            var expireDate = LocalDate.parse(
+                    instrument.ExpireDate,
+                    dateFormatter);
+            // Filter the expired instrument.
+            return LocalDate.now().isBefore(expireDate);
+        } catch (Throwable th) {
+            th.printStackTrace();
+            return true;
+        }
     }
 }
