@@ -82,7 +82,11 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     @Override
     public void sendLogin(Message message) {
         message.Type = MessageType.REQ_LOGIN;
-        super.send(toBody(message), FrameType.LOGIN);
+        // Need to wait until login request is actually sent.
+        try {
+            super.send(toBody(message), FrameType.LOGIN).await();
+        } catch (InterruptedException ignored) {
+        }
     }
 
     private Body toBody(Message message) {
@@ -111,12 +115,13 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
 
     @Override
     public void sendHeartbeat(String heartbeatID) {
+        // Take down latest heartbeat ID.
+        setAttribute(IOP_HEARTBEAT_ID_KEY, heartbeatID);
         var body = new Body();
         body.RequestID = heartbeatID;
         body.Type = MessageType.HEARTBEAT;
+        // NO NEED to wait heart beat sent.
         super.send(body, FrameType.HEARTBEAT);
-        // Take down latest heartbeat ID.
-        setAttribute(IOP_HEARTBEAT_ID_KEY, heartbeatID);
     }
 
     @Override
