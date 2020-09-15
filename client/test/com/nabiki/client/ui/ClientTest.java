@@ -79,6 +79,7 @@ public class ClientTest {
                                 CombOffsetFlagType.OFFSET_OPEN);
                         currentPosition = 1;
                         limitPrice = depth.AskPrice1;
+                        getLogger().info("buy open");
                     } catch (Throwable th) {
                         getLogger().warning("fail buy open, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
@@ -94,6 +95,7 @@ public class ClientTest {
                                 CombOffsetFlagType.OFFSET_OPEN);
                         currentPosition = -1;
                         limitPrice = depth.BidPrice1;
+                        getLogger().info("sell open");
                     } catch (Throwable th) {
                         getLogger().warning("fail sell open, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
@@ -113,6 +115,7 @@ public class ClientTest {
                                 CombOffsetFlagType.OFFSET_CLOSE);
                         currentPosition = 0;
                         limitPrice = 0;
+                        getLogger().info("sell close");
                     } catch (Throwable th) {
                         getLogger().warning("fail sell close, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));
@@ -128,6 +131,7 @@ public class ClientTest {
                                 CombOffsetFlagType.OFFSET_CLOSE);
                         currentPosition = 0;
                         limitPrice = 0;
+                        getLogger().info("buy close");
                     } catch (Throwable th) {
                         getLogger().warning("fail buy close, " + th.getMessage());
                         getLogger().warning(OP.toJson(depth));

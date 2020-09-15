@@ -46,7 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SubscriptionAdaptor extends ServerMessageAdaptor {
-    private static class SessionMarketDataReceiver implements MarketDataReceiver {
+    private class SessionMarketDataReceiver implements MarketDataReceiver {
         private final ServerSession session;
         private final Map<String, Boolean> map = new ConcurrentHashMap<>();
 
@@ -64,14 +64,26 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
 
         @Override
         public void depthReceived(CDepthMarketData depth) {
-            if (this.map.containsKey(depth.InstrumentID))
-                this.session.sendResponse(toMessage(depth));
+            try {
+                if (!this.session.isClosed()
+                        && this.map.containsKey(depth.InstrumentID))
+                    this.session.sendResponse(toMessage(depth));
+            } catch (Throwable th) {
+                th.printStackTrace();
+                global.getLogger().warning(th.getMessage());
+            }
         }
 
         @Override
         public void candleReceived(CCandle candle) {
-            if (this.map.containsKey(candle.InstrumentID))
-                this.session.sendResponse(toMessage(candle));
+            try {
+                if (!this.session.isClosed() &&
+                        this.map.containsKey(candle.InstrumentID))
+                    this.session.sendResponse(toMessage(candle));
+            } catch (Throwable th) {
+                th.printStackTrace();
+                global.getLogger().warning(th.getMessage());
+            }
         }
     }
 
@@ -80,10 +92,10 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     private final CandleRW candlRW;
     private final Global global;
 
-    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global cfg) {
+    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global global) {
         this.router = router;
         this.candlRW = rw;
-        this.global = cfg;
+        this.global = global;
     }
 
     private static Message toMessage(CDepthMarketData depth) {

@@ -148,16 +148,27 @@ public class MarketDataRouter implements Runnable {
                 // Depth.
                 while ((md = pollDepth()) != null)
                     synchronized (this.receivers) {
-                        for ( var recv : this.receivers)
-                            recv.depthReceived(Utils.deepCopy(md));
+                        for ( var recv : this.receivers) {
+                            try {
+                                recv.depthReceived(Utils.deepCopy(md));
+                            } catch (Throwable th) {
+                                th.printStackTrace();
+                            }
+                        }
                     }
                 // Candle.
                 while ((candle = pollCandle()) != null)
                     synchronized (this.receivers) {
-                        for (var recv : this.receivers)
-                            recv.candleReceived(Utils.deepCopy(candle));
+                        for (var recv : this.receivers) {
+                            try {
+                                recv.candleReceived(Utils.deepCopy(candle));
+                            } catch (Throwable th) {
+                                th.printStackTrace();
+                            }
+                        }
                     }
-            } catch (InterruptedException ignored) {
+            } catch (Throwable th) {
+                th.printStackTrace();
             } finally {
                 this.lock.unlock();
             }
