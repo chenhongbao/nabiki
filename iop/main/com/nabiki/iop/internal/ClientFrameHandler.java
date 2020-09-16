@@ -126,8 +126,12 @@ class ClientFrameHandler implements IoHandler {
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
         var clientSession = ClientSessionImpl.from(session);
         this.sessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
-        // If client detects idle, send heartbeat.
-        clientSession.sendHeartbeat(UUID.randomUUID().toString());
+        try {
+            // If client detects idle, send heartbeat.
+            clientSession.sendHeartbeat(UUID.randomUUID().toString());
+        } catch (Throwable th) {
+            exceptionCaught(session, th);
+        }
     }
 
     @Override
