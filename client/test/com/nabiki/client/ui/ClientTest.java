@@ -34,8 +34,11 @@ import com.nabiki.objects.CombOffsetFlagType;
 import com.nabiki.objects.DirectionType;
 import org.junit.Test;
 
+import java.awt.*;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ClientTest {
@@ -46,6 +49,22 @@ public class ClientTest {
         client.start(new FigureTrader() {
             CDepthMarketData depth;
             int currentPosition = 0;
+
+            private final List<Double> close01 = new LinkedList<>(),
+                    close05 = new LinkedList<>();
+
+            private Double average(int m, List<Double> close) {
+                var rm = Math.min(m, close.size());
+                if (rm < 1)
+                    return null;
+                else {
+                    var total = 0.0D;
+                    var tail = close.size() - rm;
+                    for (int idx = close.size() - 1; tail <= idx; --idx)
+                        total += close.get(idx);
+                    return total / rm;
+                }
+            }
 
             private void open(CDepthMarketData depth) throws Exception {
                 if (Math.random() > 0.5) {
@@ -99,9 +118,9 @@ public class ClientTest {
             public void onStart() {
                 subscribe("c2101", "c2105");
                 setFigure(1, "c2101", 1);
-                //setFigure(2, "c2101", 60);
-                setFigure(3, "c2105", 1);
-                //setFigure(4, "c2105", 60);
+                setLine(1, "ma", Color.MAGENTA);
+                setFigure(2, "c2105", 1);
+                setLine(2, "ma", Color.MAGENTA);
                 setUser("0001", "1234");
             }
 
@@ -114,15 +133,24 @@ public class ClientTest {
 
             @Override
             public void onCandle(CCandle candle, boolean isTrading) {
-                if (candle.Minute != 1 || !isTrading || candle.InstrumentID.compareTo("c2101") != 0)
+                if (candle.Minute != 1)
                     return;
-                try {
-                    if (currentPosition == 0)
-                        open(depth);
-                    else
-                        close(depth);
-                } catch (Throwable th) {
-                    th.printStackTrace();
+                if (candle.InstrumentID.compareTo("c2101") == 0) {
+                    close01.add(candle.ClosePrice);
+                    draw(1, "ma", average(20, close01));
+                } else if (candle.InstrumentID.compareTo("c2105") == 0) {
+                    close05.add(candle.ClosePrice);
+                    draw(2, "ma", average(20, close05));
+                }
+                if (candle.InstrumentID.compareTo("c2101") == 0 && depth != null) {
+                    try {
+                        if (currentPosition == 0)
+                            open(depth);
+                        else
+                            close(depth);
+                    } catch (Throwable th) {
+                        th.printStackTrace();
+                    }
                 }
             }
 
