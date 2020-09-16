@@ -30,7 +30,6 @@ package com.nabiki.client.sdk.internal;
 
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.ResponseConsumer;
-import com.nabiki.objects.COrder;
 import com.nabiki.objects.CRspInfo;
 
 import java.util.Map;
@@ -70,10 +69,6 @@ public class ResponseImpl<T> implements Response<T> {
     }
 
     void put(T response, CRspInfo rspInfo, int count, int total) {
-        // TODO DEBUG
-        if (response instanceof COrder)
-            System.out.println("Response gets rsp order insert.");
-
         if (this.consumer.get() != null) {
             try {
                 this.consumer.get().accept(response, rspInfo, count, total);

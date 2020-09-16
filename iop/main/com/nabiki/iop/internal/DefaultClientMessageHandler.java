@@ -134,9 +134,6 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
                         message.ResponseID,
                         message.CurrentCount,
                         message.TotalCount);
-
-                //TODO DEBUG
-                System.out.println("Handler gets rsp order insert.");
                 break;
             case RSP_REQ_ORDER_ACTION:
                 adaptor.doRspReqOrderAction(
