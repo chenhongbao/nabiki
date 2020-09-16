@@ -28,17 +28,18 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.ResponseConsumer;
+import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
-import com.nabiki.objects.*;
+import com.nabiki.objects.CReqUserLogin;
+import com.nabiki.objects.CSubMarketData;
+import com.nabiki.objects.ErrorCodes;
 
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractClient {
     private final TradeClient client;
@@ -77,98 +78,59 @@ public abstract class AbstractClient {
     }
 
     private void reqLogin(Trader trader) throws Exception {
-        var lock = new ReentrantLock();
-        var condition = lock.newCondition();
-        var info = new AtomicReference<CRspInfo>();
         // Send login rsp.
         var login = new CReqUserLogin();
         login.UserID = trader.getUserID();
         login.Password = trader.getPassword();
-        var rsp = client.login(
-                login,
-                UUID.randomUUID().toString());
-        rsp.consume((object, rspInfo, currentCount, totalCount) -> {
-            info.set(rspInfo);
-            lock.lock();
-            try {
-                condition.signal();
-            } finally {
-                lock.unlock();
-            }
-        });
-        // Wait login rsp.
-        lock.lock();
-        try {
-            condition.await(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
+        var rsp = ClientUtils.get(
+                client.login(login, UUID.randomUUID().toString()),
+                15,
+                TimeUnit.SECONDS);
         // Check login rsp.
-        var infoRsp = info.get();
-        if (infoRsp == null)
-            throw new RuntimeException("null login rsp");
-        else if (info.get().ErrorID != ErrorCodes.NONE)
-            throw new RuntimeException(
-                    "login failure[" + infoRsp.ErrorID + "], " + infoRsp.ErrorMsg);
+        if (rsp.size() == 0)
+            throw new RuntimeException("no login rsp");
+        else {
+            var rspInfo = rsp.values().iterator().next();
+            if (rspInfo.ErrorID != ErrorCodes.NONE)
+                throw new RuntimeException(
+                        "login failure[" + rspInfo.ErrorID + "], " + rspInfo.ErrorMsg);
+        }
+    }
+
+    private String getCommaList(List<String> values) {
+        if (values == null || values.size() == 0)
+            return "";
+        if (values.size() == 1) {
+            return values.iterator().next();
+        } else {
+            String r = values.get(0);
+            for (int i = 1; i < values.size(); ++i)
+                r += "," + values.get(i);
+            return r;
+        }
     }
 
     private void reqSubscription(Trader trader) throws Exception {
-        var lock = new ReentrantLock();
-        var condition = lock.newCondition();
-        var info = new AtomicReference<CRspInfo>();
-        var in = new AtomicReference<CSpecificInstrument>();
         // Request subscription.
         var reqSub = new CSubMarketData();
         reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
-        var rsp = client.subscribeMarketData(
-                reqSub,
-                UUID.randomUUID().toString());
-        rsp.consume(new ResponseConsumer<>() {
-            final AtomicInteger recvCount = new AtomicInteger(0);
-
-            @Override
-            public void accept(
-                    CSpecificInstrument object,
-                    CRspInfo rspInfo,
-                    int currentCount,
-                    int totalCount) {
-                recvCount.incrementAndGet();
-                if (totalCount == recvCount.get()
-                        || (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)) {
-                    info.set(rspInfo);
-                    in.set(object);
-                    lock.lock();
-                    try {
-                        condition.signal();
-                    } finally {
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        // Wait rsp.
-        lock.lock();
-        try {
-            condition.await(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
+        var rsp = ClientUtils.get(
+                client.subscribeMarketData(reqSub, UUID.randomUUID().toString()),
+                15,
+                TimeUnit.SECONDS);
         // Check rsp.
-        var infoRsp = info.get();
-        var inRsp = in.get();
-        if (infoRsp != null && infoRsp.ErrorID != 0)
-            if (inRsp != null)
-                throw new RuntimeException(
-                        "subscription failure[" + infoRsp.ErrorID + "]: "
-                                + inRsp.InstrumentID + ", " + infoRsp.ErrorMsg);
-            else
-                throw new RuntimeException(
-                        "subscription failure[" + infoRsp.ErrorID + "], "
-                                + infoRsp.ErrorMsg);
+        if (rsp.size() == 0)
+            throw new RuntimeException("no sub md rsp");
+        else {
+            var fail = new LinkedList<String>();
+            for (var instr : rsp.keySet()) {
+                var rspInfo = rsp.get(instr);
+                if (rspInfo == null  || rspInfo.ErrorID != ErrorCodes.NONE)
+                    fail.add(instr.InstrumentID);
+            }
+            if (fail.size() > 0)
+                throw new RuntimeException("can't subscribe md: " + getCommaList(fail));
+        }
     }
 
     private void closeConnection() {

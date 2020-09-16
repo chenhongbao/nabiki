@@ -48,7 +48,7 @@ public class ClientUtils {
                     int currentCount,
                     int totalCount) {
                 r.put(object, rspInfo);
-                if (r.size() == totalCount) {
+                if (r.size() == totalCount || totalCount == 0) {
                     lock.lock();
                     try {
                         cond.signal();
