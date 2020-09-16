@@ -121,7 +121,7 @@ public class ActiveUser {
     public CTradingAccount getTradingAccount() {
         // Call user's method directly, sync here.
         synchronized (this.user) {
-            CTradingAccount account = this.user.getRunningAccount();
+            CTradingAccount account = this.user.getTradingAccount();
             account.TradingDay = this.global.getTradingDay();
             return account;
         }

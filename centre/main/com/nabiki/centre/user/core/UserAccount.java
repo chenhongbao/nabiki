@@ -30,7 +30,6 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.user.core.plain.AccountFrozenCash;
 import com.nabiki.centre.user.core.plain.AccountTradedCash;
-import com.nabiki.centre.user.core.plain.PositionTradedCash;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
@@ -134,25 +133,11 @@ public class UserAccount {
         // Check if available money is enough.
         var needMoney = (c.FrozenCash + c.FrozenCommission)
                 * order.VolumeTotalOriginal;
-        var account = this.parent.getRunningAccount();
+        var account = this.parent.getTradingAccount();
         if (account.Available < needMoney)
             return null;
         else
             return new FrozenAccount(this, c, order.VolumeTotalOriginal);
-    }
-
-    void settle(PositionTradedCash settlement, String tradingDay) {
-        // Unset frozen account.
-        cancel();
-        // Calculate fields.
-        this.raw.CurrMargin = settlement.Margin;
-        this.raw.CloseProfit = settlement.CloseProfitByDate;
-        this.raw.PositionProfit = settlement.PositionProfitByDate;
-        this.raw.Balance = this.raw.PreBalance + (this.raw.Deposit - this.raw.Withdraw)
-                + (this.raw.CloseProfit + this.raw.PositionProfit) - this.raw.Commission;
-        this.raw.Available = this.raw.Balance - this.raw.CurrMargin;
-        // Trading day.
-        this.raw.TradingDay = tradingDay;
     }
 
     // Only calculate commission.

@@ -61,7 +61,8 @@ public class User {
      *
      * @return current trading account.
      */
-    CTradingAccount getRunningAccount() {
+    CTradingAccount getTradingAccount() {
+        // Codes for renew account and settled account are the same.
         var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
         var posFrzCash = this.userPosition.getPositionFrozenCash();
@@ -74,8 +75,10 @@ public class User {
         total.FrozenMargin = posFrzCash.FrozenMargin;
         total.CurrMargin = mnyTrade.Margin;
         total.CloseProfit = mnyTrade.CloseProfitByDate;
+        // position profit in trading is zero because no settlement price yet.
+        total.PositionProfit = mnyTrade.PositionProfitByDate;
         total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
-                + total.CloseProfit - total.Commission;
+                + (total.CloseProfit + total.PositionProfit) - total.Commission;
         total.Available = total.Balance - total.CurrMargin - total.FrozenCommission
                 - total.FrozenCash;
         return total;
@@ -104,10 +107,11 @@ public class User {
     }
 
     void settle(SettlementPreparation prep) {
-        // First position, then account.
+        // Need calculate profit and margin of the existing position.
+        // Before settling position, all frozen positions are canceled.
         this.userPosition.settle(prep);
-        this.userAccount.settle(this.userPosition.getMoneyAfterTrade(),
-                prep.getTradingDay());
+        // Cancel all frozen cash.
+        this.userAccount.cancel();
         this.state = UserState.SETTLED;
     }
 }

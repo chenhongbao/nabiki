@@ -244,8 +244,7 @@ public class UserPosition {
              */
             var origin = p.copyRawPosition();
             origin.SettlementPrice = settlementPrice;
-            if (origin.Volume == 0)
-                continue;
+            // Need the position with volume = 0, they are part of close profit.
             if (origin.Volume < 0)
                 throw new IllegalStateException("position volume less than zero");
             // Calculate new position detail, the close profit/volume/amount are

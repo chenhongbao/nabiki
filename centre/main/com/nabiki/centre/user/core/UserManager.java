@@ -108,11 +108,14 @@ public class UserManager {
                     var pos = OP.fromJson(Utils.readText(
                             file, StandardCharsets.UTF_8),
                             CInvestorPositionDetail.class);
-                    // Get position ready for today's trading.
-                    renewPosition(pos);
-                    var instrPos = positions.computeIfAbsent(
-                            pos.InstrumentID, k -> new LinkedList<>());
-                    instrPos.add(new UserPositionDetail((pos)));
+                    // Filter out position that is completely closed.
+                    if (pos.Volume > 0) {
+                        // Get position ready for today's trading.
+                        renewPosition(pos);
+                        var instrPos = positions.computeIfAbsent(
+                                pos.InstrumentID, k -> new LinkedList<>());
+                        instrPos.add(new UserPositionDetail((pos)));
+                    }
                 }
             } catch (IOException e) {
                 System.err.println(e.getMessage());
@@ -166,7 +169,7 @@ public class UserManager {
                 Utils.getDay(LocalDate.now(), null));
         Utils.createFile(todayDir, true);
         // Write trading account.
-        var account = user.getUserAccount().copyRawAccount();
+        var account = user.getTradingAccount();
         var path = Path.of(todayDir.toString(),
                 "account." + account.AccountID + ".json");
         Utils.createFile(path, false);
