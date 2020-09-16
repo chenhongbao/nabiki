@@ -249,7 +249,13 @@ public class OrderProvider implements Connectable{
      * @param active alive order
      * @return always return 0
      */
-    public int sendDetailOrder(CInputOrder input, ActiveRequest active) {
+    public synchronized int inputOrder(CInputOrder input, ActiveRequest active) {
+        if (!isOrderRefUnique(input.OrderRef)) {
+            global.getLogger().warning(
+                    Utils.formatLog("duplicated order",
+                            input.OrderRef, null, null));
+            return -1;
+        }
         // Set the initial rtn order.
         registerInitialOrderInsert(input, active);
         // Check time.
@@ -263,6 +269,10 @@ public class OrderProvider implements Connectable{
             else
                 return ErrorCodes.NONE;
         }
+    }
+
+    private boolean isOrderRefUnique(String orderRef) {
+        return this.mapper.getInputOrder(orderRef) == null;
     }
 
     protected void registerInitialOrderInsert(CInputOrder input, ActiveRequest active) {
@@ -333,9 +343,7 @@ public class OrderProvider implements Connectable{
      * @param active alive order
      * @return always return 0
      */
-    public int sendOrderAction(
-            CInputOrderAction action,
-            ActiveRequest active) {
+    public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
         if (isOver(action.InstrumentID)) {
             rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
                     ErrorMessages.FRONT_NOT_ACTIVE);
@@ -352,7 +360,7 @@ public class OrderProvider implements Connectable{
         return new LinkedList<>(this.instruments);
     }
 
-    public String getOrderRef() {
+    public synchronized String getOrderRef() {
         if (this.orderRef.get() == Integer.MAX_VALUE)
             this.orderRef.set(0);
         return String.valueOf(this.orderRef.incrementAndGet());
@@ -498,13 +506,15 @@ public class OrderProvider implements Connectable{
         rtn.InvestorID = active.getOriginOrder().InvestorID;
         rtn.AccountID = active.getOriginOrder().AccountID;
         rtn.OrderLocalID = active.getRequestUUID();
-        // Set time if it is not set.
+        // Set date and time if it is not set.
         if (rtn.UpdateTime == null || rtn.UpdateTime.length() == 0)
             rtn.UpdateTime = Utils.getTime(LocalTime.now(), null);
         if (rtn.OrderStatus == OrderStatusType.CANCELED) {
             if (rtn.CancelTime == null || rtn.CancelTime.length() == 0)
                 rtn.CancelTime = Utils.getTime(LocalTime.now(), null);
         }
+        if (rtn.InsertDate == null || rtn.InsertDate.length() == 0)
+            rtn.InsertDate = Utils.getDay(LocalDate.now(), null);
         try {
             active.updateRtnOrder(rtn);
         } catch (Throwable th) {

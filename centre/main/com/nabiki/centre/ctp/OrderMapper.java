@@ -42,15 +42,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class OrderMapper {
     private final Map<String, ActiveRequest>
-            detRef2Active = new ConcurrentHashMap<>(); // ref -> active order
+            ref2req = new ConcurrentHashMap<>(); // ref -> active order
     private final Map<String, ActiveRequest>
-            uuid2Active = new ConcurrentHashMap<>();   // UUID -> active order
+            uid2req = new ConcurrentHashMap<>();   // UUID -> active order
     private final Map<String, Set<String>>
-            uuid2DetRef = new ConcurrentHashMap<>();     // UUID -> ref
+            uid2ref = new ConcurrentHashMap<>();     // UUID -> ref
     private final Map<String, COrder>
             detRef2Rtn = new ConcurrentHashMap<>();   // ref -> rtn order
     private final Map<String, CInputOrder>
-            detRef2Det = new ConcurrentHashMap<>();   // ref -> input order
+            ref2input = new ConcurrentHashMap<>();   // ref -> input order
 
     public OrderMapper() {
     }
@@ -79,11 +79,11 @@ public class OrderMapper {
      * @param active active order that issues the detailed order
      */
     public void register(CInputOrder order, ActiveRequest active) {
-        this.detRef2Active.put(order.OrderRef, active);
-        this.uuid2Active.put(active.getRequestUUID(), active);
-        this.uuid2DetRef.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
-        this.uuid2DetRef.get(active.getRequestUUID()).add(order.OrderRef);
-        this.detRef2Det.put(order.OrderRef, order);
+        this.ref2req.put(order.OrderRef, active);
+        this.uid2req.put(active.getRequestUUID(), active);
+        this.uid2ref.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
+        this.uid2ref.get(active.getRequestUUID()).add(order.OrderRef);
+        this.ref2input.put(order.OrderRef, order);
     }
 
     /**
@@ -113,19 +113,19 @@ public class OrderMapper {
      * @param uuid UUID of the alive order that issues the detail orders
      * @return {@link Set} of detail order refs
      */
-    public Set<String> getDetailRef(String uuid) {
-        return Utils.deepCopy(this.uuid2DetRef.get(uuid));
+    public Set<String> getOrderRef(String uuid) {
+        return Utils.deepCopy(this.uid2ref.get(uuid));
     }
 
     /**
      * Get detail order of the specified detail ref. If no mapping found, return
      * {@code null}.
      *
-     * @param detailRef detail order reference
+     * @param ref detail order reference
      * @return detail order, or {@code null} if no such ref
      */
-    public CInputOrder getDetailOrder(String detailRef) {
-        return this.detRef2Det.get(detailRef);
+    public CInputOrder getInputOrder(String ref) {
+        return this.ref2input.get(ref);
     }
 
     /*
@@ -133,6 +133,6 @@ public class OrderMapper {
     reference.
      */
     public ActiveRequest getActiveRequest(String detailRef) {
-        return this.detRef2Active.get(detailRef);
+        return this.ref2req.get(detailRef);
     }
 }

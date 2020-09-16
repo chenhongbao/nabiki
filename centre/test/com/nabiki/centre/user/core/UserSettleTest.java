@@ -192,7 +192,7 @@ public class UserSettleTest extends UserSuperTest {
         // Sleep and wait for the thread to take request.
         sleep(1000);
 
-        var orderRefs = provider.getMapper().getDetailRef(uuid);
+        var orderRefs = provider.getMapper().getOrderRef(uuid);
         assertEquals(orderRefs.size(), 1);
 
         // Get order ref.

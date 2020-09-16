@@ -170,7 +170,7 @@ public class ActiveRequest {
             return;
         }
         var mapper = this.orderProvider.getMapper();
-        var refs = mapper.getDetailRef(this.action.OrderSysID);
+        var refs = mapper.getOrderRef(this.action.OrderSysID);
         if (refs == null || refs.size() < 1) {
             this.execRsp.ErrorID = ErrorCodes.ORDER_NOT_FOUND;
             this.execRsp.ErrorMsg = ErrorMessages.ORDER_NOT_FOUND;
@@ -203,14 +203,14 @@ public class ActiveRequest {
     }
 
     private int send(CInputOrder order, ActiveRequest active) {
-        int r = this.orderProvider.sendDetailOrder(order, active);
+        int r = this.orderProvider.inputOrder(order, active);
         this.execRsp.ErrorID = r;
         this.execRsp.ErrorMsg = OP.getErrorMsg(r);
         return r;
     }
 
     private int send(CInputOrderAction action, ActiveRequest active) {
-        int r = this.orderProvider.sendOrderAction(action, active);
+        int r = this.orderProvider.actionOrder(action, active);
         this.execRsp.ErrorID = r;
         this.execRsp.ErrorMsg = OP.getErrorMsg(r);
         return r;
@@ -296,7 +296,7 @@ public class ActiveRequest {
                 throw new IllegalStateException("negative frozen volume");
             var cls = toCloseOrder(p);
             cls.OrderRef = this.orderProvider.getOrderRef();
-            var x = this.orderProvider.sendDetailOrder(cls, this);
+            var x = this.orderProvider.inputOrder(cls, this);
             if (x == 0) {
                 // Map order reference to frozen position.
                 this.frozenPosition.put(cls.OrderRef, p);

@@ -91,7 +91,7 @@ public class ActiveUser {
         var r = new HashSet<COrder>();
         if (uuid == null)
             return r;
-        var refs = this.orderProvider.getMapper().getDetailRef(uuid);
+        var refs = this.orderProvider.getMapper().getOrderRef(uuid);
         if (refs == null || refs.size() == 0)
             return r;
         for (var ref : refs) {
