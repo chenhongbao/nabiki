@@ -28,6 +28,7 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.client.portal.Constants;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
@@ -65,7 +66,8 @@ public abstract class AbstractClient {
         // Open connection to server.
         try {
             client.open(address);
-            eventAdaptor.waitOpen(TimeUnit.MINUTES.toMillis(1));
+            eventAdaptor.waitOpen(
+                    TimeUnit.SECONDS.toMillis(Constants.GLOBAL_WAIT_SECONDS));
         } catch (Throwable th) {
             throw new RuntimeException("fail opening connection to " + address, th);
         }

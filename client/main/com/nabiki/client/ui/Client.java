@@ -62,7 +62,9 @@ public class Client extends AbstractClient {
     }
 
     private void checkAll() throws InterruptedException {
-        TimeUnit.SECONDS.sleep(5);
+        // It takes quite a long time for server to send all history data,
+        // so just wait a bit longer.
+        TimeUnit.SECONDS.sleep(60);
         checkLogin();
         checkSubMd();
     }

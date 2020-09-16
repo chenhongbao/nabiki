@@ -97,24 +97,24 @@ public class ClientTest {
 
             @Override
             public void onStart() {
-                subscribe("c2101"/*, "c2105"*/);
+                subscribe("c2101", "c2105");
                 setFigure(1, "c2101", 1);
                 //setFigure(2, "c2101", 60);
-                //setFigure(3, "c2105", 1);
+                setFigure(3, "c2105", 1);
                 //setFigure(4, "c2105", 60);
                 setUser("0001", "1234");
             }
 
             @Override
             public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
-                if (!isTrading)
+                if (!isTrading || depthMarketData.InstrumentID.compareTo("c2101") != 0)
                     return;
                 depth = depthMarketData;
             }
 
             @Override
             public void onCandle(CCandle candle, boolean isTrading) {
-                if (candle.Minute != 1 || !isTrading)
+                if (candle.Minute != 1 || !isTrading || candle.InstrumentID.compareTo("c2101") != 0)
                     return;
                 try {
                     if (currentPosition == 0)
