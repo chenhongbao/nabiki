@@ -127,13 +127,37 @@ public class PositionUpdater extends Updater implements Runnable {
             if (error != null)
                 showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
             else
-                updateTable(positions);
+                updatePositionTable(positions);
         }
     }
 
-    private void queryDetail() {
-        // TODO not available
-        showMsg("not supported");
+    private void queryDetail() throws Exception {
+        var req = new CQryInvestorPositionDetail();
+        req.InstrumentID = instrument;
+        var rsp = client.queryPositionDetail(
+                req, UUID.randomUUID().toString());
+        src.setEnabled(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        src.setEnabled(true);
+        if (!rsp.hasResponse())
+            showMsg("\u65E0\u6301\u4ED3");
+        else {
+            CRspInfo error = null;
+            CInvestorPositionDetail p = null;
+            var positions = new HashSet<CInvestorPositionDetail>();
+            while ((p = rsp.poll()) != null){
+                positions.add(p);
+                var info = rsp.getRspInfo(p);
+                if (info.ErrorID != ErrorCodes.NONE) {
+                    error = info;
+                    break;
+                }
+            }
+            if (error != null)
+                showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
+            else
+                updateDetailTable(positions);
+        }
     }
 
     private String getPosiDirection(byte posi) {
@@ -148,7 +172,47 @@ public class PositionUpdater extends Updater implements Runnable {
         return "\u672A\u77E5";
     }
 
-    private void updateTable(Collection<CInvestorPosition> positions) {
+    private String getDirection(byte direction) {
+        switch (direction) {
+            case DirectionType.DIRECTION_BUY:
+                return "\u4E70";
+            case DirectionType.DIRECTION_SELL:
+                return "\u5356";
+
+        }
+        return "\u672A\u77E5";
+    }
+
+    private void updateDetailTable(Collection<CInvestorPositionDetail> details) {
+        var objects = new Object[details.size()][];
+        int idx = 0;
+        for (var d : details) {
+            int todayVol = 0, ydVol = 0;
+            if (client.getTradingDay().compareTo(d.TradingDay) == 0) {
+                todayVol = d.Volume - d.CloseVolume;
+            } else {
+                ydVol = d.Volume - d.CloseVolume;
+            }
+            var row = new Object[]{
+                    d.InstrumentID,
+                    getDirection(d.Direction),
+                    todayVol + ydVol,
+                    ydVol,
+                    todayVol,
+                    d.OpenPrice,
+                    d.LastSettlementPrice,
+                    d.SettlementPrice,
+                    d.CloseProfitByTrade,
+                    d.CloseProfitByDate
+            };
+            objects[idx++] = row;
+        }
+        var model = (DefaultTableModel)table.getModel();
+        model.setDataVector(objects, headers);
+        model.fireTableDataChanged();
+    }
+
+    private void updatePositionTable(Collection<CInvestorPosition> positions) {
         var objects = new Object[positions.size()][];
         int idx = 0;
         for (var p : positions) {

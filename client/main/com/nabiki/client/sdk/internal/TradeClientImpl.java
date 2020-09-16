@@ -128,6 +128,11 @@ class TradeClientImpl implements TradeClient {
     }
 
     @Override
+    public String getTradingDay() {
+        return this.clientAdaptor.getTradingDay();
+    }
+
+    @Override
     public Response<COrder> orderInsert(
             CInputOrder order, String requestID) throws Exception {
         requireLogin();
@@ -180,6 +185,19 @@ class TradeClientImpl implements TradeClient {
                 query,
                 requestID,
                 CInvestorPosition.class);
+    }
+
+    @Override
+    public Response<CInvestorPositionDetail> queryPositionDetail(
+            CQryInvestorPositionDetail query, String requestID) throws Exception {
+        requireLogin();
+        query.InvestorID = this.lastLoginReq.UserID;
+        query.BrokerID = this.lastLoginReq.BrokerID;
+        return send(
+                MessageType.QRY_POSI_DETAIL,
+                query,
+                requestID,
+                CInvestorPositionDetail.class);
     }
 
     @Override

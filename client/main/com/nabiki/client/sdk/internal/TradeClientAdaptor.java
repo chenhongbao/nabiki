@@ -52,6 +52,8 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
     private final AtomicReference<MarketDataListener> listener
             = new AtomicReference<>(new DefaultDepthListener());
 
+    private String tradingDay;
+
     TradeClientAdaptor() {
     }
 
@@ -92,6 +94,10 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
         checkCompletion(response, requestID);
     }
 
+    public String getTradingDay() {
+        return this.tradingDay;
+    }
+
     @Override
     public void doRspReqLogin(
             CRspUserLogin rsp,
@@ -101,6 +107,7 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
             int current,
             int total) {
         doRsp(rsp, info, requestID, current, total);
+        tradingDay = rsp.TradingDay;
     }
 
     @Override
@@ -161,6 +168,17 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
     @Override
     public void doRspQryPosition(
             CInvestorPosition rsp,
+            CRspInfo info,
+            String requestID,
+            String responseID,
+            int current,
+            int total) {
+        doRsp(rsp, info, requestID, current, total);
+    }
+
+    @Override
+    public void doRspQryPositionDetail(
+            CInvestorPositionDetail rsp,
             CRspInfo info,
             String requestID,
             String responseID,

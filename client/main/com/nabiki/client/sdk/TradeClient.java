@@ -44,6 +44,8 @@ public interface TradeClient {
 
     boolean isClosed();
 
+    String getTradingDay();
+
     Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
 
     Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;
@@ -53,6 +55,8 @@ public interface TradeClient {
     Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID) throws Exception;
 
     Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID) throws Exception;
+
+    Response<CInvestorPositionDetail> queryPositionDetail(CQryInvestorPositionDetail query, String requestID) throws Exception;
 
     Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID) throws Exception;
 
