@@ -120,10 +120,10 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         var recv = session.getAttribute(FRONT_MDRECEIVER_KEY);
         if (recv == null) {
             recv = new SessionMarketDataReceiver(session);
-            this.router.addReceiver((MarketDataReceiver)recv);
+            this.router.addReceiver((MarketDataReceiver) recv);
             session.setAttribute(FRONT_MDRECEIVER_KEY, recv);
         }
-        return (SessionMarketDataReceiver)recv;
+        return (SessionMarketDataReceiver) recv;
     }
 
     private void sendHistoryCandles(ServerSession session, String instrumentID) {
@@ -136,7 +136,8 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             String instrID,
             String requestID,
             int count,
-            int total) {
+            int total,
+            int errorCode) {
         var r = new Message();
         r.Type = MessageType.RSP_SUB_MD;
         r.RequestID = requestID;
@@ -149,7 +150,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         r.Body = ins;
         // Set rsp info.
         r.RspInfo = new CRspInfo();
-        r.RspInfo.ErrorID = ErrorCodes.NONE;
+        r.RspInfo.ErrorID = errorCode;
         r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
         session.sendResponse(r);
     }
@@ -176,11 +177,33 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             int total) {
         var recv = getReceiver(session);
         var instr = getValidInstruments(request.InstrumentID);
-        int count = 0;
-        for (var instrID : instr) {
-            sendHistoryCandles(session, instrID);
-            sendRsp(session, instrID, requestID, ++count, instr.size());
-            recv.subscribe(instrID);
+        if (instr.size() == 0) {
+            sendRsp(
+                    session,
+                    "",
+                    requestID,
+                    1,
+                    1,
+                    ErrorCodes.NONE);
+        } else {
+            int count = 0;
+            for (var instrID : instr) {
+                int errorCode = ErrorCodes.NONE;
+                try {
+                    sendHistoryCandles(session, instrID);
+                    recv.subscribe(instrID);
+                } catch (Throwable ignored) {
+                    errorCode = ErrorCodes.BAD_FIELD;
+                } finally {
+                    sendRsp(
+                            session,
+                            instrID,
+                            requestID,
+                            ++count,
+                            instr.size(),
+                            errorCode);
+                }
+            }
         }
         session.done();
     }
@@ -193,8 +216,33 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
             int current,
             int total) {
         var recv = getReceiver(session);
-        for (var instrID : request.InstrumentID)
-            recv.unsubscribe(instrID);
+        if (request.InstrumentID == null || request.InstrumentID.length == 0) {
+            sendRsp(
+                    session,
+                    "",
+                    requestID,
+                    1,
+                    1,
+                    ErrorCodes.NONE);
+        } else {
+            int count = 0;
+            for (var instrID : request.InstrumentID) {
+                int errorCode = ErrorCodes.NONE;
+                try {
+                    recv.unsubscribe(instrID);
+                } catch (Throwable ignored) {
+                    errorCode = ErrorCodes.BAD_FIELD;
+                } finally {
+                    sendRsp(
+                            session,
+                            instrID,
+                            requestID,
+                            ++count,
+                            request.InstrumentID.length,
+                            errorCode);
+                }
+            }
+        }
         session.done();
     }
 }
