@@ -38,7 +38,7 @@ public class QueryOrderPanel extends JPanel {
     private final JTable orderTable;
     private final JTextField orderIDField;
     private final OrderUpdater orderUpdater;
-    private final OrderCanceler orderCanceler;
+    private final OrderActioner orderActioner;
 
     QueryOrderPanel(TradeClient client) {
         SpringLayout sl_queryOrderPanel = new SpringLayout();
@@ -55,8 +55,8 @@ public class QueryOrderPanel extends JPanel {
         orderUpdater = new OrderUpdater(orderTable, client);
         orderUpdater.start();
 
-        orderCanceler = new OrderCanceler(client, orderUpdater);
-        orderCanceler.start();
+        orderActioner = new OrderActioner(client, orderUpdater);
+        orderActioner.start();
 
         orderScrollPane.setViewportView(orderTable);
 
@@ -75,7 +75,7 @@ public class QueryOrderPanel extends JPanel {
         JButton queryOrderBtn = new JButton("\u67E5\u8BE2");
         queryOrderBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                orderUpdater.query(orderIDField.getText().trim());
+                orderUpdater.query(orderIDField.getText().trim(), e.getSource());
             }
         });
         sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, queryOrderBtn, 0, SpringLayout.NORTH, orderIDField);
@@ -86,7 +86,7 @@ public class QueryOrderPanel extends JPanel {
         JButton cancelOrderBtn = new JButton("\u64A4\u5355");
         cancelOrderBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                orderCanceler.cancel(orderIDField.getText().trim());
+                orderActioner.cancel(orderIDField.getText().trim(), e.getSource());
             }
         });
         sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, cancelOrderBtn, 0, SpringLayout.NORTH, orderIDField);

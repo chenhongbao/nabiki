@@ -28,8 +28,10 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.CInvestorPosition;
+import com.nabiki.objects.COrder;
 import com.nabiki.objects.CTradingAccount;
 
 import java.util.Collection;
@@ -46,16 +48,16 @@ public interface Trader {
 
     Collection<String> getSubscribe();
 
-    void orderInsert(
+    Response<COrder> orderInsert(
             String instrumentID, String exchangeID, double price, int volume,
             char direction, char offset) throws Exception;
 
-    Collection<CInvestorPosition> getPosition() throws Exception;
+    Response<CInvestorPosition> getPosition() throws Exception;
 
-    Collection<CInvestorPosition> getPosition(
+    Response<CInvestorPosition> getPosition(
             String instrumentID, String exchangeID) throws Exception;
 
-    CTradingAccount getAccount() throws Exception;
+    Response<CTradingAccount> getAccount() throws Exception;
 
     Logger getLogger();
 

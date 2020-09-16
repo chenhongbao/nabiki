@@ -28,13 +28,13 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +45,7 @@ public class PositionUpdater extends Updater implements Runnable {
     private Thread daemon;
     private String instrument;
     private PositionType type;
+    private JButton src;
 
     enum PositionType {
         SUMMARY, DETAIL
@@ -69,7 +70,8 @@ public class PositionUpdater extends Updater implements Runnable {
         setupTable();
     }
 
-    public void query(String instrument, PositionType type) {
+    public void query(String instrument, PositionType type, Object src) {
+        this.src = (JButton)src;
         this.instrument = instrument;
         this.type = type;
         super.fire();
@@ -103,23 +105,29 @@ public class PositionUpdater extends Updater implements Runnable {
     private void queryInvestorPosition() throws Exception {
         var req = new CQryInvestorPosition();
         req.InstrumentID = instrument;
-        var rsp = ClientUtils.get(
-                client.queryPosition(req, UUID.randomUUID().toString()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() == 0)
+        var rsp = client.queryPosition(
+                req, UUID.randomUUID().toString());
+        src.setEnabled(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        src.setEnabled(true);
+        if (!rsp.hasResponse())
             showMsg("\u65E0\u6301\u4ED3");
         else {
             CRspInfo error = null;
-            for (var info : rsp.values())
+            CInvestorPosition p = null;
+            var positions = new HashSet<CInvestorPosition>();
+            while ((p = rsp.poll()) != null){
+                positions.add(p);
+                var info = rsp.getRspInfo(p);
                 if (info.ErrorID != ErrorCodes.NONE) {
                     error = info;
                     break;
                 }
+            }
             if (error != null)
                 showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
             else
-                updateTable(rsp.keySet());
+                updateTable(positions);
         }
     }
 

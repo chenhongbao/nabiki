@@ -28,14 +28,16 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.ClientUtils;
+import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -66,52 +68,6 @@ public abstract class AbstractTrader implements Trader {
         return UUID.randomUUID().toString();
     }
 
-    private Collection<COrder> queryOrder(
-            String instrumentID,
-            String exchangeID,
-            String orderID) throws Exception {
-        var r = new HashSet<COrder>();
-        var qry = new CQryOrder();
-        qry.ExchangeID = exchangeID;
-        qry.InstrumentID = instrumentID;
-        qry.OrderSysID = orderID;
-        var rsp = ClientUtils.get(
-                this.client.queryOrder(qry, getRequestID()),
-                5,
-                TimeUnit.SECONDS);
-        for (var entry : rsp.entrySet()) {
-            if (entry.getValue().ErrorID != ErrorCodes.NONE)
-                throw new IllegalStateException(entry.getValue().ErrorMsg);
-            else
-                r.add(entry.getKey());
-        }
-        return r;
-    }
-
-    private boolean isOrderDone(Collection<COrder> orders) {
-        for (var o : orders) {
-            if (o.OrderStatus != OrderStatusType.ALL_TRADED
-                    && o.OrderStatus != OrderStatusType.CANCELED)
-                return false;
-        }
-        return true;
-    }
-
-    private void waitTrade(
-            String instrumentID,
-            String exchangeID,
-            String orderID) throws Exception {
-        Collection<COrder> rsp = null;
-        while (rsp == null || !isOrderDone(rsp)) {
-            rsp = queryOrder(instrumentID, exchangeID, orderID);
-            try {
-                TimeUnit.MILLISECONDS.sleep(250);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     @Override
     public void setUser(String userID, String password) {
         this.userID = userID;
@@ -139,7 +95,7 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public void orderInsert(
+    public Response<COrder> orderInsert(
             String instrumentID, String exchangeID, double price, int volume,
             char direction, char offset) throws Exception {
         var req = new CInputOrder();
@@ -149,59 +105,26 @@ public abstract class AbstractTrader implements Trader {
         req.VolumeTotalOriginal = volume;
         req.Direction = (byte) direction;
         req.CombOffsetFlag = (byte) offset;
-        // Process rsp.
-        var rsp = ClientUtils.get(
-                this.client.orderInsert(req, getRequestID()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() != 1)
-            throw new RuntimeException("invalid rsp size: " + rsp.size());
-        var entry = rsp.entrySet().iterator().next();
-        if (entry.getValue().ErrorID != ErrorCodes.NONE)
-            throw new IllegalStateException(entry.getValue().ErrorMsg);
-        else
-            waitTrade(instrumentID, exchangeID, entry.getKey().OrderLocalID);
+        return this.client.orderInsert(req, getRequestID());
     }
 
     @Override
-    public Collection<CInvestorPosition> getPosition() throws Exception {
+    public Response<CInvestorPosition> getPosition() throws Exception {
         return getPosition("", "");
     }
 
     @Override
-    public Collection<CInvestorPosition> getPosition(
+    public Response<CInvestorPosition> getPosition(
             String instrumentID, String exchangeID) throws Exception {
-        var r = new LinkedList<CInvestorPosition>();
         var qry = new CQryInvestorPosition();
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
-        var rsp = ClientUtils.get(
-                this.client.queryPosition(qry, getRequestID()),
-                5,
-                TimeUnit.SECONDS);
-        for (var entry : rsp.entrySet()) {
-            if (entry.getValue().ErrorID != ErrorCodes.NONE)
-                throw new IllegalStateException(entry.getValue().ErrorMsg);
-            else
-                r.add(entry.getKey());
-        }
-        return r;
+        return this.client.queryPosition(qry, getRequestID());
     }
 
     @Override
-    public CTradingAccount getAccount() throws Exception {
-        var qry = new CQryTradingAccount();
-        var rsp = ClientUtils.get(
-                this.client.queryAccount(qry, getRequestID()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() != 1)
-            throw new RuntimeException("invalid rsp size: " + rsp.size());
-        var entry = rsp.entrySet().iterator().next();
-        if (entry.getValue().ErrorID != ErrorCodes.NONE)
-            throw new IllegalStateException(entry.getValue().ErrorMsg);
-        else
-            return entry.getKey();
+    public Response<CTradingAccount> getAccount() throws Exception {
+        return this.client.queryAccount(new CQryTradingAccount(), getRequestID());
     }
 
     @Override

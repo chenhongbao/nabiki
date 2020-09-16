@@ -41,6 +41,8 @@ import org.apache.mina.filter.FilterEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 class ClientFrameHandler implements IoHandler {
     /*
@@ -55,12 +57,48 @@ class ClientFrameHandler implements IoHandler {
         }
     }
 
+    static class ResponseBag {
+        final IoSession session;
+        final Message message;
+        final int frameType;
+
+        ResponseBag(IoSession session, Message msg, int type) {
+            this.session = session;
+            this.message = msg;
+            this.frameType = type;
+        }
+    }
+
     public static final String IOP_ISLOGIN_KEY = "iop.islogin";
     private final DefaultClientMessageHandler defaultMsgHandler
             = new DefaultClientMessageHandler();
 
     private ClientSessionAdaptor sessionAdaptor = new EmptyClientSessionAdaptor();
     private ClientMessageHandler msgHandler = new EmptyClientMessageHandler();
+
+    private Thread daemon;
+    private final BlockingQueue<ResponseBag> responses = new LinkedBlockingQueue<>();
+
+    ClientFrameHandler() {
+        setupDaemon();
+    }
+
+    private void setupDaemon() {
+        daemon = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        var bag = responses.take();
+                        messageProc(bag.session, bag.message, bag.frameType);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        });
+        daemon.setDaemon(true);
+        daemon.start();
+    }
 
     void setMessageAdaptor(ClientMessageAdaptor adaptor) {
         this.defaultMsgHandler.setAdaptor(adaptor);
@@ -104,6 +142,51 @@ class ClientFrameHandler implements IoHandler {
                     SessionEvent.MISS_HEARTBEAT, message.RequestID);
     }
 
+    private void messageProc(IoSession session, Message message, int type) {
+        try {
+            ClientSessionImpl iopSession = ClientSessionImpl.from(session);
+            // First call message handler.
+            try {
+                this.msgHandler.onMessage(iopSession, message);
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+            // Then call default message handler that wraps adaptor.
+            switch (type) {
+                case FrameType.RESPONSE:
+                    if (isLogin(session))
+                        this.defaultMsgHandler.onMessage(iopSession, message);
+                    break;
+                case FrameType.LOGIN:
+                    handleLogin(iopSession, message);
+                    break;
+                case FrameType.HEARTBEAT:
+                    handleHeartbeat(iopSession, message);
+                    break;
+                default:
+                    throw new IllegalStateException("unknown frame type");
+            }
+        } catch (Throwable th) {
+            try {
+                exceptionCaught(session, th);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void offer(IoSession session, Message msg, int type) {
+        try {
+            var bag = new ResponseBag(session, msg, type);
+            if (!responses.offer(bag))
+                throw new IllegalStateException("can't offer response to queue");
+        } catch (Throwable th) {
+            try {
+                exceptionCaught(session, th);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     @Override
     public void sessionCreated(IoSession session) throws Exception {
         this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
@@ -144,38 +227,13 @@ class ClientFrameHandler implements IoHandler {
     public void messageReceived(IoSession session, Object message) throws Exception {
         if (!(message instanceof Frame))
             throw new IllegalStateException("message is not frame");
-        Body body = null;
-        Message iopMessage = null;
-        ClientSessionImpl iopSession = ClientSessionImpl.from(session);
-        var frame = (Frame) message;
         try {
-            body = OP.fromJson(new String(
+            var frame = (Frame) message;
+            var body = OP.fromJson(new String(
                     frame.Body, StandardCharsets.UTF_8), Body.class);
-            iopMessage = toMessage(body);
-            // First call message handler.
-            try {
-                this.msgHandler.onMessage(iopSession, iopMessage);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-            // Then call default message handler that wraps adaptor.
-            switch (frame.Type) {
-                case FrameType.RESPONSE:
-                    if (isLogin(session))
-                        this.defaultMsgHandler.onMessage(iopSession, iopMessage);
-                    break;
-                case FrameType.LOGIN:
-                    handleLogin(iopSession, iopMessage);
-                    break;
-                case FrameType.HEARTBEAT:
-                    handleHeartbeat(iopSession, iopMessage);
-                    break;
-                default:
-                    throw new IllegalStateException("unknown frame type");
-            }
+            offer(session, toMessage(body), frame.Type);
         } catch (IOException e) {
-            this.sessionAdaptor.doEvent(
-                    iopSession, SessionEvent.BROKEN_BODY, body);
+            exceptionCaught(session, e);
         }
     }
 

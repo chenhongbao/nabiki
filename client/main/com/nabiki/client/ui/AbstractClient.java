@@ -28,22 +28,24 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.ClientUtils;
+import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
 import com.nabiki.objects.CReqUserLogin;
+import com.nabiki.objects.CRspUserLogin;
+import com.nabiki.objects.CSpecificInstrument;
 import com.nabiki.objects.CSubMarketData;
-import com.nabiki.objects.ErrorCodes;
 
 import java.net.InetSocketAddress;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractClient {
     private final TradeClient client;
     private final ClientEventAdaptor eventAdaptor = new ClientEventAdaptor();
+
+    protected Response<CRspUserLogin> loginRsp;
+    protected Response<CSpecificInstrument> subRsp;
 
     AbstractClient() {
         client = new TradeClientFactoryImpl().get();
@@ -82,55 +84,15 @@ public abstract class AbstractClient {
         var login = new CReqUserLogin();
         login.UserID = trader.getUserID();
         login.Password = trader.getPassword();
-        var rsp = ClientUtils.get(
-                client.login(login, UUID.randomUUID().toString()),
-                15,
-                TimeUnit.SECONDS);
-        // Check login rsp.
-        if (rsp.size() == 0)
-            throw new RuntimeException("no login rsp");
-        else {
-            var rspInfo = rsp.values().iterator().next();
-            if (rspInfo.ErrorID != ErrorCodes.NONE)
-                throw new RuntimeException(
-                        "login failure[" + rspInfo.ErrorID + "], " + rspInfo.ErrorMsg);
-        }
-    }
-
-    private String getCommaList(List<String> values) {
-        if (values == null || values.size() == 0)
-            return "";
-        if (values.size() == 1) {
-            return values.iterator().next();
-        } else {
-            String r = values.get(0);
-            for (int i = 1; i < values.size(); ++i)
-                r += "," + values.get(i);
-            return r;
-        }
+        loginRsp = client.login(
+                login, UUID.randomUUID().toString());
     }
 
     private void reqSubscription(Trader trader) throws Exception {
         // Request subscription.
         var reqSub = new CSubMarketData();
         reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
-        var rsp = ClientUtils.get(
-                client.subscribeMarketData(reqSub, UUID.randomUUID().toString()),
-                15,
-                TimeUnit.SECONDS);
-        // Check rsp.
-        if (rsp.size() == 0)
-            throw new RuntimeException("no sub md rsp");
-        else {
-            var fail = new LinkedList<String>();
-            for (var instr : rsp.keySet()) {
-                var rspInfo = rsp.get(instr);
-                if (rspInfo == null  || rspInfo.ErrorID != ErrorCodes.NONE)
-                    fail.add(instr.InstrumentID);
-            }
-            if (fail.size() > 0)
-                throw new RuntimeException("can't subscribe md: " + getCommaList(fail));
-        }
+        subRsp = client.subscribeMarketData(reqSub, UUID.randomUUID().toString());
     }
 
     private void closeConnection() {

@@ -28,13 +28,13 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +44,7 @@ public class OrderUpdater extends Updater implements Runnable {
 
     private Thread daemon;
     private String orderID;
+    private JButton src;
 
     private final String[] headers = new String[] {
             "\u62A5\u5355\u5F15\u7528",
@@ -66,11 +67,12 @@ public class OrderUpdater extends Updater implements Runnable {
         setupTable();
     }
 
-    public void query(String orderID) {
+    public void query(String orderID, Object src) {
         if (orderID == null || orderID.length() == 0) {
             showMsg("\u9700\u8981\u62a5\u5355\u7f16\u53f7");
             return;
         }
+        this.src = (JButton)src;
         this.orderID = orderID;
         super.fire();
     }
@@ -96,23 +98,29 @@ public class OrderUpdater extends Updater implements Runnable {
     private void queryOrder() throws Exception {
         var req = new CQryOrder();
         req.OrderSysID = orderID;
-        var rsp = ClientUtils.get(
-                client.queryOrder(req, UUID.randomUUID().toString()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() == 0)
+        var rsp = client.queryOrder(
+                req, UUID.randomUUID().toString());
+        src.setEnabled(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        src.setEnabled(true);
+        if (!rsp.hasResponse())
             showMsg("\u67E5\u8BE2\u4E0D\u5230\u8D26\u6237\u4fE1\u606F");
         else {
             CRspInfo error = null;
-            for (var info : rsp.values())
+            COrder o = null;
+            var orders = new HashSet<COrder>();
+            while ((o = rsp.poll()) != null) {
+                orders.add(o);
+                var info = rsp.getRspInfo(o);
                 if (info.ErrorID != ErrorCodes.NONE) {
                     error = info;
                     break;
                 }
+            }
             if (error != null)
                 showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
             else
-                updateTable(rsp.keySet());
+                updateTable(orders);
         }
     }
 

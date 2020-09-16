@@ -30,10 +30,10 @@ package com.nabiki.client.sdk.internal;
 
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.ResponseConsumer;
+import com.nabiki.objects.COrder;
 import com.nabiki.objects.CRspInfo;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -70,6 +70,10 @@ public class ResponseImpl<T> implements Response<T> {
     }
 
     void put(T response, CRspInfo rspInfo, int count, int total) {
+        // TODO DEBUG
+        if (response instanceof COrder)
+            System.out.println("Response gets rsp order insert.");
+
         if (this.consumer.get() != null) {
             try {
                 this.consumer.get().accept(response, rspInfo, count, total);
@@ -90,8 +94,11 @@ public class ResponseImpl<T> implements Response<T> {
 
     @Override
     public T poll() {
-        return Objects.requireNonNull(
-                this.responses.poll(), "response null").Response;
+        var r = this.responses.poll();
+        if (r != null)
+            return r.Response;
+        else
+            return null;
     }
 
     @Override

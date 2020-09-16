@@ -28,7 +28,6 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.CQryTradingAccount;
 import com.nabiki.objects.CTradingAccount;
@@ -64,6 +63,7 @@ public class AccountUpdater extends Updater implements Runnable {
 
     private Thread daemon;
     private String user;
+    private JButton src;
 
     AccountUpdater(JTable table, TradeClient client) {
         this.table = table;
@@ -71,8 +71,9 @@ public class AccountUpdater extends Updater implements Runnable {
         setupTable();
     }
 
-    public void update(String user) {
+    public void update(String user, Object src) {
         this.user = user;
+        this.src = (JButton)src;
         super.fire();
     }
 
@@ -98,14 +99,15 @@ public class AccountUpdater extends Updater implements Runnable {
         var req = new CQryTradingAccount();
         req.CurrencyID = "CNY";
         req.AccountID = req.InvestorID = user;
-        var rsp = ClientUtils.get(
-                client.queryAccount(req, UUID.randomUUID().toString()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() == 0)
+        var rsp = client.queryAccount(
+                req, UUID.randomUUID().toString());
+        src.setEnabled(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        src.setEnabled(true);
+        if (!rsp.hasResponse())
             showMsg("\u67E5\u8BE2\u4E0D\u5230\u8D26\u6237\u4fE1\u606F");
         else
-            updateTable(rsp.keySet().iterator().next());
+            updateTable(rsp.poll());
     }
 
     private void updateTable(CTradingAccount account) {

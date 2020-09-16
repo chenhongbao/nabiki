@@ -28,6 +28,7 @@
 
 package com.nabiki.client.portal;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -52,6 +53,13 @@ public class Updater {
         } catch (Throwable ignored) {
         } finally {
             lock.unlock();
+        }
+    }
+
+    protected void sleep(int value, TimeUnit unit) {
+        try {
+            unit.sleep(value);
+        } catch (InterruptedException ignored) {
         }
     }
 }

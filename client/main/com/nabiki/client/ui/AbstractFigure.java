@@ -81,7 +81,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
     private void checkZeroValue(int figureID, String name, double value) {
         if (value == 0.0D)
-            System.err.print(String.format(
+            System.err.println(String.format(
                     "figure %d, plot %s, append zero value, possibly error",
                     figureID, name));
     }

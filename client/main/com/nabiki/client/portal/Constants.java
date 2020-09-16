@@ -26,48 +26,9 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.sdk;
+package com.nabiki.client.portal;
 
-import com.nabiki.objects.CRspInfo;
+public class Constants {
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-
-public class ClientUtils {
-    public static  <T> Map<T, CRspInfo> get(Response<T> rsp, int timeout, TimeUnit unit) {
-        var r = new HashMap<T, CRspInfo>();
-        var lock = new ReentrantLock();
-        var cond = lock.newCondition();
-        rsp.consume(new ResponseConsumer<T>() {
-            @Override
-            public void accept(
-                    T object,
-                    CRspInfo rspInfo,
-                    int currentCount,
-                    int totalCount) {
-                r.put(object, rspInfo);
-                if (r.size() == totalCount || totalCount == 0) {
-                    lock.lock();
-                    try {
-                        cond.signal();
-                    } finally {
-                        lock.unlock();
-                    }
-                }
-            }
-        });
-        // Wait signal.
-        lock.lock();
-        try {
-            if (!cond.await(timeout, unit))
-                throw new RuntimeException("wait rsp timeout");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-        return r;
-    }
+    public static int GLOBAL_WAIT_SECONDS = 3;
 }

@@ -28,7 +28,6 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.CReqUserLogin;
 import com.nabiki.objects.ErrorCodes;
@@ -102,6 +101,13 @@ public class LoginOutWorker implements Runnable {
         resultDisplay.setText(text);
     }
 
+    private void sleep(int value, TimeUnit unit) {
+        try {
+            unit.sleep(value);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
     private void loginProcess() {
         try {
             loginBtn.setEnabled(false);
@@ -119,14 +125,13 @@ public class LoginOutWorker implements Runnable {
         req.UserID = userField.getText().trim();
         req.Password = pwdField.getText().trim();
         try {
-            var rsp = ClientUtils.get(
-                    client.login(req, UUID.randomUUID().toString()),
-                    10,
-                    TimeUnit.SECONDS);
-            if (rsp.size() == 0)
+            var rsp = client.login(
+                    req, UUID.randomUUID().toString());
+            sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+            if (!rsp.hasResponse())
                 throw new RuntimeException("\u65E0\u767B\u5F55\u54CD\u5E94");
-            var r = rsp.values().iterator().next();
-            if (r.ErrorID != ErrorCodes.NONE)
+            var r = rsp.getRspInfo(rsp.poll());
+            if (r != null && r.ErrorID != ErrorCodes.NONE)
                 throw new RuntimeException(r.ErrorMsg);
             else {
                 changeComponents(false);

@@ -43,6 +43,7 @@ public class AccountPanel extends JPanel {
     final JTable insertedOrderTable;
     final JLabel userNameText;
     final JLabel loginStateText;
+    final JButton buyOpenBtn, buyCloseBtn, sellOpenBtn, sellCloseBtn;
 
     private final AccountUpdater accountUpdater;
     private final OrderInserter orderInserter;
@@ -68,7 +69,7 @@ public class AccountPanel extends JPanel {
         JButton refreshBtn = new JButton("\u5237\u65B0");
         refreshBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                accountUpdater.update(userNameText.getText().trim());
+                accountUpdater.update(userNameText.getText().trim(), e.getSource());
             }
         });
         sl_accountPanel.putConstraint(SpringLayout.EAST, refreshBtn, -10, SpringLayout.EAST, this);
@@ -140,7 +141,7 @@ public class AccountPanel extends JPanel {
         super.add(insertVolumeField);
         insertVolumeField.setColumns(10);
 
-        JButton buyOpenBtn = new JButton("\u4E70\u5F00");
+        buyOpenBtn = new JButton("\u4E70\u5F00");
         buyOpenBtn.setForeground(Color.WHITE);
         buyOpenBtn.setBackground(Color.RED);
         sl_accountPanel.putConstraint(SpringLayout.NORTH, buyOpenBtn, 22, SpringLayout.SOUTH, insertVolumeField);
@@ -151,11 +152,16 @@ public class AccountPanel extends JPanel {
         buyOpenBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                orderInserter.insert(OrderInserter.OrderType.BUY_OPEN);
+                orderInserter.insert(
+                        OrderInserter.OrderType.BUY_OPEN,
+                        buyOpenBtn,
+                        buyCloseBtn,
+                        sellOpenBtn,
+                        sellCloseBtn);
             }
         });
 
-        JButton buyCloseBtn = new JButton("\u4E70\u5E73");
+        buyCloseBtn = new JButton("\u4E70\u5E73");
         buyCloseBtn.setBackground(Color.RED);
         buyCloseBtn.setForeground(Color.LIGHT_GRAY);
         sl_accountPanel.putConstraint(SpringLayout.WEST, buyCloseBtn, -90, SpringLayout.EAST, insertVolumeField);
@@ -166,11 +172,16 @@ public class AccountPanel extends JPanel {
         buyCloseBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                orderInserter.insert(OrderInserter.OrderType.BUY_CLOSE);
+                orderInserter.insert(
+                        OrderInserter.OrderType.BUY_CLOSE,
+                        buyOpenBtn,
+                        buyCloseBtn,
+                        sellOpenBtn,
+                        sellCloseBtn);
             }
         });
 
-        JButton sellOpenBtn = new JButton("\u5356\u5F00");
+        sellOpenBtn = new JButton("\u5356\u5F00");
         sellOpenBtn.setForeground(Color.WHITE);
         sellOpenBtn.setBackground(new Color(0, 128, 0));
         sl_accountPanel.putConstraint(SpringLayout.WEST, sellOpenBtn, 0, SpringLayout.WEST, accountScrollPane);
@@ -181,11 +192,16 @@ public class AccountPanel extends JPanel {
         sellOpenBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                orderInserter.insert(OrderInserter.OrderType.SELL_OPEN);
+                orderInserter.insert(
+                        OrderInserter.OrderType.SELL_OPEN,
+                        buyOpenBtn,
+                        buyCloseBtn,
+                        sellOpenBtn,
+                        sellCloseBtn);
             }
         });
 
-        JButton sellCloseBtn = new JButton("\u5356\u5E73");
+        sellCloseBtn = new JButton("\u5356\u5E73");
         sellCloseBtn.setForeground(Color.LIGHT_GRAY);
         sellCloseBtn.setBackground(new Color(0, 128, 0));
         sl_accountPanel.putConstraint(SpringLayout.WEST, sellCloseBtn, -90, SpringLayout.EAST, insertVolumeField);
@@ -196,7 +212,12 @@ public class AccountPanel extends JPanel {
         sellCloseBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                orderInserter.insert(OrderInserter.OrderType.SELL_CLOSE);
+                orderInserter.insert(
+                        OrderInserter.OrderType.SELL_CLOSE,
+                        buyOpenBtn,
+                        buyCloseBtn,
+                        sellOpenBtn,
+                        sellCloseBtn);
             }
         });
 

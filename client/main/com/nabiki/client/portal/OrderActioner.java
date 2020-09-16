@@ -28,26 +28,28 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.CInputOrderAction;
 import com.nabiki.objects.ErrorCodes;
 
+import javax.swing.*;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class OrderCanceler extends Updater implements Runnable {
+public class OrderActioner extends Updater implements Runnable {
     private final TradeClient client;
     private final OrderUpdater updater;
     private Thread daemon;
     private String orderID;
+    private JButton src;
 
-    OrderCanceler(TradeClient client, OrderUpdater updater) {
+    OrderActioner(TradeClient client, OrderUpdater updater) {
         this.client = client;
         this.updater = updater;
     }
 
-    public void cancel(String orderID) {
+    public void cancel(String orderID, Object src) {
+        this.src = (JButton)src;
         this.orderID = orderID;
         super.fire();
     }
@@ -63,30 +65,31 @@ public class OrderCanceler extends Updater implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 super.waitFire();
-                cancelOrder();
+                actionOrder();
             } catch (Throwable th) {
                 showMsg(th.getMessage());
             }
         }
     }
 
-    private void cancelOrder() throws Exception {
+    private void actionOrder() throws Exception {
         var req = new CInputOrderAction();
         req.OrderSysID = orderID;
-        var rsp = ClientUtils.get(
-                client.orderAction(req, UUID.randomUUID().toString()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() == 0)
+        var rsp = client.orderAction(
+                req, UUID.randomUUID().toString());
+        src.setEnabled(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        src.setEnabled(true);
+        if (!rsp.hasResponse())
             showMsg("\u65E0\u6301\u4ED3");
         else {
-            var rspInfo = rsp.values().iterator().next();
+            var rspInfo = rsp.getRspInfo(rsp.poll());
             if (rspInfo == null)
                 showMsg("\u65E0\u6301\u4ED3");
             else if (rspInfo.ErrorID != ErrorCodes.NONE)
                 showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
             else
-                updater.query(orderID);
+                updater.query(orderID, src);
         }
     }
 

@@ -82,7 +82,7 @@ public class PositionPanel extends JPanel {
                     type = PositionUpdater.PositionType.SUMMARY;
                 else
                     type = PositionUpdater.PositionType.DETAIL;
-                positionUpdater.query(instrument, type);
+                positionUpdater.query(instrument, type, e.getSource());
             }
         });
         sl_positionPanel.putConstraint(SpringLayout.NORTH, qryPositionBtn, 0, SpringLayout.NORTH, instrumentField);

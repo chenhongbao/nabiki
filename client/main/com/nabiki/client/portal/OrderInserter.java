@@ -28,7 +28,6 @@
 
 package com.nabiki.client.portal;
 
-import com.nabiki.client.sdk.ClientUtils;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.objects.*;
 
@@ -55,6 +54,7 @@ public class OrderInserter extends Updater implements Runnable {
 
     private Thread daemon;
     private OrderType type;
+    private JButton[] src;
 
     enum OrderType {
         BUY_OPEN, BUY_CLOSE, SELL_OPEN, SELL_CLOSE
@@ -80,9 +80,21 @@ public class OrderInserter extends Updater implements Runnable {
         daemon.start();
     }
 
-    public void insert(OrderType type) {
+    public void insert(OrderType type, Object... src) {
         this.type = type;
+        if (src.length > 0) {
+            this.src = new JButton[src.length];
+            for (int i = 0; i < src.length; ++i)
+                this.src[i] = (JButton)src[i];
+        }
         super.fire();
+    }
+
+    private void enable(boolean enabled) {
+        if (this.src == null)
+            return;
+        for (var s : src)
+            s.setEnabled(enabled);
     }
 
     @Override
@@ -127,15 +139,16 @@ public class OrderInserter extends Updater implements Runnable {
             default:
                 break;
         }
-        var rsp = ClientUtils.get(
-                client.orderInsert(req, UUID.randomUUID().toString()),
-                5,
-                TimeUnit.SECONDS);
-        if (rsp.size() == 0)
+        var rsp = client.orderInsert(
+                req, UUID.randomUUID().toString());
+        enable(false);
+        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+        enable(true);
+        if (!rsp.hasResponse())
             showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
         else {
-            var order = rsp.keySet().iterator().next();
-            var rspInfo = rsp.get(order);
+            var order= rsp.poll();
+            var rspInfo = rsp.getRspInfo(order);
             if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)
                 showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
             else if (order == null)

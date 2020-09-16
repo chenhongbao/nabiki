@@ -28,6 +28,9 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.objects.CSpecificInstrument;
+import com.nabiki.objects.ErrorCodes;
+
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -37,11 +40,39 @@ public class Client extends AbstractClient {
     private Trader trader;
     private MarketDataHandler handler;
 
+    private void checkLogin() {
+        if (!loginRsp.hasResponse())
+            throw new RuntimeException("login timeout");
+        var info = loginRsp.getRspInfo(loginRsp.poll());
+        if (info == null || info.ErrorID != ErrorCodes.NONE)
+            throw new RuntimeException("login failed");
+    }
+
+    private void checkSubMd() {
+        if (!subRsp.hasResponse())
+            throw new RuntimeException("sub md timeout");
+        if (subRsp.getTotalCount() != subRsp.getArrivalCount())
+            throw new RuntimeException("sub msd rsp uncompleted");
+        CSpecificInstrument in = null;
+        while ((in = subRsp.poll()) != null) {
+            var info = subRsp.getRspInfo(in);
+            if (info == null || info.ErrorID != ErrorCodes.NONE)
+                throw new RuntimeException("sub md " + in.InstrumentID + " failed");
+        }
+    }
+
+    private void checkAll() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
+        checkLogin();
+        checkSubMd();
+    }
+
     public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
         this.trader = trader;
         this.handler = trader;
         try {
             super.startHeadless(trader, serverAddress);
+            checkAll();
         } catch (Throwable th) {
             th.printStackTrace();
             trader.getLogger().severe(th.getMessage());
@@ -53,6 +84,7 @@ public class Client extends AbstractClient {
         this.handler = trader;
         try {
             super.startFigure(trader, serverAddress);
+            checkAll();
         } catch (Throwable th) {
             th.printStackTrace();
             trader.getLogger().severe(th.getMessage());

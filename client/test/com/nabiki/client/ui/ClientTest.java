@@ -34,7 +34,6 @@ import com.nabiki.objects.CombOffsetFlagType;
 import com.nabiki.objects.DirectionType;
 import org.junit.Test;
 
-import java.awt.*;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
@@ -49,34 +48,32 @@ public class ClientTest {
             int currentPosition = 0;
 
             private void open(CDepthMarketData depth) throws Exception {
-                getLogger().info("open position");
                 if (Math.random() > 0.5) {
-                    orderInsert(
+                    var r = orderInsert(
                             "c2101",
                             "DCE",
                             2450,
                             1,
                             DirectionType.DIRECTION_BUY,
                             CombOffsetFlagType.OFFSET_OPEN);
-                    currentPosition = 1;
+                    currentPosition += 1;
                     getLogger().info("buy open");
                 } else {
-                    orderInsert(
+                    var r = orderInsert(
                             "c2101",
                             "DCE",
                             2350,
                             1,
                             DirectionType.DIRECTION_SELL,
                             CombOffsetFlagType.OFFSET_OPEN);
-                    currentPosition = -1;
-                    getLogger().info("buy open");
+                    currentPosition -= 1;
+                    getLogger().info("sell open");
                 }
             }
 
             private void close(CDepthMarketData depth) throws Exception {
-                getLogger().info("close position");
                 if (currentPosition > 0) {
-                    orderInsert(
+                    var r = orderInsert(
                             "c2101",
                             "DCE",
                             2350,
@@ -86,7 +83,7 @@ public class ClientTest {
                     currentPosition = 0;
                     getLogger().info("sell close");
                 } else {
-                    orderInsert(
+                    var r = orderInsert(
                             "c2101",
                             "DCE",
                             2450,
@@ -100,10 +97,11 @@ public class ClientTest {
 
             @Override
             public void onStart() {
-                subscribe("c2101", "c2105");
+                subscribe("c2101"/*, "c2105"*/);
                 setFigure(1, "c2101", 1);
-                setLine(1, "ma-10", Color.PINK);
-                setLine(1, "ma-20", Color.MAGENTA);
+                //setFigure(2, "c2101", 60);
+                //setFigure(3, "c2105", 1);
+                //setFigure(4, "c2105", 60);
                 setUser("0001", "1234");
             }
 
@@ -139,12 +137,17 @@ public class ClientTest {
     @Test
     public void only_trade() {
         var client = new Client();
+
+        System.out.println("start trader");
+
         client.start(new HeadlessTrader() {
             private Thread daemon;
 
             @Override
             public void onStart() {
                 setUser("0001", "1234");
+                getLogger().info("set user login");
+
                 daemon = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -206,6 +209,9 @@ public class ClientTest {
 
             }
         }, new InetSocketAddress("localhost", 9038));
-        client.exitAt(LocalDateTime.now().plusDays(1));
+
+        System.out.println("wait trader exits");
+        client.exitAt(LocalDateTime.now().plusMinutes(1));
+        System.out.println("only_trade exits");
     }
 }
