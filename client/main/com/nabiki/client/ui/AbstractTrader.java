@@ -66,8 +66,10 @@ public abstract class AbstractTrader implements Trader {
         return UUID.randomUUID().toString();
     }
 
-    private Collection<COrder> queryOrder(String instrumentID, String exchangeID,
-                              String orderID) {
+    private Collection<COrder> queryOrder(
+            String instrumentID,
+            String exchangeID,
+            String orderID) throws Exception {
         var r = new HashSet<COrder>();
         var qry = new CQryOrder();
         qry.ExchangeID = exchangeID;
@@ -95,8 +97,10 @@ public abstract class AbstractTrader implements Trader {
         return true;
     }
 
-    private void waitTrade(String instrumentID, String exchangeID,
-                           String orderID)  {
+    private void waitTrade(
+            String instrumentID,
+            String exchangeID,
+            String orderID) throws Exception {
         Collection<COrder> rsp = null;
         while (rsp == null || !isOrderDone(rsp)) {
             rsp = queryOrder(instrumentID, exchangeID, orderID);
@@ -135,8 +139,9 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public void orderInsert(String instrumentID, String exchangeID, double price,
-                            int volume, char direction, char offset) {
+    public void orderInsert(
+            String instrumentID, String exchangeID, double price, int volume,
+            char direction, char offset) throws Exception {
         var req = new CInputOrder();
         req.InstrumentID = instrumentID;
         req.ExchangeID = exchangeID;
@@ -159,19 +164,21 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public Collection<CInvestorPosition> getPosition() {
+    public Collection<CInvestorPosition> getPosition() throws Exception {
         return getPosition("", "");
     }
 
     @Override
     public Collection<CInvestorPosition> getPosition(
-            String instrumentID, String exchangeID) {
+            String instrumentID, String exchangeID) throws Exception {
         var r = new LinkedList<CInvestorPosition>();
         var qry = new CQryInvestorPosition();
         qry.ExchangeID = exchangeID;
         qry.InstrumentID = instrumentID;
-        var rsp = ClientUtils.get(this.client.queryPosition(qry, getRequestID()),
-                5, TimeUnit.SECONDS);
+        var rsp = ClientUtils.get(
+                this.client.queryPosition(qry, getRequestID()),
+                5,
+                TimeUnit.SECONDS);
         for (var entry : rsp.entrySet()) {
             if (entry.getValue().ErrorID != ErrorCodes.NONE)
                 throw new IllegalStateException(entry.getValue().ErrorMsg);
@@ -182,7 +189,7 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public CTradingAccount getAccount()  {
+    public CTradingAccount getAccount() throws Exception {
         var qry = new CQryTradingAccount();
         var rsp = ClientUtils.get(
                 this.client.queryAccount(qry, getRequestID()),

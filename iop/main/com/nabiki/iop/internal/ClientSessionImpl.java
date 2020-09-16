@@ -104,13 +104,10 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     }
 
     @Override
-    public void sendRequest(Message message) {
+    public void sendRequest(Message message) throws InterruptedException {
         // Send message and set response state.
         // Need to ensure the request has been sent before return.
-        try {
-            super.send(toBody(message), FrameType.REQUEST).await();
-        } catch (InterruptedException ignored) {
-        }
+        super.send(toBody(message), FrameType.REQUEST).await();
     }
 
     @Override

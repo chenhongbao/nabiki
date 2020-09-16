@@ -76,7 +76,7 @@ public abstract class AbstractClient {
         }
     }
 
-    private void reqLogin(Trader trader) {
+    private void reqLogin(Trader trader) throws Exception {
         var lock = new ReentrantLock();
         var condition = lock.newCondition();
         var info = new AtomicReference<CRspInfo>();
@@ -114,7 +114,7 @@ public abstract class AbstractClient {
                     "login failure[" + infoRsp.ErrorID + "], " + infoRsp.ErrorMsg);
     }
 
-    private void reqSubscription(Trader trader) {
+    private void reqSubscription(Trader trader) throws Exception {
         var lock = new ReentrantLock();
         var condition = lock.newCondition();
         var info = new AtomicReference<CRspInfo>();
@@ -180,7 +180,7 @@ public abstract class AbstractClient {
         }
     }
 
-    protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) {
+    protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) throws Exception {
         setHeadlessListeners(trader);
         openConnection(address);
         // Set trade client into trader.
@@ -190,7 +190,7 @@ public abstract class AbstractClient {
         reqSubscription(trader);
     }
 
-    protected void startFigure(FigureTrader trader, InetSocketAddress address) {
+    protected void startFigure(FigureTrader trader, InetSocketAddress address) throws Exception {
         setFigureListeners(trader);
         openConnection(address);
         // Set trade client into trader.

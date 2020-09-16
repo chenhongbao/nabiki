@@ -93,7 +93,7 @@ public class OrderUpdater extends Updater implements Runnable {
         }
     }
 
-    private void queryOrder() {
+    private void queryOrder() throws Exception {
         var req = new CQryOrder();
         req.OrderSysID = orderID;
         var rsp = ClientUtils.get(

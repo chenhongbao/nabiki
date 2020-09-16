@@ -74,7 +74,7 @@ class TradeClientImpl implements TradeClient {
             MessageType type,
             V request,
             String requestID,
-            Class<T> clz) {
+            Class<T> clz) throws InterruptedException {
         var rsp = new ResponseImpl<T>();
         this.clientAdaptor.setResponse(rsp, requestID);
         getSession().sendRequest(toMessage(type, request, requestID));
@@ -129,7 +129,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<COrder> orderInsert(
-            CInputOrder order, String requestID) {
+            CInputOrder order, String requestID) throws Exception {
         requireLogin();
         order.InvestorID
                 = order.UserID
@@ -145,7 +145,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<COrderAction> orderAction(
-            CInputOrderAction action, String requestID) {
+            CInputOrderAction action, String requestID) throws Exception {
         requireLogin();
         action.InvestorID
                 = action.UserID
@@ -160,7 +160,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CDepthMarketData> queryDepthMarketData(
-            CQryDepthMarketData query, String requestID) {
+            CQryDepthMarketData query, String requestID) throws Exception {
         requireLogin();
         return send(
                 MessageType.QRY_MD,
@@ -171,10 +171,10 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CInvestorPosition> queryPosition(
-            CQryInvestorPosition query, String requestID) {
+            CQryInvestorPosition query, String requestID) throws Exception {
         requireLogin();
         query.InvestorID = this.lastLoginReq.UserID;
-        query.BrokerID  = this.lastLoginReq.BrokerID;
+        query.BrokerID = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_POSITION,
                 query,
@@ -184,12 +184,12 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CTradingAccount> queryAccount(
-            CQryTradingAccount query, String requestID) {
+            CQryTradingAccount query, String requestID) throws Exception {
         requireLogin();
         query.InvestorID
                 = query.AccountID
                 = this.lastLoginReq.UserID;
-        query.BrokerID  = this.lastLoginReq.BrokerID;
+        query.BrokerID = this.lastLoginReq.BrokerID;
         query.CurrencyID = "CNY";
         return send(
                 MessageType.QRY_ACCOUNT,
@@ -200,10 +200,10 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<COrder> queryOrder(
-            CQryOrder query, String requestID) {
+            CQryOrder query, String requestID) throws Exception {
         requireLogin();
         query.InvestorID = this.lastLoginReq.UserID;
-        query.BrokerID  = this.lastLoginReq.BrokerID;
+        query.BrokerID = this.lastLoginReq.BrokerID;
         return send(
                 MessageType.QRY_ORDER,
                 query,
@@ -213,7 +213,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CSpecificInstrument> subscribeMarketData(
-            CSubMarketData subscription, String requestID) {
+            CSubMarketData subscription, String requestID) throws Exception {
         requireLogin();
         return send(
                 MessageType.SUB_MD,
@@ -224,7 +224,7 @@ class TradeClientImpl implements TradeClient {
 
     @Override
     public Response<CSpecificInstrument> unSubscribeMarketData(
-            CUnsubMarketData subscription, String requestID) {
+            CUnsubMarketData subscription, String requestID) throws Exception {
         requireLogin();
         return send(
                 MessageType.UNSUB_MD,

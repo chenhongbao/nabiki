@@ -70,7 +70,7 @@ public class OrderCanceler extends Updater implements Runnable {
         }
     }
 
-    private void cancelOrder() {
+    private void cancelOrder() throws Exception {
         var req = new CInputOrderAction();
         req.OrderSysID = orderID;
         var rsp = ClientUtils.get(

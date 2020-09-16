@@ -44,21 +44,21 @@ public interface TradeClient {
 
     boolean isClosed();
 
-    Response<CRspUserLogin> login(CReqUserLogin request, String requestID);
+    Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
 
-    Response<COrder> orderInsert(CInputOrder order, String requestID);
+    Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;
 
-    Response<COrderAction> orderAction(CInputOrderAction action, String requestID);
+    Response<COrderAction> orderAction(CInputOrderAction action, String requestID) throws Exception;
 
-    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID);
+    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID) throws Exception;
 
-    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID);
+    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID) throws Exception;
 
-    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID);
+    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID) throws Exception;
 
-    Response<COrder> queryOrder(CQryOrder query, String requestID);
+    Response<COrder> queryOrder(CQryOrder query, String requestID) throws Exception;
 
-    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID);
+    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID) throws Exception;
 
-    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID);
+    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID) throws Exception;
 }

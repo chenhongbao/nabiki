@@ -46,15 +46,16 @@ public interface Trader {
 
     Collection<String> getSubscribe();
 
-    void orderInsert(String instrumentID, String exchangeID, double price,
-                     int volume, char direction, char offset);
+    void orderInsert(
+            String instrumentID, String exchangeID, double price, int volume,
+            char direction, char offset) throws Exception;
 
-    Collection<CInvestorPosition> getPosition();
+    Collection<CInvestorPosition> getPosition() throws Exception;
 
     Collection<CInvestorPosition> getPosition(
-            String instrumentID, String exchangeID);
+            String instrumentID, String exchangeID) throws Exception;
 
-    CTradingAccount getAccount();
+    CTradingAccount getAccount() throws Exception;
 
     Logger getLogger();
 

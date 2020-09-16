@@ -97,7 +97,7 @@ public class OrderInserter extends Updater implements Runnable {
         }
     }
 
-    private void insertOrder() {
+    private void insertOrder() throws Exception {
         var req = new CInputOrder();
 
         try {

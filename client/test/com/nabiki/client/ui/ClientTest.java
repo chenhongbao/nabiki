@@ -48,7 +48,7 @@ public class ClientTest {
             CDepthMarketData depth;
             int currentPosition = 0;
 
-            private void open(CDepthMarketData depth) {
+            private void open(CDepthMarketData depth) throws Exception {
                 getLogger().info("open position");
                 if (Math.random() > 0.5) {
                     orderInsert(
@@ -73,7 +73,7 @@ public class ClientTest {
                 }
             }
 
-            private void close(CDepthMarketData depth) {
+            private void close(CDepthMarketData depth) throws Exception {
                 getLogger().info("close position");
                 if (currentPosition > 0) {
                     orderInsert(

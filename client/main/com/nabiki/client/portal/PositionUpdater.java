@@ -93,14 +93,14 @@ public class PositionUpdater extends Updater implements Runnable {
         }
     }
 
-    private void queryPosition() {
+    private void queryPosition() throws Exception {
         if (type == PositionType.SUMMARY)
             queryInvestorPosition();
         else
             queryDetail();
     }
 
-    private void queryInvestorPosition() {
+    private void queryInvestorPosition() throws Exception {
         var req = new CQryInvestorPosition();
         req.InstrumentID = instrument;
         var rsp = ClientUtils.get(

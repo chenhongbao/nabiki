@@ -106,7 +106,11 @@ public class IopTest {
         m.Body = object;
         if (new Random().nextDouble() > 0.5)
             m.RspInfo = new CRspInfo();
-        session.sendRequest(m);
+        try {
+            session.sendRequest(m);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     static void login(ClientSession session, Object object, int current, int total) {

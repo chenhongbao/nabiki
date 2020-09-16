@@ -94,7 +94,7 @@ public class AccountUpdater extends Updater implements Runnable {
         }
     }
 
-    private void queryAccount() {
+    private void queryAccount() throws Exception {
         var req = new CQryTradingAccount();
         req.CurrencyID = "CNY";
         req.AccountID = req.InvestorID = user;
