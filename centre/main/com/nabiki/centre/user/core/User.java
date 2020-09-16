@@ -61,7 +61,7 @@ public class User {
      *
      * @return current trading account.
      */
-    CTradingAccount getFeaturedAccount() {
+    CTradingAccount getRunningAccount() {
         var total = this.userAccount.copyRawAccount();
         // Calculate fields from account and position.
         var posFrzCash = this.userPosition.getPositionFrozenCash();

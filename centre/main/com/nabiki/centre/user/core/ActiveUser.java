@@ -30,6 +30,7 @@ package com.nabiki.centre.user.core;
 
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.plain.SettlementPreparation;
+import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
@@ -121,7 +122,12 @@ public class ActiveUser {
     public CTradingAccount getTradingAccount() {
         // Call user's method directly, sync here.
         synchronized (this.user) {
-            var account = this.user.getFeaturedAccount();
+            CTradingAccount account;
+            if (this.user.getState() == UserState.RENEW) {
+                account = this.user.getRunningAccount();
+            } else {
+                account = this.user.getUserAccount().copyRawAccount();
+            }
             account.TradingDay = this.global.getTradingDay();
             return account;
         }

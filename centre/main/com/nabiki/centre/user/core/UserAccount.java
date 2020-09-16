@@ -134,7 +134,7 @@ public class UserAccount {
         // Check if available money is enough.
         var needMoney = (c.FrozenCash + c.FrozenCommission)
                 * order.VolumeTotalOriginal;
-        var account = this.parent.getFeaturedAccount();
+        var account = this.parent.getRunningAccount();
         if (account.Available < needMoney)
             return null;
         else
