@@ -609,12 +609,13 @@ public class OrderProvider implements Connectable{
 
     public void whenErrRtnOrderInsert(CInputOrder inputOrder,
                                       CRspInfo rspInfo) {
-        this.global.getLogger().severe(
-                Utils.formatLog("failed order insertion", inputOrder.OrderRef,
-                        rspInfo.ErrorMsg, rspInfo.ErrorID));
+        // NO NEED to process the same error again.
+        // this.global.getLogger().severe(
+        //        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
+        //                rspInfo.ErrorMsg, rspInfo.ErrorID));
         // Failed order results in canceling the order.
-        cancelInputOrder(inputOrder, rspInfo);
-        this.msgWriter.writeErr(inputOrder, rspInfo);
+        // cancelInputOrder(inputOrder, rspInfo);
+        // this.msgWriter.writeErr(inputOrder, rspInfo);
     }
 
     public void whenRspAuthenticate(
@@ -643,10 +644,11 @@ public class OrderProvider implements Connectable{
     public void whenRspOrderAction(CInputOrderAction inputOrderAction,
                                    CRspInfo rspInfo, int requestId,
                                    boolean isLast) {
-        this.msgWriter.writeErr(inputOrderAction, rspInfo);
-        this.global.getLogger().warning(
-                Utils.formatLog("failed action", inputOrderAction.OrderRef,
-                        rspInfo.ErrorMsg, rspInfo.ErrorID));
+        // NO NEED to process the same error again.
+        // this.msgWriter.writeErr(inputOrderAction, rspInfo);
+        // this.global.getLogger().warning(
+        //        Utils.formatLog("failed action", inputOrderAction.OrderRef,
+        //               rspInfo.ErrorMsg, rspInfo.ErrorID));
     }
 
     public void whenRspOrderInsert(CInputOrder inputOrder,
