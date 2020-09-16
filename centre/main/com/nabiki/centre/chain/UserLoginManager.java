@@ -30,26 +30,37 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
+import com.nabiki.centre.utils.Global;
 import com.nabiki.iop.LoginManager;
 import com.nabiki.iop.Message;
+import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
+import com.nabiki.iop.x.OP;
 import com.nabiki.objects.CReqUserLogin;
+import com.nabiki.objects.CRspInfo;
+import com.nabiki.objects.CRspUserLogin;
 import com.nabiki.objects.ErrorCodes;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.UUID;
 
 public class UserLoginManager extends LoginManager {
     final static String FRONT_LOGINREQ_KEY = "front.loginreq";
     final static String FRONT_AUTH_KEY = "front.auth";
     final static String FRONT_ACTIVEUSR_KEY = "front.activeusr";
     final static String FRONT_USERID_KEY = "front.userid";
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private final UserAuthManager authMgr;
     private final ActiveUserManager userMgr;
+    private final Global global;
 
-    UserLoginManager(UserAuthManager auth, ActiveUserManager user) {
+    UserLoginManager(UserAuthManager auth, ActiveUserManager user, Global global) {
         this.authMgr = auth;
         this.userMgr = user;
+        this.global = global;
     }
 
     private boolean isLogin(ServerSession session) {
@@ -58,6 +69,12 @@ public class UserLoginManager extends LoginManager {
 
     @Override
     public int doLogin(ServerSession session, Message message) {
+        var code = checkLoginOK(session, message);
+        sendLoginRsp(code, session, message);
+        return code;
+    }
+
+    private int checkLoginOK(ServerSession session, Message message) {
         if (isLogin(session))
             return ErrorCodes.DUPLICATE_LOGIN;
         Objects.requireNonNull(message, "message null");
@@ -81,5 +98,23 @@ public class UserLoginManager extends LoginManager {
             session.setAttribute(FRONT_USERID_KEY, req.UserID);
             return ErrorCodes.NONE;
         }
+    }
+
+    private void sendLoginRsp(int code, ServerSession session, Message message) {
+        var r = new CRspUserLogin();
+        r.LoginTime = LocalTime.now().format(timeFormatter);
+        r.TradingDay = global.getTradingDay();
+        // Construct message.
+        Message rsp = new Message();
+        rsp.Type = MessageType.RSP_REQ_LOGIN;
+        rsp.CurrentCount = 1;
+        rsp.TotalCount = 1;
+        rsp.RequestID = message.RequestID;
+        rsp.ResponseID = UUID.randomUUID().toString();
+        rsp.Body = r;
+        rsp.RspInfo = new CRspInfo();
+        rsp.RspInfo.ErrorID = code;
+        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(code);
+        session.sendLogin(rsp);
     }
 }

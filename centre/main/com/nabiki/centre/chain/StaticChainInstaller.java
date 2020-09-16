@@ -53,7 +53,7 @@ public class StaticChainInstaller {
         var rw = new CandleRW(global);
         router.addReceiver(rw);
         // Install login manager.
-        server.setLoginManager(new UserLoginManager(auth, user));
+        server.setLoginManager(new UserLoginManager(auth, user, global));
         // Install session adaptor.
         server.setSessionAdaptor(new SessionAdaptor(router, global));
         // Install adaptors.

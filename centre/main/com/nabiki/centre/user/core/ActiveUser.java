@@ -127,6 +127,19 @@ public class ActiveUser {
         }
     }
 
+    public List<CInvestorPositionDetail> getPositionDetail(String instrID) {
+        // Manipulate user's internal data, so sync here.
+        synchronized (this.user) {
+            if (instrID == null || instrID.length() == 0) {
+                var ret = new LinkedList<CInvestorPositionDetail>();
+                for (var instr : this.user.getUserPosition().getPositionMap().keySet())
+                    ret.addAll(getInstrPositionDetail(instr));
+                return ret;
+            } else
+                return getInstrPositionDetail(instrID);
+        }
+    }
+
     public List<CInvestorPosition> getPosition(String instrID) {
         // Manipulate user's internal data, so sync here.
         synchronized (this.user) {
@@ -145,6 +158,14 @@ public class ActiveUser {
         synchronized (this.user) {
             this.user.settle(prepare());
         }
+    }
+
+    private List<CInvestorPositionDetail> getInstrPositionDetail(String instrID) {
+        var r = new LinkedList<CInvestorPositionDetail>();
+        var spec = this.user.getUserPosition().getSpecificPosition(instrID);
+        for (var d : spec)
+            r.add(d.copyRawPosition());
+        return r;
     }
 
     private List<CInvestorPosition> getInstrPosition(String instrID) {

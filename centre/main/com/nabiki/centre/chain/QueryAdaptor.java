@@ -150,9 +150,11 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         rsp.ResponseID = UUID.randomUUID().toString();
         rsp.RspInfo = new CRspInfo();
         if (attr == null) {
+            var p = new CInvestorPosition();
+            p.InstrumentID = query.InstrumentID;
             rsp.CurrentCount = 1;
             rsp.TotalCount = 1;
-            rsp.Body = new CInvestorPosition();
+            rsp.Body = p;
             rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
             rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
             session.sendResponse(rsp);
@@ -186,6 +188,65 @@ public class QueryAdaptor extends ServerMessageAdaptor {
                 for (CInvestorPosition position : positions) {
                     ++rsp.CurrentCount;
                     rsp.Body = position;
+                    session.sendResponse(rsp);
+                }
+            }
+        }
+        session.done();
+    }
+
+    @Override
+    public void doQryPositionDetail(
+            ServerSession session,
+            CQryInvestorPositionDetail query,
+            String requestID,
+            int current,
+            int total) {
+        var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+        Message rsp = new Message();
+        rsp.Type = MessageType.RSP_QRY_POSI_DETAIL;
+        rsp.RequestID = requestID;
+        rsp.ResponseID = UUID.randomUUID().toString();
+        rsp.RspInfo = new CRspInfo();
+        if (attr == null) {
+            var p = new CInvestorPositionDetail();
+            p.InstrumentID = query.InstrumentID;
+            rsp.CurrentCount = 1;
+            rsp.TotalCount = 1;
+            rsp.Body = p;
+            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
+            rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+            session.sendResponse(rsp);
+        } else {
+            var activeUser = (ActiveUser)attr;
+            // Performance measurement.
+            var max = this.global.getPerformanceMeasure().start("qry.posidetail.max");
+            var cur = this.global.getPerformanceMeasure().start("qry.posidetail.cur");
+            // Qry position.
+            var details = activeUser.getPositionDetail(query.InstrumentID);
+            // End measurement.
+            max.endWithMax();
+            cur.end();
+            if (details == null || details.size() == 0) {
+                var p = new CInvestorPositionDetail();
+                p.InstrumentID = query.InstrumentID;
+                rsp.CurrentCount = 1;
+                rsp.TotalCount = 1;
+                rsp.Body = p;
+                // It's very common that there is no position of spec instrument.
+                // Don't report error.
+                rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+                rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+                session.sendResponse(rsp);
+            } else {
+                rsp.CurrentCount = 0;
+                rsp.TotalCount = details.size();
+                rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+                rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+                // Send positions.
+                for (var detail : details) {
+                    ++rsp.CurrentCount;
+                    rsp.Body = detail;
                     session.sendResponse(rsp);
                 }
             }

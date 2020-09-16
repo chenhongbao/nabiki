@@ -85,8 +85,7 @@ public class FrozenPositionDetail {
      * @param trade trade response
      * @param instr instrument
      */
-    void applyCloseTrade(CTrade trade,
-                                CInstrument instr) {
+    void applyCloseTrade(CTrade trade, CInstrument instr) {
         if (trade.Volume < 0)
             throw new IllegalArgumentException("negative traded share count");
         if (getFrozenVolume() < trade.Volume)

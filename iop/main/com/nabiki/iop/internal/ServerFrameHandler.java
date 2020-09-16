@@ -33,8 +33,6 @@ import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.frame.FrameType;
 import com.nabiki.iop.x.OP;
-import com.nabiki.objects.CRspInfo;
-import com.nabiki.objects.CRspUserLogin;
 import com.nabiki.objects.ErrorCodes;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
@@ -43,9 +41,6 @@ import org.apache.mina.filter.FilterEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 class ServerFrameHandler implements IoHandler {
     /*
@@ -65,7 +60,6 @@ class ServerFrameHandler implements IoHandler {
 
     private static final String IOP_ISLOGIN_KEY = "iop.islogin";
     private final AdaptorChainImpl chain = new AdaptorChainImpl();
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private ServerSessionAdaptor sessionAdaptor = new DefaultServerSessionAdaptor();
     private LoginManager loginManager = new DefaultLoginManager();
@@ -99,26 +93,7 @@ class ServerFrameHandler implements IoHandler {
             var code = this.loginManager.doLogin(session, message);
             session.setAttribute(IOP_ISLOGIN_KEY,
                     code == ErrorCodes.NONE);
-            // Send rsp.
-            sendLoginRsp(code, session, message);
         }
-    }
-
-    private void sendLoginRsp(int code, ServerSession session, Message message) {
-        var r = new CRspUserLogin();
-        r.LoginTime = LocalTime.now().format(timeFormatter);
-        // Construct message.
-        Message rsp = new Message();
-        rsp.Type = MessageType.RSP_REQ_LOGIN;
-        rsp.CurrentCount = 1;
-        rsp.TotalCount = 1;
-        rsp.RequestID = message.RequestID;
-        rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.Body = r;
-        rsp.RspInfo = new CRspInfo();
-        rsp.RspInfo.ErrorID = code;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(code);
-        session.sendLogin(rsp);
     }
 
     private void sendHeartbeat(ServerSession session, Message message) {
