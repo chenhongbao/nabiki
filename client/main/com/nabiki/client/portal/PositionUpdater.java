@@ -54,14 +54,14 @@ public class PositionUpdater extends Updater implements Runnable {
     private final String[] headers = new String[]{
             "\u5408\u7EA6",
             "\u65B9\u5411",
-            "\u603B\u8BA1",
-            "\u6628\u4ED3",
-            "\u4ECA\u4ED3",
+            "\u5728\u624B",
+            "\u5df2\u5e73",
+            "\u4ECA\u6628",
             "\u5F00\u4ED3\u4EF7",
             "\u6628\u7ED3",
             "\u7ED3\u7B97\u4EF7",
-            "\u9010\u7B14\u76C8\u4E8F",
-            "\u9010\u65E5\u76C8\u4E8F"
+            "\u6301\u4ED3\u76C8\u4E8F",
+            "\u5E73\u4ED3\u76C8\u4E8F"
     };
 
     PositionUpdater(JTable table, TradeClient client) {
@@ -188,21 +188,22 @@ public class PositionUpdater extends Updater implements Runnable {
         int idx = 0;
         for (var d : details) {
             int todayVol = 0, ydVol = 0;
+            String tok;
             if (client.getTradingDay().compareTo(d.TradingDay) == 0) {
-                todayVol = d.Volume - d.CloseVolume;
+                tok = "\u4ECA";
             } else {
-                ydVol = d.Volume - d.CloseVolume;
+                tok = "\u6628";
             }
             var row = new Object[]{
                     d.InstrumentID,
                     getDirection(d.Direction),
-                    todayVol + ydVol,
-                    ydVol,
-                    todayVol,
+                    d.Volume,
+                    d.CloseVolume,
+                    tok,
                     d.OpenPrice,
                     d.LastSettlementPrice,
                     d.SettlementPrice,
-                    d.CloseProfitByTrade,
+                    d.PositionProfitByDate,
                     d.CloseProfitByDate
             };
             objects[idx++] = row;
@@ -216,17 +217,18 @@ public class PositionUpdater extends Updater implements Runnable {
         var objects = new Object[positions.size()][];
         int idx = 0;
         for (var p : positions) {
+            var openPrice = p.Position == 0 ? 0.0D : p.PositionCost / p.Position;
             var row = new Object[]{
                     p.InstrumentID,
                     getPosiDirection(p.PosiDirection),
                     p.Position,
-                    p.YdPosition,
-                    p.TodayPosition,
-                    p.PositionCost / p.Position,
+                    p.CloseVolume,
+                    "/",
+                    openPrice,
                     p.PreSettlementPrice,
                     p.SettlementPrice,
-                    p.CloseProfitByTrade,
-                    p.CloseProfitByDate
+                    p.PositionProfit,
+                    p.CloseProfit
             };
             objects[idx++] = row;
         }

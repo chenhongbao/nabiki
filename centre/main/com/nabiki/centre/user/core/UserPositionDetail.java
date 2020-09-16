@@ -168,6 +168,8 @@ public class UserPositionDetail {
             r.YdPosition = this.raw.Volume + this.raw.CloseVolume;
         else
             r.TodayPosition = r.Position;
+        r.PositionProfit = this.raw.PositionProfitByDate;
+        r.CloseProfit = this.raw.CloseProfitByDate;
         return r;
     }
 

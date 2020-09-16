@@ -110,23 +110,27 @@ public class AccountUpdater extends Updater implements Runnable {
             updateTable(rsp.poll());
     }
 
+    private String format(double value) {
+        return String.format("%.2f", value);
+    }
+
     private void updateTable(CTradingAccount account) {
         // Can't be null, but guard it here.
         if (account == null)
             return;
         model[0][1] = account.BrokerID;
         model[1][1] = account.AccountID;
-        model[2][1] = account.Balance;
-        model[2][2] = account.PreBalance;
-        model[3][1] = account.CurrMargin;
-        model[3][2] = account.PreMargin;
-        model[4][1] = account.Available;
-        model[5][1] = account.Commission;
-        model[6][1] = account.FrozenCommission;
-        model[7][1] = account.FrozenCash;
-        model[8][1] = account.FrozenMargin;
-        model[9][1] = account.CloseProfit;
-        model[10][1] = account.PositionProfit;
+        model[2][1] = format(account.Balance);
+        model[2][2] = format(account.PreBalance);
+        model[3][1] = format(account.CurrMargin);
+        model[3][2] = format(account.PreMargin);
+        model[4][1] = format(account.Available);
+        model[5][1] = format(account.Commission);
+        model[6][1] = format(account.FrozenCommission);
+        model[7][1] = format(account.FrozenCash);
+        model[8][1] = format(account.FrozenMargin);
+        model[9][1] = format(account.CloseProfit);
+        model[10][1] = format(account.PositionProfit);
         model[11][1] = account.TradingDay;
         // Update table content.
         var model2 = (DefaultTableModel)table.getModel();
