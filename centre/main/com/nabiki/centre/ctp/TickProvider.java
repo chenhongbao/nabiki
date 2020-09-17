@@ -109,6 +109,14 @@ public class TickProvider implements Connectable {
         }
     }
 
+    private void sleep(int value, TimeUnit unit) {
+        try {
+            unit.sleep(value);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void subscribe() {
         if (this.toSubscribe.size() == 0)
             throw new IllegalStateException("no instrument to subscribe");
@@ -129,19 +137,15 @@ public class TickProvider implements Connectable {
                 count = -1;
                 if (!iter.hasNext())
                     break;
-                else {
-                    try {
-                        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-                    } catch (InterruptedException e) {
-                        this.global.getLogger().warning(
-                                Utils.formatLog("failed sleep", null,
-                                        e.getMessage(), null));
-                    }
-                }
+                else
+                    sleep(1, TimeUnit.SECONDS);
             }
         }
         // Setup durations.
         setupDurations();
+        // Wait for a while, then check subscription status.
+        sleep(1, TimeUnit.MINUTES);
+        checkSubscription();
     }
 
     @Override

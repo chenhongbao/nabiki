@@ -229,7 +229,6 @@ class PlatformTask extends TimerTask {
         if (14 < hour && hour < 21) {
             settle();
             checkPerformance();
-            P.tickProvider.checkSubscription();
         }
     }
 
