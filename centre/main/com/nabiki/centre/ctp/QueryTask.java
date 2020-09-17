@@ -73,12 +73,14 @@ class QueryTask implements Runnable {
                     orderProvider.global.getLogger().warning(th.getMessage());
                 }
             }
-            // Sleep 1 second between queries.
-            try {
-                TimeUnit.MILLISECONDS.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        }
+    }
+
+    private void sleep(int value, TimeUnit unit) {
+        try {
+            unit.sleep(value);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -105,17 +107,14 @@ class QueryTask implements Runnable {
                 // Sleep up tp some seconds.
                 try {
                     if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-                        orderProvider.global.getLogger().warning("query margin timeout");
+                        orderProvider.global.getLogger()
+                                .warning("query margin timeout: " + ins);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        }
-        // Sleep 1 second between queries.
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // Sleep only when actually query margin.
+            sleep(1, TimeUnit.SECONDS);
         }
         // Query commission.
         if (in.Commission == null) {
@@ -135,11 +134,13 @@ class QueryTask implements Runnable {
                 // Sleep up tp some seconds.
                 try {
                     if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-                        orderProvider.global.getLogger().warning("query margin timeout");
+                        orderProvider.global.getLogger()
+                                .warning("query margin timeout: " + ins);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            sleep(1, TimeUnit.SECONDS);
         }
     }
 
