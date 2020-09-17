@@ -34,7 +34,6 @@ import com.nabiki.iop.x.SystemStream;
 import com.nabiki.objects.*;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -47,6 +46,8 @@ public abstract class AbstractTrader implements Trader {
     private String userID, password;
     private final Collection<String> instruments = new LinkedList<>();
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
+
+    private MarketDataTraderAdaptor traderAdaptor;
 
     protected AbstractTrader() {
         prepare();
@@ -68,6 +69,14 @@ public abstract class AbstractTrader implements Trader {
         return UUID.randomUUID().toString();
     }
 
+    protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
+        this.traderAdaptor = adaptor;
+    }
+
+    MarketDataTraderAdaptor getDefaultAdaptor() {
+        return traderAdaptor;
+    }
+
     @Override
     public void setUser(String userID, String password) {
         this.userID = userID;
@@ -85,8 +94,9 @@ public abstract class AbstractTrader implements Trader {
     }
 
     @Override
-    public void subscribe(String... instruments) {
-        this.instruments.addAll(Arrays.asList(instruments));
+    public void subscribe(String instrument, int... minutes) {
+        this.instruments.add(instrument);
+        traderAdaptor.setSubscribeMinute(instrument, minutes);
     }
 
     @Override

@@ -31,6 +31,11 @@ package com.nabiki.client.ui;
 public abstract class HeadlessTrader
         extends AbstractTrader
         implements MarketDataHandler {
+
+    public HeadlessTrader() {
+        setDefaultAdaptor(new HeadlessMarketDataAdaptor(this));
+    }
+
     @Override
     public void stop() {
     }

@@ -116,11 +116,14 @@ public class ClientTest {
 
             @Override
             public void onStart() {
-                subscribe("c2101", "c2105");
+                subscribe("c2101", 1);
                 setFigure(1, "c2101", 1);
                 setLine(1, "ma", Color.MAGENTA);
+
+                subscribe("c2105", 1);
                 setFigure(2, "c2105", 1);
                 setLine(2, "ma", Color.MAGENTA);
+
                 setUser("0001", "1234");
             }
 

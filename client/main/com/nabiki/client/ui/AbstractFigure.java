@@ -133,6 +133,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
         var frame = new ChartMainFrame(logDlg);
         frame.setInstrumentID(instrumentID);
         frame.setMinute(minute);
+        setTitle(figureID, instrumentID + " - " + minute + "m");
         display(frame);
         mains.put(figureID, frame);
     }

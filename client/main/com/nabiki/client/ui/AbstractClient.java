@@ -29,6 +29,7 @@
 package com.nabiki.client.ui;
 
 import com.nabiki.client.portal.Constants;
+import com.nabiki.client.sdk.MarketDataListener;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
@@ -52,13 +53,8 @@ public abstract class AbstractClient {
         client = new TradeClientFactoryImpl().get();
     }
 
-    private void setHeadlessListeners(MarketDataHandler handler) {
-        client.setListener(new HeadlessMarketDataAdaptor(handler));
-        client.setListener(eventAdaptor);
-    }
-
-    private void setFigureListeners(FigureTrader trader) {
-        client.setListener(new FigureMarketDataAdaptor(trader, trader));
+    private void setListener(MarketDataListener listener) {
+        client.setListener(listener);
         client.setListener(eventAdaptor);
     }
 
@@ -107,9 +103,8 @@ public abstract class AbstractClient {
     }
 
     protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) throws Exception {
-        setHeadlessListeners(trader);
+        setListener(trader.getDefaultAdaptor());
         openConnection(address);
-        // Set trade client into trader.
         trader.setClient(client);
         callStart(trader);
         reqLogin(trader);
@@ -117,9 +112,8 @@ public abstract class AbstractClient {
     }
 
     protected void startFigure(FigureTrader trader, InetSocketAddress address) throws Exception {
-        setFigureListeners(trader);
+        setListener(trader.getDefaultAdaptor());
         openConnection(address);
-        // Set trade client into trader.
         trader.setClient(client);
         callStart(trader);
         reqLogin(trader);

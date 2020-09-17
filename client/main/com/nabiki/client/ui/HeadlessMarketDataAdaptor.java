@@ -28,20 +28,24 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.client.sdk.MarketDataListener;
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-public class HeadlessMarketDataAdaptor implements MarketDataListener {
+public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     public final long MAX_ARRIVAL_SECONDS = TimeUnit.MINUTES.toSeconds(1);
     protected final MarketDataHandler handler;
     protected final DateTimeFormatter formatter
             = DateTimeFormatter.ofPattern("yyyyMMddHH:mm:ss");
+    protected final Map<String, Set<Integer>> subscribes = new ConcurrentHashMap<>();
 
     HeadlessMarketDataAdaptor(MarketDataHandler h) {
         handler = h;
@@ -59,7 +63,18 @@ public class HeadlessMarketDataAdaptor implements MarketDataListener {
     }
 
     @Override
+    public void setSubscribeMinute(String instrument, int... minutes) {
+        var set = subscribes.computeIfAbsent(
+                instrument, k -> new HashSet<>());
+        for (var i : minutes)
+            set.add(i);
+    }
+
+    @Override
     public void onDepthMarketData(CDepthMarketData depth) {
+        if (!subscribes.containsKey(depth.InstrumentID)) {
+            return;
+        }
         try {
             handler.onDepthMarketData(
                     depth,
@@ -71,6 +86,14 @@ public class HeadlessMarketDataAdaptor implements MarketDataListener {
 
     @Override
     public void onCandle(CCandle candle) {
+        if (candle == null || candle.InstrumentID == null ||
+                !subscribes.containsKey(candle.InstrumentID)) {
+            return;
+        } else {
+            var set = subscribes.get(candle.InstrumentID);
+            if (set == null || !set.contains(candle.Minute))
+                return;
+        }
         try {
             handler.onCandle(
                     candle,

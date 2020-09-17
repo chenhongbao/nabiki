@@ -44,7 +44,7 @@ public interface Trader {
 
     String getPassword();
 
-    void subscribe(String... instruments);
+    void subscribe(String instrument, int... minutes);
 
     Collection<String> getSubscribe();
 
