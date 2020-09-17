@@ -687,9 +687,11 @@ public class OrderProvider implements Connectable{
         this.qryTask.signalRequest(requestID);
         // Signal last rsp.
         if (this.qryInstrLast) {
-            this.qryLastInstrSignal.signal();
             // Set active instruments into config, and remove obsolete ones.
             GlobalConfig.resetInstrConfig(this.activeInstruments);
+            // First update config instrument info, then signal. So other waiting
+            // thread can get the correct data.
+            this.qryLastInstrSignal.signal();
             this.global.getLogger().info("get last qry instrument rsp");
         }
     }
