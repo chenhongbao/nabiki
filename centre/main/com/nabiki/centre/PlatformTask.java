@@ -162,11 +162,8 @@ class PlatformTask extends TimerTask {
                     TimeUnit.MINUTES.toMillis(1));
             if (!r)
                 this.global.getLogger().info("wait md login timeout");
-            else
-                // This code works on first startup.
-                // For later reconnect, it will use the internal instruments set by
-                // order provider after qry all instruments.
-                P.tickProvider.subscribe();
+            // No need to call TickProvider.subscribe() here because it is called
+            // internally by tick provider after it logins.
         } catch (Throwable th) {
             th.printStackTrace();
         }

@@ -41,6 +41,8 @@ import com.nabiki.objects.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TickProvider implements Connectable {
@@ -51,6 +53,7 @@ public class TickProvider implements Connectable {
     protected final ReqRspWriter msgWriter;
     protected final Set<String> toSubscribe = new HashSet<>(),
             subscribed = new HashSet<>();
+    protected ExecutorService es = Executors.newCachedThreadPool();
 
     protected boolean isConnected = false,
             isLogin = false;
@@ -295,9 +298,20 @@ public class TickProvider implements Connectable {
             this.stateSignal.signal();
             this.global.getLogger().info("md login");
             updateActionDay();
-            // If there are instruments to subscribe, do it.
             // The subscribe method uses instruments set by order provider.
-            subscribe();
+            // Because it needs to send requests many times, costing around 10 secs,
+            // use a thread here so it won't block the underlying API.
+            es.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        subscribe();
+                    } catch (Throwable th) {
+                        th.printStackTrace();
+                        global.getLogger().severe(th.getMessage());
+                    }
+                }
+            });
         } else {
             this.global.getLogger().severe(
                     Utils.formatLog("md failed login", null,

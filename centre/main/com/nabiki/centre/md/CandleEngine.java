@@ -162,7 +162,7 @@ public class CandleEngine extends TimerTask {
     }
 
     class Product {
-        private final Map<String, SingleCandle> candles = new HashMap<>();
+        private final Map<String, SingleCandle> candles = new ConcurrentHashMap<>();
 
         Product() {
         }
