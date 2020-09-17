@@ -180,14 +180,15 @@ public class UserManager {
         int count = 0;
         for (var positions : user.getUserPosition().getPositionMap().values()) {
             for (var pos : positions) {
-                if (pos.getAvailableVolume() > 0) {
-                    path = Path.of(todayDir.toString(),
-                            "position." + (++count) + ".json");
-                    Utils.writeText(OP.toJson(pos.copyRawPosition()),
-                            Utils.createFile(path, false),
-                            StandardCharsets.UTF_8,
-                            false);
-                }
+                // Don't filter all-closed position here, because need to save
+                // the trades of this day. And when reloading information, it will
+                // check the volume and filter out all-closed position.
+                path = Path.of(todayDir.toString(),
+                        "position." + (++count) + ".json");
+                Utils.writeText(OP.toJson(pos.copyRawPosition()),
+                        Utils.createFile(path, false),
+                        StandardCharsets.UTF_8,
+                        false);
             }
         }
     }
