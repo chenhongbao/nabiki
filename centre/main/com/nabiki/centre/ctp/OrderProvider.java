@@ -61,7 +61,8 @@ public class OrderProvider implements Connectable{
     protected final LoginConfig loginCfg;
     protected final ReqRspWriter msgWriter;
     protected final Thread orderDaemon = new Thread(new RequestDaemon(this));
-    protected final List<String> instruments = new LinkedList<>();
+    protected final List<String> instrumentIDs = new LinkedList<>();
+    protected final List<CInstrument> activeInstruments = new LinkedList<>();
     protected final BlockingQueue<PendingRequest> pendingReqs;
     protected final TimeAligner timeAligner = new TimeAligner();
 
@@ -356,8 +357,8 @@ public class OrderProvider implements Connectable{
         }
     }
 
-    public List<String> getInstruments() {
-        return new LinkedList<>(this.instruments);
+    public List<String> getInstrumentIDs() {
+        return new LinkedList<>(this.instrumentIDs);
     }
 
     public synchronized String getOrderRef() {
@@ -558,6 +559,9 @@ public class OrderProvider implements Connectable{
     }
 
     protected void doQueryInstr() {
+        // Clear old data.
+        this.instrumentIDs.clear();
+        this.activeInstruments.clear();
         var req = new CQryInstrument();
         var r = this.api.ReqQryInstrument(
                 JNI.toJni(req),
@@ -667,19 +671,12 @@ public class OrderProvider implements Connectable{
                                      CRspInfo rspInfo, int requestID,
                                      boolean isLast) {
         if (rspInfo.ErrorID == 0) {
-            var accepted = InstrumentFilter.accept(instrument);
-            if (accepted) {
+            if (InstrumentFilter.accept(instrument)) {
                 this.msgWriter.writeInfo(instrument);
-                GlobalConfig.setInstrConfig(instrument);
+                this.activeInstruments.add(instrument);
+                this.instrumentIDs.add(instrument.InstrumentID);
             }
-            // Sync on instrument set.
-            synchronized (this.instruments) {
-                if (this.qryInstrLast)
-                    this.instruments.clear();
-                if (accepted)
-                    this.instruments.add(instrument.InstrumentID);
-                this.qryInstrLast = isLast;
-            }
+            this.qryInstrLast = isLast;
         } else {
             this.global.getLogger().severe(
                     Utils.formatLog("failed instrument query", null,
@@ -691,6 +688,8 @@ public class OrderProvider implements Connectable{
         // Signal last rsp.
         if (this.qryInstrLast) {
             this.qryLastInstrSignal.signal();
+            // Set active instruments into config, and remove obsolete ones.
+            GlobalConfig.resetInstrConfig(this.activeInstruments);
             this.global.getLogger().info("get last qry instrument rsp");
         }
     }

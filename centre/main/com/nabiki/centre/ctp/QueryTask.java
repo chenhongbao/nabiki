@@ -144,9 +144,9 @@ class QueryTask implements Runnable {
     }
 
     protected String randomGet() {
-        synchronized (orderProvider.instruments) {
-            return orderProvider.instruments.get(
-                    Math.abs(rand.nextInt()) % orderProvider.instruments.size());
+        synchronized (orderProvider.instrumentIDs) {
+            return orderProvider.instrumentIDs.get(
+                    Math.abs(rand.nextInt()) % orderProvider.instrumentIDs.size());
         }
     }
 }

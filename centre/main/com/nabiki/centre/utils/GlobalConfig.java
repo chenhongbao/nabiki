@@ -41,6 +41,8 @@ import com.nabiki.objects.CInstrumentMarginRate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,6 +84,24 @@ public class GlobalConfig {
 
     public static void setTradingDay(String day) {
         GLOBAL.tradingDay = day;
+    }
+
+    public static void resetInstrConfig(Collection<CInstrument> instruments) {
+        if (instruments == null || instruments.size() == 0)
+            return;
+        var m = new HashMap<String, InstrumentInfo>();
+        for (var i : instruments) {
+            var info = GLOBAL.instrInfo.get(i.InstrumentID);
+            if (info == null) {
+                info = new InstrumentInfo();
+                info.Instrument = i;
+            }
+            m.put(i.InstrumentID, info);
+        }
+        synchronized (GLOBAL.instrInfo) {
+            GLOBAL.instrInfo.clear();
+            GLOBAL.instrInfo.putAll(m);
+        }
     }
 
     public static void setInstrConfig(CInstrument instr) {

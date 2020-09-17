@@ -139,7 +139,7 @@ class PlatformTask extends TimerTask {
             else
                 // Update subscription so at next reconnect it will subscribe the
                 // new instruments.
-                P.tickProvider.setSubscription(P.orderProvider.getInstruments());
+                P.tickProvider.setSubscription(P.orderProvider.getInstrumentIDs());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
