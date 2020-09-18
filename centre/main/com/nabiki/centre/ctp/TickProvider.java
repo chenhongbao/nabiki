@@ -46,358 +46,371 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TickProvider implements Connectable {
-    protected final Global global;
-    protected final LoginConfig loginCfg;
-    protected final MarketDataRouter router;
-    protected final CandleEngine engine;
-    protected final ReqRspWriter msgWriter;
-    protected final Set<String> toSubscribe = new HashSet<>(),
-            subscribed = new HashSet<>();
-    protected ExecutorService es = Executors.newCachedThreadPool();
+  protected final Global global;
+  protected final LoginConfig loginCfg;
+  protected final MarketDataRouter router;
+  protected final CandleEngine engine;
+  protected final ReqRspWriter msgWriter;
+  protected final Set<String> toSubscribe = new HashSet<>(),
+    subscribed = new HashSet<>();
+  protected ExecutorService es = Executors.newCachedThreadPool();
 
-    protected boolean isConnected = false,
-            isLogin = false;
-    protected WorkingState workingState = WorkingState.STOPPED;
+  protected boolean isConnected = false,
+    isLogin = false;
+  protected WorkingState workingState = WorkingState.STOPPED;
 
-    // Login signal.
-    protected final Signal stateSignal = new Signal();
+  // Login signal.
+  protected final Signal stateSignal = new Signal();
 
-    protected String actionDay;
-    protected CThostFtdcMdApi api;
-    protected JniMdSpi spi;
+  protected String actionDay;
+  protected CThostFtdcMdApi api;
+  protected JniMdSpi spi;
 
-    public TickProvider(MarketDataRouter router, CandleEngine engine, Global global) {
-        this.global = global;
-        this.router = router;
-        this.engine = engine;
-        this.loginCfg = this.global.getLoginConfigs().get("md");
-        this.msgWriter = new ReqRspWriter(null, this.global);
-        daemon();
+  public TickProvider(MarketDataRouter router, CandleEngine engine, Global global) {
+    this.global = global;
+    this.router = router;
+    this.engine = engine;
+    this.loginCfg = this.global.getLoginConfigs().get("md");
+    this.msgWriter = new ReqRspWriter(null, this.global);
+    daemon();
+  }
+
+  private void daemon() {
+    // Schedule action day updater.
+    var m = TimeUnit.DAYS.toMillis(1);
+    Timer dayUpdater = new Timer();
+    dayUpdater.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        updateActionDay();
+      }
+    }, m - System.currentTimeMillis() % m, m);
+  }
+
+  @Override
+  public boolean isConnected() {
+    return this.isConnected;
+  }
+
+  @Override
+  public boolean waitConnected(long millis) {
+    try {
+      this.stateSignal.waitSignal(millis);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+    return isConnected();
+  }
 
-    private void daemon() {
-        // Schedule action day updater.
-        var m = TimeUnit.DAYS.toMillis(1);
-        Timer dayUpdater = new Timer();
-        dayUpdater.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                updateActionDay();
-            }
-        },  m - System.currentTimeMillis() % m, m);
+  public void setSubscription(Collection<String> instr) {
+    synchronized (this.toSubscribe) {
+      this.toSubscribe.clear();
+      this.toSubscribe.addAll(instr);
     }
+  }
 
-    @Override
-    public boolean isConnected() {
-        return this.isConnected;
+  private void sleep(int value, TimeUnit unit) {
+    try {
+      unit.sleep(value);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public boolean waitConnected(long millis) {
-        try {
-            this.stateSignal.waitSignal(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+  public void subscribe() {
+    if (this.toSubscribe.size() == 0)
+      throw new IllegalStateException("no instrument to subscribe");
+    // Prepare new subscription.
+    var ins = new String[50];
+    int count = -1;
+    synchronized (this.toSubscribe) {
+      var iter = this.toSubscribe.iterator();
+      while (true) {
+        while (iter.hasNext() && ++count < 50) {
+          var i = iter.next();
+          // Initialize instrument ID in candle engine.
+          registerInstrument(i);
+          ins[count] = i;
         }
-        return isConnected();
+        // Subscribe batch.
+        subscribeBatch(ins, count);
+        count = -1;
+        if (!iter.hasNext())
+          break;
+        else
+          sleep(1, TimeUnit.SECONDS);
+      }
     }
+    // Setup durations.
+    setupDurations();
+    // Wait for a while, then check subscription status.
+    sleep(1, TimeUnit.MINUTES);
+    checkSubscription();
+  }
 
-    public void setSubscription(Collection<String> instr) {
-        synchronized (this.toSubscribe) {
-            this.toSubscribe.clear();
-            this.toSubscribe.addAll(instr);
-        }
-    }
-
-    private void sleep(int value, TimeUnit unit) {
-        try {
-            unit.sleep(value);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void subscribe() {
-        if (this.toSubscribe.size() == 0)
-            throw new IllegalStateException("no instrument to subscribe");
-        // Prepare new subscription.
-        var ins = new String[50];
-        int count = -1;
-        synchronized (this.toSubscribe) {
-            var iter = this.toSubscribe.iterator();
-            while (true) {
-                while (iter.hasNext() && ++count < 50) {
-                    var i = iter.next();
-                    // Initialize instrument ID in candle engine.
-                    registerInstrument(i);
-                    ins[count] = i;
-                }
-                // Subscribe batch.
-                subscribeBatch(ins, count);
-                count = -1;
-                if (!iter.hasNext())
-                    break;
-                else
-                    sleep(1, TimeUnit.SECONDS);
-            }
-        }
-        // Setup durations.
-        setupDurations();
-        // Wait for a while, then check subscription status.
-        sleep(1, TimeUnit.MINUTES);
-        checkSubscription();
-    }
-
-    @Override
-    public void connect() {
-        if (this.api != null)
-            throw new IllegalStateException("need disconnect before connect");
+  @Override
+  public void connect() {
+    if (this.api != null)
+      throw new IllegalStateException("need disconnect before connect");
         /*
          IMPORTANT!
          Kept reference to SPI so GC won't disconnect the object, hence the underlining
          C++ objects.
          */
-        this.api = CThostFtdcMdApi.CreateFtdcMdApi(
-                this.loginCfg.FlowDirectory,
-                this.loginCfg.IsUsingUDP,
-                this.loginCfg.IsMulticast);
-        this.spi = new JniMdSpi(this);
-        this.api.RegisterSpi(spi);
-        for (var addr : this.loginCfg.FrontAddresses)
-            this.api.RegisterFront(addr);
-        this.api.Init();
-    }
+    this.api = CThostFtdcMdApi.CreateFtdcMdApi(
+      this.loginCfg.FlowDirectory,
+      this.loginCfg.IsUsingUDP,
+      this.loginCfg.IsMulticast);
+    this.spi = new JniMdSpi(this);
+    this.api.RegisterSpi(spi);
+    for (var addr : this.loginCfg.FrontAddresses)
+      this.api.RegisterFront(addr);
+    this.api.Init();
+  }
 
-    @Override
-    public void disconnect() {
-        // Set states.
-        this.isLogin = false;
-        this.isConnected = false;
-        this.workingState = WorkingState.STOPPED;
-        // Release resources.
-        this.api.Release();
-        this.api = null;
-        this.spi = null;
-    }
+  @Override
+  public void disconnect() {
+    // Set states.
+    this.isLogin = false;
+    this.isConnected = false;
+    this.workingState = WorkingState.STOPPED;
+    // Release resources.
+    this.api.Release();
+    this.api = null;
+    this.spi = null;
+  }
 
-    public void login() {
-        if (!this.isConnected)
-            throw new IllegalStateException("not connected");
-        if (isLogin)
-            throw new IllegalStateException("duplicated login");
-        this.workingState = WorkingState.STARTING;
-        doLogin();
-    }
+  public void login() {
+    if (!this.isConnected)
+      throw new IllegalStateException("not connected");
+    if (isLogin)
+      throw new IllegalStateException("duplicated login");
+    this.workingState = WorkingState.STARTING;
+    doLogin();
+  }
 
-    public void logout() {
-        if (!this.isLogin)
-            throw new IllegalStateException("duplicated logout");
-        this.workingState = WorkingState.STOPPING;
-        doLogout();
-    }
+  public void logout() {
+    if (!this.isLogin)
+      throw new IllegalStateException("duplicated logout");
+    this.workingState = WorkingState.STOPPING;
+    doLogout();
+  }
 
-    public WorkingState getWorkingState() {
-        return this.workingState;
-    }
+  public WorkingState getWorkingState() {
+    return this.workingState;
+  }
 
-    public boolean waitWorkingState(WorkingState stateToWait, long millis) {
-        var wait = millis;
-        var beg = System.currentTimeMillis();
-        while (this.workingState != stateToWait) {
-            try {
-                this.stateSignal.waitSignal(wait);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            var elapse = System.currentTimeMillis() - beg;
-            if (elapse < wait)
-                wait -= elapse;
-            else
-                break;
-        }
-        return this.workingState == stateToWait;
+  public boolean waitWorkingState(WorkingState stateToWait, long millis) {
+    var wait = millis;
+    var beg = System.currentTimeMillis();
+    while (this.workingState != stateToWait) {
+      try {
+        this.stateSignal.waitSignal(wait);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      var elapse = System.currentTimeMillis() - beg;
+      if (elapse < wait)
+        wait -= elapse;
+      else
+        break;
     }
+    return this.workingState == stateToWait;
+  }
 
-    private void updateActionDay() {
-        this.actionDay = Utils.getDay(LocalDate.now(), null);
-    }
+  private void updateActionDay() {
+    this.actionDay = Utils.getDay(LocalDate.now(), null);
+  }
 
-    private void subscribeBatch(String[] instr, int count) {
-        this.api.SubscribeMarketData(instr, count);
-    }
+  private void subscribeBatch(String[] instr, int count) {
+    this.api.SubscribeMarketData(instr, count);
+  }
 
-    private void registerInstrument(String instrID) {
-        engine.addInstrument(instrID);
-    }
+  private void registerInstrument(String instrID) {
+    engine.addInstrument(instrID);
+  }
 
-    private void setupDurations() {
-        engine.setupDurations();
-    }
+  private void setupDurations() {
+    engine.setupDurations();
+  }
 
-    private void doLogin() {
-        var req = new CReqUserLogin();
-        req.BrokerID = this.loginCfg.BrokerID;
-        req.UserID = this.loginCfg.UserID;
-        req.Password = this.loginCfg.Password;
-        var r = this.api.ReqUserLogin(
-                JNI.toJni(req),
-                Utils.getIncrementID());
-        if (r != 0)
-            this.global.getLogger().severe(
-                    Utils.formatLog("failed login request", null,
-                            null, r));
-    }
+  private void doLogin() {
+    var req = new CReqUserLogin();
+    req.BrokerID = this.loginCfg.BrokerID;
+    req.UserID = this.loginCfg.UserID;
+    req.Password = this.loginCfg.Password;
+    var r = this.api.ReqUserLogin(
+      JNI.toJni(req),
+      Utils.getIncrementID());
+    if (r != 0)
+      this.global.getLogger().severe(
+        Utils.formatLog("failed login request", null,
+          null, r));
+  }
 
-    private void doLogout() {
-        var req = new CUserLogout();
-        req.BrokerID = this.loginCfg.BrokerID;
-        req.UserID = this.loginCfg.UserID;
-        var r = this.api.ReqUserLogout(
-                JNI.toJni(req),
-                Utils.getIncrementID());
-        if (r != 0)
-            this.global.getLogger().warning(
-                    Utils.formatLog("failed logout request", null,
-                            null, r));
-    }
+  private void doLogout() {
+    var req = new CUserLogout();
+    req.BrokerID = this.loginCfg.BrokerID;
+    req.UserID = this.loginCfg.UserID;
+    var r = this.api.ReqUserLogout(
+      JNI.toJni(req),
+      Utils.getIncrementID());
+    if (r != 0)
+      this.global.getLogger().warning(
+        Utils.formatLog("failed logout request", null,
+          null, r));
+  }
 
-    private boolean isTrading(String instrumentID) {
-        var keeper = this.global.getTradingHour(
-                null, instrumentID);
-        return keeper != null && keeper.contains(LocalTime.now());
-    }
+  private boolean isTrading(String instrumentID) {
+    var keeper = this.global.getTradingHour(
+      null, instrumentID);
+    return keeper != null && keeper.contains(LocalTime.now());
+  }
 
-    public void whenFrontConnected() {
-        this.isConnected = true;
-        this.stateSignal.signal();
-        if (this.workingState == WorkingState.STARTING
-                || this.workingState == WorkingState.STARTED) {
-            doLogin();
-            this.global.getLogger().info("md reconnected");
-        } else
-            this.global.getLogger().info("md connected");
-    }
+  public void whenFrontConnected() {
+    this.isConnected = true;
+    this.stateSignal.signal();
+    if (this.workingState == WorkingState.STARTING
+      || this.workingState == WorkingState.STARTED) {
+      doLogin();
+      this.global.getLogger().info("md reconnected");
+    } else
+      this.global.getLogger().info("md connected");
+  }
 
-    public void whenFrontDisconnected(int reason) {
-        this.global.getLogger().warning("md disconnected");
-        this.isLogin = false;
-        this.isConnected = false;
-    }
+  public void whenFrontDisconnected(int reason) {
+    this.global.getLogger().warning("md disconnected");
+    this.isLogin = false;
+    this.isConnected = false;
+  }
 
-    public void whenRspError(CRspInfo rspInfo, int requestId,
+  public void whenRspError(CRspInfo rspInfo, int requestId,
                            boolean isLast) {
-        this.msgWriter.writeErr(rspInfo);
-        this.global.getLogger().severe(
-                Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
-                        rspInfo.ErrorID));
-    }
+    this.msgWriter.writeErr(rspInfo);
+    this.global.getLogger().severe(
+      Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
+        rspInfo.ErrorID));
+  }
 
-    public void whenRspUserLogin(CRspUserLogin rspUserLogin,
+  public void whenRspUserLogin(CRspUserLogin rspUserLogin,
                                CRspInfo rspInfo, int requestId,
                                boolean isLast) {
-        if (rspInfo.ErrorID == 0) {
-            this.isLogin = true;
-            this.workingState = WorkingState.STARTED;
-            // Signal login state changed.
-            this.stateSignal.signal();
-            this.global.getLogger().info("md login");
-            updateActionDay();
-            // The subscribe method uses instruments set by order provider.
-            // Because it needs to send requests many times, costing around 10 secs,
-            // use a thread here so it won't block the underlying API.
-            es.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        subscribe();
-                    } catch (Throwable th) {
-                        th.printStackTrace();
-                        global.getLogger().severe(th.getMessage());
-                    }
-                }
-            });
-        } else {
-            this.global.getLogger().severe(
-                    Utils.formatLog("md failed login", null,
-                            rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.msgWriter.writeErr(rspInfo);
+    if (rspInfo.ErrorID == 0) {
+      this.isLogin = true;
+      this.workingState = WorkingState.STARTED;
+      // Signal login state changed.
+      this.stateSignal.signal();
+      this.global.getLogger().info("md login");
+      updateActionDay();
+      // The subscribe method uses instruments set by order provider.
+      // Because it needs to send requests many times, costing around 10 secs,
+      // use a thread here so it won't block the underlying API.
+      es.submit(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            subscribe();
+          } catch (Throwable th) {
+            th.printStackTrace();
+            global.getLogger().severe(th.getMessage());
+          }
         }
+      });
+    } else {
+      this.global.getLogger().severe(
+        Utils.formatLog("md failed login", null,
+          rspInfo.ErrorMsg, rspInfo.ErrorID));
+      this.msgWriter.writeErr(rspInfo);
     }
+  }
 
-    public void whenRspUserLogout(CUserLogout userLogout,
+  public void whenRspUserLogout(CUserLogout userLogout,
                                 CRspInfo rspInfo, int nRequestID,
                                 boolean isLast) {
-        if (rspInfo.ErrorID == 0) {
-            this.isLogin = false;
-            this.workingState = WorkingState.STOPPED;
-            // Signal login state changed to logout.
-            this.stateSignal.signal();
-            this.global.getLogger().info("md logout");
-            // Clear last subscription on successful logout.
-            this.toSubscribe.clear();
-        } else {
-            this.global.getLogger().warning(
-                    Utils.formatLog("failed logout", null,
-                            rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.msgWriter.writeErr(rspInfo);
-        }
+    if (rspInfo.ErrorID == 0) {
+      this.isLogin = false;
+      this.workingState = WorkingState.STOPPED;
+      // Signal login state changed to logout.
+      this.stateSignal.signal();
+      this.global.getLogger().info("md logout");
+      // Clear last subscription on successful logout.
+      this.toSubscribe.clear();
+    } else {
+      this.global.getLogger().warning(
+        Utils.formatLog("failed logout", null,
+          rspInfo.ErrorMsg, rspInfo.ErrorID));
+      this.msgWriter.writeErr(rspInfo);
     }
+  }
 
-    public void checkSubscription() {
-        if (this.subscribed.size() == this.toSubscribe.size())
-            this.global.getLogger().info(
-                    "subscribe all " + this.toSubscribe.size() + "instruments");
-        else {
-            for (var in0 : this.toSubscribe)
-                if (!this.subscribed.contains(in0))
-                    this.global.getLogger().warning(in0 + " not subscribed");
+  public void checkSubscription() {
+    if (this.subscribed.size() == this.toSubscribe.size())
+      this.global.getLogger().info(
+        "subscribe all " + this.toSubscribe.size() + "instruments");
+    else {
+      var r = new HashSet<String>();
+      for (var in0 : this.toSubscribe) {
+        if (!this.subscribed.contains(in0))
+          r.add(in0);
+      }
+      int count = 0;
+      String msgBlock = System.lineSeparator();
+      for (var i : r) {
+        ++count;
+        msgBlock += "\t" + i + ",";
+        if (count >= 10) {
+          msgBlock += System.lineSeparator();
+          count = 0;
         }
-        // Clear.
-        this.subscribed.clear();
+      }
+      global.getLogger().warning("instruments aren't subscribed" + msgBlock);
     }
+    // Clear.
+    this.subscribed.clear();
+  }
 
-    public void whenRspSubMarketData(
-            CSpecificInstrument specificInstrument,
-            CRspInfo rspInfo, int requestId, boolean isLast) {
-        if (rspInfo.ErrorID != 0) {
-            this.global.getLogger().warning(Utils.formatLog(
-                    "failed subscription", specificInstrument.InstrumentID,
-                    rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.msgWriter.writeErr(rspInfo);
-        } else {
-            this.subscribed.add(specificInstrument.InstrumentID);
-        }
+  public void whenRspSubMarketData(
+    CSpecificInstrument specificInstrument,
+    CRspInfo rspInfo, int requestId, boolean isLast) {
+    if (rspInfo.ErrorID != 0) {
+      this.global.getLogger().warning(Utils.formatLog(
+        "failed subscription", specificInstrument.InstrumentID,
+        rspInfo.ErrorMsg, rspInfo.ErrorID));
+      this.msgWriter.writeErr(rspInfo);
+    } else {
+      this.subscribed.add(specificInstrument.InstrumentID);
     }
+  }
 
-    public void whenRspUnSubMarketData(
-            CSpecificInstrument specificInstrument,
-            CRspInfo rspInfo, int nRequestID, boolean isLast) {
-        if (rspInfo.ErrorID != 0) {
-            this.global.getLogger().warning(Utils.formatLog(
-                    "failed un-subscription", specificInstrument.InstrumentID,
-                    rspInfo.ErrorMsg, rspInfo.ErrorID));
-            this.msgWriter.writeErr(rspInfo);
-        }
+  public void whenRspUnSubMarketData(
+    CSpecificInstrument specificInstrument,
+    CRspInfo rspInfo, int nRequestID, boolean isLast) {
+    if (rspInfo.ErrorID != 0) {
+      this.global.getLogger().warning(Utils.formatLog(
+        "failed un-subscription", specificInstrument.InstrumentID,
+        rspInfo.ErrorMsg, rspInfo.ErrorID));
+      this.msgWriter.writeErr(rspInfo);
     }
+  }
 
-    public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
-        // Set day.
-        // CZCE's trading day is natural day, here unify them. No need to test the
-        // exchange id because directly assign the reference saves more time.
-        depthMarketData.TradingDay = this.global.getTradingDay();
-        depthMarketData.ActionDay = this.actionDay;
-        // Update global depth.
-        GlobalConfig.setDepthMarketData(depthMarketData);
-        // Filter re-sent md of last night between subscription and market open.
-        // It is not sent specially when you subscribe near market opens, but
-        // it is always sent when you subscribe early before market opens.
-        // [IMPORTANT]
-        // But please note that this condition filters out the settlement ticks,
-        // so need to save the tick before this clause.
-        if (isTrading(depthMarketData.InstrumentID)) {
-            // Route md and update candle engines.
-            router.route(depthMarketData);
-            engine.update(depthMarketData);
-        }
+  public void whenRtnDepthMarketData(CDepthMarketData depthMarketData) {
+    // Set day.
+    // CZCE's trading day is natural day, here unify them. No need to test the
+    // exchange id because directly assign the reference saves more time.
+    depthMarketData.TradingDay = this.global.getTradingDay();
+    depthMarketData.ActionDay = this.actionDay;
+    // Update global depth.
+    GlobalConfig.setDepthMarketData(depthMarketData);
+    // Filter re-sent md of last night between subscription and market open.
+    // It is not sent specially when you subscribe near market opens, but
+    // it is always sent when you subscribe early before market opens.
+    // [IMPORTANT]
+    // But please note that this condition filters out the settlement ticks,
+    // so need to save the tick before this clause.
+    if (isTrading(depthMarketData.InstrumentID)) {
+      // Route md and update candle engines.
+      router.route(depthMarketData);
+      engine.update(depthMarketData);
     }
+  }
 }
