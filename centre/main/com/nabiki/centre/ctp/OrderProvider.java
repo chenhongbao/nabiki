@@ -80,8 +80,8 @@ public class OrderProvider implements Connectable {
   protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
   // Request daemon.
-  protected Thread orderDaemon;
   protected final RequestDaemon reqDaemon = new RequestDaemon(this);
+  protected final Thread orderDaemon = new Thread(this.reqDaemon);
 
   // State.
   protected WorkingState workingState = WorkingState.STOPPED;
@@ -100,7 +100,6 @@ public class OrderProvider implements Connectable {
 
   private void daemon() {
     // Start order daemon.
-    this.orderDaemon = new Thread(this.reqDaemon);
     this.orderDaemon.setDaemon(true);
     this.orderDaemon.start();
     // Count how many requests to send for info.
@@ -367,9 +366,11 @@ public class OrderProvider implements Connectable {
   }
 
   public synchronized String getOrderRef() {
-    if (this.orderRef.get() == Integer.MAX_VALUE)
-      this.orderRef.set(0);
-    return String.valueOf(this.orderRef.incrementAndGet());
+    if (orderRef.get() == Integer.MAX_VALUE) {
+      orderRef.set(0);
+      reqDaemon.clearOrderRef();
+    }
+    return String.valueOf(orderRef.incrementAndGet());
   }
 
   protected void doLogin() {
@@ -436,7 +437,6 @@ public class OrderProvider implements Connectable {
     var maxOrderRef = Integer.parseInt(rspLogin.MaxOrderRef);
     if (maxOrderRef > orderRef.get()) {
       orderRef.set(maxOrderRef);
-      reqDaemon.clearOrderRef();
     }
   }
 

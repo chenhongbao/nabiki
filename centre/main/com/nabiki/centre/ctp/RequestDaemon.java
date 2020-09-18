@@ -52,7 +52,7 @@ class RequestDaemon implements Runnable {
   }
 
   private boolean isOrderRefUsed(String orderRef) {
-    if (usedOrderRef.containsKey(orderRef))
+    if (orderRef == null || usedOrderRef.containsKey(orderRef))
       return true;
     else {
       usedOrderRef.put(orderRef, LocalDateTime.now());
