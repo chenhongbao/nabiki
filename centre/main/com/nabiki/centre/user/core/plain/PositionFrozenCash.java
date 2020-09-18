@@ -29,8 +29,9 @@
 package com.nabiki.centre.user.core.plain;
 
 public class PositionFrozenCash implements java.io.Serializable {
-    public double FrozenCommission;
-    public double FrozenMargin;
+  public double FrozenCommission;
+  public double FrozenMargin;
 
-    public PositionFrozenCash() {}
+  public PositionFrozenCash() {
+  }
 }

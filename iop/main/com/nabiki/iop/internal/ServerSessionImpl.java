@@ -39,107 +39,107 @@ import org.apache.mina.core.session.IoSession;
 import java.net.InetSocketAddress;
 
 class ServerSessionImpl extends SessionImpl implements ServerSession {
-    private SessionResponseState responseState;
+  private SessionResponseState responseState;
 
-    /*
-    Construct an iop session from mina's io session and set this instance into
-    the specified io session.
-     */
-    private ServerSessionImpl(IoSession ioSession) {
-        super(ioSession);
-    }
+  /*
+  Construct an iop session from mina's io session and set this instance into
+  the specified io session.
+   */
+  private ServerSessionImpl(IoSession ioSession) {
+    super(ioSession);
+  }
 
-    /*
-    Retrieve and return an iop session from the specified io session, or create
-    a new one when no session nothing found.
-     */
-    static synchronized ServerSessionImpl from(IoSession ioSession) {
-        var iop = findSelf(ioSession);
-        if (iop == null)
-            iop = new ServerSessionImpl(ioSession);
-        return (ServerSessionImpl) iop;
-    }
+  /*
+  Retrieve and return an iop session from the specified io session, or create
+  a new one when no session nothing found.
+   */
+  static synchronized ServerSessionImpl from(IoSession ioSession) {
+    var iop = findSelf(ioSession);
+    if (iop == null)
+      iop = new ServerSessionImpl(ioSession);
+    return (ServerSessionImpl) iop;
+  }
 
-    void setResponseState(SessionResponseState state) {
-        this.responseState = state;
-    }
+  void setResponseState(SessionResponseState state) {
+    this.responseState = state;
+  }
 
-    SessionResponseState getResponseState() {
-        return this.responseState;
-    }
+  SessionResponseState getResponseState() {
+    return this.responseState;
+  }
 
-    @Override
-    public void close() {
-        super.close();
-    }
+  @Override
+  public void close() {
+    super.close();
+  }
 
-    @Override
-    public boolean isClosed() {
-        return super.isClosed();
-    }
+  @Override
+  public boolean isClosed() {
+    return super.isClosed();
+  }
 
-    @Override
-    public void done() {
-        setResponseState(SessionResponseState.DONE);
-    }
+  @Override
+  public void done() {
+    setResponseState(SessionResponseState.DONE);
+  }
 
-    @Override
-    public void fix() {
-        super.fix();
-    }
+  @Override
+  public void fix() {
+    super.fix();
+  }
 
-    private Body toBody(Message message) {
-        var body = new Body();
-        body.Type = message.Type;
-        body.RequestID = message.RequestID;
-        body.ResponseID = message.ResponseID;
-        body.CurrentCount = message.CurrentCount;
-        body.TotalCount = message.TotalCount;
-        if (message.Body != null)
-            body.Body = OP.toJson(message.Body);
-        if (message.RspInfo != null)
-            body.RspInfo = OP.toJson(message.RspInfo);
-        return body;
-    }
+  private Body toBody(Message message) {
+    var body = new Body();
+    body.Type = message.Type;
+    body.RequestID = message.RequestID;
+    body.ResponseID = message.ResponseID;
+    body.CurrentCount = message.CurrentCount;
+    body.TotalCount = message.TotalCount;
+    if (message.Body != null)
+      body.Body = OP.toJson(message.Body);
+    if (message.RspInfo != null)
+      body.RspInfo = OP.toJson(message.RspInfo);
+    return body;
+  }
 
-    @Override
-    public void sendLogin(Message message) {
-        message.Type = MessageType.RSP_REQ_LOGIN;
-        super.send(toBody(message), FrameType.LOGIN);
-    }
+  @Override
+  public void sendLogin(Message message) {
+    message.Type = MessageType.RSP_REQ_LOGIN;
+    super.send(toBody(message), FrameType.LOGIN);
+  }
 
-    @Override
-    public void sendResponse(Message message) {
-        // Send message and set response state.
-        super.send(toBody(message), FrameType.RESPONSE);
-        setResponseState(SessionResponseState.SENDING);
-    }
+  @Override
+  public void sendResponse(Message message) {
+    // Send message and set response state.
+    super.send(toBody(message), FrameType.RESPONSE);
+    setResponseState(SessionResponseState.SENDING);
+  }
 
-    @Override
-    public void sendHeartbeat(String heartbeatID) {
-        var body = new Body();
-        body.RequestID = heartbeatID;
-        body.Type = MessageType.HEARTBEAT;
-        super.send(body, FrameType.HEARTBEAT);
-    }
+  @Override
+  public void sendHeartbeat(String heartbeatID) {
+    var body = new Body();
+    body.RequestID = heartbeatID;
+    body.Type = MessageType.HEARTBEAT;
+    super.send(body, FrameType.HEARTBEAT);
+  }
 
-    @Override
-    public void setAttribute(String key, Object attribute) {
-        super.setAttribute(key, attribute);
-    }
+  @Override
+  public void setAttribute(String key, Object attribute) {
+    super.setAttribute(key, attribute);
+  }
 
-    @Override
-    public void removeAttribute(String key) {
-        super.removeAttribute(key);
-    }
+  @Override
+  public void removeAttribute(String key) {
+    super.removeAttribute(key);
+  }
 
-    @Override
-    public Object getAttribute(String key) {
-        return super.getAttribute(key);
-    }
+  @Override
+  public Object getAttribute(String key) {
+    return super.getAttribute(key);
+  }
 
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        return super.getRemoteAddress();
-    }
+  @Override
+  public InetSocketAddress getRemoteAddress() {
+    return super.getRemoteAddress();
+  }
 }

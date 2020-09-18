@@ -32,11 +32,11 @@ import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 
 public interface MarketDataHandler {
-    void onStart();
+  void onStart();
 
-    void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
+  void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading);
 
-    void onCandle(CCandle candle, boolean isTrading);
+  void onCandle(CCandle candle, boolean isTrading);
 
-    void onStop();
+  void onStop();
 }

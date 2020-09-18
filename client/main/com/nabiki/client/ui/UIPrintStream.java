@@ -33,70 +33,70 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class UIPrintStream extends PrintStream {
-    private static final DateTimeFormatter formatter
-            = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ");
+  private static final DateTimeFormatter formatter
+      = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ");
 
-    public UIPrintStream(UIPrinter printer, boolean isOut) {
-        super(new UIMessageOutputStream(printer, isOut), true);
-    }
+  public UIPrintStream(UIPrinter printer, boolean isOut) {
+    super(new UIMessageOutputStream(printer, isOut), true);
+  }
 
-    private static String format(LocalDateTime timeStamp) {
-        if (timeStamp == null)
-            timeStamp = LocalDateTime.now();
-        return timeStamp.format(formatter);
-    }
+  private static String format(LocalDateTime timeStamp) {
+    if (timeStamp == null)
+      timeStamp = LocalDateTime.now();
+    return timeStamp.format(formatter);
+  }
 
-    @Override
-    public void println(boolean x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(boolean x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(char x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(char x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(int x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(int x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(long x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(long x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(float x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(float x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(double x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(double x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(char[] x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(char[] x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(String x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(String x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(Object x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(Object x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 }

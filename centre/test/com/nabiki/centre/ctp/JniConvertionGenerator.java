@@ -37,37 +37,37 @@ import java.util.Collection;
 
 public class JniConvertionGenerator {
 
-    Collection<Field> getFields(Class<?> clz) {
-        return Arrays.asList(clz.getDeclaredFields());
-    }
+  Collection<Field> getFields(Class<?> clz) {
+    return Arrays.asList(clz.getDeclaredFields());
+  }
 
-    void createToLocal(Class<?> clz) {
-        System.out.println(clz.getName());
-        System.out.println("==========================");
-        for(var f : getFields(clz)) {
-            if (f.getType() == byte.class || f.getType() == Byte.class)
-                System.out.println("local." + f.getName() + " = (byte)jni.get" + f.getName() + "();");
-            else
-                System.out.println("local." + f.getName() + " = jni.get" + f.getName() + "();");
-        }
-        System.out.println();
+  void createToLocal(Class<?> clz) {
+    System.out.println(clz.getName());
+    System.out.println("==========================");
+    for (var f : getFields(clz)) {
+      if (f.getType() == byte.class || f.getType() == Byte.class)
+        System.out.println("local." + f.getName() + " = (byte)jni.get" + f.getName() + "();");
+      else
+        System.out.println("local." + f.getName() + " = jni.get" + f.getName() + "();");
     }
+    System.out.println();
+  }
 
-    void createToJni(Class<?> clz) {
-        System.out.println(clz.getName());
-        System.out.println("==========================");
-        for(var f : getFields(clz)) {
-            if (f.getType() == byte.class || f.getType() == Byte.class)
-                System.out.println("jni.set" + f.getName() + "((char)local." + f.getName() + ");");
-            else
-                System.out.println("jni.set" + f.getName() + "(local." + f.getName() + ");");
-        }
-        System.out.println();
+  void createToJni(Class<?> clz) {
+    System.out.println(clz.getName());
+    System.out.println("==========================");
+    for (var f : getFields(clz)) {
+      if (f.getType() == byte.class || f.getType() == Byte.class)
+        System.out.println("jni.set" + f.getName() + "((char)local." + f.getName() + ");");
+      else
+        System.out.println("jni.set" + f.getName() + "(local." + f.getName() + ");");
     }
+    System.out.println();
+  }
 
-    @Test
-    public void basic() {
-        createToJni(CQryInstrumentCommissionRate.class);
-    }
+  @Test
+  public void basic() {
+    createToJni(CQryInstrumentCommissionRate.class);
+  }
 
 }

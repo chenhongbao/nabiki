@@ -37,124 +37,124 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public abstract class AbstractFigure extends AbstractTrader implements Figure {
-    static class UILoggingHandler extends Handler {
-        private final UIPrinter printer;
+  static class UILoggingHandler extends Handler {
+    private final UIPrinter printer;
 
-        UILoggingHandler(UIPrinter printer) {
-            this.printer = printer;
-        }
-
-        @Override
-        public void publish(LogRecord record) {
-            printer.appendLog(record);
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void close() throws SecurityException {
-        }
-    }
-
-    private final Map<Integer, ChartMainFrame> mains = new ConcurrentHashMap<>();
-    private final LogDialog logDlg = new LogDialog();
-
-    protected AbstractFigure() {
-        logger.addHandler(new UILoggingHandler(logDlg));
-        System.setOut(new UIPrintStream(logDlg, true));
-        System.setErr(new UIPrintStream(logDlg, false));
-    }
-
-    private ChartMainFrame getFrame(int figureID) {
-        var frame = mains.get(figureID);
-        if (frame == null)
-            throw new RuntimeException("no such figure ID: " + figureID);
-        else
-            return frame;
-    }
-
-    private void checkZeroValue(int figureID, String name, double value) {
-        if (value == 0.0D)
-            System.err.println(String.format(
-                    "figure %d, plot %s, append zero value, possibly error",
-                    figureID, name));
+    UILoggingHandler(UIPrinter printer) {
+      this.printer = printer;
     }
 
     @Override
-    public void setLine(int figureID, String name, Color color) {
-        getFrame(figureID).getChartController().createLine(name, color);
+    public void publish(LogRecord record) {
+      printer.appendLog(record);
     }
 
     @Override
-    public void setDot(int figureID, String name, Color color) {
-        getFrame(figureID).getChartController().createDot(name, color);
+    public void flush() {
     }
 
     @Override
-    public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
-        checkZeroValue(figureID, "stick", open * high * low * close);
-        getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
+    public void close() throws SecurityException {
     }
+  }
 
-    @Override
-    public void draw(int figureID, String name, Double value) {
-        checkZeroValue(figureID, name, value);
-        getFrame(figureID).getChartController().append(name, value);
-    }
+  private final Map<Integer, ChartMainFrame> mains = new ConcurrentHashMap<>();
+  private final LogDialog logDlg = new LogDialog();
 
-    @Override
-    public String getBoundInstrumentID(int figureID) {
-        return getFrame(figureID).getInstrumentID();
-    }
+  protected AbstractFigure() {
+    logger.addHandler(new UILoggingHandler(logDlg));
+    System.setOut(new UIPrintStream(logDlg, true));
+    System.setErr(new UIPrintStream(logDlg, false));
+  }
 
-    @Override
-    public int getBoundMinute(int figureID) {
-        return getFrame(figureID).getMinute();
-    }
+  private ChartMainFrame getFrame(int figureID) {
+    var frame = mains.get(figureID);
+    if (frame == null)
+      throw new RuntimeException("no such figure ID: " + figureID);
+    else
+      return frame;
+  }
 
-    @Override
-    public void setTitle(int figureID, String title) {
-        if (title != null && title.length() > 0)
-            getFrame(figureID).setTitle(title);
-        else
-            getFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
-    }
+  private void checkZeroValue(int figureID, String name, double value) {
+    if (value == 0.0D)
+      System.err.println(String.format(
+          "figure %d, plot %s, append zero value, possibly error",
+          figureID, name));
+  }
 
-    @Override
-    public void setFigure(int figureID, String instrumentID, int minute) {
-        if (mains.containsKey(figureID))
-            throw new RuntimeException("figure(" + figureID + ") already exists");
-        var frame = new ChartMainFrame(logDlg);
-        frame.setInstrumentID(instrumentID);
-        frame.setMinute(minute);
-        frame.setTitle(instrumentID + " - " + minute + "m");
-        frame.setVisible(true);
-        mains.put(figureID, frame);
-    }
+  @Override
+  public void setLine(int figureID, String name, Color color) {
+    getFrame(figureID).getChartController().createLine(name, color);
+  }
 
-    @Override
-    public Logger getLogger() {
-        return logger;
-    }
+  @Override
+  public void setDot(int figureID, String name, Color color) {
+    getFrame(figureID).getChartController().createDot(name, color);
+  }
 
-    @Override
-    public void update(int figureID) {
-        var ctrl = getFrame(figureID).getChartController();
-        if (ctrl.getDataCount() > 0)
-            ctrl.update();
-    }
+  @Override
+  public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
+    checkZeroValue(figureID, "stick", open * high * low * close);
+    getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
+  }
 
-    @Override
-    public Set<Integer> getFigureID() {
-        return mains.keySet();
-    }
+  @Override
+  public void draw(int figureID, String name, Double value) {
+    checkZeroValue(figureID, name, value);
+    getFrame(figureID).getChartController().append(name, value);
+  }
 
-    @Override
-    public void dispose(int figureID) {
-        var frame = getFrame(figureID);
-        frame.setVisible(false);
-        frame.dispose();
-    }
+  @Override
+  public String getBoundInstrumentID(int figureID) {
+    return getFrame(figureID).getInstrumentID();
+  }
+
+  @Override
+  public int getBoundMinute(int figureID) {
+    return getFrame(figureID).getMinute();
+  }
+
+  @Override
+  public void setTitle(int figureID, String title) {
+    if (title != null && title.length() > 0)
+      getFrame(figureID).setTitle(title);
+    else
+      getFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
+  }
+
+  @Override
+  public void setFigure(int figureID, String instrumentID, int minute) {
+    if (mains.containsKey(figureID))
+      throw new RuntimeException("figure(" + figureID + ") already exists");
+    var frame = new ChartMainFrame(logDlg);
+    frame.setInstrumentID(instrumentID);
+    frame.setMinute(minute);
+    frame.setTitle(instrumentID + " - " + minute + "m");
+    frame.setVisible(true);
+    mains.put(figureID, frame);
+  }
+
+  @Override
+  public Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  public void update(int figureID) {
+    var ctrl = getFrame(figureID).getChartController();
+    if (ctrl.getDataCount() > 0)
+      ctrl.update();
+  }
+
+  @Override
+  public Set<Integer> getFigureID() {
+    return mains.keySet();
+  }
+
+  @Override
+  public void dispose(int figureID) {
+    var frame = getFrame(figureID);
+    frame.setVisible(false);
+    frame.dispose();
+  }
 }

@@ -36,128 +36,128 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class JniMdSpi extends CThostFtdcMdSpi {
-    private final TickProvider provider;
-    private final BlockingQueue<CDepthMarketData> depths = new LinkedBlockingQueue<>();
-    private Thread depthUpdateThread;
+  private final TickProvider provider;
+  private final BlockingQueue<CDepthMarketData> depths = new LinkedBlockingQueue<>();
+  private Thread depthUpdateThread;
 
-    JniMdSpi(TickProvider provider) {
-        this.provider = provider;
-        prepare();
+  JniMdSpi(TickProvider provider) {
+    this.provider = provider;
+    prepare();
+  }
+
+  private void prepare() {
+    // The update may take long time, so do it in another thread.
+    this.depthUpdateThread = new Thread(new DepthUpdateDaemon());
+    this.depthUpdateThread.start();
+  }
+
+  @Override
+  public void OnFrontConnected() {
+    try {
+      this.provider.whenFrontConnected();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
     }
+  }
 
-    private void prepare() {
-        // The update may take long time, so do it in another thread.
-        this.depthUpdateThread = new Thread(new DepthUpdateDaemon());
-        this.depthUpdateThread.start();
+  @Override
+  public void OnFrontDisconnected(int nReason) {
+    try {
+      this.provider.whenFrontDisconnected(nReason);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
     }
+  }
 
+  @Override
+  public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+    try {
+      Objects.requireNonNull(pRspUserLogin, "rsp login null");
+      if (pRspInfo == null)
+        pRspInfo = new CThostFtdcRspInfoField();
+      this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  @Override
+  public void OnRspUserLogout(CThostFtdcUserLogoutField pUserLogout, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+    try {
+      Objects.requireNonNull(pUserLogout, "rsp logout null");
+      if (pRspInfo == null)
+        pRspInfo = new CThostFtdcRspInfoField();
+      this.provider.whenRspUserLogout(JNI.toLocal(pUserLogout), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  @Override
+  public void OnRspError(CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+    try {
+      Objects.requireNonNull(pRspInfo, "rsp error null");
+      this.provider.whenRspError(JNI.toLocal(pRspInfo), nRequestID, bIsLast);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  @Override
+  public void OnRspSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+    try {
+      Objects.requireNonNull(pSpecificInstrument, "rsp sub md null");
+      if (pRspInfo == null)
+        pRspInfo = new CThostFtdcRspInfoField();
+      this.provider.whenRspSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  @Override
+  public void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
+    try {
+      Objects.requireNonNull(pSpecificInstrument, "rsp unsub md null");
+      if (pRspInfo == null)
+        pRspInfo = new CThostFtdcRspInfoField();
+      this.provider.whenRspUnSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  @Override
+  public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData) {
+    try {
+      Objects.requireNonNull(pDepthMarketData, "return md null");
+      var depth = JNI.toLocal(pDepthMarketData);
+      if (!this.depths.offer(depth))
+        this.provider.global.getLogger()
+            .warning("can't offer depth: " + depth.InstrumentID);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.provider.global.getLogger().warning(th.getMessage());
+    }
+  }
+
+  class DepthUpdateDaemon implements Runnable {
     @Override
-    public void OnFrontConnected() {
+    public void run() {
+      while (!Thread.currentThread().isInterrupted()) {
         try {
-            this.provider.whenFrontConnected();
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
+          provider.whenRtnDepthMarketData(depths.take());
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
+      }
     }
-
-    @Override
-    public void OnFrontDisconnected(int nReason) {
-        try {
-            this.provider.whenFrontDisconnected(nReason);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        try {
-            Objects.requireNonNull(pRspUserLogin, "rsp login null");
-            if (pRspInfo == null)
-                pRspInfo = new CThostFtdcRspInfoField();
-            this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRspUserLogout(CThostFtdcUserLogoutField pUserLogout, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        try {
-            Objects.requireNonNull(pUserLogout, "rsp logout null");
-            if (pRspInfo == null)
-                pRspInfo = new CThostFtdcRspInfoField();
-            this.provider.whenRspUserLogout(JNI.toLocal(pUserLogout), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRspError(CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        try {
-            Objects.requireNonNull(pRspInfo, "rsp error null");
-            this.provider.whenRspError(JNI.toLocal(pRspInfo), nRequestID, bIsLast);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRspSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        try {
-            Objects.requireNonNull(pSpecificInstrument, "rsp sub md null");
-            if (pRspInfo == null)
-                pRspInfo = new CThostFtdcRspInfoField();
-            this.provider.whenRspSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField pSpecificInstrument, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
-        try {
-            Objects.requireNonNull(pSpecificInstrument, "rsp unsub md null");
-            if (pRspInfo == null)
-                pRspInfo = new CThostFtdcRspInfoField();
-            this.provider.whenRspUnSubMarketData(JNI.toLocal(pSpecificInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    @Override
-    public void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData) {
-        try {
-            Objects.requireNonNull(pDepthMarketData, "return md null");
-            var depth = JNI.toLocal(pDepthMarketData);
-            if (!this.depths.offer(depth))
-                this.provider.global.getLogger()
-                        .warning("can't offer depth: " + depth.InstrumentID);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.provider.global.getLogger().warning(th.getMessage());
-        }
-    }
-
-    class DepthUpdateDaemon implements Runnable {
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    provider.whenRtnDepthMarketData(depths.take());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+  }
 }

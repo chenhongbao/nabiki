@@ -31,70 +31,70 @@ package com.nabiki.client.sdk;
 import com.nabiki.objects.CRspInfo;
 
 public interface Response<T> {
-    /**
-     * Retrieve the remove the first response in queue in order of FIFO. If there is
-     * no response currently available in queue, return {@code null}.
-     *
-     * <p><b>If {@link ResponseConsumer} is registered, a response will be consumed
-     * by the consumer and will not be retrieved by the method.
-     * </b></p>
-     *
-     * @return the first element in queue, or {@code null} if no response in queue
-     */
-    T poll();
+  /**
+   * Retrieve the remove the first response in queue in order of FIFO. If there is
+   * no response currently available in queue, return {@code null}.
+   *
+   * <p><b>If {@link ResponseConsumer} is registered, a response will be consumed
+   * by the consumer and will not be retrieved by the method.
+   * </b></p>
+   *
+   * @return the first element in queue, or {@code null} if no response in queue
+   */
+  T poll();
 
-    /**
-     * Get the corresponding {@link CRspInfo} of the specified
-     * response. If no mapping for the specified response, return {@code null}.
-     *
-     * @param object response object
-     * @return response information, or {@code null} if no mapping
-     */
-    CRspInfo getRspInfo(T object);
+  /**
+   * Get the corresponding {@link CRspInfo} of the specified
+   * response. If no mapping for the specified response, return {@code null}.
+   *
+   * @param object response object
+   * @return response information, or {@code null} if no mapping
+   */
+  CRspInfo getRspInfo(T object);
 
-    /**
-     * Set the {@link ResponseConsumer} to receive the upcoming responses.
-     *
-     * <p><b>The consumer is invoked at once when a response arrives and the
-     * response will not be added to queue or retrieved by {@link Response#poll()}.
-     * </b></p>
-     *
-     * @param consumer consumer to receive the upcoming response
-     */
-    void consume(ResponseConsumer<T> consumer);
+  /**
+   * Set the {@link ResponseConsumer} to receive the upcoming responses.
+   *
+   * <p><b>The consumer is invoked at once when a response arrives and the
+   * response will not be added to queue or retrieved by {@link Response#poll()}.
+   * </b></p>
+   *
+   * @param consumer consumer to receive the upcoming response
+   */
+  void consume(ResponseConsumer<T> consumer);
 
-    /**
-     * Check if there was response arrived. Even all responses in queue are
-     * retrieved by {@link Response#poll()} or consumed by {@link ResponseConsumer},
-     * the mark is still {@code true}.
-     *
-     * @return {@code true} if there was response ever arrived, {@code false}
-     *      otherwise
-     */
-    boolean hasResponse();
+  /**
+   * Check if there was response arrived. Even all responses in queue are
+   * retrieved by {@link Response#poll()} or consumed by {@link ResponseConsumer},
+   * the mark is still {@code true}.
+   *
+   * @return {@code true} if there was response ever arrived, {@code false}
+   * otherwise
+   */
+  boolean hasResponse();
 
-    /**
-     * Get the number of responses ever arrived. The response counted by the
-     * method can be retrieved or consumed and is no long in queue.
-     *
-     * @return number of response ever arrived
-     */
-    int getArrivalCount();
+  /**
+   * Get the number of responses ever arrived. The response counted by the
+   * method can be retrieved or consumed and is no long in queue.
+   *
+   * @return number of response ever arrived
+   */
+  int getArrivalCount();
 
-    /**
-     * Get the total number of responses for the corresponding request.
-     *
-     * @return total number of responses for the request
-     */
-    int getTotalCount();
+  /**
+   * Get the total number of responses for the corresponding request.
+   *
+   * @return total number of responses for the request
+   */
+  int getTotalCount();
 
-    /**
-     * Get the number of responses in queue that are available for
-     * {@link Response#poll()}. If the consumer is set via
-     * {@link Response#consume(ResponseConsumer)}, the response that just arrived
-     * will be received by the consumer immediately and will not arrive in queue.
-     *
-     * @return number of responses available for {@code poll}
-     */
-    int availableCount();
+  /**
+   * Get the number of responses in queue that are available for
+   * {@link Response#poll()}. If the consumer is set via
+   * {@link Response#consume(ResponseConsumer)}, the response that just arrived
+   * will be received by the consumer immediately and will not arrive in queue.
+   *
+   * @return number of responses available for {@code poll}
+   */
+  int availableCount();
 }

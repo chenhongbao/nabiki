@@ -33,19 +33,19 @@ import com.nabiki.objects.CInputOrder;
 import com.nabiki.objects.CInputOrderAction;
 
 class PendingRequest {
-    final ActiveRequest active;
-    final CInputOrder order;
-    final CInputOrderAction action;
+  final ActiveRequest active;
+  final CInputOrder order;
+  final CInputOrderAction action;
 
-    PendingRequest(CInputOrder order, ActiveRequest active) {
-        this.order = order;
-        this.action = null;
-        this.active = active;
-    }
+  PendingRequest(CInputOrder order, ActiveRequest active) {
+    this.order = order;
+    this.action = null;
+    this.active = active;
+  }
 
-    PendingRequest(CInputOrderAction action, ActiveRequest active) {
-        this.order = null;
-        this.action = action;
-        this.active = active;
-    }
+  PendingRequest(CInputOrderAction action, ActiveRequest active) {
+    this.order = null;
+    this.action = action;
+    this.active = active;
+  }
 }

@@ -29,7 +29,8 @@
 package com.nabiki.objects;
 
 public class CUnsubMarketData implements java.io.Serializable {
-    public String[] InstrumentID;
+  public String[] InstrumentID;
 
-    public CUnsubMarketData() {}
+  public CUnsubMarketData() {
+  }
 }

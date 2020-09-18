@@ -32,42 +32,42 @@ import java.io.*;
 import java.nio.ByteBuffer;
 
 public class UIMessageOutputStream extends OutputStream {
-    private final UIPrinter printer;
-    private final boolean isOut;
-    private final byte[] bytes = new byte[1024 * 16];
-    private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
-    private final File outFile = new File("out.log"),
-            errFile = new File("err.log");
+  private final UIPrinter printer;
+  private final boolean isOut;
+  private final byte[] bytes = new byte[1024 * 16];
+  private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+  private final File outFile = new File("out.log"),
+      errFile = new File("err.log");
 
-    public UIMessageOutputStream(UIPrinter printer, boolean isOut) {
-        this.isOut = isOut;
-        this.printer = printer;
-    }
+  public UIMessageOutputStream(UIPrinter printer, boolean isOut) {
+    this.isOut = isOut;
+    this.printer = printer;
+  }
 
-    @Override
-    public void write(int b) throws IOException {
-        buffer.put((byte)b);
-    }
+  @Override
+  public void write(int b) throws IOException {
+    buffer.put((byte) b);
+  }
 
-    @Override
-    public void flush() throws IOException {
-        buffer.flip();
-        var str = new String(bytes, buffer.position(), buffer.remaining());
-        buffer.clear();
-        if (isOut) {
-            printer.appendOut(str);
-            writeFile(str, outFile);
-        } else {
-            printer.appendErr(str);
-            writeFile(str, errFile);
-        }
+  @Override
+  public void flush() throws IOException {
+    buffer.flip();
+    var str = new String(bytes, buffer.position(), buffer.remaining());
+    buffer.clear();
+    if (isOut) {
+      printer.appendOut(str);
+      writeFile(str, outFile);
+    } else {
+      printer.appendErr(str);
+      writeFile(str, errFile);
     }
+  }
 
-    private void writeFile(String msg, File file) {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))) {
-            pw.print(msg);
-            pw.flush();
-        } catch (IOException ignored) {
-        }
+  private void writeFile(String msg, File file) {
+    try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))) {
+      pw.print(msg);
+      pw.flush();
+    } catch (IOException ignored) {
     }
+  }
 }

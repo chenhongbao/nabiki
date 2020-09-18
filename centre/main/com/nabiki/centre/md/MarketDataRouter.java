@@ -38,140 +38,140 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class MarketDataRouter implements Runnable {
-    private final Set<MarketDataReceiver> receivers = new HashSet<>();
-    private final Queue<CDepthMarketData> depths = new LinkedList<>();
-    private final Queue<CCandle> candles = new LinkedList<>();
+  private final Set<MarketDataReceiver> receivers = new HashSet<>();
+  private final Queue<CDepthMarketData> depths = new LinkedList<>();
+  private final Queue<CCandle> candles = new LinkedList<>();
 
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
+  private final ReentrantLock lock = new ReentrantLock();
+  private final Condition cond = lock.newCondition();
 
-    private final Thread daemon;
+  private final Thread daemon;
 
-    public MarketDataRouter() {
-        this.daemon = new Thread(this);
-        this.daemon.start();
+  public MarketDataRouter() {
+    this.daemon = new Thread(this);
+    this.daemon.start();
+  }
+
+  public void addReceiver(MarketDataReceiver recv) {
+    if (recv == null)
+      throw new NullPointerException("receiver null");
+    synchronized (this.receivers) {
+      this.receivers.add(recv);
     }
+  }
 
-    public void addReceiver(MarketDataReceiver recv) {
-        if (recv == null)
-            throw new NullPointerException("receiver null");
-        synchronized (this.receivers) {
-            this.receivers.add(recv);
-        }
+  public void removeReceiver(MarketDataReceiver recv) {
+    if (recv == null)
+      throw new NullPointerException("receiver null");
+    synchronized (this.receivers) {
+      this.receivers.remove(recv);
     }
+  }
 
-    public void removeReceiver(MarketDataReceiver recv) {
-        if (recv == null)
-            throw new NullPointerException("receiver null");
-        synchronized (this.receivers) {
-            this.receivers.remove(recv);
-        }
+  public void route(CDepthMarketData depth) {
+    offerDepth(depth);
+    trySignal();
+  }
+
+  public void route(CCandle candle) {
+    offerCandle(candle);
+    trySignal();
+  }
+
+  public void route(Collection<CCandle> candles) {
+    offerCandle(candles);
+    trySignal();
+  }
+
+  private void trySignal() {
+    if (this.lock.tryLock()) {
+      try {
+        this.cond.signal();
+      } finally {
+        this.lock.unlock();
+      }
     }
+  }
 
-    public void route(CDepthMarketData depth) {
-        offerDepth(depth);
-        trySignal();
+  private void offerDepth(CDepthMarketData depth) {
+    synchronized (this.depths) {
+      this.depths.add(depth);
     }
+  }
 
-    public void route(CCandle candle) {
-        offerCandle(candle);
-        trySignal();
+  private void offerCandle(CCandle candle) {
+    synchronized (this.candles) {
+      this.candles.add(candle);
     }
+  }
 
-    public void route(Collection<CCandle> candles) {
-        offerCandle(candles);
-        trySignal();
+  private void offerCandle(Collection<CCandle> candles) {
+    if (candles == null || candles.size() == 0)
+      return;
+    synchronized (this.candles) {
+      this.candles.addAll(candles);
     }
+  }
 
-    private void trySignal() {
-        if (this.lock.tryLock()) {
-            try {
-                this.cond.signal();
-            } finally {
-                this.lock.unlock();
-            }
-        }
+  private CDepthMarketData pollDepth() {
+    synchronized (this.depths) {
+      return this.depths.poll();
     }
+  }
 
-    private void offerDepth(CDepthMarketData depth) {
-        synchronized (this.depths) {
-            this.depths.add(depth);
-        }
+  private CCandle pollCandle() {
+    synchronized (this.candles) {
+      return this.candles.poll();
     }
+  }
 
-    private void offerCandle(CCandle candle) {
-        synchronized (this.candles) {
-            this.candles.add(candle);
-        }
+  private boolean hasData() {
+    int mdCnt, cndCnt;
+    synchronized (this.depths) {
+      mdCnt = this.depths.size();
     }
-
-    private void offerCandle(Collection<CCandle> candles) {
-        if (candles == null || candles.size() == 0)
-            return;
-        synchronized (this.candles) {
-            this.candles.addAll(candles);
-        }
+    synchronized (this.candles) {
+      cndCnt = this.candles.size();
     }
+    return mdCnt + cndCnt > 0;
+  }
 
-    private CDepthMarketData pollDepth() {
-        synchronized (this.depths) {
-            return this.depths.poll();
-        }
-    }
-
-    private CCandle pollCandle() {
-        synchronized (this.candles) {
-            return this.candles.poll();
-        }
-    }
-
-    private boolean hasData() {
-        int mdCnt, cndCnt;
-        synchronized (this.depths) {
-            mdCnt = this.depths.size();
-        }
-        synchronized (this.candles) {
-            cndCnt = this.candles.size();
-        }
-        return mdCnt + cndCnt > 0;
-    }
-
-    @Override
-    public void run() {
-        while (!Thread.interrupted()) {
-            this.lock.lock();
-            try {
-                while (!hasData())
-                    this.cond.await(1, TimeUnit.SECONDS);
-                CCandle candle;
-                CDepthMarketData md;
-                // Depth.
-                while ((md = pollDepth()) != null)
-                    synchronized (this.receivers) {
-                        for ( var recv : this.receivers) {
-                            try {
-                                recv.depthReceived(Utils.deepCopy(md));
-                            } catch (Throwable th) {
-                                th.printStackTrace();
-                            }
-                        }
-                    }
-                // Candle.
-                while ((candle = pollCandle()) != null)
-                    synchronized (this.receivers) {
-                        for (var recv : this.receivers) {
-                            try {
-                                recv.candleReceived(Utils.deepCopy(candle));
-                            } catch (Throwable th) {
-                                th.printStackTrace();
-                            }
-                        }
-                    }
-            } catch (Throwable th) {
+  @Override
+  public void run() {
+    while (!Thread.interrupted()) {
+      this.lock.lock();
+      try {
+        while (!hasData())
+          this.cond.await(1, TimeUnit.SECONDS);
+        CCandle candle;
+        CDepthMarketData md;
+        // Depth.
+        while ((md = pollDepth()) != null)
+          synchronized (this.receivers) {
+            for (var recv : this.receivers) {
+              try {
+                recv.depthReceived(Utils.deepCopy(md));
+              } catch (Throwable th) {
                 th.printStackTrace();
-            } finally {
-                this.lock.unlock();
+              }
             }
-        }
+          }
+        // Candle.
+        while ((candle = pollCandle()) != null)
+          synchronized (this.receivers) {
+            for (var recv : this.receivers) {
+              try {
+                recv.candleReceived(Utils.deepCopy(candle));
+              } catch (Throwable th) {
+                th.printStackTrace();
+              }
+            }
+          }
+      } catch (Throwable th) {
+        th.printStackTrace();
+      } finally {
+        this.lock.unlock();
+      }
     }
+  }
 }

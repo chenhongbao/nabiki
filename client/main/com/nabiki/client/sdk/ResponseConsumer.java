@@ -31,5 +31,5 @@ package com.nabiki.client.sdk;
 import com.nabiki.objects.CRspInfo;
 
 public interface ResponseConsumer<T> {
-    void accept(T object, CRspInfo rspInfo, int currentCount, int totalCount);
+  void accept(T object, CRspInfo rspInfo, int currentCount, int totalCount);
 }

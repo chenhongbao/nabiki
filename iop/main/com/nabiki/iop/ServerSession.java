@@ -29,8 +29,8 @@
 package com.nabiki.iop;
 
 public interface ServerSession extends IOPSession {
-    void done();
+  void done();
 
-    void sendResponse(Message message);
+  void sendResponse(Message message);
 
 }

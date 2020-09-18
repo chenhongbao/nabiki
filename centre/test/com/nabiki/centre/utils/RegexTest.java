@@ -33,21 +33,21 @@ import org.junit.Test;
 import java.util.regex.Pattern;
 
 public class RegexTest {
-    @Test
-    public void basic() {
-        Pattern p = Pattern.compile("[a-zA-Z]+\\d+");
+  @Test
+  public void basic() {
+    Pattern p = Pattern.compile("[a-zA-Z]+\\d+");
 
-        var instruments = new String[]{
-                "c2009", "c2101", "au2012", "RM009", "WR101",
-                "c", "cs", "001", "2012", "2101",
-                "c-cs-2012", "c-", "-cs-2009", "cs-2009-cs-2101"
-        };
+    var instruments = new String[]{
+        "c2009", "c2101", "au2012", "RM009", "WR101",
+        "c", "cs", "001", "2012", "2101",
+        "c-cs-2012", "c-", "-cs-2009", "cs-2009-cs-2101"
+    };
 
-        for (var instr : instruments) {
-            if (p.matcher(instr).matches())
-                System.out.println(instr);
-            else
-                System.err.println(instr);
-        }
+    for (var instr : instruments) {
+      if (p.matcher(instr).matches())
+        System.out.println(instr);
+      else
+        System.err.println(instr);
     }
+  }
 }

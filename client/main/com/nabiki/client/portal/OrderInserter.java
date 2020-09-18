@@ -42,172 +42,175 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrderInserter extends Updater implements Runnable {
-    private final TradeClient client;
-    private final JTextField instrumentField, priceField, volumeField;
-    private final JTable table;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+  private final TradeClient client;
+  private final JTextField instrumentField, priceField, volumeField;
+  private final JTable table;
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
-    // Table headers.
-    private final String[] columns = new String[] {
-            "\u65F6\u95F4", "\u62A5\u5355\u7F16\u53F7"
-    };
+  // Table headers.
+  private final String[] columns = new String[]{
+      "\u65F6\u95F4", "\u62A5\u5355\u7F16\u53F7"
+  };
 
-    private Thread daemon;
-    private OrderType type;
-    private JButton[] src;
+  private Thread daemon;
+  private OrderType type;
+  private JButton[] src;
 
-    enum OrderType {
-        BUY_OPEN, BUY_CLOSE, SELL_OPEN, SELL_CLOSE
+  enum OrderType {
+    BUY_OPEN, BUY_CLOSE, SELL_OPEN, SELL_CLOSE
+  }
+
+  OrderInserter(
+      TradeClient client,
+      JTextField instrumentField,
+      JTextField priceField,
+      JTextField volumeField,
+      JTable table) {
+    this.client = client;
+    this.table = table;
+    this.instrumentField = instrumentField;
+    this.priceField = priceField;
+    this.volumeField = volumeField;
+    setupTable();
+  }
+
+  public void start() {
+    daemon = new Thread(this);
+    daemon.setDaemon(true);
+    daemon.start();
+  }
+
+  public void insert(OrderType type, Object... src) {
+    this.type = type;
+    if (src.length > 0) {
+      this.src = new JButton[src.length];
+      for (int i = 0; i < src.length; ++i)
+        this.src[i] = (JButton) src[i];
     }
+    super.fire();
+  }
 
-    OrderInserter(
-            TradeClient client,
-            JTextField instrumentField,
-            JTextField priceField,
-            JTextField volumeField,
-            JTable table) {
-        this.client = client;
-        this.table = table;
-        this.instrumentField = instrumentField;
-        this.priceField = priceField;
-        this.volumeField = volumeField;
-        setupTable();
+  private void enable(boolean enabled) {
+    if (this.src == null)
+      return;
+    for (var s : src)
+      s.setEnabled(enabled);
+  }
+
+  @Override
+  public void run() {
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
+        super.waitFire();
+        insertOrder();
+      } catch (Throwable th) {
+        showMsg(th.getMessage());
+      }
     }
+  }
 
-    public void start() {
-        daemon = new Thread(this);
-        daemon.setDaemon(true);
-        daemon.start();
+  private void insertOrder() throws Exception {
+    var req = new CInputOrder();
+
+    try {
+      req.InstrumentID = instrumentField.getText().trim();
+      req.LimitPrice = Double.parseDouble(priceField.getText().trim());
+      req.VolumeTotalOriginal = Integer.parseInt(volumeField.getText().trim());
+    } catch (Throwable th) {
+      throw new IllegalArgumentException("invalid parameters for order insert");
     }
-
-    public void insert(OrderType type, Object... src) {
-        this.type = type;
-        if (src.length > 0) {
-            this.src = new JButton[src.length];
-            for (int i = 0; i < src.length; ++i)
-                this.src[i] = (JButton)src[i];
-        }
-        super.fire();
+    switch (type) {
+      case BUY_OPEN:
+        req.Direction = DirectionType.DIRECTION_BUY;
+        req.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
+        break;
+      case BUY_CLOSE:
+        req.Direction = DirectionType.DIRECTION_BUY;
+        req.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        break;
+      case SELL_OPEN:
+        req.Direction = DirectionType.DIRECTION_SELL;
+        req.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
+        break;
+      case SELL_CLOSE:
+        req.Direction = DirectionType.DIRECTION_SELL;
+        req.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
+        break;
+      default:
+        break;
     }
-
-    private void enable(boolean enabled) {
-        if (this.src == null)
-            return;
-        for (var s : src)
-            s.setEnabled(enabled);
+    var rsp = client.orderInsert(
+        req, UUID.randomUUID().toString());
+    enable(false);
+    sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+    enable(true);
+    if (!rsp.hasResponse())
+      showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
+    else {
+      var order = rsp.poll();
+      var rspInfo = rsp.getRspInfo(order);
+      if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)
+        showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+      else if (order == null)
+        showMsg("\u62A5\u5355\u54CD\u5E94\u8FD4\u56DE\u7A7A\u5F15\u7528");
+      else
+        updateInsertedTable(order);
     }
+    clearFields();
+  }
 
-    @Override
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                super.waitFire();
-                insertOrder();
-            } catch (Throwable th) {
-                showMsg(th.getMessage());
-            }
-        }
+  private void setupTable() {
+    table.setCellSelectionEnabled(true);
+    table.setModel(new DefaultTableModel(columns, 0) {
+      final Class[] columnTypes = new Class[]{
+          String.class, String.class
+      };
+
+      public Class getColumnClass(int columnIndex) {
+        return columnTypes[columnIndex];
+      }
+
+      final boolean[] columnEditables = new boolean[]{
+          false, false
+      };
+
+      public boolean isCellEditable(int row, int column) {
+        return columnEditables[column];
+      }
+    });
+    table.getColumnModel().getColumn(1).setPreferredWidth(250);
+    table.getColumnModel().getColumn(1).setMinWidth(250);
+  }
+
+  private void updateInsertedTable(COrder order) {
+    var timeStamp = LocalDateTime.now().format(formatter);
+    var model = (DefaultTableModel) table.getModel();
+    model.addRow(new Object[]{
+        timeStamp,
+        order.OrderLocalID});
+    model.fireTableDataChanged();
+    writeOrderID(timeStamp, order.OrderLocalID);
+  }
+
+  private void writeOrderID(String timeStamp, String id) {
+    try (PrintWriter pw = new PrintWriter(
+        new FileWriter("order_id.log", true))) {
+      pw.print(timeStamp);
+      pw.print("\t");
+      pw.println(id);
+      pw.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    private void insertOrder() throws Exception {
-        var req = new CInputOrder();
+  private void clearFields() {
+    instrumentField.setText("");
+    priceField.setText("");
+    volumeField.setText("");
+  }
 
-        try {
-            req.InstrumentID = instrumentField.getText().trim();
-            req.LimitPrice = Double.parseDouble(priceField.getText().trim());
-            req.VolumeTotalOriginal = Integer.parseInt(volumeField.getText().trim());
-        } catch (Throwable th) {
-            throw new IllegalArgumentException("invalid parameters for order insert");
-        }
-        switch (type) {
-            case BUY_OPEN:
-                req.Direction = DirectionType.DIRECTION_BUY;
-                req.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
-                break;
-            case BUY_CLOSE:
-                req.Direction = DirectionType.DIRECTION_BUY;
-                req.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
-                break;
-            case SELL_OPEN:
-                req.Direction = DirectionType.DIRECTION_SELL;
-                req.CombOffsetFlag = CombOffsetFlagType.OFFSET_OPEN;
-                break;
-            case SELL_CLOSE:
-                req.Direction = DirectionType.DIRECTION_SELL;
-                req.CombOffsetFlag = CombOffsetFlagType.OFFSET_CLOSE;
-                break;
-            default:
-                break;
-        }
-        var rsp = client.orderInsert(
-                req, UUID.randomUUID().toString());
-        enable(false);
-        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
-        enable(true);
-        if (!rsp.hasResponse())
-            showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
-        else {
-            var order= rsp.poll();
-            var rspInfo = rsp.getRspInfo(order);
-            if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)
-                showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
-            else if (order == null)
-                showMsg("\u62A5\u5355\u54CD\u5E94\u8FD4\u56DE\u7A7A\u5F15\u7528");
-            else
-                updateInsertedTable(order);
-        }
-        clearFields();
-    }
-
-    private void setupTable() {
-        table.setCellSelectionEnabled(true);
-        table.setModel(new DefaultTableModel(columns, 0) {
-            final Class[] columnTypes = new Class[] {
-                    String.class, String.class
-            };
-            public Class getColumnClass(int columnIndex) {
-                return columnTypes[columnIndex];
-            }
-            final boolean[] columnEditables = new boolean[] {
-                    false, false
-            };
-            public boolean isCellEditable(int row, int column) {
-                return columnEditables[column];
-            }
-        });
-        table.getColumnModel().getColumn(1).setPreferredWidth(250);
-        table.getColumnModel().getColumn(1).setMinWidth(250);
-    }
-
-    private void updateInsertedTable(COrder order) {
-        var timeStamp = LocalDateTime.now().format(formatter);
-        var model = (DefaultTableModel) table.getModel();
-        model.addRow(new Object[]{
-                timeStamp,
-                order.OrderLocalID});
-        model.fireTableDataChanged();
-        writeOrderID(timeStamp, order.OrderLocalID);
-    }
-
-    private void writeOrderID(String timeStamp, String id) {
-        try (PrintWriter pw = new PrintWriter(
-                new FileWriter("order_id.log", true))) {
-            pw.print(timeStamp);
-            pw.print("\t");
-            pw.println(id);
-            pw.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void clearFields() {
-        instrumentField.setText("");
-        priceField.setText("");
-        volumeField.setText("");
-    }
-
-    private void showMsg(String msg) {
-        MessageDialog.showDefault(msg);
-    }
+  private void showMsg(String msg) {
+    MessageDialog.showDefault(msg);
+  }
 }

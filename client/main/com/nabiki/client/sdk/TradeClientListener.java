@@ -29,9 +29,9 @@
 package com.nabiki.client.sdk;
 
 public interface TradeClientListener {
-    void onError(Throwable th);
+  void onError(Throwable th);
 
-    void onClose();
+  void onClose();
 
-    void onOpen();
+  void onOpen();
 }

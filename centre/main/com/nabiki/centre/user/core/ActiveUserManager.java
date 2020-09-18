@@ -36,41 +36,41 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUserManager {
-    private final OrderProvider provider;
-    private final Global global;
-    private final UserManager userMgr;
-    private final Map<String, ActiveUser> users = new ConcurrentHashMap<>();
+  private final OrderProvider provider;
+  private final Global global;
+  private final UserManager userMgr;
+  private final Map<String, ActiveUser> users = new ConcurrentHashMap<>();
 
-    public ActiveUserManager(OrderProvider provider, Global cfg, Path dataDir) {
-        this.provider = provider;
-        this.global = cfg;
-        this.userMgr = UserManager.create(dataDir);
-    }
+  public ActiveUserManager(OrderProvider provider, Global cfg, Path dataDir) {
+    this.provider = provider;
+    this.global = cfg;
+    this.userMgr = UserManager.create(dataDir);
+  }
 
-    private void createActive() {
-        for (var userID : this.userMgr.getAllUserID()) {
-            var usr = this.userMgr.getUser(userID);
-            if (usr != null)
-                this.users.put(userID,
-                        new ActiveUser(usr, this.provider, this.global));
-            else
-                this.global.getLogger().warning("null user");
-        }
+  private void createActive() {
+    for (var userID : this.userMgr.getAllUserID()) {
+      var usr = this.userMgr.getUser(userID);
+      if (usr != null)
+        this.users.put(userID,
+            new ActiveUser(usr, this.provider, this.global));
+      else
+        this.global.getLogger().warning("null user");
     }
+  }
 
-    public ActiveUser getActiveUser(String userID) {
-        return this.users.get(userID);
-    }
+  public ActiveUser getActiveUser(String userID) {
+    return this.users.get(userID);
+  }
 
-    public void renew() throws Exception {
-        this.users.clear();
-        this.userMgr.load();
-        createActive();
-    }
+  public void renew() throws Exception {
+    this.users.clear();
+    this.userMgr.load();
+    createActive();
+  }
 
-    public void settle() throws Exception {
-        for (var active : this.users.values())
-            active.settle();
-        this.userMgr.flush();
-    }
+  public void settle() throws Exception {
+    for (var active : this.users.values())
+      active.settle();
+    this.userMgr.flush();
+  }
 }

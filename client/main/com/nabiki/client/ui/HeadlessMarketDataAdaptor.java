@@ -41,65 +41,65 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
-    public final long MAX_ARRIVAL_SECONDS = TimeUnit.MINUTES.toSeconds(1);
-    protected final MarketDataHandler handler;
-    protected final DateTimeFormatter formatter
-            = DateTimeFormatter.ofPattern("yyyyMMddHH:mm:ss");
-    protected final Map<String, Set<Integer>> subscribes = new ConcurrentHashMap<>();
+  public final long MAX_ARRIVAL_SECONDS = TimeUnit.MINUTES.toSeconds(1);
+  protected final MarketDataHandler handler;
+  protected final DateTimeFormatter formatter
+      = DateTimeFormatter.ofPattern("yyyyMMddHH:mm:ss");
+  protected final Map<String, Set<Integer>> subscribes = new ConcurrentHashMap<>();
 
-    HeadlessMarketDataAdaptor(MarketDataHandler h) {
-        handler = h;
-    }
+  HeadlessMarketDataAdaptor(MarketDataHandler h) {
+    handler = h;
+  }
 
-    private boolean isTrading(String actionDay, String updateTime) {
-        var dateTime = LocalDateTime.parse(
-                actionDay + updateTime,
-                formatter);
-        var epocDiff = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-                - dateTime.toEpochSecond(ZoneOffset.UTC);
-        // All real-time trading market data must arrive in one minute, or it
-        // is taken as history data.
-        return epocDiff <= MAX_ARRIVAL_SECONDS;
-    }
+  private boolean isTrading(String actionDay, String updateTime) {
+    var dateTime = LocalDateTime.parse(
+        actionDay + updateTime,
+        formatter);
+    var epocDiff = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+        - dateTime.toEpochSecond(ZoneOffset.UTC);
+    // All real-time trading market data must arrive in one minute, or it
+    // is taken as history data.
+    return epocDiff <= MAX_ARRIVAL_SECONDS;
+  }
 
-    @Override
-    public void setSubscribeMinute(String instrument, int... minutes) {
-        var set = subscribes.computeIfAbsent(
-                instrument, k -> new HashSet<>());
-        for (var i : minutes)
-            set.add(i);
-    }
+  @Override
+  public void setSubscribeMinute(String instrument, int... minutes) {
+    var set = subscribes.computeIfAbsent(
+        instrument, k -> new HashSet<>());
+    for (var i : minutes)
+      set.add(i);
+  }
 
-    @Override
-    public void onDepthMarketData(CDepthMarketData depth) {
-        if (!subscribes.containsKey(depth.InstrumentID)) {
-            return;
-        }
-        try {
-            handler.onDepthMarketData(
-                    depth,
-                    isTrading(depth.ActionDay, depth.UpdateTime));
-        } catch (Throwable th) {
-            th.printStackTrace();
-        }
+  @Override
+  public void onDepthMarketData(CDepthMarketData depth) {
+    if (!subscribes.containsKey(depth.InstrumentID)) {
+      return;
     }
+    try {
+      handler.onDepthMarketData(
+          depth,
+          isTrading(depth.ActionDay, depth.UpdateTime));
+    } catch (Throwable th) {
+      th.printStackTrace();
+    }
+  }
 
-    @Override
-    public void onCandle(CCandle candle) {
-        if (candle == null || candle.InstrumentID == null ||
-                !subscribes.containsKey(candle.InstrumentID)) {
-            return;
-        } else {
-            var set = subscribes.get(candle.InstrumentID);
-            if (set == null || !set.contains(candle.Minute))
-                return;
-        }
-        try {
-            handler.onCandle(
-                    candle,
-                    isTrading(candle.ActionDay, candle.UpdateTime));
-        } catch (Throwable th) {
-            th.printStackTrace();
-        }
+  @Override
+  public void onCandle(CCandle candle) {
+    if (candle == null || candle.InstrumentID == null ||
+        !subscribes.containsKey(candle.InstrumentID)) {
+      return;
+    } else {
+      var set = subscribes.get(candle.InstrumentID);
+      if (set == null || !set.contains(candle.Minute))
+        return;
     }
+    try {
+      handler.onCandle(
+          candle,
+          isTrading(candle.ActionDay, candle.UpdateTime));
+    } catch (Throwable th) {
+      th.printStackTrace();
+    }
+  }
 }

@@ -42,82 +42,82 @@ import com.nabiki.objects.ErrorCodes;
 import java.util.UUID;
 
 public class RequestValidator extends RequestSuper {
-    RequestValidator() {
-    }
+  RequestValidator() {
+  }
 
-    private boolean isAllowed(
-            UserAuthProfile.InstrumentAuth auth,
-            String instrumentID,
-            byte offset) {
-        var rightTrade = (auth.AllowOffset == OrderOffset.OPEN_CLOSE ||
-                (auth.AllowOffset == OrderOffset.ONLY_CLOSE &&
-                        offset != CombOffsetFlagType.OFFSET_OPEN));
-        return auth.InstrumentID.compareTo(instrumentID) == 0 && rightTrade;
-    }
+  private boolean isAllowed(
+      UserAuthProfile.InstrumentAuth auth,
+      String instrumentID,
+      byte offset) {
+    var rightTrade = (auth.AllowOffset == OrderOffset.OPEN_CLOSE ||
+        (auth.AllowOffset == OrderOffset.ONLY_CLOSE &&
+            offset != CombOffsetFlagType.OFFSET_OPEN));
+    return auth.InstrumentID.compareTo(instrumentID) == 0 && rightTrade;
+  }
 
-    private void reply(
-            ServerSession session,
-            Object request,
-            String requestID,
-            MessageType type,
-            int errorCode,
-            String errorMsg) {
-        Message m = new Message();
-        m.RequestID = requestID;
-        m.ResponseID = UUID.randomUUID().toString();
-        m.CurrentCount = m.TotalCount = 1;
-        m.Type = type;
-        m.Body = request;
-        m.RspInfo = new CRspInfo();
-        m.RspInfo.ErrorID = errorCode;
-        m.RspInfo.ErrorMsg = errorMsg;
-        session.sendResponse(m);
-    }
+  private void reply(
+      ServerSession session,
+      Object request,
+      String requestID,
+      MessageType type,
+      int errorCode,
+      String errorMsg) {
+    Message m = new Message();
+    m.RequestID = requestID;
+    m.ResponseID = UUID.randomUUID().toString();
+    m.CurrentCount = m.TotalCount = 1;
+    m.Type = type;
+    m.Body = request;
+    m.RspInfo = new CRspInfo();
+    m.RspInfo.ErrorID = errorCode;
+    m.RspInfo.ErrorMsg = errorMsg;
+    session.sendResponse(m);
+  }
 
-    @Override
-    public void doReqOrderInsert(
-            ServerSession session,
-            CInputOrder request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
-        if (attr == null) {
-            reply(session,
-                    toRtnOrder(request),
-                    requestID,
-                    MessageType.RSP_REQ_ORDER_INSERT,
-                    ErrorCodes.NOT_AUTHENT,
-                    OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
-        } else {
-            var auth = (UserAuthProfile) attr;
-            if (request.UserID == null
-                    || auth.UserID.compareTo(request.UserID) != 0) {
-                reply(session,
-                        toRtnOrder(request),
-                        requestID,
-                        MessageType.RSP_REQ_ORDER_INSERT,
-                        ErrorCodes.USER_NOT_ACTIVE,
-                        OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
-            } else {
-                for (var instrAuth : auth.InstrumentAuths) {
-                    var instrumentID = request.InstrumentID;
-                    var offset = request.CombOffsetFlag;
-                    if (isAllowed(instrAuth, instrumentID, offset))
-                        return;
-                }
-                reply(session,
-                        toRtnOrder(request),
-                        requestID,
-                        MessageType.RSP_REQ_ORDER_INSERT,
-                        ErrorCodes.NO_TRADING_RIGHT,
-                        OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
-            }
+  @Override
+  public void doReqOrderInsert(
+      ServerSession session,
+      CInputOrder request,
+      String requestID,
+      int current,
+      int total) {
+    var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
+    if (attr == null) {
+      reply(session,
+          toRtnOrder(request),
+          requestID,
+          MessageType.RSP_REQ_ORDER_INSERT,
+          ErrorCodes.NOT_AUTHENT,
+          OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
+    } else {
+      var auth = (UserAuthProfile) attr;
+      if (request.UserID == null
+          || auth.UserID.compareTo(request.UserID) != 0) {
+        reply(session,
+            toRtnOrder(request),
+            requestID,
+            MessageType.RSP_REQ_ORDER_INSERT,
+            ErrorCodes.USER_NOT_ACTIVE,
+            OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
+      } else {
+        for (var instrAuth : auth.InstrumentAuths) {
+          var instrumentID = request.InstrumentID;
+          var offset = request.CombOffsetFlag;
+          if (isAllowed(instrAuth, instrumentID, offset))
+            return;
         }
-        session.done();
+        reply(session,
+            toRtnOrder(request),
+            requestID,
+            MessageType.RSP_REQ_ORDER_INSERT,
+            ErrorCodes.NO_TRADING_RIGHT,
+            OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
+      }
     }
+    session.done();
+  }
 
-    // No need to validate an order action because when request reaches here, user
-    // must be login. The insert is sent so it means the user has right to trade
-    // the instrument.
+  // No need to validate an order action because when request reaches here, user
+  // must be login. The insert is sent so it means the user has right to trade
+  // the instrument.
 }

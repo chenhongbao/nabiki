@@ -29,7 +29,7 @@
 package com.nabiki.client.sdk;
 
 public interface DataPersistenceFactory {
-    DataPersistence get();
+  DataPersistence get();
 
-    void unget(DataPersistence object);
+  void unget(DataPersistence object);
 }

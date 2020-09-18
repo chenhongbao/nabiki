@@ -38,139 +38,139 @@ import java.util.List;
 import java.util.Objects;
 
 public class UserAccount {
-    private final User parent;
-    private final CTradingAccount raw;
-    private final List<FrozenAccount> frozenAccount = new LinkedList<>();
+  private final User parent;
+  private final CTradingAccount raw;
+  private final List<FrozenAccount> frozenAccount = new LinkedList<>();
 
-    UserAccount(CTradingAccount raw, User parent) {
-        this.raw = Utils.deepCopy(raw);
-        this.parent = parent;
+  UserAccount(CTradingAccount raw, User parent) {
+    this.raw = Utils.deepCopy(raw);
+    this.parent = parent;
+  }
+
+  /**
+   * Get the {@link User} that owns this account.
+   *
+   * @return user object that owns this account
+   */
+  User getParent() {
+    return this.parent;
+  }
+
+  CTradingAccount copyRawAccount() {
+    return Utils.deepCopy(this.raw);
+  }
+
+  /**
+   * Add commission for traded order. The order can be open or close.
+   *
+   * @param trade the trade response
+   * @param instr instrument
+   * @param comm  commission
+   */
+  void applyTrade(CTrade trade,
+                  CInstrument instr,
+                  CInstrumentCommissionRate comm) {
+    var cash = toTradedCash(trade, instr, comm);
+    this.raw.Commission += cash.Commission;
+  }
+
+  /**
+   * Cancel an open order and release all frozen cashes and commission.
+   */
+  void cancel() {
+    for (var acc : this.frozenAccount)
+      acc.cancel();
+  }
+
+  AccountFrozenCash getAccountFrozenCash() {
+    var r = new com.nabiki.centre.user.core.plain.AccountFrozenCash();
+    r.FrozenCash = 0;
+    r.FrozenCommission = 0;
+    for (var c : this.frozenAccount) {
+      r.FrozenCash += c.getFrozenVolume() * c.getSingleFrozenCash().FrozenCash;
+      r.FrozenCommission += c.getFrozenVolume()
+          * c.getSingleFrozenCash().FrozenCommission;
     }
+    return r;
+  }
 
-    /**
-     * Get the {@link User} that owns this account.
-     *
-     * @return user object that owns this account
-     */
-    User getParent() {
-        return this.parent;
+  /**
+   * Add frozen account for a new open order.
+   *
+   * @param frz new frozen account
+   */
+  void addFrozenAccount(FrozenAccount frz) {
+    this.frozenAccount.add(frz);
+  }
+
+  FrozenAccount getOpenFrozenAccount(
+      CInputOrder order, CInstrument instr,
+      CInstrumentMarginRate margin,
+      CInstrumentCommissionRate comm) {
+    Objects.requireNonNull(instr, "instrument null");
+    Objects.requireNonNull(margin, "margin null");
+    Objects.requireNonNull(comm, "commission null");
+    // Calculate commission, cash.
+    var c = new AccountFrozenCash();
+    if (order.Direction == DirectionType.DIRECTION_BUY) {
+      if (margin.LongMarginRatioByMoney > 0)
+        c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
+            * margin.LongMarginRatioByMoney;
+      else
+        c.FrozenCash = margin.LongMarginRatioByVolume;
+    } else {
+      if (margin.ShortMarginRatioByMoney > 0)
+        c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
+            * margin.ShortMarginRatioByMoney;
+      else
+        c.FrozenCash = margin.ShortMarginRatioByVolume;
     }
+    if (comm.OpenRatioByMoney > 0)
+      c.FrozenCommission = order.LimitPrice * instr.VolumeMultiple
+          * comm.OpenRatioByMoney;
+    else
+      c.FrozenCommission = comm.OpenRatioByVolume;
+    // Check if available money is enough.
+    var needMoney = (c.FrozenCash + c.FrozenCommission)
+        * order.VolumeTotalOriginal;
+    var account = this.parent.getTradingAccount();
+    if (account.Available < needMoney)
+      return null;
+    else
+      return new FrozenAccount(this, c, order.VolumeTotalOriginal);
+  }
 
-    CTradingAccount copyRawAccount() {
-        return Utils.deepCopy(this.raw);
-    }
-
-    /**
-     * Add commission for traded order. The order can be open or close.
-     *
-     * @param trade the trade response
-     * @param instr instrument
-     * @param comm  commission
-     */
-    void applyTrade(CTrade trade,
-                           CInstrument instr,
-                           CInstrumentCommissionRate comm) {
-        var cash = toTradedCash(trade, instr, comm);
-        this.raw.Commission += cash.Commission;
-    }
-
-    /**
-     * Cancel an open order and release all frozen cashes and commission.
-     */
-    void cancel() {
-        for (var acc : this.frozenAccount)
-            acc.cancel();
-    }
-
-    AccountFrozenCash getAccountFrozenCash() {
-        var r = new com.nabiki.centre.user.core.plain.AccountFrozenCash();
-        r.FrozenCash = 0;
-        r.FrozenCommission = 0;
-        for (var c : this.frozenAccount) {
-            r.FrozenCash += c.getFrozenVolume() * c.getSingleFrozenCash().FrozenCash;
-            r.FrozenCommission += c.getFrozenVolume()
-                    * c.getSingleFrozenCash().FrozenCommission;
-        }
-        return r;
-    }
-
-    /**
-     * Add frozen account for a new open order.
-     *
-     * @param frz new frozen account
-     */
-    void addFrozenAccount(FrozenAccount frz) {
-        this.frozenAccount.add(frz);
-    }
-
-    FrozenAccount getOpenFrozenAccount(
-            CInputOrder order, CInstrument instr,
-            CInstrumentMarginRate margin,
-            CInstrumentCommissionRate comm) {
-        Objects.requireNonNull(instr, "instrument null");
-        Objects.requireNonNull(margin, "margin null");
-        Objects.requireNonNull(comm, "commission null");
-        // Calculate commission, cash.
-        var c = new AccountFrozenCash();
-        if (order.Direction == DirectionType.DIRECTION_BUY) {
-            if (margin.LongMarginRatioByMoney > 0)
-                c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
-                        * margin.LongMarginRatioByMoney;
-            else
-                c.FrozenCash = margin.LongMarginRatioByVolume;
-        } else {
-            if (margin.ShortMarginRatioByMoney > 0)
-                c.FrozenCash = order.LimitPrice * instr.VolumeMultiple
-                        * margin.ShortMarginRatioByMoney;
-            else
-                c.FrozenCash = margin.ShortMarginRatioByVolume;
-        }
-        if (comm.OpenRatioByMoney > 0)
-            c.FrozenCommission = order.LimitPrice * instr.VolumeMultiple
-                    * comm.OpenRatioByMoney;
+  // Only calculate commission.
+  private AccountTradedCash toTradedCash(
+      CTrade trade,
+      CInstrument instr,
+      CInstrumentCommissionRate comm) {
+    Objects.requireNonNull(comm, "commission null");
+    Objects.requireNonNull(instr, "instrument null");
+    var r = new AccountTradedCash();
+    if (trade.OffsetFlag == CombOffsetFlagType.OFFSET_OPEN) {
+      if (comm.OpenRatioByMoney > 0)
+        r.Commission = comm.OpenRatioByMoney * instr.VolumeMultiple
+            * trade.Price * trade.Volume;
+      else
+        r.Commission = comm.OpenRatioByVolume * trade.Volume;
+    } else {
+      if (trade.OffsetFlag ==
+          CombOffsetFlagType.OFFSET_CLOSE_TODAY) {
+        if (comm.CloseRatioByMoney > 0)
+          r.Commission = comm.CloseTodayRatioByMoney
+              * instr.VolumeMultiple * trade.Price * trade.Volume;
         else
-            c.FrozenCommission = comm.OpenRatioByVolume;
-        // Check if available money is enough.
-        var needMoney = (c.FrozenCash + c.FrozenCommission)
-                * order.VolumeTotalOriginal;
-        var account = this.parent.getTradingAccount();
-        if (account.Available < needMoney)
-            return null;
+          r.Commission = comm.CloseTodayRatioByVolume * trade.Volume;
+      } else {
+        // close = close yesterday
+        if (comm.CloseRatioByMoney > 0)
+          r.Commission = comm.CloseRatioByMoney
+              * instr.VolumeMultiple * trade.Price * trade.Volume;
         else
-            return new FrozenAccount(this, c, order.VolumeTotalOriginal);
+          r.Commission = comm.CloseRatioByVolume * trade.Volume;
+      }
     }
-
-    // Only calculate commission.
-    private AccountTradedCash toTradedCash(
-            CTrade trade,
-            CInstrument instr,
-            CInstrumentCommissionRate comm) {
-        Objects.requireNonNull(comm, "commission null");
-        Objects.requireNonNull(instr, "instrument null");
-        var r = new AccountTradedCash();
-        if (trade.OffsetFlag == CombOffsetFlagType.OFFSET_OPEN) {
-            if (comm.OpenRatioByMoney > 0)
-                r.Commission = comm.OpenRatioByMoney * instr.VolumeMultiple
-                        * trade.Price * trade.Volume;
-            else
-                r.Commission = comm.OpenRatioByVolume * trade.Volume;
-        } else {
-            if (trade.OffsetFlag ==
-                    CombOffsetFlagType.OFFSET_CLOSE_TODAY) {
-                if (comm.CloseRatioByMoney > 0)
-                    r.Commission = comm.CloseTodayRatioByMoney
-                            * instr.VolumeMultiple * trade.Price * trade.Volume;
-                else
-                    r.Commission = comm.CloseTodayRatioByVolume * trade.Volume;
-            } else {
-                // close = close yesterday
-                if (comm.CloseRatioByMoney > 0)
-                    r.Commission = comm.CloseRatioByMoney
-                            * instr.VolumeMultiple * trade.Price * trade.Volume;
-                else
-                    r.Commission = comm.CloseRatioByVolume * trade.Volume;
-            }
-        }
-        return r;
-    }
+    return r;
+  }
 }

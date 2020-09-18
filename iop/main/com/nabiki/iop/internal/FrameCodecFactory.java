@@ -34,13 +34,13 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
 class FrameCodecFactory implements ProtocolCodecFactory {
-    @Override
-    public ProtocolEncoder getEncoder(IoSession session) throws Exception {
-        return new FrameEncoder();
-    }
+  @Override
+  public ProtocolEncoder getEncoder(IoSession session) throws Exception {
+    return new FrameEncoder();
+  }
 
-    @Override
-    public ProtocolDecoder getDecoder(IoSession session) throws Exception {
-        return new FrameDecoder();
-    }
+  @Override
+  public ProtocolDecoder getDecoder(IoSession session) throws Exception {
+    return new FrameDecoder();
+  }
 }

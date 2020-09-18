@@ -35,60 +35,60 @@ import com.nabiki.objects.COrder;
 import com.nabiki.objects.COrderAction;
 
 public class RequestSuper extends ServerMessageAdaptor {
-    COrder toRtnOrder(CInputOrder rtn) {
-        var r = new COrder();
-        r.AccountID = rtn.AccountID;
-        r.BrokerID = rtn.BrokerID;
-        r.BusinessUnit = rtn.BusinessUnit;
-        r.ClientID = rtn.ClientID;
-        r.CombHedgeFlag = rtn.CombHedgeFlag;
-        r.CombOffsetFlag = rtn.CombOffsetFlag;
-        r.ContingentCondition = rtn.ContingentCondition;
-        r.CurrencyID = rtn.CurrencyID;
-        r.Direction = rtn.Direction;
-        r.ExchangeID = rtn.ExchangeID;
-        r.ForceCloseReason = rtn.ForceCloseReason;
-        r.GTDDate = rtn.GTDDate;
-        r.InstrumentID = rtn.InstrumentID;
-        r.InvestorID = rtn.InvestorID;
-        r.InvestUnitID = rtn.InvestUnitID;
-        r.IPAddress = rtn.IPAddress;
-        r.IsAutoSuspend = rtn.IsAutoSuspend;
-        r.IsSwapOrder = rtn.IsSwapOrder;
-        r.LimitPrice = rtn.LimitPrice;
-        r.MacAddress = rtn.MacAddress;
-        r.MinVolume = rtn.MinVolume;
-        r.OrderPriceType = rtn.OrderPriceType;
-        r.OrderRef = rtn.OrderRef;
-        r.RequestID = rtn.RequestID;
-        r.StopPrice = rtn.StopPrice;
-        r.TimeCondition = rtn.TimeCondition;
-        r.UserForceClose = rtn.UserForceClose;
-        r.UserID = rtn.UserID;
-        r.VolumeCondition = rtn.VolumeCondition;
-        r.VolumeTotalOriginal = rtn.VolumeTotalOriginal;
-        return r;
-    }
+  COrder toRtnOrder(CInputOrder rtn) {
+    var r = new COrder();
+    r.AccountID = rtn.AccountID;
+    r.BrokerID = rtn.BrokerID;
+    r.BusinessUnit = rtn.BusinessUnit;
+    r.ClientID = rtn.ClientID;
+    r.CombHedgeFlag = rtn.CombHedgeFlag;
+    r.CombOffsetFlag = rtn.CombOffsetFlag;
+    r.ContingentCondition = rtn.ContingentCondition;
+    r.CurrencyID = rtn.CurrencyID;
+    r.Direction = rtn.Direction;
+    r.ExchangeID = rtn.ExchangeID;
+    r.ForceCloseReason = rtn.ForceCloseReason;
+    r.GTDDate = rtn.GTDDate;
+    r.InstrumentID = rtn.InstrumentID;
+    r.InvestorID = rtn.InvestorID;
+    r.InvestUnitID = rtn.InvestUnitID;
+    r.IPAddress = rtn.IPAddress;
+    r.IsAutoSuspend = rtn.IsAutoSuspend;
+    r.IsSwapOrder = rtn.IsSwapOrder;
+    r.LimitPrice = rtn.LimitPrice;
+    r.MacAddress = rtn.MacAddress;
+    r.MinVolume = rtn.MinVolume;
+    r.OrderPriceType = rtn.OrderPriceType;
+    r.OrderRef = rtn.OrderRef;
+    r.RequestID = rtn.RequestID;
+    r.StopPrice = rtn.StopPrice;
+    r.TimeCondition = rtn.TimeCondition;
+    r.UserForceClose = rtn.UserForceClose;
+    r.UserID = rtn.UserID;
+    r.VolumeCondition = rtn.VolumeCondition;
+    r.VolumeTotalOriginal = rtn.VolumeTotalOriginal;
+    return r;
+  }
 
-    COrderAction toOrderAction(CInputOrderAction action) {
-        var r = new COrderAction();
-        r.ActionFlag = action.ActionFlag;
-        r.BrokerID = action.BrokerID;
-        r.ExchangeID = action.ExchangeID;
-        r.FrontID = action.FrontID;
-        r.InstrumentID = action.InstrumentID;
-        r.InvestorID = action.InvestorID;
-        r.IPAddress = action.IPAddress;
-        r.MacAddress = action.MacAddress;
-        r.InvestUnitID = action.InvestUnitID;
-        r.LimitPrice = action.LimitPrice;
-        r.OrderActionRef = action.OrderActionRef;
-        r.OrderSysID = action.OrderSysID;
-        r.OrderRef = action.OrderRef;
-        r.RequestID = action.RequestID;
-        r.SessionID = action.SessionID;
-        r.UserID = action.UserID;
-        r.VolumeChange = action.VolumeChange;
-        return r;
-    }
+  COrderAction toOrderAction(CInputOrderAction action) {
+    var r = new COrderAction();
+    r.ActionFlag = action.ActionFlag;
+    r.BrokerID = action.BrokerID;
+    r.ExchangeID = action.ExchangeID;
+    r.FrontID = action.FrontID;
+    r.InstrumentID = action.InstrumentID;
+    r.InvestorID = action.InvestorID;
+    r.IPAddress = action.IPAddress;
+    r.MacAddress = action.MacAddress;
+    r.InvestUnitID = action.InvestUnitID;
+    r.LimitPrice = action.LimitPrice;
+    r.OrderActionRef = action.OrderActionRef;
+    r.OrderSysID = action.OrderSysID;
+    r.OrderRef = action.OrderRef;
+    r.RequestID = action.RequestID;
+    r.SessionID = action.SessionID;
+    r.UserID = action.UserID;
+    r.VolumeChange = action.VolumeChange;
+    return r;
+  }
 }

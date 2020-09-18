@@ -34,21 +34,21 @@ import org.junit.Test;
 import java.util.LinkedList;
 
 public class LoginConfigTest {
-    @Test
-    public void basic() {
-        var config = new LoginConfig();
-        config.BrokerID = "9999";
-        config.UserID = "0001";
-        config.AppID = "test_appid";
-        config.AuthCode = "test_authcode";
-        config.Name = "test login global";
-        config.UserProductInfo = "test product info";
-        config.IsMulticast = false;
-        config.IsUsingUDP = false;
-        config.FrontAddresses = new LinkedList<>();
-        config.FrontAddresses.add("tcp://test.address.com:8080/");
+  @Test
+  public void basic() {
+    var config = new LoginConfig();
+    config.BrokerID = "9999";
+    config.UserID = "0001";
+    config.AppID = "test_appid";
+    config.AuthCode = "test_authcode";
+    config.Name = "test login global";
+    config.UserProductInfo = "test product info";
+    config.IsMulticast = false;
+    config.IsUsingUDP = false;
+    config.FrontAddresses = new LinkedList<>();
+    config.FrontAddresses.add("tcp://test.address.com:8080/");
 
-        System.out.println(OP.toJson(config));
-    }
+    System.out.println(OP.toJson(config));
+  }
 
 }

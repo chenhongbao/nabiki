@@ -31,246 +31,246 @@ package com.nabiki.iop;
 import com.nabiki.objects.*;
 
 public abstract class ClientMessageAdaptor {
-    public void doRspSubscribeMarketData(
-            CSpecificInstrument rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspSubscribeMarketData(
+      CSpecificInstrument rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspUnsubscribeMarketData(
-            CSpecificInstrument rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspUnsubscribeMarketData(
+      CSpecificInstrument rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspDepthMarketData(
-            CDepthMarketData rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspDepthMarketData(
+      CDepthMarketData rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspCandle(
-            CCandle rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspCandle(
+      CCandle rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspAuthenticate(
-            CRspAuthenticate rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspAuthenticate(
+      CRspAuthenticate rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspReqLogin(
-            CRspUserLogin rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspReqLogin(
+      CRspUserLogin rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspReqLogout(
-            CUserLogout rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspReqLogout(
+      CUserLogout rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspReqSettlementConfirm(
-            CSettlementInfoConfirm rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspReqSettlementConfirm(
+      CSettlementInfoConfirm rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspReqOrderInsert(
-            COrder rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspReqOrderInsert(
+      COrder rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspReqOrderAction(
-            COrderAction rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspReqOrderAction(
+      COrderAction rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryDepthMarketData(
-            CDepthMarketData rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryDepthMarketData(
+      CDepthMarketData rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryAccount(
-            CTradingAccount rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryAccount(
+      CTradingAccount rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryOrder(
-            COrder rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryOrder(
+      COrder rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryPosition(
-            CInvestorPosition rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryPosition(
+      CInvestorPosition rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryPositionDetail(
-            CInvestorPositionDetail rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryPositionDetail(
+      CInvestorPositionDetail rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryInstrument(
-            CInstrument rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryInstrument(
+      CInstrument rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryCommission(
-            CInstrumentCommissionRate rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryCommission(
+      CInstrumentCommissionRate rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspQryMargin(
-            CInstrumentMarginRate rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspQryMargin(
+      CInstrumentMarginRate rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRtnOrder(
-            COrder rtn,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRtnOrder(
+      COrder rtn,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRtnTrade(
-            CTrade rtn,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRtnTrade(
+      CTrade rtn,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRtnOrderAction(
-            COrderAction rtn,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRtnOrderAction(
+      COrderAction rtn,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRtnOrderInsert(
-            CInputOrder rtn,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRtnOrderInsert(
+      CInputOrder rtn,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspOrderAction(
-            CInputOrderAction rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspOrderAction(
+      CInputOrderAction rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspOrderInsert(
-            CInputOrder rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspOrderInsert(
+      CInputOrder rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspError(
-            CRspInfo rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspError(
+      CRspInfo rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspConnect(
-            CConnect rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspConnect(
+      CConnect rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 
-    public void doRspDisconnect(
-            CDisconnect rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-    }
+  public void doRspDisconnect(
+      CDisconnect rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+  }
 }

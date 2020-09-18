@@ -39,88 +39,88 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class SessionImpl {
-    private static final String IOP_SESSION_KEY = "iop.session";
+  private static final String IOP_SESSION_KEY = "iop.session";
 
-    private final IoSession session;
-    static AtomicInteger countX = new AtomicInteger(0);
+  private final IoSession session;
+  static AtomicInteger countX = new AtomicInteger(0);
 
-    protected SessionImpl(IoSession ioSession) {
-        if (ioSession == null)
-            throw new NullPointerException("io session null");
-        if (findSelf(ioSession) != null)
-            throw new IllegalStateException(
-                    "reused io session could cause inconsistency");
-        ioSession.setAttribute(IOP_SESSION_KEY, this);
-        this.session = ioSession;
+  protected SessionImpl(IoSession ioSession) {
+    if (ioSession == null)
+      throw new NullPointerException("io session null");
+    if (findSelf(ioSession) != null)
+      throw new IllegalStateException(
+          "reused io session could cause inconsistency");
+    ioSession.setAttribute(IOP_SESSION_KEY, this);
+    this.session = ioSession;
+  }
+
+  protected static Object findSelf(IoSession session) {
+    if (session == null)
+      throw new NullPointerException("io session null");
+    return session.getAttribute(IOP_SESSION_KEY);
+  }
+
+  protected void close() {
+    synchronized (this) {
+      if (!isClosed()) {
+        // Just close the session ans don't wait for the CloseFuture to
+        // return because it may continue checking input while waiting,
+        // causing dead lock.
+        this.session.closeNow();
+      }
     }
+  }
 
-   protected static Object findSelf(IoSession session) {
-        if (session == null)
-            throw new NullPointerException("io session null");
-        return session.getAttribute(IOP_SESSION_KEY);
-    }
+  protected boolean isClosed() {
+    return this.session == null || this.session.isClosing()
+        || !this.session.isConnected();
+  }
 
-    protected void close() {
-        synchronized (this) {
-            if (!isClosed()) {
-                // Just close the session ans don't wait for the CloseFuture to
-                // return because it may continue checking input while waiting,
-                // causing dead lock.
-                this.session.closeNow();
-            }
-        }
-    }
+  protected void fix() {
+    if (isClosed())
+      throw new IllegalStateException("can't fix a closed session");
+    if (this.session.isWriteSuspended())
+      this.session.resumeWrite();
+    if (this.session.isReadSuspended())
+      this.session.resumeRead();
+  }
 
-    protected boolean isClosed() {
-        return this.session == null || this.session.isClosing()
-                || !this.session.isConnected();
+  protected WriteFuture send(Body message, int type) {
+    if (message == null)
+      throw new NullPointerException("message null");
+    synchronized (this) {
+      if (isClosed())
+        throw new IllegalStateException("session closed");
+      // Get body bytes.
+      var bytes = OP.toJson(message).getBytes(StandardCharsets.UTF_8);
+      // Construct frame.
+      var req = new Frame();
+      req.Type = type;
+      req.Length = bytes.length;
+      req.Body = bytes;
+      // Send frame.
+      return this.session.write(req);
     }
+  }
 
-    protected void fix() {
-        if (isClosed())
-            throw new IllegalStateException("can't fix a closed session");
-        if (this.session.isWriteSuspended())
-            this.session.resumeWrite();
-        if (this.session.isReadSuspended())
-            this.session.resumeRead();
-    }
+  protected void setAttribute(String key, Object attribute) {
+    if (!isClosed())
+      this.session.setAttribute(key, attribute);
+  }
 
-    protected WriteFuture send(Body message, int type) {
-        if (message == null)
-            throw new NullPointerException("message null");
-        synchronized (this) {
-            if (isClosed())
-                throw new IllegalStateException("session closed");
-            // Get body bytes.
-            var bytes = OP.toJson(message).getBytes(StandardCharsets.UTF_8);
-            // Construct frame.
-            var req = new Frame();
-            req.Type = type;
-            req.Length = bytes.length;
-            req.Body = bytes;
-            // Send frame.
-            return this.session.write(req);
-        }
-    }
+  protected void removeAttribute(String key) {
+    if (!isClosed())
+      this.session.setAttribute(key, null);
+  }
 
-    protected void setAttribute(String key, Object attribute) {
-        if (!isClosed())
-            this.session.setAttribute(key, attribute);
-    }
+  protected Object getAttribute(String key) {
+    if (!isClosed())
+      return this.session.getAttribute(key);
+    else
+      return null;
+  }
 
-    protected void removeAttribute(String key) {
-        if (!isClosed())
-            this.session.setAttribute(key, null);
-    }
-
-    protected Object getAttribute(String key) {
-        if (!isClosed())
-            return this.session.getAttribute(key);
-        else
-            return null;
-    }
-
-    protected InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress)this.session.getRemoteAddress();
-    }
+  protected InetSocketAddress getRemoteAddress() {
+    return (InetSocketAddress) this.session.getRemoteAddress();
+  }
 }

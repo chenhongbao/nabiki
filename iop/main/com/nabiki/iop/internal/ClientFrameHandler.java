@@ -45,211 +45,211 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 class ClientFrameHandler implements IoHandler {
-    /*
-    Default adaptors. The adaptors can be override by setter.
-     */
-    static class EmptyClientSessionAdaptor extends ClientSessionAdaptor {
-    }
+  /*
+  Default adaptors. The adaptors can be override by setter.
+   */
+  static class EmptyClientSessionAdaptor extends ClientSessionAdaptor {
+  }
 
-    static class EmptyClientMessageHandler implements ClientMessageHandler {
-        @Override
-        public void onMessage(ClientSession session, Message message) {
+  static class EmptyClientMessageHandler implements ClientMessageHandler {
+    @Override
+    public void onMessage(ClientSession session, Message message) {
+    }
+  }
+
+  static class ResponseBag {
+    final IoSession session;
+    final Message message;
+    final int frameType;
+
+    ResponseBag(IoSession session, Message msg, int type) {
+      this.session = session;
+      this.message = msg;
+      this.frameType = type;
+    }
+  }
+
+  public static final String IOP_ISLOGIN_KEY = "iop.islogin";
+  private final DefaultClientMessageHandler defaultMsgHandler
+      = new DefaultClientMessageHandler();
+
+  private ClientSessionAdaptor sessionAdaptor = new EmptyClientSessionAdaptor();
+  private ClientMessageHandler msgHandler = new EmptyClientMessageHandler();
+
+  private Thread daemon;
+  private final BlockingQueue<ResponseBag> responses = new LinkedBlockingQueue<>();
+
+  ClientFrameHandler() {
+    setupDaemon();
+  }
+
+  private void setupDaemon() {
+    daemon = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while (!Thread.currentThread().isInterrupted()) {
+          try {
+            var bag = responses.take();
+            messageProc(bag.session, bag.message, bag.frameType);
+          } catch (Throwable ignored) {
+          }
         }
+      }
+    });
+    daemon.setDaemon(true);
+    daemon.start();
+  }
+
+  void setMessageAdaptor(ClientMessageAdaptor adaptor) {
+    this.defaultMsgHandler.setAdaptor(adaptor);
+  }
+
+  void setSessionAdaptor(ClientSessionAdaptor adaptor) {
+    this.sessionAdaptor = adaptor;
+  }
+
+  void setMessageHandler(ClientMessageHandler handler) {
+    this.msgHandler = handler;
+  }
+
+  private void handleLogin(ClientSession session, Message message) {
+    session.setAttribute(IOP_ISLOGIN_KEY,
+        message.RspInfo != null && message.RspInfo.ErrorID == 0);
+    this.defaultMsgHandler.onMessage(session, message);
+  }
+
+  private boolean isLogin(IoSession session) {
+    var isLogin = session.getAttribute(IOP_ISLOGIN_KEY);
+    if (isLogin == null)
+      return false;
+    else
+      return (Boolean) isLogin;
+  }
+
+  private Message toMessage(Body body) throws IOException {
+    try {
+      return MessageImpl.toMessage(body);
+    } catch (Throwable th) {
+      throw new IOException("message not properly handled", th);
     }
+  }
 
-    static class ResponseBag {
-        final IoSession session;
-        final Message message;
-        final int frameType;
+  private void handleHeartbeat(ClientSessionImpl session, Message message) {
+    if (message.Type != MessageType.HEARTBEAT)
+      return;
+    if (!session.getHeartbeatID().equals(message.RequestID))
+      this.sessionAdaptor.doEvent(session,
+          SessionEvent.MISS_HEARTBEAT, message.RequestID);
+  }
 
-        ResponseBag(IoSession session, Message msg, int type) {
-            this.session = session;
-            this.message = msg;
-            this.frameType = type;
-        }
+  private void messageProc(IoSession session, Message message, int type) {
+    try {
+      ClientSessionImpl iopSession = ClientSessionImpl.from(session);
+      // First call message handler.
+      try {
+        this.msgHandler.onMessage(iopSession, message);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+      // Then call default message handler that wraps adaptor.
+      switch (type) {
+        case FrameType.RESPONSE:
+          if (isLogin(session))
+            this.defaultMsgHandler.onMessage(iopSession, message);
+          break;
+        case FrameType.LOGIN:
+          handleLogin(iopSession, message);
+          break;
+        case FrameType.HEARTBEAT:
+          handleHeartbeat(iopSession, message);
+          break;
+        default:
+          throw new IllegalStateException("unknown frame type");
+      }
+    } catch (Throwable th) {
+      try {
+        exceptionCaught(session, th);
+      } catch (Exception ignored) {
+      }
     }
+  }
 
-    public static final String IOP_ISLOGIN_KEY = "iop.islogin";
-    private final DefaultClientMessageHandler defaultMsgHandler
-            = new DefaultClientMessageHandler();
-
-    private ClientSessionAdaptor sessionAdaptor = new EmptyClientSessionAdaptor();
-    private ClientMessageHandler msgHandler = new EmptyClientMessageHandler();
-
-    private Thread daemon;
-    private final BlockingQueue<ResponseBag> responses = new LinkedBlockingQueue<>();
-
-    ClientFrameHandler() {
-        setupDaemon();
+  private void offer(IoSession session, Message msg, int type) {
+    try {
+      var bag = new ResponseBag(session, msg, type);
+      if (!responses.offer(bag))
+        throw new IllegalStateException("can't offer response to queue");
+    } catch (Throwable th) {
+      try {
+        exceptionCaught(session, th);
+      } catch (Throwable ignored) {
+      }
     }
+  }
 
-    private void setupDaemon() {
-        daemon = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        var bag = responses.take();
-                        messageProc(bag.session, bag.message, bag.frameType);
-                    } catch (Throwable ignored) {
-                    }
-                }
-            }
-        });
-        daemon.setDaemon(true);
-        daemon.start();
-    }
+  @Override
+  public void sessionCreated(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        SessionEvent.CREATED, null);
+  }
 
-    void setMessageAdaptor(ClientMessageAdaptor adaptor) {
-        this.defaultMsgHandler.setAdaptor(adaptor);
-    }
+  @Override
+  public void sessionOpened(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        SessionEvent.OPENED, null);
+  }
 
-    void setSessionAdaptor(ClientSessionAdaptor adaptor) {
-        this.sessionAdaptor = adaptor;
-    }
+  @Override
+  public void sessionClosed(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        SessionEvent.CLOSED, null);
+  }
 
-    void setMessageHandler(ClientMessageHandler handler) {
-        this.msgHandler = handler;
+  @Override
+  public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
+    var clientSession = ClientSessionImpl.from(session);
+    this.sessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
+    try {
+      // If client detects idle, send heartbeat.
+      clientSession.sendHeartbeat(UUID.randomUUID().toString());
+    } catch (Throwable th) {
+      exceptionCaught(session, th);
     }
+  }
 
-    private void handleLogin(ClientSession session, Message message) {
-        session.setAttribute(IOP_ISLOGIN_KEY,
-                message.RspInfo != null && message.RspInfo.ErrorID == 0);
-        this.defaultMsgHandler.onMessage(session, message);
-    }
+  @Override
+  public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
+    this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        SessionEvent.ERROR, cause);
+  }
 
-    private boolean isLogin(IoSession session) {
-        var isLogin = session.getAttribute(IOP_ISLOGIN_KEY);
-        if (isLogin == null)
-            return false;
-        else
-            return (Boolean) isLogin;
+  @Override
+  public void messageReceived(IoSession session, Object message) throws Exception {
+    if (!(message instanceof Frame))
+      throw new IllegalStateException("message is not frame");
+    try {
+      var frame = (Frame) message;
+      var body = OP.fromJson(new String(
+          frame.Body, StandardCharsets.UTF_8), Body.class);
+      offer(session, toMessage(body), frame.Type);
+    } catch (IOException e) {
+      exceptionCaught(session, e);
     }
+  }
 
-    private Message toMessage(Body body) throws IOException {
-        try {
-            return MessageImpl.toMessage(body);
-        } catch (Throwable th) {
-            throw new IOException("message not properly handled", th);
-        }
-    }
+  @Override
+  public void messageSent(IoSession session, Object message) throws Exception {
+    // nothing.
+  }
 
-    private void handleHeartbeat(ClientSessionImpl session, Message message) {
-        if (message.Type != MessageType.HEARTBEAT)
-            return;
-        if (!session.getHeartbeatID().equals(message.RequestID))
-            this.sessionAdaptor.doEvent(session,
-                    SessionEvent.MISS_HEARTBEAT, message.RequestID);
-    }
+  @Override
+  public void inputClosed(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
+        SessionEvent.INPUT_CLOSED, null);
+  }
 
-    private void messageProc(IoSession session, Message message, int type) {
-        try {
-            ClientSessionImpl iopSession = ClientSessionImpl.from(session);
-            // First call message handler.
-            try {
-                this.msgHandler.onMessage(iopSession, message);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-            // Then call default message handler that wraps adaptor.
-            switch (type) {
-                case FrameType.RESPONSE:
-                    if (isLogin(session))
-                        this.defaultMsgHandler.onMessage(iopSession, message);
-                    break;
-                case FrameType.LOGIN:
-                    handleLogin(iopSession, message);
-                    break;
-                case FrameType.HEARTBEAT:
-                    handleHeartbeat(iopSession, message);
-                    break;
-                default:
-                    throw new IllegalStateException("unknown frame type");
-            }
-        } catch (Throwable th) {
-            try {
-                exceptionCaught(session, th);
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    private void offer(IoSession session, Message msg, int type) {
-        try {
-            var bag = new ResponseBag(session, msg, type);
-            if (!responses.offer(bag))
-                throw new IllegalStateException("can't offer response to queue");
-        } catch (Throwable th) {
-            try {
-                exceptionCaught(session, th);
-            } catch (Throwable ignored) {
-            }
-        }
-    }
-
-    @Override
-    public void sessionCreated(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.CREATED, null);
-    }
-
-    @Override
-    public void sessionOpened(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.OPENED, null);
-    }
-
-    @Override
-    public void sessionClosed(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.CLOSED, null);
-    }
-
-    @Override
-    public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
-        var clientSession = ClientSessionImpl.from(session);
-        this.sessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
-        try {
-            // If client detects idle, send heartbeat.
-            clientSession.sendHeartbeat(UUID.randomUUID().toString());
-        } catch (Throwable th) {
-            exceptionCaught(session, th);
-        }
-    }
-
-    @Override
-    public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.ERROR, cause);
-    }
-
-    @Override
-    public void messageReceived(IoSession session, Object message) throws Exception {
-        if (!(message instanceof Frame))
-            throw new IllegalStateException("message is not frame");
-        try {
-            var frame = (Frame) message;
-            var body = OP.fromJson(new String(
-                    frame.Body, StandardCharsets.UTF_8), Body.class);
-            offer(session, toMessage(body), frame.Type);
-        } catch (IOException e) {
-            exceptionCaught(session, e);
-        }
-    }
-
-    @Override
-    public void messageSent(IoSession session, Object message) throws Exception {
-        // nothing.
-    }
-
-    @Override
-    public void inputClosed(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ClientSessionImpl.from(session),
-                SessionEvent.INPUT_CLOSED, null);
-    }
-
-    @Override
-    public void event(IoSession session, FilterEvent event) throws Exception {
-        // nothing.
-    }
+  @Override
+  public void event(IoSession session, FilterEvent event) throws Exception {
+    // nothing.
+  }
 }

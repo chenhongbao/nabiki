@@ -35,100 +35,101 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PerformanceMeasure {
-    public class TimeDiff {
-        private final String name;
-        private final long startNanos;
+  public class TimeDiff {
+    private final String name;
+    private final long startNanos;
 
-        TimeDiff(String name) {
-            this.name = name;
-            this.startNanos = System.nanoTime();
-        }
-
-        public Duration end() {
-            var duration = Duration.ofNanos(System.nanoTime() - this.startNanos);
-            measures.put(this.name, duration);
-            return duration;
-        }
-
-        private Duration compareAndEnd(int positive) {
-            var duration = Duration.ofNanos(System.nanoTime() - this.startNanos);
-            var old = measures.get(this.name);
-            if (old == null || old.compareTo(duration) * positive < 0)
-                measures.put(this.name, duration);
-            else
-                duration = measures.get(this.name);
-            return duration;
-        }
-
-        public Duration endWithMax() {
-            return compareAndEnd(1);
-        }
-
-        public Duration endWithMin() {
-            return compareAndEnd(-1);
-        }
+    TimeDiff(String name) {
+      this.name = name;
+      this.startNanos = System.nanoTime();
     }
 
-    private final Map<String, Duration> measures = new ConcurrentHashMap<>();
-    private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-    public PerformanceMeasure() {}
-
-    public TimeDiff start(String measureName) {
-        return new TimeDiff(measureName);
+    public Duration end() {
+      var duration = Duration.ofNanos(System.nanoTime() - this.startNanos);
+      measures.put(this.name, duration);
+      return duration;
     }
 
-    public Duration measure(String measureName, String from, String to) {
-        return measure(
-                measureName,
-                LocalTime.parse(from, timeFormatter),
-                LocalTime.parse(to, timeFormatter));
+    private Duration compareAndEnd(int positive) {
+      var duration = Duration.ofNanos(System.nanoTime() - this.startNanos);
+      var old = measures.get(this.name);
+      if (old == null || old.compareTo(duration) * positive < 0)
+        measures.put(this.name, duration);
+      else
+        duration = measures.get(this.name);
+      return duration;
     }
 
-    public Duration measure(String measureName, LocalTime from, LocalTime to) {
-        var duration = Duration.between(from, to);
-        this.measures.put(measureName, duration);
-        return duration;
+    public Duration endWithMax() {
+      return compareAndEnd(1);
     }
 
-    public Duration measureMax(String measureName, String from, String to) {
-        return measureMax(
-                measureName,
-                LocalTime.parse(from, timeFormatter),
-                LocalTime.parse(to, timeFormatter));
+    public Duration endWithMin() {
+      return compareAndEnd(-1);
     }
+  }
 
-    public Duration measureMax(String measureName, LocalTime from, LocalTime to) {
-        return measureAndCompare(measureName, from, to, 1);
-    }
+  private final Map<String, Duration> measures = new ConcurrentHashMap<>();
+  private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public Duration measureMin(String measureName, String from, String to) {
-        return measureMin(
-                measureName,
-                LocalTime.parse(from, timeFormatter),
-                LocalTime.parse(to, timeFormatter));
-    }
+  public PerformanceMeasure() {
+  }
 
-    private Duration measureAndCompare(
-            String measureName, LocalTime from, LocalTime to, int positive) {
-        var duration = Duration.between(from, to);
-        var old = this.measures.get(measureName);
-        if (old == null || old.compareTo(duration) * positive < 0)
-            this.measures.put(measureName, duration);
-        else
-            duration = this.measures.get(measureName);
-        return duration;
-    }
+  public TimeDiff start(String measureName) {
+    return new TimeDiff(measureName);
+  }
 
-    public Duration measureMin(String measureName, LocalTime from, LocalTime to) {
-        return measureAndCompare(measureName, from, to, -1);
-    }
+  public Duration measure(String measureName, String from, String to) {
+    return measure(
+        measureName,
+        LocalTime.parse(from, timeFormatter),
+        LocalTime.parse(to, timeFormatter));
+  }
 
-    public Duration getMeasure(String measureName) {
-        return this.measures.get(measureName);
-    }
+  public Duration measure(String measureName, LocalTime from, LocalTime to) {
+    var duration = Duration.between(from, to);
+    this.measures.put(measureName, duration);
+    return duration;
+  }
 
-    public Map<String, Duration> getAllMeasures() {
-        return this.measures;
-    }
+  public Duration measureMax(String measureName, String from, String to) {
+    return measureMax(
+        measureName,
+        LocalTime.parse(from, timeFormatter),
+        LocalTime.parse(to, timeFormatter));
+  }
+
+  public Duration measureMax(String measureName, LocalTime from, LocalTime to) {
+    return measureAndCompare(measureName, from, to, 1);
+  }
+
+  public Duration measureMin(String measureName, String from, String to) {
+    return measureMin(
+        measureName,
+        LocalTime.parse(from, timeFormatter),
+        LocalTime.parse(to, timeFormatter));
+  }
+
+  private Duration measureAndCompare(
+      String measureName, LocalTime from, LocalTime to, int positive) {
+    var duration = Duration.between(from, to);
+    var old = this.measures.get(measureName);
+    if (old == null || old.compareTo(duration) * positive < 0)
+      this.measures.put(measureName, duration);
+    else
+      duration = this.measures.get(measureName);
+    return duration;
+  }
+
+  public Duration measureMin(String measureName, LocalTime from, LocalTime to) {
+    return measureAndCompare(measureName, from, to, -1);
+  }
+
+  public Duration getMeasure(String measureName) {
+    return this.measures.get(measureName);
+  }
+
+  public Map<String, Duration> getAllMeasures() {
+    return this.measures;
+  }
 }

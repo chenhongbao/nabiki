@@ -42,78 +42,78 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class IOPClientImpl implements IOPClient {
-    private static final int DEFAULT_IDLE_SEC = 60;
-    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+  private static final int DEFAULT_IDLE_SEC = 60;
+  private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
 
-    private final ClientFrameHandler frameHandler = new ClientFrameHandler();
+  private final ClientFrameHandler frameHandler = new ClientFrameHandler();
 
-    private NioSocketConnector connector;
-    private ClientSessionImpl session;
+  private NioSocketConnector connector;
+  private ClientSessionImpl session;
 
-    public IOPClientImpl() {
+  public IOPClientImpl() {
+  }
+
+  private IoSession io(InetSocketAddress connectAddress) throws IOException {
+    this.connector = new NioSocketConnector();
+    this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
+    // Set filters.
+    var chain = this.connector.getFilterChain();
+    // Too many logs, don't use the logging filter.
+    // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
+    chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
+        new FrameCodecFactory()));
+    // Set handler.
+    this.connector.setHandler(this.frameHandler);
+    // Configure the session.
+    var config = this.connector.getSessionConfig();
+    config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
+    config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
+    // Connect and construct session.
+    ConnectFuture future = connector.connect(connectAddress);
+    try {
+      if (!future.await(DEFAULT_CONNECT_TIMEOUT_MILLIS,
+          TimeUnit.MILLISECONDS))
+        throw new IOException("connect timeout");
+    } catch (InterruptedException e) {
+      throw new IOException("wait interrupted");
     }
+    return future.getSession();
+  }
 
-    private IoSession io(InetSocketAddress connectAddress) throws IOException {
-        this.connector = new NioSocketConnector();
-        this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
-        // Set filters.
-        var chain = this.connector.getFilterChain();
-        // Too many logs, don't use the logging filter.
-        // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
-        chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
-                new FrameCodecFactory()));
-        // Set handler.
-        this.connector.setHandler(this.frameHandler);
-        // Configure the session.
-        var config = this.connector.getSessionConfig();
-        config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
-        config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
-        // Connect and construct session.
-        ConnectFuture future = connector.connect(connectAddress);
-        try {
-            if (!future.await(DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                    TimeUnit.MILLISECONDS))
-                throw new IOException("connect timeout");
-        } catch (InterruptedException e) {
-            throw new IOException("wait interrupted");
-        }
-        return future.getSession();
-    }
+  @Override
+  public void connect(InetSocketAddress address) throws IOException {
+    // Construct session.
+    this.session = ClientSessionImpl.from(io(address));
+  }
 
-    @Override
-    public void connect(InetSocketAddress address) throws IOException {
-        // Construct session.
-        this.session = ClientSessionImpl.from(io(address));
-    }
+  @Override
+  public void disconnect() {
+    this.session.close();
+    this.connector.dispose();
+  }
 
-    @Override
-    public void disconnect() {
-        this.session.close();
-        this.connector.dispose();
-    }
+  @Override
+  public boolean isConnected() {
+    return !this.session.isClosed();
+  }
 
-    @Override
-    public boolean isConnected() {
-        return !this.session.isClosed();
-    }
+  @Override
+  public void setSessionAdaptor(ClientSessionAdaptor adaptor) {
+    this.frameHandler.setSessionAdaptor(adaptor);
+  }
 
-    @Override
-    public void setSessionAdaptor(ClientSessionAdaptor adaptor) {
-        this.frameHandler.setSessionAdaptor(adaptor);
-    }
+  @Override
+  public void setMessageAdaptor(ClientMessageAdaptor adaptor) {
+    this.frameHandler.setMessageAdaptor(adaptor);
+  }
 
-    @Override
-    public void setMessageAdaptor(ClientMessageAdaptor adaptor) {
-        this.frameHandler.setMessageAdaptor(adaptor);
-    }
+  @Override
+  public void setMessageHandler(ClientMessageHandler handler) {
+    this.frameHandler.setMessageHandler(handler);
+  }
 
-    @Override
-    public void setMessageHandler(ClientMessageHandler handler) {
-        this.frameHandler.setMessageHandler(handler);
-    }
-
-    @Override
-    public ClientSession getSession() {
-        return this.session;
-    }
+  @Override
+  public ClientSession getSession() {
+    return this.session;
+  }
 }

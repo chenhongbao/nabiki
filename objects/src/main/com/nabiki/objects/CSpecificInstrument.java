@@ -31,8 +31,8 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CSpecificInstrument implements Serializable {
-	public String InstrumentID;
+  public String InstrumentID;
 
-	public CSpecificInstrument() {
-	}
+  public CSpecificInstrument() {
+  }
 }

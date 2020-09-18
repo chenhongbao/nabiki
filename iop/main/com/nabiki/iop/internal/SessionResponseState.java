@@ -29,5 +29,5 @@
 package com.nabiki.iop.internal;
 
 enum SessionResponseState {
-    NOT_YET, SENDING, DONE, ERROR
+  NOT_YET, SENDING, DONE, ERROR
 }

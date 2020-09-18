@@ -34,25 +34,25 @@ import java.io.Serializable;
 import java.util.Objects;
 
 class DataPersistenceImpl implements DataPersistence {
-    private final DataPersistenceAccess access;
+  private final DataPersistenceAccess access;
 
-    DataPersistenceImpl(DataPersistenceAccess access) {
-        Objects.requireNonNull(access, "data persistence writer null");
-        this.access = access;
-    }
+  DataPersistenceImpl(DataPersistenceAccess access) {
+    Objects.requireNonNull(access, "data persistence writer null");
+    this.access = access;
+  }
 
-    @Override
-    public boolean put(String key, Serializable data) {
-        return this.access.write(key, data);
-    }
+  @Override
+  public boolean put(String key, Serializable data) {
+    return this.access.write(key, data);
+  }
 
-    @Override
-    public boolean remove(String key) {
-        return this.access.remove(key);
-    }
+  @Override
+  public boolean remove(String key) {
+    return this.access.remove(key);
+  }
 
-    @Override
-    public Object get(String key) {
-        return this.access.read(key);
-    }
+  @Override
+  public Object get(String key) {
+    return this.access.read(key);
+  }
 }

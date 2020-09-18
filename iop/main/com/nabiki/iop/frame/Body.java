@@ -31,45 +31,46 @@ package com.nabiki.iop.frame;
 import com.nabiki.iop.MessageType;
 
 public class Body implements java.io.Serializable {
-    /**
-     * If the message is a request, the request ID identifies this request. If the
-     * message is a response, the request ID identifies that the request that
-     * it responds to.
-     */
-    public String RequestID;
+  /**
+   * If the message is a request, the request ID identifies this request. If the
+   * message is a response, the request ID identifies that the request that
+   * it responds to.
+   */
+  public String RequestID;
 
-    /**
-     * If the message is a response, the response ID identifies this response. Else
-     * the field is set to null.
-     */
-    public String ResponseID;
+  /**
+   * If the message is a response, the response ID identifies this response. Else
+   * the field is set to null.
+   */
+  public String ResponseID;
 
-    /**
-     * Message type {@link MessageType}.
-     */
-    public MessageType Type;
+  /**
+   * Message type {@link MessageType}.
+   */
+  public MessageType Type;
 
-    /**
-     * The counter counts how many messages have ben sent for this request or
-     * response. It starts from 1, to total count. It can't be larger than total
-     * count.
-     */
-    public int CurrentCount;
+  /**
+   * The counter counts how many messages have ben sent for this request or
+   * response. It starts from 1, to total count. It can't be larger than total
+   * count.
+   */
+  public int CurrentCount;
 
-    /**
-     * How many messages to be sent in total. Must be at least 1.
-     */
-    public int TotalCount;
+  /**
+   * How many messages to be sent in total. Must be at least 1.
+   */
+  public int TotalCount;
 
-    /**
-     * JSON string representation of the data in this message.
-     */
-    public String Body;
+  /**
+   * JSON string representation of the data in this message.
+   */
+  public String Body;
 
-    /**
-     * JSON string representation of rsp info in this message.
-     */
-    public String RspInfo;
+  /**
+   * JSON string representation of rsp info in this message.
+   */
+  public String RspInfo;
 
-    public Body() {}
+  public Body() {
+  }
 }

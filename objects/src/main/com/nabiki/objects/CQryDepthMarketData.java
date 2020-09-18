@@ -29,8 +29,9 @@
 package com.nabiki.objects;
 
 public class CQryDepthMarketData {
-    public String InstrumentID;
-    public String ExchangeID;
+  public String InstrumentID;
+  public String ExchangeID;
 
-    public CQryDepthMarketData() {}
+  public CQryDepthMarketData() {
+  }
 }

@@ -66,13 +66,13 @@ public class OrderProvider implements Connectable {
   protected final TimeAligner timeAligner = new TimeAligner();
 
   protected boolean isConfirmed = false,
-          isConnected = false,
-          qryInstrLast = false;
+      isConnected = false,
+      qryInstrLast = false;
   protected CRspUserLogin rspLogin;
 
   // Wait and signaling.
   protected final Signal stateSignal = new Signal(),
-          qryLastInstrSignal = new Signal();
+      qryLastInstrSignal = new Signal();
 
   // Query instrument info.
   protected final QueryTask qryTask = new QueryTask(this);
@@ -139,7 +139,7 @@ public class OrderProvider implements Connectable {
     }
     if (estimatedQueryCount > 0)
       global.getLogger().info(
-              "estimated query count: " + estimatedQueryCount);
+          "estimated query count: " + estimatedQueryCount);
     return estimatedQueryCount != 0;
   }
 
@@ -165,7 +165,7 @@ public class OrderProvider implements Connectable {
          C++ objects.
          */
     this.api = CThostFtdcTraderApi
-            .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
+        .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
     this.spi = new JniTraderSpi(this);
     for (var fa : this.loginCfg.FrontAddresses)
       this.api.RegisterFront(fa);
@@ -257,8 +257,8 @@ public class OrderProvider implements Connectable {
   public synchronized int inputOrder(CInputOrder input, ActiveRequest active) {
     if (!isOrderRefUnique(input.OrderRef)) {
       global.getLogger().warning(
-              Utils.formatLog("duplicated order",
-                      input.OrderRef, null, null));
+          Utils.formatLog("duplicated order",
+              input.OrderRef, null, null));
       return -1;
     }
     // Set the initial rtn order.
@@ -266,7 +266,7 @@ public class OrderProvider implements Connectable {
     // Check time.
     if (isOver(input.InstrumentID)) {
       rspError(input, ErrorCodes.FRONT_NOT_ACTIVE,
-              ErrorMessages.FRONT_NOT_ACTIVE);
+          ErrorMessages.FRONT_NOT_ACTIVE);
       return ErrorCodes.FRONT_NOT_ACTIVE;
     } else {
       if (!this.pendingReqs.offer(new PendingRequest(input, active)))
@@ -330,7 +330,7 @@ public class OrderProvider implements Connectable {
       // Workday.
       var dayOfWeek = day.getDayOfWeek();
       return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY
-              && hour.isEndDay(LocalTime.now());
+          && hour.isEndDay(LocalTime.now());
     }
   }
 
@@ -351,7 +351,7 @@ public class OrderProvider implements Connectable {
   public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
     if (isOver(action.InstrumentID)) {
       rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
-              ErrorMessages.FRONT_NOT_ACTIVE);
+          ErrorMessages.FRONT_NOT_ACTIVE);
       return (-1);
     } else {
       if (!this.pendingReqs.offer(new PendingRequest(action, active)))
@@ -379,12 +379,12 @@ public class OrderProvider implements Connectable {
     req.UserID = this.loginCfg.UserID;
     req.Password = this.loginCfg.Password;
     var r = this.api.ReqUserLogin(
-            JNI.toJni(req),
-            Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-              Utils.formatLog("failed login request", null,
-                      null, r));
+          Utils.formatLog("failed login request", null,
+              null, r));
   }
 
   protected void doLogout() {
@@ -392,12 +392,12 @@ public class OrderProvider implements Connectable {
     req.BrokerID = this.loginCfg.BrokerID;
     req.UserID = this.loginCfg.UserID;
     var r = this.api.ReqUserLogout(
-            JNI.toJni(req),
-            Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().warning(
-              Utils.formatLog("failed logout request", null,
-                      null, r));
+          Utils.formatLog("failed logout request", null,
+              null, r));
   }
 
   protected void doAuthentication() {
@@ -408,12 +408,12 @@ public class OrderProvider implements Connectable {
     req.UserID = this.loginCfg.UserID;
     req.UserProductInfo = this.loginCfg.UserProductInfo;
     var r = this.api.ReqAuthenticate(
-            JNI.toJni(req),
-            Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-              Utils.formatLog("failed authentication", null,
-                      null, r));
+          Utils.formatLog("failed authentication", null,
+              null, r));
   }
 
   protected void doSettlement() {
@@ -423,12 +423,12 @@ public class OrderProvider implements Connectable {
     req.InvestorID = this.loginCfg.UserID;
     req.CurrencyID = "CNY";
     var r = this.api.ReqSettlementInfoConfirm(
-            JNI.toJni(req),
-            Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-              Utils.formatLog("failed confirm settlement", null,
-                      null, r));
+          Utils.formatLog("failed confirm settlement", null,
+              null, r));
   }
 
   protected void doRspLogin(CRspUserLogin rsp) {
@@ -482,17 +482,17 @@ public class OrderProvider implements Connectable {
     var rtn0 = this.mapper.getRtnOrder(ref);
     if (rtn0 == null) {
       this.global.getLogger().warning(
-              Utils.formatLog(
-                      "missing previous rtn order",
-                      ref, null, null));
+          Utils.formatLog(
+              "missing previous rtn order",
+              ref, null, null));
       return true;
     }
     if (rtn0.OrderStatus == OrderStatusType.ALL_TRADED
-            || rtn0.OrderStatus == OrderStatusType.CANCELED) {
+        || rtn0.OrderStatus == OrderStatusType.CANCELED) {
       this.global.getLogger().warning(
-              Utils.formatLog(
-                      "no update to a completed order",
-                      ref, null, null));
+          Utils.formatLog(
+              "no update to a completed order",
+              ref, null, null));
       return true;
     } else
       return false;
@@ -504,8 +504,8 @@ public class OrderProvider implements Connectable {
     var active = this.mapper.getActiveRequest(rtn.OrderRef);
     if (active == null) {
       this.global.getLogger().warning(
-              Utils.formatLog("active request not found", rtn.OrderRef,
-                      null, null));
+          Utils.formatLog("active request not found", rtn.OrderRef,
+              null, null));
       return;
     }
     // Adjust IDs.
@@ -528,8 +528,8 @@ public class OrderProvider implements Connectable {
     } catch (Throwable th) {
       th.printStackTrace();
       this.global.getLogger().severe(
-              Utils.formatLog("failed update rtn order", rtn.OrderRef,
-                      th.getMessage(), null));
+          Utils.formatLog("failed update rtn order", rtn.OrderRef,
+              th.getMessage(), null));
     }
     // The codes below follow the doXXX method because the parameter's fields
     // were rewritten by the method, with local IDs.
@@ -543,8 +543,8 @@ public class OrderProvider implements Connectable {
     var active = this.mapper.getActiveRequest(trade.OrderRef);
     if (active == null) {
       this.global.getLogger().warning(
-              Utils.formatLog("active request not found", trade.OrderRef,
-                      null, null));
+          Utils.formatLog("active request not found", trade.OrderRef,
+              null, null));
       return;
     }
     // Adjust IDs.
@@ -557,8 +557,8 @@ public class OrderProvider implements Connectable {
     } catch (Throwable th) {
       th.printStackTrace();
       this.global.getLogger().severe(
-              Utils.formatLog("failed update rtn trade", trade.OrderRef,
-                      th.getMessage(), null));
+          Utils.formatLog("failed update rtn trade", trade.OrderRef,
+              th.getMessage(), null));
     }
     // The writing method must follow the doXXX method because the fields are
     // rewritten with local IDs.
@@ -571,12 +571,12 @@ public class OrderProvider implements Connectable {
     this.activeInstruments.clear();
     var req = new CQryInstrument();
     var r = this.api.ReqQryInstrument(
-            JNI.toJni(req),
-            Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().warning(
-              Utils.formatLog("failed query instrument", null,
-                      null, r));
+          Utils.formatLog("failed query instrument", null,
+              null, r));
   }
 
   protected void cancelInputOrder(CInputOrder inputOrder, CRspInfo info) {
@@ -592,7 +592,7 @@ public class OrderProvider implements Connectable {
     this.isConnected = true;
     this.stateSignal.signal();
     if (this.workingState == WorkingState.STARTING
-            || this.workingState == WorkingState.STARTED) {
+        || this.workingState == WorkingState.STARTED) {
       doAuthentication();
       this.global.getLogger().info("trader reconnected");
     } else
@@ -609,8 +609,8 @@ public class OrderProvider implements Connectable {
   public void whenErrRtnOrderAction(COrderAction orderAction,
                                     CRspInfo rspInfo) {
     this.global.getLogger().warning(
-            Utils.formatLog("failed action", orderAction.OrderRef,
-                    rspInfo.ErrorMsg, rspInfo.ErrorID));
+        Utils.formatLog("failed action", orderAction.OrderRef,
+            rspInfo.ErrorMsg, rspInfo.ErrorID));
     // Rewrite the local ID.
     var active = this.mapper.getActiveRequest(orderAction.OrderRef);
     if (active != null)
@@ -630,15 +630,15 @@ public class OrderProvider implements Connectable {
   }
 
   public void whenRspAuthenticate(
-          CRspAuthenticate rspAuthenticateField,
-          CRspInfo rspInfo, int requestId, boolean isLast) {
+      CRspAuthenticate rspAuthenticateField,
+      CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       doLogin();
       this.global.getLogger().info("trader authenticated");
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("failed authentication", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed authentication", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
       this.workingState = WorkingState.STOPPED;
     }
@@ -648,8 +648,8 @@ public class OrderProvider implements Connectable {
                            boolean isLast) {
     this.msgWriter.writeErr(rspInfo);
     this.global.getLogger().severe(
-            Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
-                    rspInfo.ErrorID));
+        Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
+            rspInfo.ErrorID));
   }
 
   public void whenRspOrderAction(CInputOrderAction inputOrderAction,
@@ -666,8 +666,8 @@ public class OrderProvider implements Connectable {
                                  CRspInfo rspInfo, int requestId,
                                  boolean isLast) {
     this.global.getLogger().severe(
-            Utils.formatLog("failed order insertion", inputOrder.OrderRef,
-                    rspInfo.ErrorMsg, rspInfo.ErrorID));
+        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
+            rspInfo.ErrorMsg, rspInfo.ErrorID));
     // Failed order results in canceling the order.
     // Set order status msg to error message.
     cancelInputOrder(inputOrder, rspInfo);
@@ -686,8 +686,8 @@ public class OrderProvider implements Connectable {
       this.qryInstrLast = isLast;
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("failed instrument query", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed instrument query", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Signal request rtn.
@@ -704,15 +704,15 @@ public class OrderProvider implements Connectable {
   }
 
   public void whenRspQryInstrumentCommissionRate(
-          CInstrumentCommissionRate instrumentCommissionRate,
-          CRspInfo rspInfo, int requestID, boolean isLast) {
+      CInstrumentCommissionRate instrumentCommissionRate,
+      CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       this.msgWriter.writeInfo(instrumentCommissionRate);
       GlobalConfig.setInstrConfig(instrumentCommissionRate);
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("failed commission query", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed commission query", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Signal request rtn.
@@ -720,15 +720,15 @@ public class OrderProvider implements Connectable {
   }
 
   public void whenRspQryInstrumentMarginRate(
-          CInstrumentMarginRate instrumentMarginRate,
-          CRspInfo rspInfo, int requestID, boolean isLast) {
+      CInstrumentMarginRate instrumentMarginRate,
+      CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       this.msgWriter.writeInfo(instrumentMarginRate);
       GlobalConfig.setInstrConfig(instrumentMarginRate);
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("failed margin query", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed margin query", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Signal request rtn.
@@ -736,8 +736,8 @@ public class OrderProvider implements Connectable {
   }
 
   public void whenRspSettlementInfoConfirm(
-          CSettlementInfoConfirm settlementInfoConfirm,
-          CRspInfo rspInfo, int requestId, boolean isLast) {
+      CSettlementInfoConfirm settlementInfoConfirm,
+      CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       this.global.getLogger().info("trader confirm settlement");
       this.isConfirmed = true;
@@ -748,8 +748,8 @@ public class OrderProvider implements Connectable {
       doQueryInstr();
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("failed settlement confirm", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed settlement confirm", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
       // Confirm settlement fails, logout.
       logout();
@@ -773,8 +773,8 @@ public class OrderProvider implements Connectable {
       this.timeAligner.align("INE", LocalTime.now(), rspLogin.INETime);
     } else {
       this.global.getLogger().severe(
-              Utils.formatLog("trader failed login", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("trader failed login", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
       this.workingState = WorkingState.STOPPED;
     }
@@ -791,8 +791,8 @@ public class OrderProvider implements Connectable {
       this.stateSignal.signal();
     } else {
       this.global.getLogger().warning(
-              Utils.formatLog("failed logout", null,
-                      rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed logout", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
   }

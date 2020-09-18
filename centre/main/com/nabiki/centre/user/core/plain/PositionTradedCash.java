@@ -29,15 +29,16 @@
 package com.nabiki.centre.user.core.plain;
 
 public class PositionTradedCash implements java.io.Serializable {
-    public String InstrumentID;
-    public double ExchMargin;
-    public double Margin;
-    public double CloseAmount;
-    public int CloseVolume;
-    public double CloseProfitByTrade;
-    public double CloseProfitByDate;
-    public double PositionProfitByTrade;
-    public double PositionProfitByDate;
+  public String InstrumentID;
+  public double ExchMargin;
+  public double Margin;
+  public double CloseAmount;
+  public int CloseVolume;
+  public double CloseProfitByTrade;
+  public double CloseProfitByDate;
+  public double PositionProfitByTrade;
+  public double PositionProfitByDate;
 
-    public PositionTradedCash() {}
+  public PositionTradedCash() {
+  }
 }

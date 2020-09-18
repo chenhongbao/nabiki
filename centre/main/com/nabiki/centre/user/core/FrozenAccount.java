@@ -37,67 +37,67 @@ import com.nabiki.objects.CTrade;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FrozenAccount {
-    private final AccountFrozenCash singleFrzCash;
-    private final long totalFrozenCount;
-    private final UserAccount parent;
+  private final AccountFrozenCash singleFrzCash;
+  private final long totalFrozenCount;
+  private final UserAccount parent;
 
-    private ProcessStage stage = ProcessStage.ONGOING;
-    private final AtomicBoolean frozenSet = new AtomicBoolean(false);
-    private long tradedCount = 0;
+  private ProcessStage stage = ProcessStage.ONGOING;
+  private final AtomicBoolean frozenSet = new AtomicBoolean(false);
+  private long tradedCount = 0;
 
-    FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
-        this.parent = parent;
-        this.singleFrzCash = single;
-        this.totalFrozenCount = frzCount;
+  FrozenAccount(UserAccount parent, AccountFrozenCash single, long frzCount) {
+    this.parent = parent;
+    this.singleFrzCash = single;
+    this.totalFrozenCount = frzCount;
+  }
+
+  /**
+   * Add this frozen account to its parent's frozen list. Then this account is
+   * calculated as frozen.
+   */
+  void setFrozen() {
+    if (!this.frozenSet.get()) {
+      this.parent.addFrozenAccount(this);
+      this.frozenSet.set(true);
     }
+  }
 
-    /**
-     * Add this frozen account to its parent's frozen list. Then this account is
-     * calculated as frozen.
-     */
-    void setFrozen() {
-        if (!this.frozenSet.get()) {
-            this.parent.addFrozenAccount(this);
-            this.frozenSet.set(true);
-        }
-    }
+  double getFrozenVolume() {
+    if (this.stage == ProcessStage.CANCELED)
+      return 0;
+    else
+      return this.totalFrozenCount - this.tradedCount;
+  }
 
-    double getFrozenVolume() {
-        if (this.stage == ProcessStage.CANCELED)
-            return 0;
-        else
-            return this.totalFrozenCount - this.tradedCount;
-    }
+  AccountFrozenCash getSingleFrozenCash() {
+    return this.singleFrzCash;
+  }
 
-    AccountFrozenCash getSingleFrozenCash() {
-        return this.singleFrzCash;
-    }
+  /**
+   * Cancel an open order whose frozen account is also canceled.
+   */
+  void cancel() {
+    this.stage = ProcessStage.CANCELED;
+  }
 
-    /**
-     * Cancel an open order whose frozen account is also canceled.
-     */
-    void cancel() {
-        this.stage = ProcessStage.CANCELED;
-    }
-
-    /**
-     * An open order is traded(or partly) whose frozen account is also decreased.
-     *
-     * @param trade trade response
-     * @param instr instrument
-     * @param comm commission
-     */
-    void applyOpenTrade(CTrade trade,
-                               CInstrument instr,
-                               CInstrumentCommissionRate comm) {
-        if (trade.Volume < 0)
-            throw new IllegalArgumentException("negative traded share count");
-        if (this.stage == ProcessStage.CANCELED)
-            throw new IllegalStateException("trade on canceled order");
-        if (getFrozenVolume() < trade.Volume)
-            throw new IllegalStateException("not enough frozen shares");
-        this.tradedCount += trade.Volume;
-        // Update parent.
-        this.parent.applyTrade(trade, instr, comm);
-    }
+  /**
+   * An open order is traded(or partly) whose frozen account is also decreased.
+   *
+   * @param trade trade response
+   * @param instr instrument
+   * @param comm  commission
+   */
+  void applyOpenTrade(CTrade trade,
+                      CInstrument instr,
+                      CInstrumentCommissionRate comm) {
+    if (trade.Volume < 0)
+      throw new IllegalArgumentException("negative traded share count");
+    if (this.stage == ProcessStage.CANCELED)
+      throw new IllegalStateException("trade on canceled order");
+    if (getFrozenVolume() < trade.Volume)
+      throw new IllegalStateException("not enough frozen shares");
+    this.tradedCount += trade.Volume;
+    // Update parent.
+    this.parent.applyTrade(trade, instr, comm);
+  }
 }

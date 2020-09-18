@@ -29,7 +29,7 @@
 package com.nabiki.objects;
 
 public class PosiDirectionType {
-    public static final char NET = '1';
-    public static final char LONG = '2';
-    public static final char SHORT = '3';
+  public static final char NET = '1';
+  public static final char LONG = '2';
+  public static final char SHORT = '3';
 }

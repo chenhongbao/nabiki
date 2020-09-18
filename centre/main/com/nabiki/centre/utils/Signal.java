@@ -33,27 +33,27 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Signal {
-    protected final ReentrantLock lock = new ReentrantLock();
-    protected final Condition cond = lock.newCondition();
+  protected final ReentrantLock lock = new ReentrantLock();
+  protected final Condition cond = lock.newCondition();
 
-    public Signal() {
-    }
+  public Signal() {
+  }
 
-    public boolean waitSignal(long millis) throws InterruptedException {
-        this.lock.lock();
-        try {
-            return this.cond.await(millis, TimeUnit.MILLISECONDS);
-        } finally {
-            this.lock.unlock();
-        }
+  public boolean waitSignal(long millis) throws InterruptedException {
+    this.lock.lock();
+    try {
+      return this.cond.await(millis, TimeUnit.MILLISECONDS);
+    } finally {
+      this.lock.unlock();
     }
+  }
 
-    public void signal() {
-        this.lock.lock();
-        try {
-            this.cond.signalAll();
-        } finally {
-            this.lock.unlock();
-        }
+  public void signal() {
+    this.lock.lock();
+    try {
+      this.cond.signalAll();
+    } finally {
+      this.lock.unlock();
     }
+  }
 }

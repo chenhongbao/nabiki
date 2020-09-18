@@ -44,87 +44,87 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CandleRW extends CandleAccess implements MarketDataReceiver {
-    private final Path candleDir;
-    private final Global global;
-    private final Map<String, Map<Integer, File>> files = new ConcurrentHashMap<>();
+  private final Path candleDir;
+  private final Global global;
+  private final Map<String, Map<Integer, File>> files = new ConcurrentHashMap<>();
 
-    public CandleRW(Global cfg) {
-        this.global = cfg;
-        this.candleDir = getPath(this.global);
-        loadInstrFiles();
-    }
+  public CandleRW(Global cfg) {
+    this.global = cfg;
+    this.candleDir = getPath(this.global);
+    loadInstrFiles();
+  }
 
-    private void loadInstrFiles() {
-        if (!Files.exists(this.candleDir))
-            return;
-        this.candleDir.toFile().listFiles(file -> {
-            var n = file.getName();
-            var ns = n.substring(0, n.indexOf(".csv")).split("_");
-            if (ns.length == 2) {
-                try {
-                    getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                    global.getLogger().warning(
-                            "incorrect candle file name: " + n);
-                }
-            }
-            return false;
-        });
-    }
-
-    private Path getPath(Global cfg) {
-        var dirs = cfg.getRootDirectory().recursiveGet("dir.cdl");
-        if (dirs.size() > 0)
-            return dirs.iterator().next().path();
-        else
-            return Path.of("");
-    }
-
-    private Map<Integer, File> getInstrFiles(String instrumentID) {
-        var instrFiles = this.files.get(instrumentID);
-        if (instrFiles == null) {
-            instrFiles = new ConcurrentHashMap<>();
-            this.files.put(instrumentID, instrFiles);
-        }
-        return instrFiles;
-    }
-
-    private File getFile(String instrumentID, int minute) throws IOException {
-        var instrFiles = getInstrFiles(instrumentID);
-        File file = instrFiles.get(minute);
-        if (file == null) {
-            var path = Path.of(this.candleDir.toString(),
-                    instrumentID + "_" + minute + ".csv");
-            Utils.createFile(path, false);
-            file = path.toFile();
-            instrFiles.put(minute, file);
-        }
-        return file;
-    }
-
-    public List<CCandle> queryCandle(String instrID) {
-        var candles = new LinkedList<CCandle>();
-        for (var f : getInstrFiles(instrID).values())
-            candles.addAll(super.read(f));
-        // Sort candles.
-        candles.sort(Comparator.comparing(c -> (c.ActionDay + c.UpdateTime)));
-        return candles;
-    }
-
-    @Override
-    public void depthReceived(CDepthMarketData depth) {
-
-    }
-
-    @Override
-    public void candleReceived(CCandle candle) {
+  private void loadInstrFiles() {
+    if (!Files.exists(this.candleDir))
+      return;
+    this.candleDir.toFile().listFiles(file -> {
+      var n = file.getName();
+      var ns = n.substring(0, n.indexOf(".csv")).split("_");
+      if (ns.length == 2) {
         try {
-            super.write(getFile(candle.InstrumentID, candle.Minute), candle);
-        } catch (IOException e) {
-            global.getLogger().warning(
-                    "fail writing candle " + candle.InstrumentID
-                            + "(" + candle.Minute + ")");
+          getInstrFiles(ns[0]).put(Integer.parseInt(ns[1]), file);
+        } catch (Throwable th) {
+          th.printStackTrace();
+          global.getLogger().warning(
+              "incorrect candle file name: " + n);
         }
+      }
+      return false;
+    });
+  }
+
+  private Path getPath(Global cfg) {
+    var dirs = cfg.getRootDirectory().recursiveGet("dir.cdl");
+    if (dirs.size() > 0)
+      return dirs.iterator().next().path();
+    else
+      return Path.of("");
+  }
+
+  private Map<Integer, File> getInstrFiles(String instrumentID) {
+    var instrFiles = this.files.get(instrumentID);
+    if (instrFiles == null) {
+      instrFiles = new ConcurrentHashMap<>();
+      this.files.put(instrumentID, instrFiles);
     }
+    return instrFiles;
+  }
+
+  private File getFile(String instrumentID, int minute) throws IOException {
+    var instrFiles = getInstrFiles(instrumentID);
+    File file = instrFiles.get(minute);
+    if (file == null) {
+      var path = Path.of(this.candleDir.toString(),
+          instrumentID + "_" + minute + ".csv");
+      Utils.createFile(path, false);
+      file = path.toFile();
+      instrFiles.put(minute, file);
+    }
+    return file;
+  }
+
+  public List<CCandle> queryCandle(String instrID) {
+    var candles = new LinkedList<CCandle>();
+    for (var f : getInstrFiles(instrID).values())
+      candles.addAll(super.read(f));
+    // Sort candles.
+    candles.sort(Comparator.comparing(c -> (c.ActionDay + c.UpdateTime)));
+    return candles;
+  }
+
+  @Override
+  public void depthReceived(CDepthMarketData depth) {
+
+  }
+
+  @Override
+  public void candleReceived(CCandle candle) {
+    try {
+      super.write(getFile(candle.InstrumentID, candle.Minute), candle);
+    } catch (IOException e) {
+      global.getLogger().warning(
+          "fail writing candle " + candle.InstrumentID
+              + "(" + candle.Minute + ")");
+    }
+  }
 }

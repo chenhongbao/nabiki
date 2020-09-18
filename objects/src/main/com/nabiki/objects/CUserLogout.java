@@ -31,9 +31,9 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CUserLogout implements Serializable {
-	public String BrokerID;
-	public String UserID;
+  public String BrokerID;
+  public String UserID;
 
-	public CUserLogout() {
-	}
+  public CUserLogout() {
+  }
 }

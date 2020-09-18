@@ -39,121 +39,121 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p><b>Instance of the class is thread-safe.</b></p>
  */
 public class TradingHourKeeper {
-    // (from, to]
-    static class TradingHour {
-        final LocalTime from, to;
+  // (from, to]
+  static class TradingHour {
+    final LocalTime from, to;
 
-        TradingHour(LocalTime from, LocalTime to) {
-            this.from = from;
-            this.to = to;
-        }
-
-        boolean contains(LocalTime now) {
-            if (from.isBefore(this.to))
-                return this.from.isBefore(now) && !this.to.isBefore(now);
-            else if (from.isAfter(to))
-                return this.from.isBefore(now) || !this.to.isBefore(now);
-            else
-                return false;
-        }
+    TradingHour(LocalTime from, LocalTime to) {
+      this.from = from;
+      this.to = to;
     }
 
-    final List<TradingHour> tradingHours = new LinkedList<>();
-    final Map<Duration, Set<LocalTime>> durationSplits = new ConcurrentHashMap<>();
-
-    TradingHourKeeper(TradingHour... hours) {
-        this.tradingHours.addAll(Arrays.asList(hours));
-    }
-
-    /**
-     * Check if the specified local time {@code now} is in this time range.
-     *
-     * @param now local time now
-     * @return {@code true} if the specified local time is in the range, {@code false}
-     * otherwise
-     */
-    public boolean contains(LocalTime now) {
-        for (var hour : this.tradingHours) {
-            if (hour.contains(now))
-                return true;
-        }
+    boolean contains(LocalTime now) {
+      if (from.isBefore(this.to))
+        return this.from.isBefore(now) && !this.to.isBefore(now);
+      else if (from.isAfter(to))
+        return this.from.isBefore(now) || !this.to.isBefore(now);
+      else
         return false;
     }
+  }
 
-    /**
-     * Check if the specified local time {@code now} is sampled under the specified
-     * duration. If the specified duration doesn't exist, the method returns
-     * {@code false}.
-     *
-     * @param du duration
-     * @param now local time now
-     * @return {@code true} if the specified local time is a sample under the specified
-     * duration
-     */
-    public boolean contains(Duration du, LocalTime now) {
-        if (!this.durationSplits.containsKey(du))
-            return false;
-        return this.durationSplits.get(du).contains(now);
+  final List<TradingHour> tradingHours = new LinkedList<>();
+  final Map<Duration, Set<LocalTime>> durationSplits = new ConcurrentHashMap<>();
+
+  TradingHourKeeper(TradingHour... hours) {
+    this.tradingHours.addAll(Arrays.asList(hours));
+  }
+
+  /**
+   * Check if the specified local time {@code now} is in this time range.
+   *
+   * @param now local time now
+   * @return {@code true} if the specified local time is in the range, {@code false}
+   * otherwise
+   */
+  public boolean contains(LocalTime now) {
+    for (var hour : this.tradingHours) {
+      if (hour.contains(now))
+        return true;
     }
+    return false;
+  }
 
-    /**
-     * Sample some time points in trading hours with interval of the specified
-     * {@link Duration}.
-     *
-     * @param du duration between sampled time points
-     */
-    public void sample(Duration du) {
-        if (this.durationSplits.containsKey(du))
-            return;
-        else
-            this.durationSplits.put(du, new HashSet<>());
+  /**
+   * Check if the specified local time {@code now} is sampled under the specified
+   * duration. If the specified duration doesn't exist, the method returns
+   * {@code false}.
+   *
+   * @param du  duration
+   * @param now local time now
+   * @return {@code true} if the specified local time is a sample under the specified
+   * duration
+   */
+  public boolean contains(Duration du, LocalTime now) {
+    if (!this.durationSplits.containsKey(du))
+      return false;
+    return this.durationSplits.get(du).contains(now);
+  }
 
-        final Set<LocalTime> times = durationSplits.get(du);
-        synchronized (times) {
-            // Calculate splits.
-            final LocalTime[] next = {null}, to = {null};
-            final Duration[] nextDu = {du};
-            this.tradingHours.forEach(hour -> {
-                if (next[0] == null)
-                    next[0] = hour.from;
-                while (true) {
-                    next[0] = next[0].plus(nextDu[0]);
-                    if (hour.contains(next[0])) {
-                        times.add(next[0]);
-                        nextDu[0] = du;
-                    } else {
-                        nextDu[0] = Utils.between(hour.to, next[0]);
-                        break;
-                    }
-                }
-                to[0] = hour.to;
-                next[0] = null;
-            });
-            // Finalize the calculation by adding the end of trading hour if next
-            // possible local time exceeds the last trading hour.
-            if (!nextDu[0].equals(du))
-                times.add(to[0]);
+  /**
+   * Sample some time points in trading hours with interval of the specified
+   * {@link Duration}.
+   *
+   * @param du duration between sampled time points
+   */
+  public void sample(Duration du) {
+    if (this.durationSplits.containsKey(du))
+      return;
+    else
+      this.durationSplits.put(du, new HashSet<>());
+
+    final Set<LocalTime> times = durationSplits.get(du);
+    synchronized (times) {
+      // Calculate splits.
+      final LocalTime[] next = {null}, to = {null};
+      final Duration[] nextDu = {du};
+      this.tradingHours.forEach(hour -> {
+        if (next[0] == null)
+          next[0] = hour.from;
+        while (true) {
+          next[0] = next[0].plus(nextDu[0]);
+          if (hour.contains(next[0])) {
+            times.add(next[0]);
+            nextDu[0] = du;
+          } else {
+            nextDu[0] = Utils.between(hour.to, next[0]);
+            break;
+          }
         }
+        to[0] = hour.to;
+        next[0] = null;
+      });
+      // Finalize the calculation by adding the end of trading hour if next
+      // possible local time exceeds the last trading hour.
+      if (!nextDu[0].equals(du))
+        times.add(to[0]);
     }
+  }
 
-    /**
-     * Check if the specified local time is between two trading days, when the
-     * market is closed.
-     *
-     * @param now local time now
-     * @return {@code true} if now is end of the previous trading day, {@code false}
-     * otherwise
-     */
-    public boolean isEndDay(LocalTime now) {
-        if (this.tradingHours.size() == 0)
-            return true;    // no trading hour so it's always end-of-day
-        if (contains(now))
-            return false;   // now is trading hour
-        var beg = this.tradingHours.get(0);
-        var end = this.tradingHours.get(this.tradingHours.size() - 1);
-        if (beg.from.isBefore(end.to))
-            return beg.from.isAfter(now) || end.to.isBefore(now);
-        else
-            return end.to.isBefore(now) && beg.from.isAfter(now);
-    }
+  /**
+   * Check if the specified local time is between two trading days, when the
+   * market is closed.
+   *
+   * @param now local time now
+   * @return {@code true} if now is end of the previous trading day, {@code false}
+   * otherwise
+   */
+  public boolean isEndDay(LocalTime now) {
+    if (this.tradingHours.size() == 0)
+      return true;    // no trading hour so it's always end-of-day
+    if (contains(now))
+      return false;   // now is trading hour
+    var beg = this.tradingHours.get(0);
+    var end = this.tradingHours.get(this.tradingHours.size() - 1);
+    if (beg.from.isBefore(end.to))
+      return beg.from.isAfter(now) || end.to.isBefore(now);
+    else
+      return end.to.isBefore(now) && beg.from.isAfter(now);
+  }
 }

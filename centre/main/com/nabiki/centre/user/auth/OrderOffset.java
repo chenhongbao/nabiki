@@ -29,5 +29,5 @@
 package com.nabiki.centre.user.auth;
 
 public enum OrderOffset {
-    OPEN_CLOSE, ONLY_CLOSE, NEITHER
+  OPEN_CLOSE, ONLY_CLOSE, NEITHER
 }

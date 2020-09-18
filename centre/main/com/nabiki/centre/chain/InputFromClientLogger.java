@@ -33,22 +33,22 @@ import com.nabiki.iop.ServerMessageHandler;
 import com.nabiki.iop.ServerSession;
 
 public class InputFromClientLogger implements ServerMessageHandler {
-    private final MsgInOutWriter writer;
+  private final MsgInOutWriter writer;
 
-    InputFromClientLogger(MsgInOutWriter writer) {
-        this.writer = writer;
-    }
+  InputFromClientLogger(MsgInOutWriter writer) {
+    this.writer = writer;
+  }
 
-    @Override
-    public void onMessage(ServerSession session, Message message) {
-        switch (message.Type) {
-            case HEARTBEAT:
-            case FLOW_DEPTH:
-            case FLOW_CANDLE:
-                break;
-            default:
-                this.writer.writeIn(message, session);
-                break;
-        }
+  @Override
+  public void onMessage(ServerSession session, Message message) {
+    switch (message.Type) {
+      case HEARTBEAT:
+      case FLOW_DEPTH:
+      case FLOW_CANDLE:
+        break;
+      default:
+        this.writer.writeIn(message, session);
+        break;
     }
+  }
 }

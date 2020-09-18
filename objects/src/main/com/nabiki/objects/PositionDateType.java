@@ -29,6 +29,6 @@
 package com.nabiki.objects;
 
 public class PositionDateType {
-    final public static char TODAY = '1';
-    final public static char HISTORY = '1';
+  final public static char TODAY = '1';
+  final public static char HISTORY = '1';
 }

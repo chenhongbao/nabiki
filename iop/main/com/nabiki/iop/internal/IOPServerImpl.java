@@ -40,57 +40,57 @@ import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class IOPServerImpl implements IOPServer {
-    private static final int DEFAULT_IDLE_SEC = 60;
+  private static final int DEFAULT_IDLE_SEC = 60;
 
-    private final IoAcceptor acceptor = new NioSocketAcceptor();
-    private final ServerFrameHandler frameHandler = new ServerFrameHandler();
+  private final IoAcceptor acceptor = new NioSocketAcceptor();
+  private final ServerFrameHandler frameHandler = new ServerFrameHandler();
 
-    public IOPServerImpl() {
-    }
+  public IOPServerImpl() {
+  }
 
-    private void io(InetSocketAddress address) throws IOException {
-        var chain = this.acceptor.getFilterChain();
-        // Too many logs, don't use the logging filter.
-        // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
-        chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
-                new FrameCodecFactory()));
-        // Frame handler.
-        this.acceptor.setHandler(frameHandler);
-        // Configure the session.
-        var config = this.acceptor.getSessionConfig();
-        config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
-        config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
-        // Bind address.
-        this.acceptor.bind(address);
-    }
+  private void io(InetSocketAddress address) throws IOException {
+    var chain = this.acceptor.getFilterChain();
+    // Too many logs, don't use the logging filter.
+    // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
+    chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
+        new FrameCodecFactory()));
+    // Frame handler.
+    this.acceptor.setHandler(frameHandler);
+    // Configure the session.
+    var config = this.acceptor.getSessionConfig();
+    config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
+    config.setIdleTime(IdleStatus.BOTH_IDLE, DEFAULT_IDLE_SEC);
+    // Bind address.
+    this.acceptor.bind(address);
+  }
 
-    @Override
-    public void bind(InetSocketAddress address) throws IOException {
-        io(address);
-    }
+  @Override
+  public void bind(InetSocketAddress address) throws IOException {
+    io(address);
+  }
 
-    @Override
-    public void setSessionAdaptor(ServerSessionAdaptor adaptor) {
-        this.frameHandler.setSessionAdaptor(adaptor);
-    }
+  @Override
+  public void setSessionAdaptor(ServerSessionAdaptor adaptor) {
+    this.frameHandler.setSessionAdaptor(adaptor);
+  }
 
-    @Override
-    public void setMessageHandlerOut(ServerMessageHandler handler) {
-        this.frameHandler.setHandlerOut(handler);
-    }
+  @Override
+  public void setMessageHandlerOut(ServerMessageHandler handler) {
+    this.frameHandler.setHandlerOut(handler);
+  }
 
-    @Override
-    public void setMessageHandlerIn(ServerMessageHandler handler) {
-        this.frameHandler.setHandlerIn(handler);
-    }
+  @Override
+  public void setMessageHandlerIn(ServerMessageHandler handler) {
+    this.frameHandler.setHandlerIn(handler);
+  }
 
-    @Override
-    public void setLoginManager(LoginManager manager) {
-        this.frameHandler.setLoginManager(manager);
-    }
+  @Override
+  public void setLoginManager(LoginManager manager) {
+    this.frameHandler.setLoginManager(manager);
+  }
 
-    @Override
-    public AdaptorChain getAdaptorChain() {
-        return this.frameHandler.getAdaptorChain();
-    }
+  @Override
+  public AdaptorChain getAdaptorChain() {
+    return this.frameHandler.getAdaptorChain();
+  }
 }

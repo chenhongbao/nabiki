@@ -32,21 +32,21 @@ import com.nabiki.iop.internal.IOPClientImpl;
 import com.nabiki.iop.internal.IOPServerImpl;
 
 public class IOP {
-    /**
-     * Create a server bound to the specified address and talking the IOP frame.
-     *
-     * @return server instance
-     */
-    public static IOPServer createServer() {
-        return new IOPServerImpl();
-    }
+  /**
+   * Create a server bound to the specified address and talking the IOP frame.
+   *
+   * @return server instance
+   */
+  public static IOPServer createServer() {
+    return new IOPServerImpl();
+  }
 
-    /**
-     * Create a client connected to the specified address and talking the IOP frame.
-     *
-     * @return client instance
-     */
-    public static IOPClient createClient() {
-        return new IOPClientImpl();
-    }
+  /**
+   * Create a client connected to the specified address and talking the IOP frame.
+   *
+   * @return client instance
+   */
+  public static IOPClient createClient() {
+    return new IOPClientImpl();
+  }
 }

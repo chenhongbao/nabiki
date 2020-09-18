@@ -38,35 +38,35 @@ import com.nabiki.iop.IOPServer;
 import java.util.Objects;
 
 public class StaticChainInstaller {
-    public static void install(
-            IOPServer server,
-            UserAuthManager auth,
-            ActiveUserManager user,
-            MarketDataRouter router,
-            Global global) {
-        Objects.requireNonNull(server, "iop server null");
-        Objects.requireNonNull(auth, "user auth manager null");
-        Objects.requireNonNull(user, "active user manager null");
-        Objects.requireNonNull(router, "md router null");
-        Objects.requireNonNull(router, "md router null");
-        // Install candle writer.
-        var rw = new CandleRW(global);
-        router.addReceiver(rw);
-        // Install login manager.
-        server.setLoginManager(new UserLoginManager(auth, user, global));
-        // Install session adaptor.
-        server.setSessionAdaptor(new SessionAdaptor(router, global));
-        // Install adaptors.
-        var chain = server.getAdaptorChain();
-        chain.addAdaptor(new RequestValidator());
-        chain.addAdaptor(new RequestExecutor(global));
-        chain.addAdaptor(new SubscriptionAdaptor(router, rw, global));
-        chain.addAdaptor(new QueryAdaptor(global));
-        // Install msg writer.
-        // Create msg in/out writer.
-        var msgWriter = new MsgInOutWriter(global);
-        server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
-        server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
+  public static void install(
+      IOPServer server,
+      UserAuthManager auth,
+      ActiveUserManager user,
+      MarketDataRouter router,
+      Global global) {
+    Objects.requireNonNull(server, "iop server null");
+    Objects.requireNonNull(auth, "user auth manager null");
+    Objects.requireNonNull(user, "active user manager null");
+    Objects.requireNonNull(router, "md router null");
+    Objects.requireNonNull(router, "md router null");
+    // Install candle writer.
+    var rw = new CandleRW(global);
+    router.addReceiver(rw);
+    // Install login manager.
+    server.setLoginManager(new UserLoginManager(auth, user, global));
+    // Install session adaptor.
+    server.setSessionAdaptor(new SessionAdaptor(router, global));
+    // Install adaptors.
+    var chain = server.getAdaptorChain();
+    chain.addAdaptor(new RequestValidator());
+    chain.addAdaptor(new RequestExecutor(global));
+    chain.addAdaptor(new SubscriptionAdaptor(router, rw, global));
+    chain.addAdaptor(new QueryAdaptor(global));
+    // Install msg writer.
+    // Create msg in/out writer.
+    var msgWriter = new MsgInOutWriter(global);
+    server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
+    server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
 
-    }
+  }
 }

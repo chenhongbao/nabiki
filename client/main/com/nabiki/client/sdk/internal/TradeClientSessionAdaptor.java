@@ -37,60 +37,60 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 class TradeClientSessionAdaptor extends ClientSessionAdaptor {
-    private class DefaultClientListener implements TradeClientListener {
-        @Override
-        public void onError(Throwable th) {
-        }
-
-        @Override
-        public void onClose() {
-        }
-
-        @Override
-        public void onOpen() {
-        }
-    }
-
-    private final AtomicBoolean closed = new AtomicBoolean(true);
-    private final AtomicReference<TradeClientListener> listener
-            = new AtomicReference<>(new DefaultClientListener());
-
-    TradeClientSessionAdaptor() {
-    }
-
-    void setListener(TradeClientListener listener) {
-        if (listener != null)
-            this.listener.set(listener);
+  private class DefaultClientListener implements TradeClientListener {
+    @Override
+    public void onError(Throwable th) {
     }
 
     @Override
-    public void doEvent(ClientSession session, SessionEvent event,
-                        Object eventObject) {
-        switch (event) {
-            case OPENED:
-                this.closed.set(false);
-                try {
-                    this.listener.get().onOpen();
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-                break;
-            case CLOSED:
-                this.closed.set(true);
-                try {
-                    this.listener.get().onClose();
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-                break;
-            case ERROR:
-                try {
-                    this.listener.get().onError((Throwable) eventObject);
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-            default:
-                break;
-        }
+    public void onClose() {
     }
+
+    @Override
+    public void onOpen() {
+    }
+  }
+
+  private final AtomicBoolean closed = new AtomicBoolean(true);
+  private final AtomicReference<TradeClientListener> listener
+      = new AtomicReference<>(new DefaultClientListener());
+
+  TradeClientSessionAdaptor() {
+  }
+
+  void setListener(TradeClientListener listener) {
+    if (listener != null)
+      this.listener.set(listener);
+  }
+
+  @Override
+  public void doEvent(ClientSession session, SessionEvent event,
+                      Object eventObject) {
+    switch (event) {
+      case OPENED:
+        this.closed.set(false);
+        try {
+          this.listener.get().onOpen();
+        } catch (Throwable th) {
+          th.printStackTrace();
+        }
+        break;
+      case CLOSED:
+        this.closed.set(true);
+        try {
+          this.listener.get().onClose();
+        } catch (Throwable th) {
+          th.printStackTrace();
+        }
+        break;
+      case ERROR:
+        try {
+          this.listener.get().onError((Throwable) eventObject);
+        } catch (Throwable th) {
+          th.printStackTrace();
+        }
+      default:
+        break;
+    }
+  }
 }

@@ -29,16 +29,16 @@
 package com.nabiki.client.ui;
 
 public abstract class FigureTrader
-        extends AbstractFigure
-        implements MarketDataHandler {
+    extends AbstractFigure
+    implements MarketDataHandler {
 
-    FigureTrader() {
-        setDefaultAdaptor(new FigureMarketDataAdaptor(this, this));
-    }
+  FigureTrader() {
+    setDefaultAdaptor(new FigureMarketDataAdaptor(this, this));
+  }
 
-    @Override
-    public void stop() {
-        for (var fid : getFigureID())
-            super.dispose(fid);
-    }
+  @Override
+  public void stop() {
+    for (var fid : getFigureID())
+      super.dispose(fid);
+  }
 }

@@ -29,7 +29,7 @@
 package com.nabiki.client.sdk;
 
 public interface TradeClientFactory {
-    TradeClient get();
+  TradeClient get();
 
-    void unget(TradeClient client);
+  void unget(TradeClient client);
 }

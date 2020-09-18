@@ -32,7 +32,7 @@ import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 
 public interface MarketDataListener {
-    void onDepthMarketData(CDepthMarketData depth);
+  void onDepthMarketData(CDepthMarketData depth);
 
-    void onCandle(CCandle candle);
+  void onCandle(CCandle candle);
 }

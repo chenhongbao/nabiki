@@ -41,91 +41,91 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ResponseImpl<T> implements Response<T> {
-    private static class ArriveResponse<T> {
-        final T Response;
-        final CRspInfo RspInfo;
-        final int CurrentCount, TotalCount;
+  private static class ArriveResponse<T> {
+    final T Response;
+    final CRspInfo RspInfo;
+    final int CurrentCount, TotalCount;
 
-        ArriveResponse(T response, CRspInfo rspInfo, int count,
-                       int total) {
-            this.Response = response;
-            this.RspInfo = rspInfo;
-            this.CurrentCount = count;
-            this.TotalCount = total;
-        }
+    ArriveResponse(T response, CRspInfo rspInfo, int count,
+                   int total) {
+      this.Response = response;
+      this.RspInfo = rspInfo;
+      this.CurrentCount = count;
+      this.TotalCount = total;
     }
+  }
 
-    private final AtomicReference<ResponseConsumer<T>> consumer;
-    private final Map<Integer, CRspInfo> infos;
-    private final Queue<ArriveResponse<T>> responses;
-    private final AtomicInteger totalCount = new AtomicInteger(0),
-            arriveCount = new AtomicInteger(0);
-    private final AtomicBoolean hasRsp = new AtomicBoolean(false);
+  private final AtomicReference<ResponseConsumer<T>> consumer;
+  private final Map<Integer, CRspInfo> infos;
+  private final Queue<ArriveResponse<T>> responses;
+  private final AtomicInteger totalCount = new AtomicInteger(0),
+      arriveCount = new AtomicInteger(0);
+  private final AtomicBoolean hasRsp = new AtomicBoolean(false);
 
-    public ResponseImpl() {
-        this.consumer = new AtomicReference<>(null);
-        this.infos = new ConcurrentHashMap<>();
-        this.responses = new ConcurrentLinkedQueue<>();
+  public ResponseImpl() {
+    this.consumer = new AtomicReference<>(null);
+    this.infos = new ConcurrentHashMap<>();
+    this.responses = new ConcurrentLinkedQueue<>();
+  }
+
+  void put(T response, CRspInfo rspInfo, int count, int total) {
+    if (this.consumer.get() != null) {
+      try {
+        this.consumer.get().accept(response, rspInfo, count, total);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    } else {
+      this.responses.add(
+          new ArriveResponse<>(response, rspInfo, count, total));
+      this.infos.put(response.hashCode(), rspInfo);
     }
+    this.hasRsp.set(true);
+    // Set count.
+    this.arriveCount.incrementAndGet();
+    if (this.totalCount.get() == 0)
+      this.totalCount.set(total);
+  }
 
-    void put(T response, CRspInfo rspInfo, int count, int total) {
-        if (this.consumer.get() != null) {
-            try {
-                this.consumer.get().accept(response, rspInfo, count, total);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-        } else {
-            this.responses.add(
-                    new ArriveResponse<>(response, rspInfo, count, total));
-            this.infos.put(response.hashCode(), rspInfo);
-        }
-        this.hasRsp.set(true);
-        // Set count.
-        this.arriveCount.incrementAndGet();
-        if (this.totalCount.get() == 0)
-            this.totalCount.set(total);
-    }
+  @Override
+  public T poll() {
+    var r = this.responses.poll();
+    if (r != null)
+      return r.Response;
+    else
+      return null;
+  }
 
-    @Override
-    public T poll() {
-        var r = this.responses.poll();
-        if (r != null)
-            return r.Response;
-        else
-            return null;
-    }
+  @Override
+  public CRspInfo getRspInfo(T response) {
+    if (response == null)
+      return null;
+    return this.infos.get(response.hashCode());
+  }
 
-    @Override
-    public CRspInfo getRspInfo(T response) {
-        if (response == null)
-            return null;
-        return this.infos.get(response.hashCode());
-    }
+  @Override
+  public void consume(ResponseConsumer<T> consumer) {
+    if (consumer != null)
+      this.consumer.set(consumer);
+  }
 
-    @Override
-    public void consume(ResponseConsumer<T> consumer) {
-        if (consumer != null)
-            this.consumer.set(consumer);
-    }
+  @Override
+  public boolean hasResponse() {
+    return this.hasRsp.get();
+  }
 
-    @Override
-    public boolean hasResponse() {
-        return this.hasRsp.get();
-    }
+  @Override
+  public int getArrivalCount() {
+    return this.arriveCount.get();
+  }
 
-    @Override
-    public int getArrivalCount() {
-        return this.arriveCount.get();
-    }
+  @Override
+  public int getTotalCount() {
+    return this.totalCount.get();
+  }
 
-    @Override
-    public int getTotalCount() {
-        return this.totalCount.get();
-    }
-
-    @Override
-    public int availableCount() {
-        return this.responses.size();
-    }
+  @Override
+  public int availableCount() {
+    return this.responses.size();
+  }
 }

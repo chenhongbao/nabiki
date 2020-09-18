@@ -37,63 +37,63 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrderActioner extends Updater implements Runnable {
-    private final TradeClient client;
-    private final OrderUpdater updater;
-    private Thread daemon;
-    private String orderID;
-    private JButton src;
+  private final TradeClient client;
+  private final OrderUpdater updater;
+  private Thread daemon;
+  private String orderID;
+  private JButton src;
 
-    OrderActioner(TradeClient client, OrderUpdater updater) {
-        this.client = client;
-        this.updater = updater;
-    }
+  OrderActioner(TradeClient client, OrderUpdater updater) {
+    this.client = client;
+    this.updater = updater;
+  }
 
-    public void cancel(String orderID, Object src) {
-        this.src = (JButton)src;
-        this.orderID = orderID;
-        super.fire();
-    }
+  public void cancel(String orderID, Object src) {
+    this.src = (JButton) src;
+    this.orderID = orderID;
+    super.fire();
+  }
 
-    public void start() {
-        daemon = new Thread(this);
-        daemon.setDaemon(true);
-        daemon.start();
-    }
+  public void start() {
+    daemon = new Thread(this);
+    daemon.setDaemon(true);
+    daemon.start();
+  }
 
-    @Override
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                super.waitFire();
-                actionOrder();
-            } catch (Throwable th) {
-                showMsg(th.getMessage());
-            }
-        }
+  @Override
+  public void run() {
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
+        super.waitFire();
+        actionOrder();
+      } catch (Throwable th) {
+        showMsg(th.getMessage());
+      }
     }
+  }
 
-    private void actionOrder() throws Exception {
-        var req = new CInputOrderAction();
-        req.OrderSysID = orderID;
-        var rsp = client.orderAction(
-                req, UUID.randomUUID().toString());
-        src.setEnabled(false);
-        sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
-        src.setEnabled(true);
-        if (!rsp.hasResponse())
-            showMsg("\u65E0\u6301\u4ED3");
-        else {
-            var rspInfo = rsp.getRspInfo(rsp.poll());
-            if (rspInfo == null)
-                showMsg("\u65E0\u6301\u4ED3");
-            else if (rspInfo.ErrorID != ErrorCodes.NONE)
-                showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
-            else
-                updater.query(orderID, src);
-        }
+  private void actionOrder() throws Exception {
+    var req = new CInputOrderAction();
+    req.OrderSysID = orderID;
+    var rsp = client.orderAction(
+        req, UUID.randomUUID().toString());
+    src.setEnabled(false);
+    sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
+    src.setEnabled(true);
+    if (!rsp.hasResponse())
+      showMsg("\u65E0\u6301\u4ED3");
+    else {
+      var rspInfo = rsp.getRspInfo(rsp.poll());
+      if (rspInfo == null)
+        showMsg("\u65E0\u6301\u4ED3");
+      else if (rspInfo.ErrorID != ErrorCodes.NONE)
+        showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+      else
+        updater.query(orderID, src);
     }
+  }
 
-    private void showMsg(String msg) {
-        MessageDialog.showDefault(msg);
-    }
+  private void showMsg(String msg) {
+    MessageDialog.showDefault(msg);
+  }
 }

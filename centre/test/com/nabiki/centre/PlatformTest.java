@@ -42,94 +42,94 @@ import java.util.concurrent.TimeUnit;
 
 public class PlatformTest {
 
-    private void launch_centre() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Platform.main(new String[] {
-                        "--root",
-                        "C:/Users/chenh/Desktop/.root",
-                        "--host",
-                        "localhost",
-                        "--port",
-                        "9038",
-                        "--start-now",
-                        "true"
-                });
-            }
-        }).start();
+  private void launch_centre() {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        Platform.main(new String[]{
+            "--root",
+            "C:/Users/chenh/Desktop/.root",
+            "--host",
+            "localhost",
+            "--port",
+            "9038",
+            "--start-now",
+            "true"
+        });
+      }
+    }).start();
+  }
+
+  private void sleep(long seconds) {
+    try {
+      TimeUnit.SECONDS.sleep(seconds);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+  }
 
-    private void sleep(long seconds) {
-        try {
-            TimeUnit.SECONDS.sleep(seconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+  private void launch_client() {
+    var client = new Client();
+    client.start(new HeadlessTrader() {
+      private Thread daemon;
 
-    private void launch_client() {
-        var client = new Client();
-        client.start(new HeadlessTrader() {
-            private Thread daemon;
-
-            @Override
-            public void onStart() {
-                setUser("0001", "1234");
-                daemon = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            while (true) {
-                                sleep(30);
-                                orderInsert(
-                                        "c2101",
-                                        "DCE",
-                                        2450,
-                                        1,
-                                        DirectionType.DIRECTION_BUY,
-                                        CombOffsetFlagType.OFFSET_OPEN);
-                                getLogger().info("buy open all traded");
-                                orderInsert(
-                                        "c2101",
-                                        "DCE",
-                                        2350,
-                                        1,
-                                        DirectionType.DIRECTION_SELL,
-                                        CombOffsetFlagType.OFFSET_CLOSE);
-                                getLogger().info("sell close all traded");
-                            }
-                        } catch (Throwable th) {
-                            getLogger().warning("not traded");
-                            th.printStackTrace();
-                        }
-                    }
-                });
-                daemon.start();
+      @Override
+      public void onStart() {
+        setUser("0001", "1234");
+        daemon = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              while (true) {
+                sleep(30);
+                orderInsert(
+                    "c2101",
+                    "DCE",
+                    2450,
+                    1,
+                    DirectionType.DIRECTION_BUY,
+                    CombOffsetFlagType.OFFSET_OPEN);
+                getLogger().info("buy open all traded");
+                orderInsert(
+                    "c2101",
+                    "DCE",
+                    2350,
+                    1,
+                    DirectionType.DIRECTION_SELL,
+                    CombOffsetFlagType.OFFSET_CLOSE);
+                getLogger().info("sell close all traded");
+              }
+            } catch (Throwable th) {
+              getLogger().warning("not traded");
+              th.printStackTrace();
             }
+          }
+        });
+        daemon.start();
+      }
 
-            @Override
-            public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
+      @Override
+      public void onDepthMarketData(CDepthMarketData depthMarketData, boolean isTrading) {
 
-            }
+      }
 
-            @Override
-            public void onCandle(CCandle candle, boolean isTrading) {
+      @Override
+      public void onCandle(CCandle candle, boolean isTrading) {
 
-            }
+      }
 
-            @Override
-            public void onStop() {
+      @Override
+      public void onStop() {
 
-            }
-        }, new InetSocketAddress("localhost", 9038));
-        client.exitAt(LocalDateTime.now().plusDays(1));
-    }
+      }
+    }, new InetSocketAddress("localhost", 9038));
+    client.exitAt(LocalDateTime.now().plusDays(1));
+  }
 
-    @Test
-    public void headless() {
-        launch_centre();
-        sleep(TimeUnit.MINUTES.toSeconds(1));
-        launch_client();
-    }
+  @Test
+  public void headless() {
+    launch_centre();
+    sleep(TimeUnit.MINUTES.toSeconds(1));
+    launch_client();
+  }
 }

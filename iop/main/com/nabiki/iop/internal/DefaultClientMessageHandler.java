@@ -35,271 +35,271 @@ import com.nabiki.iop.Message;
 import com.nabiki.objects.*;
 
 public class DefaultClientMessageHandler implements ClientMessageHandler {
-    static class DefaultClientMessageAdaptor extends ClientMessageAdaptor {
-    }
+  static class DefaultClientMessageAdaptor extends ClientMessageAdaptor {
+  }
 
-    private ClientMessageAdaptor msgAdaptor = new DefaultClientMessageAdaptor();
+  private ClientMessageAdaptor msgAdaptor = new DefaultClientMessageAdaptor();
 
-    DefaultClientMessageHandler() {
-    }
+  DefaultClientMessageHandler() {
+  }
 
-    void setAdaptor(ClientMessageAdaptor adaptor) {
-        this.msgAdaptor = adaptor;
-    }
+  void setAdaptor(ClientMessageAdaptor adaptor) {
+    this.msgAdaptor = adaptor;
+  }
 
-    @Override
-    public void onMessage(ClientSession session, Message message) {
-        handleMessage(this.msgAdaptor, message);
-    }
+  @Override
+  public void onMessage(ClientSession session, Message message) {
+    handleMessage(this.msgAdaptor, message);
+  }
 
-    private void handleMessage(ClientMessageAdaptor adaptor, Message message) {
-        switch (message.Type) {
-            case RSP_SUB_MD:
-                adaptor.doRspSubscribeMarketData(
-                        (CSpecificInstrument) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_UNSUB_MD:
-                adaptor.doRspUnsubscribeMarketData(
-                        (CSpecificInstrument) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case FLOW_DEPTH:
-                adaptor.doRspDepthMarketData(
-                        (CDepthMarketData) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case FLOW_CANDLE:
-                adaptor.doRspCandle(
-                        (CCandle) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_AUTHENTICATE:
-                adaptor.doRspAuthenticate(
-                        (CRspAuthenticate) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_LOGIN:
-                adaptor.doRspReqLogin(
-                        (CRspUserLogin) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_LOGOUT:
-                adaptor.doRspReqLogout(
-                        (CUserLogout) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_SETTLEMENT:
-                adaptor.doRspReqSettlementConfirm(
-                        (CSettlementInfoConfirm) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_ORDER_INSERT:
-                adaptor.doRspReqOrderInsert(
-                        (COrder) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_REQ_ORDER_ACTION:
-                adaptor.doRspReqOrderAction(
-                        (COrderAction) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_MD:
-                adaptor.doRspQryDepthMarketData(
-                        (CDepthMarketData) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_ACCOUNT:
-                adaptor.doRspQryAccount(
-                        (CTradingAccount) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_ORDER:
-                adaptor.doRspQryOrder(
-                        (COrder) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_POSITION:
-                adaptor.doRspQryPosition(
-                        (CInvestorPosition) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_POSI_DETAIL:
-                adaptor.doRspQryPositionDetail(
-                        (CInvestorPositionDetail) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_INSTRUMENT:
-                adaptor.doRspQryInstrument(
-                        (CInstrument) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_COMMISSION:
-                adaptor.doRspQryCommission(
-                        (CInstrumentCommissionRate) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_QRY_MARGIN:
-                adaptor.doRspQryMargin(
-                        (CInstrumentMarginRate) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RTN_ORDER:
-                adaptor.doRtnOrder(
-                        (COrder) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RTN_TRADE:
-                adaptor.doRtnTrade(
-                        (CTrade) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RTN_ORDER_ACTION:
-                adaptor.doRtnOrderAction(
-                        (COrderAction) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RTN_ORDER_INSERT:
-                adaptor.doRtnOrderInsert(
-                        (CInputOrder) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_ORDER_ACTION:
-                adaptor.doRspOrderAction(
-                        (CInputOrderAction) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_ORDER_INSERT:
-                adaptor.doRspOrderInsert(
-                        (CInputOrder) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_ERROR:
-                adaptor.doRspError(
-                        (CRspInfo) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_CONNECT:
-                adaptor.doRspConnect(
-                        (CConnect) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            case RSP_DISCONNECT:
-                adaptor.doRspDisconnect(
-                        (CDisconnect) message.Body,
-                        message.RspInfo,
-                        message.RequestID,
-                        message.ResponseID,
-                        message.CurrentCount,
-                        message.TotalCount);
-                break;
-            default:
-                throw new IllegalStateException(
-                        "unknown message type " + message.Type);
-        }
+  private void handleMessage(ClientMessageAdaptor adaptor, Message message) {
+    switch (message.Type) {
+      case RSP_SUB_MD:
+        adaptor.doRspSubscribeMarketData(
+            (CSpecificInstrument) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_UNSUB_MD:
+        adaptor.doRspUnsubscribeMarketData(
+            (CSpecificInstrument) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case FLOW_DEPTH:
+        adaptor.doRspDepthMarketData(
+            (CDepthMarketData) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case FLOW_CANDLE:
+        adaptor.doRspCandle(
+            (CCandle) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_AUTHENTICATE:
+        adaptor.doRspAuthenticate(
+            (CRspAuthenticate) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_LOGIN:
+        adaptor.doRspReqLogin(
+            (CRspUserLogin) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_LOGOUT:
+        adaptor.doRspReqLogout(
+            (CUserLogout) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_SETTLEMENT:
+        adaptor.doRspReqSettlementConfirm(
+            (CSettlementInfoConfirm) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_ORDER_INSERT:
+        adaptor.doRspReqOrderInsert(
+            (COrder) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_REQ_ORDER_ACTION:
+        adaptor.doRspReqOrderAction(
+            (COrderAction) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_MD:
+        adaptor.doRspQryDepthMarketData(
+            (CDepthMarketData) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_ACCOUNT:
+        adaptor.doRspQryAccount(
+            (CTradingAccount) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_ORDER:
+        adaptor.doRspQryOrder(
+            (COrder) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_POSITION:
+        adaptor.doRspQryPosition(
+            (CInvestorPosition) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_POSI_DETAIL:
+        adaptor.doRspQryPositionDetail(
+            (CInvestorPositionDetail) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_INSTRUMENT:
+        adaptor.doRspQryInstrument(
+            (CInstrument) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_COMMISSION:
+        adaptor.doRspQryCommission(
+            (CInstrumentCommissionRate) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_QRY_MARGIN:
+        adaptor.doRspQryMargin(
+            (CInstrumentMarginRate) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RTN_ORDER:
+        adaptor.doRtnOrder(
+            (COrder) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RTN_TRADE:
+        adaptor.doRtnTrade(
+            (CTrade) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RTN_ORDER_ACTION:
+        adaptor.doRtnOrderAction(
+            (COrderAction) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RTN_ORDER_INSERT:
+        adaptor.doRtnOrderInsert(
+            (CInputOrder) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_ORDER_ACTION:
+        adaptor.doRspOrderAction(
+            (CInputOrderAction) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_ORDER_INSERT:
+        adaptor.doRspOrderInsert(
+            (CInputOrder) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_ERROR:
+        adaptor.doRspError(
+            (CRspInfo) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_CONNECT:
+        adaptor.doRspConnect(
+            (CConnect) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      case RSP_DISCONNECT:
+        adaptor.doRspDisconnect(
+            (CDisconnect) message.Body,
+            message.RspInfo,
+            message.RequestID,
+            message.ResponseID,
+            message.CurrentCount,
+            message.TotalCount);
+        break;
+      default:
+        throw new IllegalStateException(
+            "unknown message type " + message.Type);
     }
+  }
 }

@@ -31,14 +31,14 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CSettlementInfoConfirm implements Serializable {
-	public String BrokerID;
-	public String InvestorID;
-	public String ConfirmDate;
-	public String ConfirmTime;
-	public int SettlementID;
-	public String AccountID;
-	public String CurrencyID;
+  public String BrokerID;
+  public String InvestorID;
+  public String ConfirmDate;
+  public String ConfirmTime;
+  public int SettlementID;
+  public String AccountID;
+  public String CurrencyID;
 
-	public CSettlementInfoConfirm() {
-	}
+  public CSettlementInfoConfirm() {
+  }
 }

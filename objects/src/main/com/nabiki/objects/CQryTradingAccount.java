@@ -31,12 +31,12 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CQryTradingAccount implements Serializable {
-	public String BrokerID;
-	public String InvestorID;
-	public String CurrencyID;
-	public byte BizType;
-	public String AccountID;
+  public String BrokerID;
+  public String InvestorID;
+  public String CurrencyID;
+  public byte BizType;
+  public String AccountID;
 
-	public CQryTradingAccount() {
-	}
+  public CQryTradingAccount() {
+  }
 }

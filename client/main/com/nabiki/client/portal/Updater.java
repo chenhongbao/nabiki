@@ -34,32 +34,32 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Updater {
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
+  private final Lock lock = new ReentrantLock();
+  private final Condition cond = lock.newCondition();
 
-    public void fire() {
-        lock.lock();
-        try {
-            cond.signal();
-        } finally {
-            lock.unlock();
-        }
+  public void fire() {
+    lock.lock();
+    try {
+      cond.signal();
+    } finally {
+      lock.unlock();
     }
+  }
 
-    protected void waitFire() {
-        lock.lock();
-        try {
-            cond.await();
-        } catch (Throwable ignored) {
-        } finally {
-            lock.unlock();
-        }
+  protected void waitFire() {
+    lock.lock();
+    try {
+      cond.await();
+    } catch (Throwable ignored) {
+    } finally {
+      lock.unlock();
     }
+  }
 
-    protected void sleep(int value, TimeUnit unit) {
-        try {
-            unit.sleep(value);
-        } catch (InterruptedException ignored) {
-        }
+  protected void sleep(int value, TimeUnit unit) {
+    try {
+      unit.sleep(value);
+    } catch (InterruptedException ignored) {
     }
+  }
 }

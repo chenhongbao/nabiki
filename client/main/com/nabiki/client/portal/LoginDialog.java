@@ -35,163 +35,163 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class LoginDialog extends JDialog {
-    private final Portal portal;
-    private final JPanel contentPanel = new JPanel();
-    private final JTextField addrField;
-    private final JTextField userNameField;
-    private final JTextField pwdField;
-    private final JTextPane loginResultTxt;
-    private final JButton loginBtn;
-    private final JButton logoutBtn;
-    private final JButton cancelBtn;
-    private final ClientPortal owner;
-    private final JDialog self = this;
+  private final Portal portal;
+  private final JPanel contentPanel = new JPanel();
+  private final JTextField addrField;
+  private final JTextField userNameField;
+  private final JTextField pwdField;
+  private final JTextPane loginResultTxt;
+  private final JButton loginBtn;
+  private final JButton logoutBtn;
+  private final JButton cancelBtn;
+  private final ClientPortal owner;
+  private final JDialog self = this;
 
-    private void locateSelf() {
-        var point = super.getParent().getLocation();
-        var size = super.getParent().getSize();
-        var selfSize = super.getSize();
-        var x = point.x + (size.width - selfSize.width) / 2;
-        var y = point.y + (size.height - selfSize.height) / 2;
-        super.setLocation(new Point(x, y));
+  private void locateSelf() {
+    var point = super.getParent().getLocation();
+    var size = super.getParent().getSize();
+    var selfSize = super.getSize();
+    var x = point.x + (size.width - selfSize.width) / 2;
+    var y = point.y + (size.height - selfSize.height) / 2;
+    super.setLocation(new Point(x, y));
+  }
+
+  public void display() {
+    try {
+      locateSelf();
+      super.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+      super.setVisible(true);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+  }
 
-    public void display() {
-        try {
-            locateSelf();
-            super.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            super.setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+  /**
+   * Create the dialog.
+   */
+  public LoginDialog(ClientPortal owner, Portal portal) {
+    super(owner, true);
+    this.owner = owner;
+    this.portal = portal;
 
-    /**
-     * Create the dialog.
-     */
-    public LoginDialog(ClientPortal owner, Portal portal) {
-        super(owner, true);
-        this.owner = owner;
-        this.portal = portal;
+    setTitle("\u767B\u5F55\u670D\u52A1\u5668");
+    setBounds(100, 100, 450, 300);
+    getContentPane().setLayout(new BorderLayout());
+    contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+    getContentPane().add(contentPanel, BorderLayout.CENTER);
+    contentPanel.setLayout(new BorderLayout(0, 0));
 
-        setTitle("\u767B\u5F55\u670D\u52A1\u5668");
-        setBounds(100, 100, 450, 300);
-        getContentPane().setLayout(new BorderLayout());
-        contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        getContentPane().add(contentPanel, BorderLayout.CENTER);
-        contentPanel.setLayout(new BorderLayout(0, 0));
+    JPanel loginPanel = new JPanel();
+    contentPanel.add(loginPanel, BorderLayout.CENTER);
+    SpringLayout sl_loginPanel = new SpringLayout();
+    loginPanel.setLayout(sl_loginPanel);
 
-        JPanel loginPanel = new JPanel();
-        contentPanel.add(loginPanel, BorderLayout.CENTER);
-        SpringLayout sl_loginPanel = new SpringLayout();
-        loginPanel.setLayout(sl_loginPanel);
+    addrField = new JTextField();
+    sl_loginPanel.putConstraint(SpringLayout.WEST, addrField, 100, SpringLayout.WEST, loginPanel);
+    sl_loginPanel.putConstraint(SpringLayout.EAST, addrField, -10, SpringLayout.EAST, loginPanel);
+    addrField.setHorizontalAlignment(SwingConstants.CENTER);
+    addrField.setColumns(10);
+    loginPanel.add(addrField);
 
-        addrField = new JTextField();
-        sl_loginPanel.putConstraint(SpringLayout.WEST, addrField, 100, SpringLayout.WEST, loginPanel);
-        sl_loginPanel.putConstraint(SpringLayout.EAST, addrField, -10, SpringLayout.EAST, loginPanel);
-        addrField.setHorizontalAlignment(SwingConstants.CENTER);
-        addrField.setColumns(10);
-        loginPanel.add(addrField);
+    userNameField = new JTextField();
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, userNameField, 6, SpringLayout.SOUTH, addrField);
+    sl_loginPanel.putConstraint(SpringLayout.WEST, userNameField, 100, SpringLayout.WEST, loginPanel);
+    sl_loginPanel.putConstraint(SpringLayout.EAST, userNameField, -10, SpringLayout.EAST, loginPanel);
+    userNameField.setHorizontalAlignment(SwingConstants.CENTER);
+    userNameField.setColumns(10);
+    loginPanel.add(userNameField);
 
-        userNameField = new JTextField();
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, userNameField, 6, SpringLayout.SOUTH, addrField);
-        sl_loginPanel.putConstraint(SpringLayout.WEST, userNameField, 100, SpringLayout.WEST, loginPanel);
-        sl_loginPanel.putConstraint(SpringLayout.EAST, userNameField, -10, SpringLayout.EAST, loginPanel);
-        userNameField.setHorizontalAlignment(SwingConstants.CENTER);
-        userNameField.setColumns(10);
-        loginPanel.add(userNameField);
+    pwdField = new JTextField();
+    pwdField.setHorizontalAlignment(SwingConstants.CENTER);
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, pwdField, 6, SpringLayout.SOUTH, userNameField);
+    sl_loginPanel.putConstraint(SpringLayout.WEST, pwdField, 100, SpringLayout.WEST, loginPanel);
+    sl_loginPanel.putConstraint(SpringLayout.EAST, pwdField, -10, SpringLayout.EAST, loginPanel);
+    pwdField.setColumns(10);
+    loginPanel.add(pwdField);
 
-        pwdField = new JTextField();
-        pwdField.setHorizontalAlignment(SwingConstants.CENTER);
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, pwdField, 6, SpringLayout.SOUTH, userNameField);
-        sl_loginPanel.putConstraint(SpringLayout.WEST, pwdField, 100, SpringLayout.WEST, loginPanel);
-        sl_loginPanel.putConstraint(SpringLayout.EAST, pwdField, -10, SpringLayout.EAST, loginPanel);
-        pwdField.setColumns(10);
-        loginPanel.add(pwdField);
+    JLabel addrLabel = new JLabel("\u670D\u52A1\u5668\u5730\u5740");
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, addrField, 0, SpringLayout.NORTH, addrLabel);
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, addrLabel, 10, SpringLayout.NORTH, loginPanel);
+    sl_loginPanel.putConstraint(SpringLayout.WEST, addrLabel, 10, SpringLayout.WEST, loginPanel);
+    addrLabel.setLabelFor(addrField);
+    loginPanel.add(addrLabel);
 
-        JLabel addrLabel = new JLabel("\u670D\u52A1\u5668\u5730\u5740");
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, addrField, 0, SpringLayout.NORTH, addrLabel);
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, addrLabel, 10, SpringLayout.NORTH, loginPanel);
-        sl_loginPanel.putConstraint(SpringLayout.WEST, addrLabel, 10, SpringLayout.WEST, loginPanel);
-        addrLabel.setLabelFor(addrField);
-        loginPanel.add(addrLabel);
+    JLabel userNameLabel = new JLabel("\u8D26      \u53F7");
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, userNameLabel, 30, SpringLayout.NORTH, addrField);
+    sl_loginPanel.putConstraint(SpringLayout.WEST, userNameLabel, 10, SpringLayout.WEST, loginPanel);
+    userNameLabel.setLabelFor(userNameField);
+    loginPanel.add(userNameLabel);
 
-        JLabel userNameLabel = new JLabel("\u8D26      \u53F7");
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, userNameLabel, 30, SpringLayout.NORTH, addrField);
-        sl_loginPanel.putConstraint(SpringLayout.WEST, userNameLabel, 10, SpringLayout.WEST, loginPanel);
-        userNameLabel.setLabelFor(userNameField);
-        loginPanel.add(userNameLabel);
+    JLabel pwdLabel = new JLabel("\u5BC6      \u7801");
+    sl_loginPanel.putConstraint(SpringLayout.NORTH, pwdLabel, 30, SpringLayout.NORTH, userNameField);
+    sl_loginPanel.putConstraint(SpringLayout.WEST, pwdLabel, 10, SpringLayout.WEST, loginPanel);
+    pwdLabel.setLabelFor(pwdField);
+    loginPanel.add(pwdLabel);
 
-        JLabel pwdLabel = new JLabel("\u5BC6      \u7801");
-        sl_loginPanel.putConstraint(SpringLayout.NORTH, pwdLabel, 30, SpringLayout.NORTH, userNameField);
-        sl_loginPanel.putConstraint(SpringLayout.WEST, pwdLabel, 10, SpringLayout.WEST, loginPanel);
-        pwdLabel.setLabelFor(pwdField);
-        loginPanel.add(pwdLabel);
+    JPanel titlePanel = new JPanel();
+    contentPanel.add(titlePanel, BorderLayout.NORTH);
 
-        JPanel titlePanel = new JPanel();
-        contentPanel.add(titlePanel, BorderLayout.NORTH);
+    JLabel bigBannerLabel = new JLabel("\u767B\u5F55\u670D\u52A1\u5668");
+    bigBannerLabel.setFont(new Font("SansSerif", Font.PLAIN, 36));
+    titlePanel.add(bigBannerLabel);
 
-        JLabel bigBannerLabel = new JLabel("\u767B\u5F55\u670D\u52A1\u5668");
-        bigBannerLabel.setFont(new Font("SansSerif", Font.PLAIN, 36));
-        titlePanel.add(bigBannerLabel);
+    loginResultTxt = new JTextPane();
+    loginResultTxt.setText("\u672A\u767B\u5F55");
+    loginResultTxt.setBackground(UIManager.getColor("Button.background"));
+    contentPanel.add(loginResultTxt, BorderLayout.SOUTH);
 
-        loginResultTxt = new JTextPane();
-        loginResultTxt.setText("\u672A\u767B\u5F55");
-        loginResultTxt.setBackground(UIManager.getColor("Button.background"));
-        contentPanel.add(loginResultTxt, BorderLayout.SOUTH);
+    JPanel buttonPane = new JPanel();
+    buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+    getContentPane().add(buttonPane, BorderLayout.SOUTH);
+    loginBtn = new JButton("\u767B\u5F55");
+    loginBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new LoginOutWorker(
+            true,
+            self,
+            portal.getClient(),
+            loginBtn,
+            logoutBtn,
+            loginResultTxt,
+            owner.accountPanel.userNameText,
+            owner.accountPanel.loginStateText,
+            addrField,
+            userNameField,
+            pwdField
+        ).start();
+      }
+    });
+    buttonPane.add(loginBtn);
+    getRootPane().setDefaultButton(loginBtn);
 
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        getContentPane().add(buttonPane, BorderLayout.SOUTH);
-        loginBtn = new JButton("\u767B\u5F55");
-        loginBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new LoginOutWorker(
-                        true,
-                        self,
-                        portal.getClient(),
-                        loginBtn,
-                        logoutBtn,
-                        loginResultTxt,
-                        owner.accountPanel.userNameText,
-                        owner.accountPanel.loginStateText,
-                        addrField,
-                        userNameField,
-                        pwdField
-                ).start();
-            }
-        });
-        buttonPane.add(loginBtn);
-        getRootPane().setDefaultButton(loginBtn);
+    logoutBtn = new JButton("\u9000\u51FA");
+    logoutBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new LoginOutWorker(
+            false,
+            self,
+            portal.getClient(),
+            loginBtn,
+            logoutBtn,
+            loginResultTxt,
+            owner.accountPanel.userNameText,
+            owner.accountPanel.loginStateText,
+            addrField,
+            userNameField,
+            pwdField
+        ).start();
+      }
+    });
+    logoutBtn.setEnabled(false);
+    buttonPane.add(logoutBtn);
 
-        logoutBtn = new JButton("\u9000\u51FA");
-        logoutBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new LoginOutWorker(
-                        false,
-                        self,
-                        portal.getClient(),
-                        loginBtn,
-                        logoutBtn,
-                        loginResultTxt,
-                        owner.accountPanel.userNameText,
-                        owner.accountPanel.loginStateText,
-                        addrField,
-                        userNameField,
-                        pwdField
-                ).start();
-            }
-        });
-        logoutBtn.setEnabled(false);
-        buttonPane.add(logoutBtn);
-
-        cancelBtn = new JButton("\u53D6\u6D88");
-        cancelBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
-        buttonPane.add(cancelBtn);
-    }
+    cancelBtn = new JButton("\u53D6\u6D88");
+    cancelBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        setVisible(false);
+      }
+    });
+    buttonPane.add(cancelBtn);
+  }
 
 }

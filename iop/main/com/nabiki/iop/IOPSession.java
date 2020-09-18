@@ -31,21 +31,21 @@ package com.nabiki.iop;
 import java.net.InetSocketAddress;
 
 public interface IOPSession {
-    void close();
+  void close();
 
-    boolean isClosed();
+  boolean isClosed();
 
-    void fix();
+  void fix();
 
-    void sendLogin(Message message);
+  void sendLogin(Message message);
 
-    void sendHeartbeat(String heartbeatID);
+  void sendHeartbeat(String heartbeatID);
 
-    void setAttribute(String key, Object attribute);
+  void setAttribute(String key, Object attribute);
 
-    void removeAttribute(String key);
+  void removeAttribute(String key);
 
-    Object getAttribute(String key);
+  Object getAttribute(String key);
 
-    InetSocketAddress getRemoteAddress();
+  InetSocketAddress getRemoteAddress();
 }

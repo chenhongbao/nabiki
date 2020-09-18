@@ -36,71 +36,71 @@ import java.awt.event.ActionListener;
 
 public class MessageDialog extends JDialog {
 
-	private final JPanel contentPanel = new JPanel();
-	private final JTextArea textArea;
+  private final JPanel contentPanel = new JPanel();
+  private final JTextArea textArea;
 
-	private static final MessageDialog dialog = new MessageDialog();
+  private static final MessageDialog dialog = new MessageDialog();
 
-	/**
-	 * Launch the application.
-	 */
-	public static void showDefault(String msg) {
-		try {
-			dialog.setMessage(msg);
-			dialog.locateSelf();
-			dialog.setVisible(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+  /**
+   * Launch the application.
+   */
+  public static void showDefault(String msg) {
+    try {
+      dialog.setMessage(msg);
+      dialog.locateSelf();
+      dialog.setVisible(true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
-	private void locateSelf() {
-		var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		var selfSize = getSize();
-		var x = (screenSize.width - selfSize.width) / 2;
-		var y = (screenSize.height - selfSize.height) / 2;
-		setLocation(new Point(x, y));
-	}
+  private void locateSelf() {
+    var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    var selfSize = getSize();
+    var x = (screenSize.width - selfSize.width) / 2;
+    var y = (screenSize.height - selfSize.height) / 2;
+    setLocation(new Point(x, y));
+  }
 
-	/**
-	 * Create the dialog.
-	 */
-	public MessageDialog() {
-		setTitle("\u6D88\u606F");
-		setBounds(100, 100, 450, 300);
-		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		SpringLayout sl_contentPanel = new SpringLayout();
-		contentPanel.setLayout(sl_contentPanel);
+  /**
+   * Create the dialog.
+   */
+  public MessageDialog() {
+    setTitle("\u6D88\u606F");
+    setBounds(100, 100, 450, 300);
+    getContentPane().setLayout(new BorderLayout());
+    contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+    getContentPane().add(contentPanel, BorderLayout.CENTER);
+    SpringLayout sl_contentPanel = new SpringLayout();
+    contentPanel.setLayout(sl_contentPanel);
 
-		JScrollPane scrollPane = new JScrollPane();
-		sl_contentPanel.putConstraint(SpringLayout.EAST, scrollPane, -10, SpringLayout.EAST, contentPanel);
-		sl_contentPanel.putConstraint(SpringLayout.WEST, scrollPane, 10, SpringLayout.WEST, contentPanel);
-		sl_contentPanel.putConstraint(SpringLayout.NORTH, scrollPane, 10, SpringLayout.NORTH, contentPanel);
-		sl_contentPanel.putConstraint(SpringLayout.SOUTH, scrollPane, -10, SpringLayout.SOUTH, contentPanel);
-		contentPanel.add(scrollPane);
-		textArea = new JTextArea();
-		textArea.setEditable(false);
-		textArea.setBackground(UIManager.getColor("Button.background"));
-		scrollPane.setViewportView(textArea);
-		JPanel buttonPane = new JPanel();
-		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		getContentPane().add(buttonPane, BorderLayout.SOUTH);
-		JButton okButton = new JButton("OK");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				setVisible(false);
-			}
-		});
-		okButton.setActionCommand("OK");
-		buttonPane.add(okButton);
-		getRootPane().setDefaultButton(okButton);
-		// Hide on close.
-		setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-	}
+    JScrollPane scrollPane = new JScrollPane();
+    sl_contentPanel.putConstraint(SpringLayout.EAST, scrollPane, -10, SpringLayout.EAST, contentPanel);
+    sl_contentPanel.putConstraint(SpringLayout.WEST, scrollPane, 10, SpringLayout.WEST, contentPanel);
+    sl_contentPanel.putConstraint(SpringLayout.NORTH, scrollPane, 10, SpringLayout.NORTH, contentPanel);
+    sl_contentPanel.putConstraint(SpringLayout.SOUTH, scrollPane, -10, SpringLayout.SOUTH, contentPanel);
+    contentPanel.add(scrollPane);
+    textArea = new JTextArea();
+    textArea.setEditable(false);
+    textArea.setBackground(UIManager.getColor("Button.background"));
+    scrollPane.setViewportView(textArea);
+    JPanel buttonPane = new JPanel();
+    buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+    getContentPane().add(buttonPane, BorderLayout.SOUTH);
+    JButton okButton = new JButton("OK");
+    okButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        setVisible(false);
+      }
+    });
+    okButton.setActionCommand("OK");
+    buttonPane.add(okButton);
+    getRootPane().setDefaultButton(okButton);
+    // Hide on close.
+    setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+  }
 
-	public void setMessage(String msg) {
-		textArea.setText(msg);
-	}
+  public void setMessage(String msg) {
+    textArea.setText(msg);
+  }
 }

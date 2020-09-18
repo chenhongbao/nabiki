@@ -31,11 +31,11 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CQryInstrument implements Serializable {
-	public String InstrumentID;
-	public String ExchangeID;
-	public String ExchangeInstID;
-	public String ProductID;
+  public String InstrumentID;
+  public String ExchangeID;
+  public String ExchangeInstID;
+  public String ProductID;
 
-	public CQryInstrument() {
-	}
+  public CQryInstrument() {
+  }
 }

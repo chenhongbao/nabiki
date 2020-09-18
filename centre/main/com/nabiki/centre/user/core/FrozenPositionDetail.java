@@ -40,115 +40,115 @@ import com.nabiki.objects.DirectionType;
 import java.util.Objects;
 
 public class FrozenPositionDetail {
-    // The original position that own this frozen position.
-    private final UserPositionDetail parent;
-    private final AccountFrozenCash frozenSingleCash;
-    // The share is asset change for each share before real trade happens.
-    // When trade returns, use the return trade to generate another share info
-    // to update the position.
-    // This share info is used to calculate frozen margin or commission.
-    private final CInvestorPositionDetail frozenSinglePosition;
+  // The original position that own this frozen position.
+  private final UserPositionDetail parent;
+  private final AccountFrozenCash frozenSingleCash;
+  // The share is asset change for each share before real trade happens.
+  // When trade returns, use the return trade to generate another share info
+  // to update the position.
+  // This share info is used to calculate frozen margin or commission.
+  private final CInvestorPositionDetail frozenSinglePosition;
 
-    private final long totalFrozenCount;
-    private ProcessStage stage = ProcessStage.ONGOING;
-    private long tradedCount = 0;
+  private final long totalFrozenCount;
+  private ProcessStage stage = ProcessStage.ONGOING;
+  private long tradedCount = 0;
 
-    FrozenPositionDetail(UserPositionDetail parent,
-                                CInvestorPositionDetail frzSinglePos,
-                                AccountFrozenCash frzCash,
-                                long frzCount) {
-        this.parent = parent;
-        this.frozenSinglePosition = frzSinglePos;
-        this.frozenSingleCash = frzCash;
-        this.totalFrozenCount = frzCount;
-    }
+  FrozenPositionDetail(UserPositionDetail parent,
+                       CInvestorPositionDetail frzSinglePos,
+                       AccountFrozenCash frzCash,
+                       long frzCount) {
+    this.parent = parent;
+    this.frozenSinglePosition = frzSinglePos;
+    this.frozenSingleCash = frzCash;
+    this.totalFrozenCount = frzCount;
+  }
 
-    /**
-     * Get frozen volume of this position detail.
-     *
-     * @return frozen volume
-     */
-    long getFrozenVolume() {
-        if (this.stage == ProcessStage.CANCELED)
-            return 0;
-        else
-            return this.totalFrozenCount - tradedCount;
-    }
+  /**
+   * Get frozen volume of this position detail.
+   *
+   * @return frozen volume
+   */
+  long getFrozenVolume() {
+    if (this.stage == ProcessStage.CANCELED)
+      return 0;
+    else
+      return this.totalFrozenCount - tradedCount;
+  }
 
-    /**
-     * Close some volume(a part or all) of a close order.
-     *
-     * <p>When a close order trades, its frozen volume is decreased. If a close
-     * order is canceled, all its frozen volume is released.
-     * </p>
-     *
-     * @param trade trade response
-     * @param instr instrument
-     */
-    void applyCloseTrade(CTrade trade, CInstrument instr) {
-        if (trade.Volume < 0)
-            throw new IllegalArgumentException("negative traded share count");
-        if (getFrozenVolume() < trade.Volume)
-            throw new IllegalStateException("not enough frozen shares");
-        this.tradedCount += trade.Volume;
-        // Update parent.
-        var single = toSingleTradedCash(this.frozenSinglePosition, trade, instr);
-        this.parent.closePosition(single, trade.Volume);
-    }
+  /**
+   * Close some volume(a part or all) of a close order.
+   *
+   * <p>When a close order trades, its frozen volume is decreased. If a close
+   * order is canceled, all its frozen volume is released.
+   * </p>
+   *
+   * @param trade trade response
+   * @param instr instrument
+   */
+  void applyCloseTrade(CTrade trade, CInstrument instr) {
+    if (trade.Volume < 0)
+      throw new IllegalArgumentException("negative traded share count");
+    if (getFrozenVolume() < trade.Volume)
+      throw new IllegalStateException("not enough frozen shares");
+    this.tradedCount += trade.Volume;
+    // Update parent.
+    var single = toSingleTradedCash(this.frozenSinglePosition, trade, instr);
+    this.parent.closePosition(single, trade.Volume);
+  }
 
-    /**
-     * Cancel a close order whose frozen volume is all released.
-     */
-    void cancel() {
-        this.stage = ProcessStage.CANCELED;
-    }
+  /**
+   * Cancel a close order whose frozen volume is all released.
+   */
+  void cancel() {
+    this.stage = ProcessStage.CANCELED;
+  }
 
-    /**
-     * Get the position detail represents 1 share of the closed position, whose
-     * close profit and close amount are pre-calculated. And the margin and exchange
-     * margin are set for 1 volume, and close volume is set to 1.
-     *
-     * @return pre-calculated closed position detail for 1 volume.
-     */
-    CInvestorPositionDetail getSingleFrozenPosition() {
-        return Utils.deepCopy(this.frozenSinglePosition);
-    }
+  /**
+   * Get the position detail represents 1 share of the closed position, whose
+   * close profit and close amount are pre-calculated. And the margin and exchange
+   * margin are set for 1 volume, and close volume is set to 1.
+   *
+   * @return pre-calculated closed position detail for 1 volume.
+   */
+  CInvestorPositionDetail getSingleFrozenPosition() {
+    return Utils.deepCopy(this.frozenSinglePosition);
+  }
 
-    /**
-     * Add this frozen position detail to its parent's frozen list. Then this
-     * position is calculated as frozen.
-     */
-    void setFrozen() {
-        this.parent.addFrozenPosition(this);
-    }
+  /**
+   * Add this frozen position detail to its parent's frozen list. Then this
+   * position is calculated as frozen.
+   */
+  void setFrozen() {
+    this.parent.addFrozenPosition(this);
+  }
 
-    AccountFrozenCash getSingleFrozenCash() {
-        return Utils.deepCopy(this.frozenSingleCash);
-    }
+  AccountFrozenCash getSingleFrozenCash() {
+    return Utils.deepCopy(this.frozenSingleCash);
+  }
 
-    private PositionTradedCash toSingleTradedCash(
-            CInvestorPositionDetail p,
-            CTrade trade,
-            CInstrument instr) {
-        var r = new PositionTradedCash();
-        Objects.requireNonNull(r, "failed deep copy");
-        // Calculate position detail.
-        r.CloseAmount = trade.Price * instr.VolumeMultiple;
-        r.CloseVolume = 1;
-        double token;
-        if (p.Direction == DirectionType.DIRECTION_BUY)
-            token = 1.0D;   // Long position.
-        else
-            token = -1.0D;  // Short position.
-        r.CloseProfitByTrade = token * (trade.Price - p.OpenPrice)
-                * instr.VolumeMultiple;
-        if (p.TradingDay.compareTo(trade.TradingDay) == 0)
-            // Today's position.
-            r.CloseProfitByDate = r.CloseProfitByTrade;
-        else
-            // History position.
-            r.CloseProfitByDate = token * (trade.Price - p.LastSettlementPrice)
-                    * instr.VolumeMultiple;
-        return r;
-    }
+  private PositionTradedCash toSingleTradedCash(
+      CInvestorPositionDetail p,
+      CTrade trade,
+      CInstrument instr) {
+    var r = new PositionTradedCash();
+    Objects.requireNonNull(r, "failed deep copy");
+    // Calculate position detail.
+    r.CloseAmount = trade.Price * instr.VolumeMultiple;
+    r.CloseVolume = 1;
+    double token;
+    if (p.Direction == DirectionType.DIRECTION_BUY)
+      token = 1.0D;   // Long position.
+    else
+      token = -1.0D;  // Short position.
+    r.CloseProfitByTrade = token * (trade.Price - p.OpenPrice)
+        * instr.VolumeMultiple;
+    if (p.TradingDay.compareTo(trade.TradingDay) == 0)
+      // Today's position.
+      r.CloseProfitByDate = r.CloseProfitByTrade;
+    else
+      // History position.
+      r.CloseProfitByDate = token * (trade.Price - p.LastSettlementPrice)
+          * instr.VolumeMultiple;
+    return r;
+  }
 }

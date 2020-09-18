@@ -39,115 +39,115 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class QueryTask implements Runnable {
-    private final OrderProvider orderProvider;
-    protected final Random rand = new Random();
+  private final OrderProvider orderProvider;
+  protected final Random rand = new Random();
 
-    // Wait last request return.
-    protected final Signal lastRtn = new Signal();
-    protected final AtomicInteger lastID = new AtomicInteger(0);
+  // Wait last request return.
+  protected final Signal lastRtn = new Signal();
+  protected final AtomicInteger lastID = new AtomicInteger(0);
 
-    QueryTask(OrderProvider orderProvider) {
-        this.orderProvider = orderProvider;
-    }
+  QueryTask(OrderProvider orderProvider) {
+    this.orderProvider = orderProvider;
+  }
 
-    void signalRequest(int requestID) {
-        if (this.lastID.get() == requestID)
-            this.lastRtn.signal();
-    }
+  void signalRequest(int requestID) {
+    if (this.lastID.get() == requestID)
+      this.lastRtn.signal();
+  }
 
-    private boolean waitRequestRsp(
-            long millis, int requestID) throws InterruptedException {
-        this.lastID.set(requestID);
-        return this.lastRtn.waitSignal(millis);
-    }
+  private boolean waitRequestRsp(
+      long millis, int requestID) throws InterruptedException {
+    this.lastID.set(requestID);
+    return this.lastRtn.waitSignal(millis);
+  }
 
 
-    @Override
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            if (orderProvider.qryInstrLast && orderProvider.isConfirmed) {
-                try {
-                    doQuery();
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                    orderProvider.global.getLogger().warning(th.getMessage());
-                }
-            }
-        }
-    }
-
-    private void sleep(int value, TimeUnit unit) {
+  @Override
+  public void run() {
+    while (!Thread.currentThread().isInterrupted()) {
+      if (orderProvider.qryInstrLast && orderProvider.isConfirmed) {
         try {
-            unit.sleep(value);
+          doQuery();
+        } catch (Throwable th) {
+          th.printStackTrace();
+          orderProvider.global.getLogger().warning(th.getMessage());
+        }
+      }
+    }
+  }
+
+  private void sleep(int value, TimeUnit unit) {
+    try {
+      unit.sleep(value);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  protected void doQuery() {
+    String ins = randomGet();
+    int reqID;
+    var in = orderProvider.global.getInstrInfo(ins);
+    // Query margin.
+    if (in.Margin == null) {
+      var req = new CQryInstrumentMarginRate();
+      req.BrokerID = orderProvider.loginCfg.BrokerID;
+      req.InvestorID = orderProvider.loginCfg.UserID;
+      req.HedgeFlag = CombHedgeFlagType.SPECULATION;
+      req.InstrumentID = ins;
+      reqID = Utils.getIncrementID();
+      int r = orderProvider.api.ReqQryInstrumentMarginRate(
+          JNI.toJni(req),
+          reqID);
+      if (r != 0) {
+        orderProvider.global.getLogger().warning(
+            Utils.formatLog("failed query margin",
+                null, ins, r));
+      } else {
+        // Sleep up tp some seconds.
+        try {
+          if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
+            orderProvider.global.getLogger()
+                .warning("query margin timeout: " + ins);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+          e.printStackTrace();
         }
+      }
+      // Sleep only when actually query margin.
+      sleep(1, TimeUnit.SECONDS);
     }
+    // Query commission.
+    if (in.Commission == null) {
+      var req0 = new CQryInstrumentCommissionRate();
+      req0.BrokerID = orderProvider.loginCfg.BrokerID;
+      req0.InvestorID = orderProvider.loginCfg.UserID;
+      req0.InstrumentID = ins;
+      reqID = Utils.getIncrementID();
+      var r = orderProvider.api.ReqQryInstrumentCommissionRate(
+          JNI.toJni(req0),
+          reqID);
+      if (r != 0) {
+        orderProvider.global.getLogger().warning(
+            Utils.formatLog("failed query commission",
+                null, ins, r));
+      } else {
+        // Sleep up tp some seconds.
+        try {
+          if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
+            orderProvider.global.getLogger()
+                .warning("query margin timeout: " + ins);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      sleep(1, TimeUnit.SECONDS);
+    }
+  }
 
-    protected void doQuery() {
-        String ins = randomGet();
-        int reqID;
-        var in = orderProvider.global.getInstrInfo(ins);
-        // Query margin.
-        if (in.Margin == null) {
-            var req = new CQryInstrumentMarginRate();
-            req.BrokerID = orderProvider.loginCfg.BrokerID;
-            req.InvestorID = orderProvider.loginCfg.UserID;
-            req.HedgeFlag = CombHedgeFlagType.SPECULATION;
-            req.InstrumentID = ins;
-            reqID = Utils.getIncrementID();
-            int r = orderProvider.api.ReqQryInstrumentMarginRate(
-                    JNI.toJni(req),
-                    reqID);
-            if (r != 0) {
-                orderProvider.global.getLogger().warning(
-                        Utils.formatLog("failed query margin",
-                                null, ins, r));
-            } else {
-                // Sleep up tp some seconds.
-                try {
-                    if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-                        orderProvider.global.getLogger()
-                                .warning("query margin timeout: " + ins);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            // Sleep only when actually query margin.
-            sleep(1, TimeUnit.SECONDS);
-        }
-        // Query commission.
-        if (in.Commission == null) {
-            var req0 = new CQryInstrumentCommissionRate();
-            req0.BrokerID = orderProvider.loginCfg.BrokerID;
-            req0.InvestorID = orderProvider.loginCfg.UserID;
-            req0.InstrumentID = ins;
-            reqID = Utils.getIncrementID();
-            var r = orderProvider.api.ReqQryInstrumentCommissionRate(
-                    JNI.toJni(req0),
-                    reqID);
-            if (r != 0) {
-                orderProvider.global.getLogger().warning(
-                        Utils.formatLog("failed query commission",
-                                null, ins, r));
-            } else {
-                // Sleep up tp some seconds.
-                try {
-                    if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-                        orderProvider.global.getLogger()
-                                .warning("query margin timeout: " + ins);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            sleep(1, TimeUnit.SECONDS);
-        }
+  protected String randomGet() {
+    synchronized (orderProvider.instrumentIDs) {
+      return orderProvider.instrumentIDs.get(
+          Math.abs(rand.nextInt()) % orderProvider.instrumentIDs.size());
     }
-
-    protected String randomGet() {
-        synchronized (orderProvider.instrumentIDs) {
-            return orderProvider.instrumentIDs.get(
-                    Math.abs(rand.nextInt()) % orderProvider.instrumentIDs.size());
-        }
-    }
+  }
 }

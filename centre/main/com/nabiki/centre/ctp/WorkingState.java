@@ -29,5 +29,5 @@
 package com.nabiki.centre.ctp;
 
 public enum WorkingState {
-    STARTING, STARTED, STOPPING, STOPPED
+  STARTING, STARTED, STOPPING, STOPPED
 }

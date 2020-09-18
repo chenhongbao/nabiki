@@ -31,12 +31,12 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CRspAuthenticate implements Serializable {
-	public String BrokerID;
-	public String UserID;
-	public String UserProductInfo;
-	public String AppID;
-	public byte AppType;
+  public String BrokerID;
+  public String UserID;
+  public String UserProductInfo;
+  public String AppID;
+  public byte AppType;
 
-	public CRspAuthenticate() {
-	}
+  public CRspAuthenticate() {
+  }
 }

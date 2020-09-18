@@ -32,82 +32,83 @@ package com.nabiki.centre.utils.plain;
  * Configuration for login to remote counter.
  */
 public class LoginConfig {
-    /**
-     * Front address of the remote server. The address uses the format:
-     * <p>{@code protocol://ipaddress:port}</p>
-     * {@code protocol} is the communication protocol of the front server, they
-     * can be {@code tcp} or {@code ssl}. Currently, it is always {@code tcp}.
-     * {@code ipaddress} is a typical string representation of IPv4 address.
-     * {@code port} is a typical IPv4 port.
-     * <p>There are some examples:</p>
-     * <ul>
-     * <li>tcp://192.168.0.1:41205</li>
-     * <li>ssl://192.168.0.1:41205</li>
-     * </ul>
-     */
-    public java.util.List<String> FrontAddresses;
+  /**
+   * Front address of the remote server. The address uses the format:
+   * <p>{@code protocol://ipaddress:port}</p>
+   * {@code protocol} is the communication protocol of the front server, they
+   * can be {@code tcp} or {@code ssl}. Currently, it is always {@code tcp}.
+   * {@code ipaddress} is a typical string representation of IPv4 address.
+   * {@code port} is a typical IPv4 port.
+   * <p>There are some examples:</p>
+   * <ul>
+   * <li>tcp://192.168.0.1:41205</li>
+   * <li>ssl://192.168.0.1:41205</li>
+   * </ul>
+   */
+  public java.util.List<String> FrontAddresses;
 
-    /**
-     * Set the communication protocol of market data front.
-     * <ul>
-     * <li>{@code true}: UDP</li>
-     * <li>{@code false}: TCP</li>
-     * </ul>
-     */
-    public boolean IsUsingUDP;
+  /**
+   * Set the communication protocol of market data front.
+   * <ul>
+   * <li>{@code true}: UDP</li>
+   * <li>{@code false}: TCP</li>
+   * </ul>
+   */
+  public boolean IsUsingUDP;
 
-    /**
-     * Set if the client receives multicast market data.
-     * <ul>
-     * <li>{@code true}: multicast, only LAN has this option</li>
-     * <li>{@code false}: normal internet connection</li>
-     * </ul>
-     */
-    public boolean IsMulticast;
+  /**
+   * Set if the client receives multicast market data.
+   * <ul>
+   * <li>{@code true}: multicast, only LAN has this option</li>
+   * <li>{@code false}: normal internet connection</li>
+   * </ul>
+   */
+  public boolean IsMulticast;
 
-    /**
-     * Broker ID of the brokerage service provider.
-     */
-    public String BrokerID;
+  /**
+   * Broker ID of the brokerage service provider.
+   */
+  public String BrokerID;
 
-    /**
-     * User ID of the login user.
-     */
-    public String UserID;
+  /**
+   * User ID of the login user.
+   */
+  public String UserID;
 
-    /**
-     * Password.
-     */
-    public String Password;
+  /**
+   * Password.
+   */
+  public String Password;
 
-    /**
-     * Application ID of the software. User needs to contact his or her broker for
-     * this ID.
-     */
-    public String AppID;
+  /**
+   * Application ID of the software. User needs to contact his or her broker for
+   * this ID.
+   */
+  public String AppID;
 
-    /**
-     * Authentication code comes with the application ID {@link #AppID}.
-     */
-    public String AuthCode;
+  /**
+   * Authentication code comes with the application ID {@link #AppID}.
+   */
+  public String AuthCode;
 
-    /**
-     * Description of the software. It is usually combination of few words. Overflow
-     * letters are truncated.
-     */
-    public String UserProductInfo;
+  /**
+   * Description of the software. It is usually combination of few words. Overflow
+   * letters are truncated.
+   */
+  public String UserProductInfo;
 
-    /**
-     * Valid directory to keep flow information during data transmission between
-     * client and server.
-     */
-    public String FlowDirectory;
+  /**
+   * Valid directory to keep flow information during data transmission between
+   * client and server.
+   */
+  public String FlowDirectory;
 
-    /**
-     * Name of this configuration. The field is used to name the different login
-     * configurations.
-     */
-    public String Name;
+  /**
+   * Name of this configuration. The field is used to name the different login
+   * configurations.
+   */
+  public String Name;
 
-    public LoginConfig() {}
+  public LoginConfig() {
+  }
 }

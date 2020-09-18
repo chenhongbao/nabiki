@@ -42,120 +42,120 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public abstract class AbstractTrader implements Trader {
-    private TradeClient client;
-    private String userID, password;
-    private final Collection<String> instruments = new LinkedList<>();
-    protected final Logger logger = Logger.getLogger(this.getClass().getName());
+  private TradeClient client;
+  private String userID, password;
+  private final Collection<String> instruments = new LinkedList<>();
+  protected final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    private MarketDataTraderAdaptor traderAdaptor;
+  private MarketDataTraderAdaptor traderAdaptor;
 
-    protected AbstractTrader() {
-        prepare();
+  protected AbstractTrader() {
+    prepare();
+  }
+
+  private void prepare() {
+    try {
+      logger.addHandler(new SimpleFileHandler());
+      logger.setUseParentHandlers(false);
+      // Set default err/out.
+      SystemStream.setErr("err.log");
+      SystemStream.setOut("out.log");
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    private void prepare() {
-        try {
-            logger.addHandler(new SimpleFileHandler());
-            logger.setUseParentHandlers(false);
-            // Set default err/out.
-            SystemStream.setErr("err.log");
-            SystemStream.setOut("out.log");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  private String getRequestID() {
+    return UUID.randomUUID().toString();
+  }
 
-    private String getRequestID() {
-        return UUID.randomUUID().toString();
-    }
+  protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
+    this.traderAdaptor = adaptor;
+  }
 
-    protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
-        this.traderAdaptor = adaptor;
-    }
+  MarketDataTraderAdaptor getDefaultAdaptor() {
+    return traderAdaptor;
+  }
 
-    MarketDataTraderAdaptor getDefaultAdaptor() {
-        return traderAdaptor;
-    }
+  @Override
+  public void setUser(String userID, String password) {
+    this.userID = userID;
+    this.password = password;
+  }
 
-    @Override
-    public void setUser(String userID, String password) {
-        this.userID = userID;
-        this.password = password;
-    }
+  @Override
+  public String getUserID() {
+    return userID;
+  }
 
-    @Override
-    public String getUserID() {
-        return userID;
-    }
+  @Override
+  public String getPassword() {
+    return password;
+  }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
+  @Override
+  public void subscribe(String instrument, int... minutes) {
+    this.instruments.add(instrument);
+    traderAdaptor.setSubscribeMinute(instrument, minutes);
+  }
 
-    @Override
-    public void subscribe(String instrument, int... minutes) {
-        this.instruments.add(instrument);
-        traderAdaptor.setSubscribeMinute(instrument, minutes);
-    }
+  @Override
+  public Collection<String> getSubscribe() {
+    return instruments;
+  }
 
-    @Override
-    public Collection<String> getSubscribe() {
-        return instruments;
-    }
+  @Override
+  public Response<COrder> orderInsert(
+      String instrumentID, String exchangeID, double price, int volume,
+      char direction, char offset) throws Exception {
+    var req = new CInputOrder();
+    req.InstrumentID = instrumentID;
+    req.ExchangeID = exchangeID;
+    req.LimitPrice = price;
+    req.VolumeTotalOriginal = volume;
+    req.Direction = (byte) direction;
+    req.CombOffsetFlag = (byte) offset;
+    return this.client.orderInsert(req, getRequestID());
+  }
 
-    @Override
-    public Response<COrder> orderInsert(
-            String instrumentID, String exchangeID, double price, int volume,
-            char direction, char offset) throws Exception {
-        var req = new CInputOrder();
-        req.InstrumentID = instrumentID;
-        req.ExchangeID = exchangeID;
-        req.LimitPrice = price;
-        req.VolumeTotalOriginal = volume;
-        req.Direction = (byte) direction;
-        req.CombOffsetFlag = (byte) offset;
-        return this.client.orderInsert(req, getRequestID());
-    }
+  @Override
+  public Response<CInvestorPosition> getPosition() throws Exception {
+    return getPosition("", "");
+  }
 
-    @Override
-    public Response<CInvestorPosition> getPosition() throws Exception {
-        return getPosition("", "");
-    }
+  @Override
+  public Response<CInvestorPosition> getPosition(
+      String instrumentID, String exchangeID) throws Exception {
+    var qry = new CQryInvestorPosition();
+    qry.ExchangeID = exchangeID;
+    qry.InstrumentID = instrumentID;
+    return this.client.queryPosition(qry, getRequestID());
+  }
 
-    @Override
-    public Response<CInvestorPosition> getPosition(
-            String instrumentID, String exchangeID) throws Exception {
-        var qry = new CQryInvestorPosition();
-        qry.ExchangeID = exchangeID;
-        qry.InstrumentID = instrumentID;
-        return this.client.queryPosition(qry, getRequestID());
-    }
+  @Override
+  public Response<CTradingAccount> getAccount() throws Exception {
+    return this.client.queryAccount(new CQryTradingAccount(), getRequestID());
+  }
 
-    @Override
-    public Response<CTradingAccount> getAccount() throws Exception {
-        return this.client.queryAccount(new CQryTradingAccount(), getRequestID());
-    }
+  @Override
+  public Logger getLogger() {
+    return this.logger;
+  }
 
-    @Override
-    public Logger getLogger() {
-        return this.logger;
-    }
+  @Override
+  public TradeClient getClient() {
+    return this.client;
+  }
 
-    @Override
-    public TradeClient getClient() {
-        return this.client;
-    }
+  @Override
+  public void setClient(TradeClient client) {
+    this.client = client;
+  }
 
-    @Override
-    public void setClient(TradeClient client) {
-        this.client = client;
+  static class SimpleFileHandler extends FileHandler {
+    public SimpleFileHandler() throws IOException, SecurityException {
+      super("default.log", true);
+      super.setFormatter(new SimpleFormatter());
     }
-
-    static class SimpleFileHandler extends FileHandler {
-        public SimpleFileHandler() throws IOException, SecurityException {
-            super("default.log", true);
-            super.setFormatter(new SimpleFormatter());
-        }
-    }
+  }
 }

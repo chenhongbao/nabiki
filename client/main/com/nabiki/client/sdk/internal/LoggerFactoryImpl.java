@@ -39,64 +39,64 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class LoggerFactoryImpl extends ServiceCounter implements LoggerFactory {
-    private static final Path root = Path.of(".log");
+  private static final Path root = Path.of(".log");
 
-    static {
-        try {
-            ensure(root);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+  static {
+    try {
+      ensure(root);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    private static Path ensure(Path dir) throws IOException {
-        if (!Files.exists(dir) || !Files.isDirectory(dir))
-            Files.createDirectories(dir);
-        return dir;
-    }
+  private static Path ensure(Path dir) throws IOException {
+    if (!Files.exists(dir) || !Files.isDirectory(dir))
+      Files.createDirectories(dir);
+    return dir;
+  }
 
-    private static String ensure(Path dir, String file) throws IOException {
-        var f = Path.of(dir.toString(), file).toFile();
-        if (!f.exists() || !f.isFile()) {
-            if (!f.createNewFile())
-                throw new IOException("fail creating logging file");
-        }
-        return f.toPath().toAbsolutePath().toString();
+  private static String ensure(Path dir, String file) throws IOException {
+    var f = Path.of(dir.toString(), file).toFile();
+    if (!f.exists() || !f.isFile()) {
+      if (!f.createNewFile())
+        throw new IOException("fail creating logging file");
     }
+    return f.toPath().toAbsolutePath().toString();
+  }
 
-    private FileHandler getProperHandler(String file) throws IOException {
-        var fh = new FileHandler(ensure(root, file), true);
-        fh.setLevel(Level.ALL);
-        fh.setFormatter(new SimpleFormatter());
-        return fh;
-    }
+  private FileHandler getProperHandler(String file) throws IOException {
+    var fh = new FileHandler(ensure(root, file), true);
+    fh.setLevel(Level.ALL);
+    fh.setFormatter(new SimpleFormatter());
+    return fh;
+  }
 
-    private Logger getClearLogger(String name) {
-        var l = Logger.getLogger(name);
-        l.setUseParentHandlers(false);
-        l.setLevel(Level.ALL);
-        return l;
-    }
+  private Logger getClearLogger(String name) {
+    var l = Logger.getLogger(name);
+    l.setUseParentHandlers(false);
+    l.setLevel(Level.ALL);
+    return l;
+  }
 
-    @Override
-    public Logger get(String name) {
-        try {
-            var l = getClearLogger(name);
-            l.addHandler(getProperHandler(name));
-            super.add(l);
-            return l;
-        } catch (IOException e) {
-            return Logger.getGlobal();
-        }
+  @Override
+  public Logger get(String name) {
+    try {
+      var l = getClearLogger(name);
+      l.addHandler(getProperHandler(name));
+      super.add(l);
+      return l;
+    } catch (IOException e) {
+      return Logger.getGlobal();
     }
+  }
 
-    @Override
-    public void unget(Logger logger) {
-        super.remove(logger);
-    }
+  @Override
+  public void unget(Logger logger) {
+    super.remove(logger);
+  }
 
-    @Override
-    public void release() {
-        super.clear();
-    }
+  @Override
+  public void release() {
+    super.clear();
+  }
 }

@@ -29,11 +29,12 @@
 package com.nabiki.objects;
 
 public class CQryInvestorPosition implements java.io.Serializable {
-    public String BrokerID;
-    public String InvestorID;
-    public String InstrumentID;
-    public String ExchangeID;
-    public String InvestUnitID;
+  public String BrokerID;
+  public String InvestorID;
+  public String InstrumentID;
+  public String ExchangeID;
+  public String InvestUnitID;
 
-    public CQryInvestorPosition() {}
+  public CQryInvestorPosition() {
+  }
 }

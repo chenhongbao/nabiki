@@ -42,144 +42,144 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public class ReqRspWriter {
-    private final Global global;
-    private final OrderMapper mapper;
-    private final Path reqDir, rtnDir, infoDir, errDir;
-    private final DateTimeFormatter formatter
-            = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss.SSS");
+  private final Global global;
+  private final OrderMapper mapper;
+  private final Path reqDir, rtnDir, infoDir, errDir;
+  private final DateTimeFormatter formatter
+      = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss.SSS");
 
-    public ReqRspWriter(OrderMapper mapper, Global cfg) {
-        this.mapper = mapper;
-        this.global = cfg;
-        this.reqDir = getPath(cfg, "dir.flow.req");
-        this.rtnDir = getPath(cfg, "dir.flow.rtn");
-        this.infoDir = getPath(cfg, "dir.flow.info");
-        this.errDir = getPath(cfg, "dir.flow.err");
-    }
+  public ReqRspWriter(OrderMapper mapper, Global cfg) {
+    this.mapper = mapper;
+    this.global = cfg;
+    this.reqDir = getPath(cfg, "dir.flow.req");
+    this.rtnDir = getPath(cfg, "dir.flow.rtn");
+    this.infoDir = getPath(cfg, "dir.flow.info");
+    this.errDir = getPath(cfg, "dir.flow.err");
+  }
 
-    private Path getPath(Global cfg, String key) {
-        var dirs = cfg.getRootDirectory().recursiveGet(key);
-        if (dirs.size() > 0)
-            return dirs.iterator().next().path();
-        else
-            return Path.of("");
-    }
+  private Path getPath(Global cfg, String key) {
+    var dirs = cfg.getRootDirectory().recursiveGet(key);
+    if (dirs.size() > 0)
+      return dirs.iterator().next().path();
+    else
+      return Path.of("");
+  }
 
-    private void write(String text, File file) {
-        try {
-            Utils.writeText(text, file, StandardCharsets.UTF_8, false);
-        } catch (IOException e) {
-            this.global.getLogger()
-                    .warning(file.toString() + ". " + e.getMessage());
-        }
+  private void write(String text, File file) {
+    try {
+      Utils.writeText(text, file, StandardCharsets.UTF_8, false);
+    } catch (IOException e) {
+      this.global.getLogger()
+          .warning(file.toString() + ". " + e.getMessage());
     }
+  }
 
-    private File ensureFile(Path root, String fn) {
-        try {
-            var r = Path.of(root.toAbsolutePath().toString(), fn);
-            Utils.createFile(root, true);
-            Utils.createFile(r, false);
-            return r.toFile();
-        } catch (IOException e) {
-            this.global.getLogger().warning(root.toString() + "/" + fn + ". "
-                    + e.getMessage());
-            return new File(".failover");
-        }
+  private File ensureFile(Path root, String fn) {
+    try {
+      var r = Path.of(root.toAbsolutePath().toString(), fn);
+      Utils.createFile(root, true);
+      Utils.createFile(r, false);
+      return r.toFile();
+    } catch (IOException e) {
+      this.global.getLogger().warning(root.toString() + "/" + fn + ". "
+          + e.getMessage());
+      return new File(".failover");
     }
+  }
 
-    private String getClientUserID(String orderRef) {
-        if (orderRef == null || orderRef.length() < 1)
-            return "null";
-        var active = this.mapper.getActiveRequest(orderRef);
-        if (active == null)
-            return "null";
-        else
-            return active.getUser().getUserID();
-    }
+  private String getClientUserID(String orderRef) {
+    if (orderRef == null || orderRef.length() < 1)
+      return "null";
+    var active = this.mapper.getActiveRequest(orderRef);
+    if (active == null)
+      return "null";
+    else
+      return active.getUser().getUserID();
+  }
 
-    private Path getClientDir(Path root, String orderRef) {
-        return Path.of(root.toString(), getClientUserID(orderRef));
-    }
+  private Path getClientDir(Path root, String orderRef) {
+    return Path.of(root.toString(), getClientUserID(orderRef));
+  }
 
-    private String getTimeStamp() {
-        // Add random string suffix to avoid sending requests between a very short
-        // time then files are over written.
-        return LocalDateTime.now().format(this.formatter) + "."
-                + UUID.randomUUID().toString().substring(0, 8);
-    }
+  private String getTimeStamp() {
+    // Add random string suffix to avoid sending requests between a very short
+    // time then files are over written.
+    return LocalDateTime.now().format(this.formatter) + "."
+        + UUID.randomUUID().toString().substring(0, 8);
+  }
 
-    public void writeRtn(COrder rtn) {
-        write(OP.toJson(rtn), ensureFile(
-                getClientDir(this.rtnDir, rtn.OrderRef),
-                "Order." + getTimeStamp() + ".json"));
-    }
+  public void writeRtn(COrder rtn) {
+    write(OP.toJson(rtn), ensureFile(
+        getClientDir(this.rtnDir, rtn.OrderRef),
+        "Order." + getTimeStamp() + ".json"));
+  }
 
-    public void writeRtn(CTrade rtn) {
-        write(OP.toJson(rtn), ensureFile(
-                getClientDir(this.rtnDir, rtn.OrderRef),
-                "Trade." + getTimeStamp() + ".json"));
-    }
+  public void writeRtn(CTrade rtn) {
+    write(OP.toJson(rtn), ensureFile(
+        getClientDir(this.rtnDir, rtn.OrderRef),
+        "Trade." + getTimeStamp() + ".json"));
+  }
 
-    public void writeReq(CInputOrder req) {
-        write(OP.toJson(req), ensureFile(
-                getClientDir(this.reqDir, req.OrderRef),
-                "InputOrder." + getTimeStamp() + ".json"));
-    }
+  public void writeReq(CInputOrder req) {
+    write(OP.toJson(req), ensureFile(
+        getClientDir(this.reqDir, req.OrderRef),
+        "InputOrder." + getTimeStamp() + ".json"));
+  }
 
-    public void writeReq(CInputOrderAction req) {
-        write(OP.toJson(req), ensureFile(
-                getClientDir(this.reqDir, req.OrderRef),
-                "InputOrderAction." + getTimeStamp() + ".json"));
-    }
+  public void writeReq(CInputOrderAction req) {
+    write(OP.toJson(req), ensureFile(
+        getClientDir(this.reqDir, req.OrderRef),
+        "InputOrderAction." + getTimeStamp() + ".json"));
+  }
 
-    public void writeInfo(CInstrumentMarginRate rsp) {
-        write(OP.toJson(rsp),
-                ensureFile(this.infoDir,
-                        "Margin." + rsp.InstrumentID + ".json"));
-    }
+  public void writeInfo(CInstrumentMarginRate rsp) {
+    write(OP.toJson(rsp),
+        ensureFile(this.infoDir,
+            "Margin." + rsp.InstrumentID + ".json"));
+  }
 
-    public void writeInfo(CInstrumentCommissionRate rsp) {
-        write(OP.toJson(rsp),
-                ensureFile(this.infoDir,
-                        "Commission." + rsp.InstrumentID + ".json"));
-    }
+  public void writeInfo(CInstrumentCommissionRate rsp) {
+    write(OP.toJson(rsp),
+        ensureFile(this.infoDir,
+            "Commission." + rsp.InstrumentID + ".json"));
+  }
 
-    public void writeInfo(CInstrument rsp) {
-        write(OP.toJson(rsp),
-                ensureFile(this.infoDir,
-                        "Instrument." + rsp.InstrumentID + ".json"));
-    }
+  public void writeInfo(CInstrument rsp) {
+    write(OP.toJson(rsp),
+        ensureFile(this.infoDir,
+            "Instrument." + rsp.InstrumentID + ".json"));
+  }
 
-    public void writeErr(COrderAction err, CRspInfo info) {
-        write(OP.toJson(err), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "OrderAction." + getTimeStamp() + ".json"));
-        write(OP.toJson(info), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "RspInfo." + getTimeStamp() + ".json"));
-    }
+  public void writeErr(COrderAction err, CRspInfo info) {
+    write(OP.toJson(err), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "OrderAction." + getTimeStamp() + ".json"));
+    write(OP.toJson(info), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "RspInfo." + getTimeStamp() + ".json"));
+  }
 
-    public void writeErr(CInputOrderAction err, CRspInfo info) {
-        write(OP.toJson(err), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "InputOrderAction." + getTimeStamp() + ".json"));
-        write(OP.toJson(info), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "RspInfo." + getTimeStamp() + ".json"));
-    }
+  public void writeErr(CInputOrderAction err, CRspInfo info) {
+    write(OP.toJson(err), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "InputOrderAction." + getTimeStamp() + ".json"));
+    write(OP.toJson(info), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "RspInfo." + getTimeStamp() + ".json"));
+  }
 
-    public void writeErr(CInputOrder err, CRspInfo info) {
-        write(OP.toJson(err), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "InputOrder." + getTimeStamp() + ".json"));
-        write(OP.toJson(info), ensureFile(
-                getClientDir(this.errDir, err.OrderRef),
-                "RspInfo." + getTimeStamp() + ".json"));
-    }
+  public void writeErr(CInputOrder err, CRspInfo info) {
+    write(OP.toJson(err), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "InputOrder." + getTimeStamp() + ".json"));
+    write(OP.toJson(info), ensureFile(
+        getClientDir(this.errDir, err.OrderRef),
+        "RspInfo." + getTimeStamp() + ".json"));
+  }
 
-    public void writeErr(CRspInfo err) {
-        write(OP.toJson(err),
-                ensureFile(getClientDir(this.errDir, ""),
-                        "RspInfo." + getTimeStamp() + ".json"));
-    }
+  public void writeErr(CRspInfo err) {
+    write(OP.toJson(err),
+        ensureFile(getClientDir(this.errDir, ""),
+            "RspInfo." + getTimeStamp() + ".json"));
+  }
 }

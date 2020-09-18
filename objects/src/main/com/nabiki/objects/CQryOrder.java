@@ -29,14 +29,15 @@
 package com.nabiki.objects;
 
 public class CQryOrder implements java.io.Serializable {
-    public String BrokerID;
-    public String InvestorID;
-    public String InstrumentID;
-    public String ExchangeID;
-    public String OrderSysID;
-    public String InsertTimeStart;
-    public String InsertTimeEnd;
-    public String InvestUnitID;
+  public String BrokerID;
+  public String InvestorID;
+  public String InstrumentID;
+  public String ExchangeID;
+  public String OrderSysID;
+  public String InsertTimeStart;
+  public String InsertTimeEnd;
+  public String InvestUnitID;
 
-    public CQryOrder() {}
+  public CQryOrder() {
+  }
 }

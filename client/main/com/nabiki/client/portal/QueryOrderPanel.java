@@ -35,63 +35,63 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class QueryOrderPanel extends JPanel {
-    private final JTable orderTable;
-    private final JTextField orderIDField;
-    private final OrderUpdater orderUpdater;
-    private final OrderActioner orderActioner;
+  private final JTable orderTable;
+  private final JTextField orderIDField;
+  private final OrderUpdater orderUpdater;
+  private final OrderActioner orderActioner;
 
-    QueryOrderPanel(TradeClient client) {
-        SpringLayout sl_queryOrderPanel = new SpringLayout();
-        this.setLayout(sl_queryOrderPanel);
+  QueryOrderPanel(TradeClient client) {
+    SpringLayout sl_queryOrderPanel = new SpringLayout();
+    this.setLayout(sl_queryOrderPanel);
 
-        JScrollPane orderScrollPane = new JScrollPane();
-        sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderScrollPane, 50, SpringLayout.NORTH, this);
-        sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderScrollPane, 10, SpringLayout.WEST, this);
-        sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, orderScrollPane, -10, SpringLayout.SOUTH, this);
-        sl_queryOrderPanel.putConstraint(SpringLayout.EAST, orderScrollPane, -10, SpringLayout.EAST, this);
-        this.add(orderScrollPane);
+    JScrollPane orderScrollPane = new JScrollPane();
+    sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderScrollPane, 50, SpringLayout.NORTH, this);
+    sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderScrollPane, 10, SpringLayout.WEST, this);
+    sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, orderScrollPane, -10, SpringLayout.SOUTH, this);
+    sl_queryOrderPanel.putConstraint(SpringLayout.EAST, orderScrollPane, -10, SpringLayout.EAST, this);
+    this.add(orderScrollPane);
 
-        orderTable = new JTable();
-        orderUpdater = new OrderUpdater(orderTable, client);
-        orderUpdater.start();
+    orderTable = new JTable();
+    orderUpdater = new OrderUpdater(orderTable, client);
+    orderUpdater.start();
 
-        orderActioner = new OrderActioner(client, orderUpdater);
-        orderActioner.start();
+    orderActioner = new OrderActioner(client, orderUpdater);
+    orderActioner.start();
 
-        orderScrollPane.setViewportView(orderTable);
+    orderScrollPane.setViewportView(orderTable);
 
-        JLabel orderIDLabel = new JLabel("\u62A5\u5355\u7F16\u53F7:");
-        sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderIDLabel, 14, SpringLayout.NORTH, this);
-        sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderIDLabel, 10, SpringLayout.WEST, this);
-        this.add(orderIDLabel);
+    JLabel orderIDLabel = new JLabel("\u62A5\u5355\u7F16\u53F7:");
+    sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderIDLabel, 14, SpringLayout.NORTH, this);
+    sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderIDLabel, 10, SpringLayout.WEST, this);
+    this.add(orderIDLabel);
 
-        orderIDField = new JTextField();
-        sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderIDField, 10, SpringLayout.NORTH, this);
-        sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderIDField, 5, SpringLayout.EAST, orderIDLabel);
-        sl_queryOrderPanel.putConstraint(SpringLayout.EAST, orderIDField, 250, SpringLayout.EAST, orderIDLabel);
-        this.add(orderIDField);
-        orderIDField.setColumns(10);
+    orderIDField = new JTextField();
+    sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, orderIDField, 10, SpringLayout.NORTH, this);
+    sl_queryOrderPanel.putConstraint(SpringLayout.WEST, orderIDField, 5, SpringLayout.EAST, orderIDLabel);
+    sl_queryOrderPanel.putConstraint(SpringLayout.EAST, orderIDField, 250, SpringLayout.EAST, orderIDLabel);
+    this.add(orderIDField);
+    orderIDField.setColumns(10);
 
-        JButton queryOrderBtn = new JButton("\u67E5\u8BE2");
-        queryOrderBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                orderUpdater.query(orderIDField.getText().trim(), e.getSource());
-            }
-        });
-        sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, queryOrderBtn, 0, SpringLayout.NORTH, orderIDField);
-        sl_queryOrderPanel.putConstraint(SpringLayout.WEST, queryOrderBtn, 10, SpringLayout.EAST, orderIDField);
-        sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, queryOrderBtn, 0, SpringLayout.SOUTH, orderIDField);
-        this.add(queryOrderBtn);
+    JButton queryOrderBtn = new JButton("\u67E5\u8BE2");
+    queryOrderBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        orderUpdater.query(orderIDField.getText().trim(), e.getSource());
+      }
+    });
+    sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, queryOrderBtn, 0, SpringLayout.NORTH, orderIDField);
+    sl_queryOrderPanel.putConstraint(SpringLayout.WEST, queryOrderBtn, 10, SpringLayout.EAST, orderIDField);
+    sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, queryOrderBtn, 0, SpringLayout.SOUTH, orderIDField);
+    this.add(queryOrderBtn);
 
-        JButton cancelOrderBtn = new JButton("\u64A4\u5355");
-        cancelOrderBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                orderActioner.cancel(orderIDField.getText().trim(), e.getSource());
-            }
-        });
-        sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, cancelOrderBtn, 0, SpringLayout.NORTH, orderIDField);
-        sl_queryOrderPanel.putConstraint(SpringLayout.WEST, cancelOrderBtn, 10, SpringLayout.EAST, queryOrderBtn);
-        sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, cancelOrderBtn, 0, SpringLayout.SOUTH, orderIDField);
-        this.add(cancelOrderBtn);
-    }
+    JButton cancelOrderBtn = new JButton("\u64A4\u5355");
+    cancelOrderBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        orderActioner.cancel(orderIDField.getText().trim(), e.getSource());
+      }
+    });
+    sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, cancelOrderBtn, 0, SpringLayout.NORTH, orderIDField);
+    sl_queryOrderPanel.putConstraint(SpringLayout.WEST, cancelOrderBtn, 10, SpringLayout.EAST, queryOrderBtn);
+    sl_queryOrderPanel.putConstraint(SpringLayout.SOUTH, cancelOrderBtn, 0, SpringLayout.SOUTH, orderIDField);
+    this.add(cancelOrderBtn);
+  }
 }

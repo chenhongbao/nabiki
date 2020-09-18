@@ -31,12 +31,12 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CReqAuthenticate implements Serializable {
-	public String BrokerID;
-	public String UserID;
-	public String UserProductInfo;
-	public String AuthCode;
-	public String AppID;
+  public String BrokerID;
+  public String UserID;
+  public String UserProductInfo;
+  public String AuthCode;
+  public String AppID;
 
-	public CReqAuthenticate() {
-	}
+  public CReqAuthenticate() {
+  }
 }

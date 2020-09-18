@@ -29,5 +29,5 @@
 package com.nabiki.iop;
 
 public interface AdaptorChain {
-    void addAdaptor(ServerMessageAdaptor adaptor);
+  void addAdaptor(ServerMessageAdaptor adaptor);
 }

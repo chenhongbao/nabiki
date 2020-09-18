@@ -29,11 +29,11 @@
 package com.nabiki.centre.ctp;
 
 public interface Connectable {
-    void connect();
+  void connect();
 
-    void disconnect();
+  void disconnect();
 
-    boolean isConnected();
+  boolean isConnected();
 
-    boolean waitConnected(long millis);
+  boolean waitConnected(long millis);
 }

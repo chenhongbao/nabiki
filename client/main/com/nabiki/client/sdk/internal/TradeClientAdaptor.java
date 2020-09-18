@@ -38,185 +38,185 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 class TradeClientAdaptor extends ClientMessageAdaptor {
-    private class DefaultDepthListener implements MarketDataListener {
-        @Override
-        public void onDepthMarketData(CDepthMarketData depth) {
-        }
-
-        @Override
-        public void onCandle(CCandle candle) {
-        }
-    }
-
-    private final Map<String, ResponseImpl<?>> responses = new ConcurrentHashMap<>();
-    private final AtomicReference<MarketDataListener> listener
-            = new AtomicReference<>(new DefaultDepthListener());
-
-    private String tradingDay;
-
-    TradeClientAdaptor() {
-    }
-
-    void setResponse(ResponseImpl<?> response, String requestID) {
-        Objects.requireNonNull(response, "response future null");
-        Objects.requireNonNull(requestID, "request ID null");
-        if (this.responses.containsKey(requestID))
-            throw new IllegalArgumentException("duplicated request ID");
-        this.responses.put(requestID, response);
-    }
-
-    void setListener(MarketDataListener listener) {
-        if (listener != null)
-            this.listener.set(listener);
-    }
-
-    private void checkCompletion(ResponseImpl<?> response, String requestID) {
-        // Check the completion of response.
-        if (response.getArrivalCount() == response.getTotalCount()
-                && response.getTotalCount() != 0)
-            this.responses.remove(requestID);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> void doRsp(
-            T object,
-            CRspInfo info,
-            String requestID,
-            int current,
-            int total) {
-        if (!this.responses.containsKey(requestID))
-            throw new IllegalStateException(
-                    "no such request ID and response mapping");
-        // Call response.
-        var response = (ResponseImpl<T>) this.responses.get(requestID);
-        response.put(object, info, current, total);
-        // Remove mapping if all responses arrive.
-        checkCompletion(response, requestID);
-    }
-
-    public String getTradingDay() {
-        return this.tradingDay;
+  private class DefaultDepthListener implements MarketDataListener {
+    @Override
+    public void onDepthMarketData(CDepthMarketData depth) {
     }
 
     @Override
-    public void doRspReqLogin(
-            CRspUserLogin rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-        tradingDay = rsp.TradingDay;
+    public void onCandle(CCandle candle) {
     }
+  }
 
-    @Override
-    public void doRspReqOrderInsert(
-            COrder rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  private final Map<String, ResponseImpl<?>> responses = new ConcurrentHashMap<>();
+  private final AtomicReference<MarketDataListener> listener
+      = new AtomicReference<>(new DefaultDepthListener());
 
-    @Override
-    public void doRspReqOrderAction(
-            COrderAction rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  private String tradingDay;
 
-    @Override
-    public void doRspQryDepthMarketData(
-            CDepthMarketData rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  TradeClientAdaptor() {
+  }
 
-    @Override
-    public void doRspQryAccount(
-            CTradingAccount rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  void setResponse(ResponseImpl<?> response, String requestID) {
+    Objects.requireNonNull(response, "response future null");
+    Objects.requireNonNull(requestID, "request ID null");
+    if (this.responses.containsKey(requestID))
+      throw new IllegalArgumentException("duplicated request ID");
+    this.responses.put(requestID, response);
+  }
 
-    @Override
-    public void doRspQryOrder(
-            COrder rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  void setListener(MarketDataListener listener) {
+    if (listener != null)
+      this.listener.set(listener);
+  }
 
-    @Override
-    public void doRspQryPosition(
-            CInvestorPosition rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  private void checkCompletion(ResponseImpl<?> response, String requestID) {
+    // Check the completion of response.
+    if (response.getArrivalCount() == response.getTotalCount()
+        && response.getTotalCount() != 0)
+      this.responses.remove(requestID);
+  }
 
-    @Override
-    public void doRspQryPositionDetail(
-            CInvestorPositionDetail rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  @SuppressWarnings("unchecked")
+  private <T> void doRsp(
+      T object,
+      CRspInfo info,
+      String requestID,
+      int current,
+      int total) {
+    if (!this.responses.containsKey(requestID))
+      throw new IllegalStateException(
+          "no such request ID and response mapping");
+    // Call response.
+    var response = (ResponseImpl<T>) this.responses.get(requestID);
+    response.put(object, info, current, total);
+    // Remove mapping if all responses arrive.
+    checkCompletion(response, requestID);
+  }
 
-    @Override
-    public void doRspSubscribeMarketData(
-            CSpecificInstrument rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        doRsp(rsp, info, requestID, current, total);
-    }
+  public String getTradingDay() {
+    return this.tradingDay;
+  }
 
-    @Override
-    public void doRspDepthMarketData(
-            CDepthMarketData rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        this.listener.get().onDepthMarketData(rsp);
-    }
+  @Override
+  public void doRspReqLogin(
+      CRspUserLogin rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+    tradingDay = rsp.TradingDay;
+  }
 
-    @Override
-    public void doRspCandle(
-            CCandle rsp,
-            CRspInfo info,
-            String requestID,
-            String responseID,
-            int current,
-            int total) {
-        this.listener.get().onCandle(rsp);
-    }
+  @Override
+  public void doRspReqOrderInsert(
+      COrder rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspReqOrderAction(
+      COrderAction rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryDepthMarketData(
+      CDepthMarketData rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryAccount(
+      CTradingAccount rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryOrder(
+      COrder rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryPosition(
+      CInvestorPosition rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryPositionDetail(
+      CInvestorPositionDetail rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspSubscribeMarketData(
+      CSpecificInstrument rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspDepthMarketData(
+      CDepthMarketData rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    this.listener.get().onDepthMarketData(rsp);
+  }
+
+  @Override
+  public void doRspCandle(
+      CCandle rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    this.listener.get().onCandle(rsp);
+  }
 }

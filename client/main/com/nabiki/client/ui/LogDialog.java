@@ -36,104 +36,104 @@ import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
 public class LogDialog extends JDialog implements UIPrinter {
-	private final JTextArea logArea;
-	private final JTextArea outArea;
-	private final JTextArea errArea;
-	private final JScrollPane logScrollPane;
-	private final JScrollPane outScrollPane;
-	private final JScrollPane errScrollPane;
-	private final JCheckBox atuoScrollCheck;
+  private final JTextArea logArea;
+  private final JTextArea outArea;
+  private final JTextArea errArea;
+  private final JScrollPane logScrollPane;
+  private final JScrollPane outScrollPane;
+  private final JScrollPane errScrollPane;
+  private final JCheckBox atuoScrollCheck;
 
-	private static final SimpleFormatter formatter = new SimpleFormatter();
+  private static final SimpleFormatter formatter = new SimpleFormatter();
 
-	/**
-	 * Create the dialog.
-	 */
-	public LogDialog() {
-		setTitle("\u65E5\u5FD7\u76D1\u89C6");
-		setBounds(100, 100, 400, 600);
-		
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.TOP);
-		tabPane.setBorder(null);
-		getContentPane().add(tabPane, BorderLayout.CENTER);
-		
-		logScrollPane = new JScrollPane();
-		logScrollPane.setViewportBorder(null);
-		tabPane.addTab("\u65E5\u5FD7", null, logScrollPane, "Logger\u8F93\u51FA");
-		
-		logArea = new JTextArea();
-		logArea.setTabSize(2);
-		logArea.setEditable(false);
-		logScrollPane.setViewportView(logArea);
-		
-		outScrollPane = new JScrollPane();
-		outScrollPane.setViewportBorder(null);
-		tabPane.addTab("\u8F93\u51FA", null, outScrollPane, "System.out");
-		tabPane.setForegroundAt(1, Color.BLUE);
-		
-		outArea = new JTextArea();
-		outArea.setForeground(new Color(0, 0, 255));
-		outArea.setTabSize(2);
-		outArea.setEditable(false);
-		outScrollPane.setViewportView(outArea);
-		
-		errScrollPane = new JScrollPane();
-		errScrollPane.setViewportBorder(null);
-		tabPane.addTab("\u9519\u8BEF", null, errScrollPane, "System.err");
-		tabPane.setForegroundAt(2, Color.RED);
-		
-		errArea = new JTextArea();
-		errArea.setForeground(Color.RED);
-		errArea.setTabSize(2);
-		errArea.setEditable(false);
-		errScrollPane.setViewportView(errArea);
-		
-		JPanel ctrlPane = new JPanel();
-		FlowLayout fl_ctrlPane = (FlowLayout) ctrlPane.getLayout();
-		fl_ctrlPane.setAlignment(FlowLayout.TRAILING);
-		getContentPane().add(ctrlPane, BorderLayout.SOUTH);
-		
-		atuoScrollCheck = new JCheckBox("\u5411\u4E0B\u6EDA\u52A8");
-		atuoScrollCheck.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				AbstractButton abstractButton = (AbstractButton) e.getSource();
-				if (abstractButton.getModel().isSelected()) {
-					scrollBottom(logArea);
-					scrollBottom(outArea);
-					scrollBottom(errArea);
-				}
-			}
-		});
-		atuoScrollCheck.setSelected(true);
-		ctrlPane.add(atuoScrollCheck);
+  /**
+   * Create the dialog.
+   */
+  public LogDialog() {
+    setTitle("\u65E5\u5FD7\u76D1\u89C6");
+    setBounds(100, 100, 400, 600);
 
-		setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-	}
+    JTabbedPane tabPane = new JTabbedPane(JTabbedPane.TOP);
+    tabPane.setBorder(null);
+    getContentPane().add(tabPane, BorderLayout.CENTER);
 
-	@Override
-	public void appendOut(String msg) {
-		appendSystem(msg, outArea);
-	}
+    logScrollPane = new JScrollPane();
+    logScrollPane.setViewportBorder(null);
+    tabPane.addTab("\u65E5\u5FD7", null, logScrollPane, "Logger\u8F93\u51FA");
 
-	@Override
-	public void appendErr(String msg) {
-		appendSystem(msg, errArea);
-	}
+    logArea = new JTextArea();
+    logArea.setTabSize(2);
+    logArea.setEditable(false);
+    logScrollPane.setViewportView(logArea);
 
-	@Override
-	public void appendLog(LogRecord log) {
-		logArea.append(formatter.format(log));
-		if (atuoScrollCheck.isSelected())
-			scrollBottom(logArea);
-	}
+    outScrollPane = new JScrollPane();
+    outScrollPane.setViewportBorder(null);
+    tabPane.addTab("\u8F93\u51FA", null, outScrollPane, "System.out");
+    tabPane.setForegroundAt(1, Color.BLUE);
 
-	private void appendSystem(String msg, JTextArea area) {
-		area.append(msg);
-		if (atuoScrollCheck.isSelected())
-			scrollBottom(area);
-	}
+    outArea = new JTextArea();
+    outArea.setForeground(new Color(0, 0, 255));
+    outArea.setTabSize(2);
+    outArea.setEditable(false);
+    outScrollPane.setViewportView(outArea);
 
-	private void scrollBottom(JTextArea area) {
-		area.setCaretPosition(area.getDocument().getLength());
-	}
+    errScrollPane = new JScrollPane();
+    errScrollPane.setViewportBorder(null);
+    tabPane.addTab("\u9519\u8BEF", null, errScrollPane, "System.err");
+    tabPane.setForegroundAt(2, Color.RED);
+
+    errArea = new JTextArea();
+    errArea.setForeground(Color.RED);
+    errArea.setTabSize(2);
+    errArea.setEditable(false);
+    errScrollPane.setViewportView(errArea);
+
+    JPanel ctrlPane = new JPanel();
+    FlowLayout fl_ctrlPane = (FlowLayout) ctrlPane.getLayout();
+    fl_ctrlPane.setAlignment(FlowLayout.TRAILING);
+    getContentPane().add(ctrlPane, BorderLayout.SOUTH);
+
+    atuoScrollCheck = new JCheckBox("\u5411\u4E0B\u6EDA\u52A8");
+    atuoScrollCheck.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        AbstractButton abstractButton = (AbstractButton) e.getSource();
+        if (abstractButton.getModel().isSelected()) {
+          scrollBottom(logArea);
+          scrollBottom(outArea);
+          scrollBottom(errArea);
+        }
+      }
+    });
+    atuoScrollCheck.setSelected(true);
+    ctrlPane.add(atuoScrollCheck);
+
+    setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+  }
+
+  @Override
+  public void appendOut(String msg) {
+    appendSystem(msg, outArea);
+  }
+
+  @Override
+  public void appendErr(String msg) {
+    appendSystem(msg, errArea);
+  }
+
+  @Override
+  public void appendLog(LogRecord log) {
+    logArea.append(formatter.format(log));
+    if (atuoScrollCheck.isSelected())
+      scrollBottom(logArea);
+  }
+
+  private void appendSystem(String msg, JTextArea area) {
+    area.append(msg);
+    if (atuoScrollCheck.isSelected())
+      scrollBottom(area);
+  }
+
+  private void scrollBottom(JTextArea area) {
+    area.setCaretPosition(area.getDocument().getLength());
+  }
 }

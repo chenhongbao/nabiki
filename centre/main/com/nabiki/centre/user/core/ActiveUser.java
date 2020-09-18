@@ -38,235 +38,235 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveUser {
-    private final User user;
-    private final Global global;
-    private final OrderProvider orderProvider;
-    private final Map<String, ActiveRequest> requests = new ConcurrentHashMap<>();
+  private final User user;
+  private final Global global;
+  private final OrderProvider orderProvider;
+  private final Map<String, ActiveRequest> requests = new ConcurrentHashMap<>();
 
-    public ActiveUser(User user, OrderProvider orderProvider, Global cfg) {
-        this.user = user;
-        this.global = cfg;
-        this.orderProvider = orderProvider;
+  public ActiveUser(User user, OrderProvider orderProvider, Global cfg) {
+    this.user = user;
+    this.global = cfg;
+    this.orderProvider = orderProvider;
+  }
+
+  public CRspInfo getExecRsp(String uuid) {
+    var active = this.requests.get(uuid);
+    if (active == null)
+      return null;
+    else
+      return active.getExecRsp();
+  }
+
+  public String insertOrder(CInputOrder order) {
+    var active = new ActiveRequest(order, this.user, this.orderProvider,
+        this.global);
+    this.requests.put(active.getRequestUUID(), active);
+    try {
+      active.execOrder();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.global.getLogger().severe(
+          Utils.formatLog("failed order insertion", order.UserID,
+              th.getMessage(), null));
     }
+    return active.getRequestUUID();
+  }
 
-    public CRspInfo getExecRsp(String uuid) {
-        var active = this.requests.get(uuid);
-        if (active == null)
-            return null;
-        else
-            return active.getExecRsp();
+  public String orderAction(CInputOrderAction action) {
+    var active = new ActiveRequest(action, this.user, this.orderProvider,
+        this.global);
+    this.requests.put(active.getRequestUUID(), active);
+    try {
+      active.execAction();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      this.global.getLogger().severe(
+          Utils.formatLog("failed order action", action.UserID,
+              th.getMessage(), null));
     }
+    return active.getRequestUUID();
+  }
 
-    public String insertOrder(CInputOrder order) {
-        var active = new ActiveRequest(order, this.user, this.orderProvider,
-                this.global);
-        this.requests.put(active.getRequestUUID(), active);
-        try {
-            active.execOrder();
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.global.getLogger().severe(
-                    Utils.formatLog("failed order insertion", order.UserID,
-                            th.getMessage(), null));
-        }
-        return active.getRequestUUID();
+  public Set<COrder> getRtnOrder(String uuid) {
+    var r = new HashSet<COrder>();
+    if (uuid == null)
+      return r;
+    var refs = this.orderProvider.getMapper().getOrderRef(uuid);
+    if (refs == null || refs.size() == 0)
+      return r;
+    for (var ref : refs) {
+      var o = this.orderProvider.getMapper().getRtnOrder(ref);
+      if (o != null)
+        r.add(o);
     }
+    return r;
+  }
 
-    public String orderAction(CInputOrderAction action) {
-        var active = new ActiveRequest(action, this.user, this.orderProvider,
-                this.global);
-        this.requests.put(active.getRequestUUID(), active);
-        try {
-            active.execAction();
-        } catch (Throwable th) {
-            th.printStackTrace();
-            this.global.getLogger().severe(
-                    Utils.formatLog("failed order action", action.UserID,
-                            th.getMessage(), null));
-        }
-        return active.getRequestUUID();
+  public Map<String, FrozenPositionDetail> getFrozenPositionDetail(String uuid) {
+    var active = this.requests.get(uuid);
+    if (active != null)
+      return active.getFrozenPosition();
+    else
+      return null;
+  }
+
+  public FrozenAccount getFrozenAccount(String uuid) {
+    var active = this.requests.get(uuid);
+    if (active != null)
+      return active.getFrozenAccount();
+    else
+      return null;
+  }
+
+  public CTradingAccount getTradingAccount() {
+    // Call user's method directly, sync here.
+    synchronized (this.user) {
+      CTradingAccount account = this.user.getTradingAccount();
+      account.TradingDay = this.global.getTradingDay();
+      return account;
     }
+  }
 
-    public Set<COrder> getRtnOrder(String uuid) {
-        var r = new HashSet<COrder>();
-        if (uuid == null)
-            return r;
-        var refs = this.orderProvider.getMapper().getOrderRef(uuid);
-        if (refs == null || refs.size() == 0)
-            return r;
-        for (var ref : refs) {
-            var o = this.orderProvider.getMapper().getRtnOrder(ref);
-            if (o != null)
-                r.add(o);
-        }
-        return r;
-    }
-
-    public Map<String, FrozenPositionDetail> getFrozenPositionDetail(String uuid) {
-        var active = this.requests.get(uuid);
-        if (active != null)
-            return active.getFrozenPosition();
-        else
-            return null;
-    }
-
-    public FrozenAccount getFrozenAccount(String uuid) {
-        var active = this.requests.get(uuid);
-        if (active != null)
-            return active.getFrozenAccount();
-        else
-            return null;
-    }
-
-    public CTradingAccount getTradingAccount() {
-        // Call user's method directly, sync here.
-        synchronized (this.user) {
-            CTradingAccount account = this.user.getTradingAccount();
-            account.TradingDay = this.global.getTradingDay();
-            return account;
-        }
-    }
-
-    public List<CInvestorPositionDetail> getPositionDetail(String instrID) {
-        // Manipulate user's internal data, so sync here.
-        synchronized (this.user) {
-            if (instrID == null || instrID.length() == 0) {
-                var ret = new LinkedList<CInvestorPositionDetail>();
-                for (var instr : this.user.getUserPosition().getPositionMap().keySet())
-                    ret.addAll(getInstrPositionDetail(instr));
-                return ret;
-            } else
-                return getInstrPositionDetail(instrID);
-        }
-    }
-
-    public List<CInvestorPosition> getPosition(String instrID) {
-        // Manipulate user's internal data, so sync here.
-        synchronized (this.user) {
-            if (instrID == null || instrID.length() == 0) {
-                var ret = new LinkedList<CInvestorPosition>();
-                for (var instr : this.user.getUserPosition().getPositionMap().keySet())
-                    ret.addAll(getInstrPosition(instr));
-                return ret;
-            } else
-                return getInstrPosition(instrID);
-        }
-    }
-
-    void settle() {
-        // Call user's method directly, sync here.
-        synchronized (this.user) {
-            this.user.settle(prepare());
-        }
-    }
-
-    private List<CInvestorPositionDetail> getInstrPositionDetail(String instrID) {
-        var r = new LinkedList<CInvestorPositionDetail>();
-        var spec = this.user.getUserPosition().getSpecificPosition(instrID);
-        for (var d : spec)
-            r.add(d.copyRawPosition());
-        return r;
-    }
-
-    private List<CInvestorPosition> getInstrPosition(String instrID) {
-        var ret = new LinkedList<CInvestorPosition>();
-        if (instrID == null || instrID.length() == 0)
-            return ret;
-        var usrPos = this.user.getUserPosition().getSpecificPosition(instrID);
-        if (usrPos == null || usrPos.size() == 0)
-            return ret;
-        var tradingDay = this.global.getTradingDay();
-        if (tradingDay == null || tradingDay.length() == 0)
-            throw new IllegalArgumentException("trading day null");
-        CInvestorPosition lp = null, sp = null;
-        for (var p : usrPos) {
-            var sum = p.getInvestorPosition(tradingDay);
-            if (sum.PosiDirection == PosiDirectionType.LONG) {
-                // Long position.
-                if (lp  == null)
-                    lp = sum;
-                else
-                    lp = add(lp, sum);
-            } else {
-                // Short position.
-                if (sp == null)
-                    sp = sum;
-                else
-                    sp = add(sp, sum);
-            }
-        }
-        // Add to result set.
-        if (lp != null) {
-            lp.TradingDay = this.global.getTradingDay();
-            ret.add(lp);
-        }
-        if (sp != null) {
-            sp.TradingDay = this.global.getTradingDay();
-            ret.add(sp);
-        }
+  public List<CInvestorPositionDetail> getPositionDetail(String instrID) {
+    // Manipulate user's internal data, so sync here.
+    synchronized (this.user) {
+      if (instrID == null || instrID.length() == 0) {
+        var ret = new LinkedList<CInvestorPositionDetail>();
+        for (var instr : this.user.getUserPosition().getPositionMap().keySet())
+          ret.addAll(getInstrPositionDetail(instr));
         return ret;
+      } else
+        return getInstrPositionDetail(instrID);
     }
+  }
 
-    private CInvestorPosition add(
-            CInvestorPosition a,
-            CInvestorPosition b) {
-        a.CloseAmount += b.CloseAmount;
-        a.CloseProfit += b.CloseProfit;
-        a.CloseProfitByDate += b.CloseProfitByDate;
-        a.CloseProfitByTrade += b.CloseProfitByTrade;
-        a.CloseVolume += b.CloseVolume;
-        a.Commission += b.Commission;
-        a.ExchangeMargin += b.ExchangeMargin;
-        a.FrozenCash += b.FrozenCash;
-        a.FrozenCommission += b.FrozenCommission;
-        a.FrozenMargin += b.FrozenMargin;
-        a.LongFrozen += b.LongFrozen;
-        a.LongFrozenAmount += b.LongFrozenAmount;
-        a.OpenAmount += b.OpenAmount;
-        a.OpenVolume += b.OpenVolume;
-        a.OpenCost += b.OpenCost;
-        a.Position += b.Position;
-        a.PositionCost += b.PositionCost;
-        a.PositionProfit += b.PositionProfit;
-        a.PreMargin += b.PreMargin;
-        a.ShortFrozen += b.ShortFrozen;
-        a.ShortFrozenAmount += b.ShortFrozenAmount;
-        a.TodayPosition += b.TodayPosition;
-        a.UseMargin += b.UseMargin;
-        a.YdPosition += b.YdPosition;
-        return Utils.deepCopy(a);
+  public List<CInvestorPosition> getPosition(String instrID) {
+    // Manipulate user's internal data, so sync here.
+    synchronized (this.user) {
+      if (instrID == null || instrID.length() == 0) {
+        var ret = new LinkedList<CInvestorPosition>();
+        for (var instr : this.user.getUserPosition().getPositionMap().keySet())
+          ret.addAll(getInstrPosition(instr));
+        return ret;
+      } else
+        return getInstrPosition(instrID);
     }
+  }
 
-    private SettlementPreparation prepare() {
-        SettlementPreparation prep = new SettlementPreparation();
-        prep.prepare(this.global.getTradingDay());
-        for (var i : this.global.getAllInstrInfo()) {
-            // There may be some info missing, but it doesn't matter if we don't
-            // have that position.
-            // It is possible for some instruments that don't have trade for whole
-            // day whose depth md is null. Need to catch exception here and keep
-            // settlement going.
-            try {
-                prep.prepare(i.Instrument);
-                prep.prepare(i.Commission);
-                prep.prepare(i.Margin);
-                var depth = this.global.getDepthMarketData(i.Instrument.InstrumentID);
-                Objects.requireNonNull(depth, "depth null");
-                if (Utils.validPrice(depth.SettlementPrice))
-                    prep.prepare(depth);
-                else
-                    this.global.getLogger()
-                            .warning("no settlement price("
-                                    + depth.SettlementPrice + "): "
-                                    + i.Instrument.InstrumentID);
-            } catch (Throwable th) {
-                if (i != null && i.Instrument != null)
-                    this.global.getLogger()
-                            .warning("can't prepare settlement: "
-                                    + i.Instrument.InstrumentID
-                                    + ", " + th.getMessage());
-            }
-        }
-        return prep;
+  void settle() {
+    // Call user's method directly, sync here.
+    synchronized (this.user) {
+      this.user.settle(prepare());
     }
+  }
+
+  private List<CInvestorPositionDetail> getInstrPositionDetail(String instrID) {
+    var r = new LinkedList<CInvestorPositionDetail>();
+    var spec = this.user.getUserPosition().getSpecificPosition(instrID);
+    for (var d : spec)
+      r.add(d.copyRawPosition());
+    return r;
+  }
+
+  private List<CInvestorPosition> getInstrPosition(String instrID) {
+    var ret = new LinkedList<CInvestorPosition>();
+    if (instrID == null || instrID.length() == 0)
+      return ret;
+    var usrPos = this.user.getUserPosition().getSpecificPosition(instrID);
+    if (usrPos == null || usrPos.size() == 0)
+      return ret;
+    var tradingDay = this.global.getTradingDay();
+    if (tradingDay == null || tradingDay.length() == 0)
+      throw new IllegalArgumentException("trading day null");
+    CInvestorPosition lp = null, sp = null;
+    for (var p : usrPos) {
+      var sum = p.getInvestorPosition(tradingDay);
+      if (sum.PosiDirection == PosiDirectionType.LONG) {
+        // Long position.
+        if (lp == null)
+          lp = sum;
+        else
+          lp = add(lp, sum);
+      } else {
+        // Short position.
+        if (sp == null)
+          sp = sum;
+        else
+          sp = add(sp, sum);
+      }
+    }
+    // Add to result set.
+    if (lp != null) {
+      lp.TradingDay = this.global.getTradingDay();
+      ret.add(lp);
+    }
+    if (sp != null) {
+      sp.TradingDay = this.global.getTradingDay();
+      ret.add(sp);
+    }
+    return ret;
+  }
+
+  private CInvestorPosition add(
+      CInvestorPosition a,
+      CInvestorPosition b) {
+    a.CloseAmount += b.CloseAmount;
+    a.CloseProfit += b.CloseProfit;
+    a.CloseProfitByDate += b.CloseProfitByDate;
+    a.CloseProfitByTrade += b.CloseProfitByTrade;
+    a.CloseVolume += b.CloseVolume;
+    a.Commission += b.Commission;
+    a.ExchangeMargin += b.ExchangeMargin;
+    a.FrozenCash += b.FrozenCash;
+    a.FrozenCommission += b.FrozenCommission;
+    a.FrozenMargin += b.FrozenMargin;
+    a.LongFrozen += b.LongFrozen;
+    a.LongFrozenAmount += b.LongFrozenAmount;
+    a.OpenAmount += b.OpenAmount;
+    a.OpenVolume += b.OpenVolume;
+    a.OpenCost += b.OpenCost;
+    a.Position += b.Position;
+    a.PositionCost += b.PositionCost;
+    a.PositionProfit += b.PositionProfit;
+    a.PreMargin += b.PreMargin;
+    a.ShortFrozen += b.ShortFrozen;
+    a.ShortFrozenAmount += b.ShortFrozenAmount;
+    a.TodayPosition += b.TodayPosition;
+    a.UseMargin += b.UseMargin;
+    a.YdPosition += b.YdPosition;
+    return Utils.deepCopy(a);
+  }
+
+  private SettlementPreparation prepare() {
+    SettlementPreparation prep = new SettlementPreparation();
+    prep.prepare(this.global.getTradingDay());
+    for (var i : this.global.getAllInstrInfo()) {
+      // There may be some info missing, but it doesn't matter if we don't
+      // have that position.
+      // It is possible for some instruments that don't have trade for whole
+      // day whose depth md is null. Need to catch exception here and keep
+      // settlement going.
+      try {
+        prep.prepare(i.Instrument);
+        prep.prepare(i.Commission);
+        prep.prepare(i.Margin);
+        var depth = this.global.getDepthMarketData(i.Instrument.InstrumentID);
+        Objects.requireNonNull(depth, "depth null");
+        if (Utils.validPrice(depth.SettlementPrice))
+          prep.prepare(depth);
+        else
+          this.global.getLogger()
+              .warning("no settlement price("
+                  + depth.SettlementPrice + "): "
+                  + i.Instrument.InstrumentID);
+      } catch (Throwable th) {
+        if (i != null && i.Instrument != null)
+          this.global.getLogger()
+              .warning("can't prepare settlement: "
+                  + i.Instrument.InstrumentID
+                  + ", " + th.getMessage());
+      }
+    }
+    return prep;
+  }
 }

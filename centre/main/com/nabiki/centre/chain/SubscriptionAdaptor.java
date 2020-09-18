@@ -46,203 +46,203 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SubscriptionAdaptor extends ServerMessageAdaptor {
-    private class SessionMarketDataReceiver implements MarketDataReceiver {
-        private final ServerSession session;
-        private final Map<String, Boolean> map = new ConcurrentHashMap<>();
+  private class SessionMarketDataReceiver implements MarketDataReceiver {
+    private final ServerSession session;
+    private final Map<String, Boolean> map = new ConcurrentHashMap<>();
 
-        SessionMarketDataReceiver(ServerSession session) {
-            this.session = session;
-        }
-
-        void subscribe(String instrID) {
-            this.map.put(instrID, true);
-        }
-
-        void unsubscribe(String instrID) {
-            this.map.remove(instrID);
-        }
-
-        @Override
-        public void depthReceived(CDepthMarketData depth) {
-            try {
-                if (!this.session.isClosed()
-                        && this.map.containsKey(depth.InstrumentID))
-                    this.session.sendResponse(toMessage(depth));
-            } catch (Throwable th) {
-                th.printStackTrace();
-                global.getLogger().warning(th.getMessage());
-            }
-        }
-
-        @Override
-        public void candleReceived(CCandle candle) {
-            try {
-                if (!this.session.isClosed() &&
-                        this.map.containsKey(candle.InstrumentID))
-                    this.session.sendResponse(toMessage(candle));
-            } catch (Throwable th) {
-                th.printStackTrace();
-                global.getLogger().warning(th.getMessage());
-            }
-        }
+    SessionMarketDataReceiver(ServerSession session) {
+      this.session = session;
     }
 
-    static String FRONT_MDRECEIVER_KEY = "front.mdrecv";
-    private final MarketDataRouter router;
-    private final CandleRW candlRW;
-    private final Global global;
-
-    SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global global) {
-        this.router = router;
-        this.candlRW = rw;
-        this.global = global;
+    void subscribe(String instrID) {
+      this.map.put(instrID, true);
     }
 
-    private static Message toMessage(CDepthMarketData depth) {
-        var rsp = new Message();
-        rsp.Type = MessageType.FLOW_DEPTH;
-        rsp.TotalCount = rsp.CurrentCount = 0;
-        rsp.ResponseID = rsp.RequestID = "";
-        rsp.Body = depth;
-        return rsp;
-    }
-
-    private static Message toMessage(CCandle candle) {
-        var rsp = new Message();
-        rsp.Type = MessageType.FLOW_CANDLE;
-        rsp.TotalCount = rsp.CurrentCount = 0;
-        rsp.ResponseID = rsp.RequestID = "";
-        rsp.Body = candle;
-        return rsp;
-    }
-
-    private SessionMarketDataReceiver getReceiver(ServerSession session) {
-        var recv = session.getAttribute(FRONT_MDRECEIVER_KEY);
-        if (recv == null) {
-            recv = new SessionMarketDataReceiver(session);
-            this.router.addReceiver((MarketDataReceiver) recv);
-            session.setAttribute(FRONT_MDRECEIVER_KEY, recv);
-        }
-        return (SessionMarketDataReceiver) recv;
-    }
-
-    private void sendHistoryCandles(ServerSession session, String instrumentID) {
-        for (var c : this.candlRW.queryCandle(instrumentID))
-            session.sendResponse(toMessage(c));
-    }
-
-    private void sendRsp(
-            ServerSession session,
-            String instrID,
-            String requestID,
-            int count,
-            int total,
-            int errorCode) {
-        var r = new Message();
-        r.Type = MessageType.RSP_SUB_MD;
-        r.RequestID = requestID;
-        r.ResponseID = UUID.randomUUID().toString();
-        r.CurrentCount = count;
-        r.TotalCount = total;
-        // Set response body.
-        var ins = new CSpecificInstrument();
-        ins.InstrumentID = instrID;
-        r.Body = ins;
-        // Set rsp info.
-        r.RspInfo = new CRspInfo();
-        r.RspInfo.ErrorID = errorCode;
-        r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
-        session.sendResponse(r);
-    }
-
-    private List<String> getValidInstruments(String[] instrID) {
-        var r = new LinkedList<String>();
-        if (instrID == null)
-            return r;
-        for (var s : instrID) {
-            if (this.global.getInstrInfo(s) != null)
-                r.add(s);
-            else
-                this.global.getLogger().warning("unknown instrument: " + s);
-        }
-        return r;
+    void unsubscribe(String instrID) {
+      this.map.remove(instrID);
     }
 
     @Override
-    public void doSubDepthMarketData(
-            ServerSession session,
-            CSubMarketData request,
-            String requestID,
-            int current,
-            int total) {
-        var recv = getReceiver(session);
-        var instr = getValidInstruments(request.InstrumentID);
-        if (instr.size() == 0) {
-            sendRsp(
-                    session,
-                    "",
-                    requestID,
-                    1,
-                    1,
-                    ErrorCodes.NONE);
-        } else {
-            int count = 0;
-            for (var instrID : instr) {
-                int errorCode = ErrorCodes.NONE;
-                try {
-                    sendHistoryCandles(session, instrID);
-                    recv.subscribe(instrID);
-                } catch (Throwable ignored) {
-                    errorCode = ErrorCodes.BAD_FIELD;
-                } finally {
-                    sendRsp(
-                            session,
-                            instrID,
-                            requestID,
-                            ++count,
-                            instr.size(),
-                            errorCode);
-                }
-            }
-        }
-        session.done();
+    public void depthReceived(CDepthMarketData depth) {
+      try {
+        if (!this.session.isClosed()
+            && this.map.containsKey(depth.InstrumentID))
+          this.session.sendResponse(toMessage(depth));
+      } catch (Throwable th) {
+        th.printStackTrace();
+        global.getLogger().warning(th.getMessage());
+      }
     }
 
     @Override
-    public void doUnsubDepthMarketData(
-            ServerSession session,
-            CUnsubMarketData request,
-            String requestID,
-            int current,
-            int total) {
-        var recv = getReceiver(session);
-        if (request.InstrumentID == null || request.InstrumentID.length == 0) {
-            sendRsp(
-                    session,
-                    "",
-                    requestID,
-                    1,
-                    1,
-                    ErrorCodes.NONE);
-        } else {
-            int count = 0;
-            for (var instrID : request.InstrumentID) {
-                int errorCode = ErrorCodes.NONE;
-                try {
-                    recv.unsubscribe(instrID);
-                } catch (Throwable ignored) {
-                    errorCode = ErrorCodes.BAD_FIELD;
-                } finally {
-                    sendRsp(
-                            session,
-                            instrID,
-                            requestID,
-                            ++count,
-                            request.InstrumentID.length,
-                            errorCode);
-                }
-            }
-        }
-        session.done();
+    public void candleReceived(CCandle candle) {
+      try {
+        if (!this.session.isClosed() &&
+            this.map.containsKey(candle.InstrumentID))
+          this.session.sendResponse(toMessage(candle));
+      } catch (Throwable th) {
+        th.printStackTrace();
+        global.getLogger().warning(th.getMessage());
+      }
     }
+  }
+
+  static String FRONT_MDRECEIVER_KEY = "front.mdrecv";
+  private final MarketDataRouter router;
+  private final CandleRW candlRW;
+  private final Global global;
+
+  SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global global) {
+    this.router = router;
+    this.candlRW = rw;
+    this.global = global;
+  }
+
+  private static Message toMessage(CDepthMarketData depth) {
+    var rsp = new Message();
+    rsp.Type = MessageType.FLOW_DEPTH;
+    rsp.TotalCount = rsp.CurrentCount = 0;
+    rsp.ResponseID = rsp.RequestID = "";
+    rsp.Body = depth;
+    return rsp;
+  }
+
+  private static Message toMessage(CCandle candle) {
+    var rsp = new Message();
+    rsp.Type = MessageType.FLOW_CANDLE;
+    rsp.TotalCount = rsp.CurrentCount = 0;
+    rsp.ResponseID = rsp.RequestID = "";
+    rsp.Body = candle;
+    return rsp;
+  }
+
+  private SessionMarketDataReceiver getReceiver(ServerSession session) {
+    var recv = session.getAttribute(FRONT_MDRECEIVER_KEY);
+    if (recv == null) {
+      recv = new SessionMarketDataReceiver(session);
+      this.router.addReceiver((MarketDataReceiver) recv);
+      session.setAttribute(FRONT_MDRECEIVER_KEY, recv);
+    }
+    return (SessionMarketDataReceiver) recv;
+  }
+
+  private void sendHistoryCandles(ServerSession session, String instrumentID) {
+    for (var c : this.candlRW.queryCandle(instrumentID))
+      session.sendResponse(toMessage(c));
+  }
+
+  private void sendRsp(
+      ServerSession session,
+      String instrID,
+      String requestID,
+      int count,
+      int total,
+      int errorCode) {
+    var r = new Message();
+    r.Type = MessageType.RSP_SUB_MD;
+    r.RequestID = requestID;
+    r.ResponseID = UUID.randomUUID().toString();
+    r.CurrentCount = count;
+    r.TotalCount = total;
+    // Set response body.
+    var ins = new CSpecificInstrument();
+    ins.InstrumentID = instrID;
+    r.Body = ins;
+    // Set rsp info.
+    r.RspInfo = new CRspInfo();
+    r.RspInfo.ErrorID = errorCode;
+    r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
+    session.sendResponse(r);
+  }
+
+  private List<String> getValidInstruments(String[] instrID) {
+    var r = new LinkedList<String>();
+    if (instrID == null)
+      return r;
+    for (var s : instrID) {
+      if (this.global.getInstrInfo(s) != null)
+        r.add(s);
+      else
+        this.global.getLogger().warning("unknown instrument: " + s);
+    }
+    return r;
+  }
+
+  @Override
+  public void doSubDepthMarketData(
+      ServerSession session,
+      CSubMarketData request,
+      String requestID,
+      int current,
+      int total) {
+    var recv = getReceiver(session);
+    var instr = getValidInstruments(request.InstrumentID);
+    if (instr.size() == 0) {
+      sendRsp(
+          session,
+          "",
+          requestID,
+          1,
+          1,
+          ErrorCodes.NONE);
+    } else {
+      int count = 0;
+      for (var instrID : instr) {
+        int errorCode = ErrorCodes.NONE;
+        try {
+          sendHistoryCandles(session, instrID);
+          recv.subscribe(instrID);
+        } catch (Throwable ignored) {
+          errorCode = ErrorCodes.BAD_FIELD;
+        } finally {
+          sendRsp(
+              session,
+              instrID,
+              requestID,
+              ++count,
+              instr.size(),
+              errorCode);
+        }
+      }
+    }
+    session.done();
+  }
+
+  @Override
+  public void doUnsubDepthMarketData(
+      ServerSession session,
+      CUnsubMarketData request,
+      String requestID,
+      int current,
+      int total) {
+    var recv = getReceiver(session);
+    if (request.InstrumentID == null || request.InstrumentID.length == 0) {
+      sendRsp(
+          session,
+          "",
+          requestID,
+          1,
+          1,
+          ErrorCodes.NONE);
+    } else {
+      int count = 0;
+      for (var instrID : request.InstrumentID) {
+        int errorCode = ErrorCodes.NONE;
+        try {
+          recv.unsubscribe(instrID);
+        } catch (Throwable ignored) {
+          errorCode = ErrorCodes.BAD_FIELD;
+        } finally {
+          sendRsp(
+              session,
+              instrID,
+              requestID,
+              ++count,
+              request.InstrumentID.length,
+              errorCode);
+        }
+      }
+    }
+    session.done();
+  }
 }

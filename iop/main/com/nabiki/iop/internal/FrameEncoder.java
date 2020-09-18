@@ -37,18 +37,18 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 import java.nio.ByteOrder;
 
 class FrameEncoder extends ProtocolEncoderAdapter {
-    @Override
-    public void encode(IoSession session, Object message, ProtocolEncoderOutput out)
-            throws Exception {
-        if (!(message instanceof Frame))
-            throw new IllegalArgumentException("message is not frame");
-        var frame = (Frame)message;
-        var buffer = IoBuffer.allocate(8 + frame.Length);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(frame.Type);
-        buffer.putInt(frame.Length);
-        buffer.put(frame.Body);
-        buffer.flip();
-        out.write(buffer);
-    }
+  @Override
+  public void encode(IoSession session, Object message, ProtocolEncoderOutput out)
+      throws Exception {
+    if (!(message instanceof Frame))
+      throw new IllegalArgumentException("message is not frame");
+    var frame = (Frame) message;
+    var buffer = IoBuffer.allocate(8 + frame.Length);
+    buffer.order(ByteOrder.BIG_ENDIAN);
+    buffer.putInt(frame.Type);
+    buffer.putInt(frame.Length);
+    buffer.put(frame.Body);
+    buffer.flip();
+    out.write(buffer);
+  }
 }

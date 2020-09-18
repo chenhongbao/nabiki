@@ -31,9 +31,9 @@ package com.nabiki.client.ui;
 import java.util.logging.LogRecord;
 
 public interface UIPrinter {
-    void appendOut(String msg);
+  void appendOut(String msg);
 
-    void appendErr(String msg);
+  void appendErr(String msg);
 
-    void appendLog(LogRecord log);
+  void appendLog(LogRecord log);
 }

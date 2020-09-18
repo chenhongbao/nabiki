@@ -86,13 +86,13 @@ class RequestDaemon implements Runnable {
         }
       } catch (InterruptedException e) {
         if (orderProvider.workingState == WorkingState.STOPPING
-                || orderProvider.workingState == WorkingState.STOPPED)
+            || orderProvider.workingState == WorkingState.STOPPED)
           break;
         else
           orderProvider.global.getLogger().warning(
-                  Utils.formatLog("order daemon interrupted",
-                          null, e.getMessage(),
-                          null));
+              Utils.formatLog("order daemon interrupted",
+                  null, e.getMessage(),
+                  null));
       }
     }
   }
@@ -117,9 +117,9 @@ class RequestDaemon implements Runnable {
       var ref = pend.order.OrderRef;
       if (isOrderRefUsed(ref)) {
         orderProvider.global.getLogger().severe(String.format(
-                "duplicated order[%s], previous order sent at %s",
-                ref,
-                getPrevOrderDateTime(ref)));
+            "duplicated order[%s], previous order sent at %s",
+            ref,
+            getPrevOrderDateTime(ref)));
       } else {
         r = fillAndSendOrder(pend.order);
         if (r == 0)
@@ -167,8 +167,8 @@ class RequestDaemon implements Runnable {
     input.TimeCondition = TimeConditionType.GFD;
     input.VolumeCondition = VolumeConditionType.ANY_VOLUME;
     return orderProvider.api.ReqOrderInsert(
-            JNI.toJni(input),
-            Utils.getIncrementID());
+        JNI.toJni(input),
+        Utils.getIncrementID());
   }
 
   protected int fillAndSendAction(CInputOrderAction action) {
@@ -193,26 +193,26 @@ class RequestDaemon implements Runnable {
       action.ExchangeID = rtn.ExchangeID;
     } else {
       action.ExchangeID = (instrInfo.Instrument != null)
-              ? instrInfo.Instrument.ExchangeID : null;
+          ? instrInfo.Instrument.ExchangeID : null;
     }
     return orderProvider.api.ReqOrderAction(
-            JNI.toJni(action),
-            Utils.getIncrementID());
+        JNI.toJni(action),
+        Utils.getIncrementID());
   }
 
   protected boolean canTrade(String instrID) {
     var hour = orderProvider.global.getTradingHour(null, instrID);
     if (hour == null) {
       orderProvider.global.getLogger().warning(
-              Utils.formatLog("trading hour global null", instrID,
-                      null, null));
+          Utils.formatLog("trading hour global null", instrID,
+              null, null));
       return false;
     }
     LocalTime now;
     var ins = orderProvider.global.getInstrInfo(instrID);
     if (ins != null && ins.Instrument != null)
       now = orderProvider.timeAligner.getAlignTime(ins.Instrument.ExchangeID,
-              LocalTime.now());
+          LocalTime.now());
     else
       now = LocalTime.now();
     return orderProvider.isConfirmed && hour.contains(now.minusSeconds(1));
@@ -238,6 +238,6 @@ class RequestDaemon implements Runnable {
     } else
       return;
     orderProvider.global.getLogger().warning(
-            Utils.formatLog(hint, ref, null, r));
+        Utils.formatLog(hint, ref, null, r));
   }
 }

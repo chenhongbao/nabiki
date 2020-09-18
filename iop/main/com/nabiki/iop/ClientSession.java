@@ -30,6 +30,6 @@ package com.nabiki.iop;
 
 public interface ClientSession extends IOPSession {
 
-    void sendRequest(Message message) throws InterruptedException;
+  void sendRequest(Message message) throws InterruptedException;
 
 }

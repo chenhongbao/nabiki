@@ -43,84 +43,84 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractClient {
-    private final TradeClient client;
-    private final ClientEventAdaptor eventAdaptor = new ClientEventAdaptor();
+  private final TradeClient client;
+  private final ClientEventAdaptor eventAdaptor = new ClientEventAdaptor();
 
-    protected Response<CRspUserLogin> loginRsp;
-    protected Response<CSpecificInstrument> subRsp;
+  protected Response<CRspUserLogin> loginRsp;
+  protected Response<CSpecificInstrument> subRsp;
 
-    AbstractClient() {
-        client = new TradeClientFactoryImpl().get();
+  AbstractClient() {
+    client = new TradeClientFactoryImpl().get();
+  }
+
+  private void setListener(MarketDataListener listener) {
+    client.setListener(listener);
+    client.setListener(eventAdaptor);
+  }
+
+  private void openConnection(InetSocketAddress address) {
+    // Open connection to server.
+    try {
+      client.open(address);
+      eventAdaptor.waitOpen(
+          TimeUnit.SECONDS.toMillis(Constants.GLOBAL_WAIT_SECONDS));
+    } catch (Throwable th) {
+      throw new RuntimeException("fail opening connection to " + address, th);
     }
+  }
 
-    private void setListener(MarketDataListener listener) {
-        client.setListener(listener);
-        client.setListener(eventAdaptor);
+  private void callStart(MarketDataHandler handler) {
+    try {
+      handler.onStart();
+    } catch (Throwable th) {
+      throw new RuntimeException("uncaught error: " + th.getMessage(), th);
     }
+  }
 
-    private void openConnection(InetSocketAddress address) {
-        // Open connection to server.
-        try {
-            client.open(address);
-            eventAdaptor.waitOpen(
-                    TimeUnit.SECONDS.toMillis(Constants.GLOBAL_WAIT_SECONDS));
-        } catch (Throwable th) {
-            throw new RuntimeException("fail opening connection to " + address, th);
-        }
-    }
+  private void reqLogin(Trader trader) throws Exception {
+    // Send login rsp.
+    var login = new CReqUserLogin();
+    login.UserID = trader.getUserID();
+    login.Password = trader.getPassword();
+    loginRsp = client.login(
+        login, UUID.randomUUID().toString());
+  }
 
-    private void callStart(MarketDataHandler handler) {
-        try {
-            handler.onStart();
-        } catch (Throwable th) {
-            throw new RuntimeException("uncaught error: " + th.getMessage(), th);
-        }
-    }
+  private void reqSubscription(Trader trader) throws Exception {
+    // Request subscription.
+    var reqSub = new CSubMarketData();
+    reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
+    subRsp = client.subscribeMarketData(reqSub, UUID.randomUUID().toString());
+  }
 
-    private void reqLogin(Trader trader) throws Exception {
-        // Send login rsp.
-        var login = new CReqUserLogin();
-        login.UserID = trader.getUserID();
-        login.Password = trader.getPassword();
-        loginRsp = client.login(
-                login, UUID.randomUUID().toString());
+  private void closeConnection() {
+    try {
+      client.close();
+      eventAdaptor.waitClose(TimeUnit.MINUTES.toMillis(1));
+    } catch (Throwable th) {
+      throw new RuntimeException("fail closing connection", th);
     }
+  }
 
-    private void reqSubscription(Trader trader) throws Exception {
-        // Request subscription.
-        var reqSub = new CSubMarketData();
-        reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
-        subRsp = client.subscribeMarketData(reqSub, UUID.randomUUID().toString());
-    }
+  protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) throws Exception {
+    setListener(trader.getDefaultAdaptor());
+    openConnection(address);
+    trader.setClient(client);
+    callStart(trader);
+    reqLogin(trader);
+    reqSubscription(trader);
+  }
 
-    private void closeConnection() {
-        try {
-            client.close();
-            eventAdaptor.waitClose(TimeUnit.MINUTES.toMillis(1));
-        } catch (Throwable th) {
-            throw new RuntimeException("fail closing connection" , th);
-        }
-    }
+  protected void startFigure(FigureTrader trader, InetSocketAddress address) throws Exception {
+    setListener(trader.getDefaultAdaptor());
+    openConnection(address);
+    trader.setClient(client);
+    callStart(trader);
+    reqLogin(trader);
+    reqSubscription(trader);
+  }
 
-    protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) throws Exception {
-        setListener(trader.getDefaultAdaptor());
-        openConnection(address);
-        trader.setClient(client);
-        callStart(trader);
-        reqLogin(trader);
-        reqSubscription(trader);
-    }
-
-    protected void startFigure(FigureTrader trader, InetSocketAddress address) throws Exception {
-        setListener(trader.getDefaultAdaptor());
-        openConnection(address);
-        trader.setClient(client);
-        callStart(trader);
-        reqLogin(trader);
-        reqSubscription(trader);
-    }
-
-    protected void stop() {
-        closeConnection();
-    }
+  protected void stop() {
+    closeConnection();
+  }
 }

@@ -31,131 +31,131 @@ package com.nabiki.iop;
 import com.nabiki.objects.*;
 
 public abstract class ServerMessageAdaptor {
-    public void doSubDepthMarketData(
-            ServerSession session,
-            CSubMarketData request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doSubDepthMarketData(
+      ServerSession session,
+      CSubMarketData request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doUnsubDepthMarketData(
-            ServerSession session,
-            CUnsubMarketData request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doUnsubDepthMarketData(
+      ServerSession session,
+      CUnsubMarketData request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqAuthenticate(
-            ServerSession session,
-            CReqAuthenticate request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqAuthenticate(
+      ServerSession session,
+      CReqAuthenticate request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqLogin(
-            ServerSession session,
-            CReqUserLogin request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqLogin(
+      ServerSession session,
+      CReqUserLogin request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqLogout(
-            ServerSession session,
-            CUserLogout request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqLogout(
+      ServerSession session,
+      CUserLogout request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqSettlementConfirm(
-            ServerSession session,
-            CSettlementInfoConfirm request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqSettlementConfirm(
+      ServerSession session,
+      CSettlementInfoConfirm request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqOrderInsert(
-            ServerSession session,
-            CInputOrder request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqOrderInsert(
+      ServerSession session,
+      CInputOrder request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doReqOrderAction(
-            ServerSession session,
-            CInputOrderAction request,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doReqOrderAction(
+      ServerSession session,
+      CInputOrderAction request,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryDepthMarketData(
-            ServerSession session,
-            CQryDepthMarketData query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryDepthMarketData(
+      ServerSession session,
+      CQryDepthMarketData query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryAccount(
-            ServerSession session,
-            CQryTradingAccount query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryAccount(
+      ServerSession session,
+      CQryTradingAccount query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryOrder(
-            ServerSession session,
-            CQryOrder query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryOrder(
+      ServerSession session,
+      CQryOrder query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryPosition(
-            ServerSession session,
-            CQryInvestorPosition query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryPosition(
+      ServerSession session,
+      CQryInvestorPosition query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryPositionDetail(
-            ServerSession session,
-            CQryInvestorPositionDetail query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryPositionDetail(
+      ServerSession session,
+      CQryInvestorPositionDetail query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryInstrument(
-            ServerSession session,
-            CQryInstrument query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryInstrument(
+      ServerSession session,
+      CQryInstrument query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryCommission(
-            ServerSession session,
-            CQryInstrumentCommissionRate query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryCommission(
+      ServerSession session,
+      CQryInstrumentCommissionRate query,
+      String requestID,
+      int current,
+      int total) {
+  }
 
-    public void doQryMargin(
-            ServerSession session,
-            CQryInstrumentMarginRate query,
-            String requestID,
-            int current,
-            int total) {
-    }
+  public void doQryMargin(
+      ServerSession session,
+      CQryInstrumentMarginRate query,
+      String requestID,
+      int current,
+      int total) {
+  }
 }

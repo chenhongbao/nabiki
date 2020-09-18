@@ -37,30 +37,30 @@ import org.junit.Test;
 import java.util.UUID;
 
 public class BodyTest {
-    @Test
-    public void basic() {
-        var body = new Body();
+  @Test
+  public void basic() {
+    var body = new Body();
 
-        body.RequestID = UUID.randomUUID().toString();
-        body.ResponseID = UUID.randomUUID().toString();
-        body.Type = MessageType.QRY_POSITION;
-        body.Body = "xxx";
-        body.RspInfo = "yyy";
+    body.RequestID = UUID.randomUUID().toString();
+    body.ResponseID = UUID.randomUUID().toString();
+    body.Type = MessageType.QRY_POSITION;
+    body.Body = "xxx";
+    body.RspInfo = "yyy";
 
-        var gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-                .create();
+    var gson = new GsonBuilder()
+        .setPrettyPrinting()
+        .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+        .create();
 
-        var str = gson.toJson(body);
-        System.out.println(str);
+    var str = gson.toJson(body);
+    System.out.println(str);
 
-        var body2 = gson.fromJson(str, Body.class);
+    var body2 = gson.fromJson(str, Body.class);
 
-        Assert.assertEquals(body.RequestID, body2.RequestID);
-        Assert.assertEquals(body.ResponseID, body2.ResponseID);
-        Assert.assertEquals(body.Body, body2.Body);
-        Assert.assertEquals(body.RspInfo, body2.RspInfo);
-        Assert.assertEquals(body.Type,  body2.Type);
-    }
+    Assert.assertEquals(body.RequestID, body2.RequestID);
+    Assert.assertEquals(body.ResponseID, body2.ResponseID);
+    Assert.assertEquals(body.Body, body2.Body);
+    Assert.assertEquals(body.RspInfo, body2.RspInfo);
+    Assert.assertEquals(body.Type, body2.Type);
+  }
 }

@@ -36,26 +36,26 @@ import java.util.List;
  * hours, so those instruments' trading hours are kept in name of their products.
  */
 public class TradingHourConfig {
-    /**
-     * Single trading hour, (from, to].
-     */
-    public static class SingleTradingHour {
-        public LocalTime From, To;
-    }
+  /**
+   * Single trading hour, (from, to].
+   */
+  public static class SingleTradingHour {
+    public LocalTime From, To;
+  }
 
-    /**
-     * Products that share the same trading hour.
-     */
-    public List<String> ProductID;
+  /**
+   * Products that share the same trading hour.
+   */
+  public List<String> ProductID;
 
-    /**
-     * Ordered trading hours in a trading day. The first trading hour has the index
-     * of 0, then index of 1 and so forth.
-     */
-    public List<SingleTradingHour> TradingHour;
+  /**
+   * Ordered trading hours in a trading day. The first trading hour has the index
+   * of 0, then index of 1 and so forth.
+   */
+  public List<SingleTradingHour> TradingHour;
 
-    /**
-     * Name of this configuration.
-     */
-    public String Name;
+  /**
+   * Name of this configuration.
+   */
+  public String Name;
 }

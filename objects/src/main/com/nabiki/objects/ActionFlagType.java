@@ -29,6 +29,6 @@
 package com.nabiki.objects;
 
 public class ActionFlagType {
-    public final static int DELETE = '0';
-    public final static int MODIFY = '3';
+  public final static int DELETE = '0';
+  public final static int MODIFY = '3';
 }

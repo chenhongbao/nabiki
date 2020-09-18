@@ -32,17 +32,17 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public interface IOPClient {
-    void connect(InetSocketAddress address) throws IOException;
+  void connect(InetSocketAddress address) throws IOException;
 
-    void disconnect();
+  void disconnect();
 
-    boolean isConnected();
+  boolean isConnected();
 
-    void setSessionAdaptor(ClientSessionAdaptor adaptor);
+  void setSessionAdaptor(ClientSessionAdaptor adaptor);
 
-    void setMessageAdaptor(ClientMessageAdaptor adaptor);
+  void setMessageAdaptor(ClientMessageAdaptor adaptor);
 
-    void setMessageHandler(ClientMessageHandler handler);
+  void setMessageHandler(ClientMessageHandler handler);
 
-    ClientSession getSession();
+  ClientSession getSession();
 }

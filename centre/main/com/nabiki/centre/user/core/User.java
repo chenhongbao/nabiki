@@ -37,81 +37,81 @@ import java.util.List;
 import java.util.Map;
 
 public class User {
-    private final UserPosition userPosition;
-    private final UserAccount userAccount;
-    private final String userID;
-    private final CRspInfo panicReason = new CRspInfo();
+  private final UserPosition userPosition;
+  private final UserAccount userAccount;
+  private final String userID;
+  private final CRspInfo panicReason = new CRspInfo();
 
-    private UserState state = UserState.RENEW;
+  private UserState state = UserState.RENEW;
 
-    User(CTradingAccount rawAccount,
-                Map<String, List<UserPositionDetail>> positions) {
-        this.userID  = rawAccount.AccountID;
-        this.userAccount = new UserAccount(rawAccount, this);
-        this.userPosition = new UserPosition(positions, this);
-    }
+  User(CTradingAccount rawAccount,
+       Map<String, List<UserPositionDetail>> positions) {
+    this.userID = rawAccount.AccountID;
+    this.userAccount = new UserAccount(rawAccount, this);
+    this.userPosition = new UserPosition(positions, this);
+  }
 
-    public String getUserID() {
-        return this.userID;
-    }
+  public String getUserID() {
+    return this.userID;
+  }
 
-    /**
-     * Get current trading account<b>(not settled account)</b>. The method always
-     * return account object, not {@code null}.
-     *
-     * @return current trading account.
-     */
-    CTradingAccount getTradingAccount() {
-        // Codes for renew account and settled account are the same.
-        var total = this.userAccount.copyRawAccount();
-        // Calculate fields from account and position.
-        var posFrzCash = this.userPosition.getPositionFrozenCash();
-        var mnyTrade = this.userPosition.getMoneyAfterTrade();
-        var accFrzCash = this.userAccount.getAccountFrozenCash();
-        // Summarize.
-        total.FrozenCash = accFrzCash.FrozenCash;
-        total.FrozenCommission = accFrzCash.FrozenCommission
-                + posFrzCash.FrozenCommission;
-        total.FrozenMargin = posFrzCash.FrozenMargin;
-        total.CurrMargin = mnyTrade.Margin;
-        total.CloseProfit = mnyTrade.CloseProfitByDate;
-        // position profit in trading is zero because no settlement price yet.
-        total.PositionProfit = mnyTrade.PositionProfitByDate;
-        total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
-                + (total.CloseProfit + total.PositionProfit) - total.Commission;
-        total.Available = total.Balance - total.CurrMargin - total.FrozenCommission
-                - total.FrozenCash;
-        return total;
-    }
+  /**
+   * Get current trading account<b>(not settled account)</b>. The method always
+   * return account object, not {@code null}.
+   *
+   * @return current trading account.
+   */
+  CTradingAccount getTradingAccount() {
+    // Codes for renew account and settled account are the same.
+    var total = this.userAccount.copyRawAccount();
+    // Calculate fields from account and position.
+    var posFrzCash = this.userPosition.getPositionFrozenCash();
+    var mnyTrade = this.userPosition.getMoneyAfterTrade();
+    var accFrzCash = this.userAccount.getAccountFrozenCash();
+    // Summarize.
+    total.FrozenCash = accFrzCash.FrozenCash;
+    total.FrozenCommission = accFrzCash.FrozenCommission
+        + posFrzCash.FrozenCommission;
+    total.FrozenMargin = posFrzCash.FrozenMargin;
+    total.CurrMargin = mnyTrade.Margin;
+    total.CloseProfit = mnyTrade.CloseProfitByDate;
+    // position profit in trading is zero because no settlement price yet.
+    total.PositionProfit = mnyTrade.PositionProfitByDate;
+    total.Balance = total.PreBalance + (total.Deposit - total.Withdraw)
+        + (total.CloseProfit + total.PositionProfit) - total.Commission;
+    total.Available = total.Balance - total.CurrMargin - total.FrozenCommission
+        - total.FrozenCash;
+    return total;
+  }
 
-    void setPanic(int code, String msg) {
-        this.state = UserState.PANIC;
-        this.panicReason.ErrorID = code;
-        this.panicReason.ErrorMsg = msg;
-    }
+  void setPanic(int code, String msg) {
+    this.state = UserState.PANIC;
+    this.panicReason.ErrorID = code;
+    this.panicReason.ErrorMsg = msg;
+  }
 
-    CRspInfo getRspInfo() {
-        return this.panicReason;
-    }
+  CRspInfo getRspInfo() {
+    return this.panicReason;
+  }
 
-    UserState getState() {
-        return this.state;
-    }
+  UserState getState() {
+    return this.state;
+  }
 
-    UserPosition getUserPosition() {
-        return this.userPosition;
-    }
+  UserPosition getUserPosition() {
+    return this.userPosition;
+  }
 
-    UserAccount getUserAccount() {
-        return this.userAccount;
-    }
+  UserAccount getUserAccount() {
+    return this.userAccount;
+  }
 
-    void settle(SettlementPreparation prep) {
-        // Need calculate profit and margin of the existing position.
-        // Before settling position, all frozen positions are canceled.
-        this.userPosition.settle(prep);
-        // Cancel all frozen cash.
-        this.userAccount.cancel();
-        this.state = UserState.SETTLED;
-    }
+  void settle(SettlementPreparation prep) {
+    // Need calculate profit and margin of the existing position.
+    // Before settling position, all frozen positions are canceled.
+    this.userPosition.settle(prep);
+    // Cancel all frozen cash.
+    this.userAccount.cancel();
+    this.state = UserState.SETTLED;
+  }
 }

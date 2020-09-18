@@ -29,5 +29,5 @@
 package com.nabiki.iop.frame;
 
 public enum ParsingState {
-    WAIT_HEADER_TYPE, WAIT_HEADER_LENGTH, WAIT_BODY, WAIT_SYNC, SYNC_UP
+  WAIT_HEADER_TYPE, WAIT_HEADER_LENGTH, WAIT_BODY, WAIT_SYNC, SYNC_UP
 }

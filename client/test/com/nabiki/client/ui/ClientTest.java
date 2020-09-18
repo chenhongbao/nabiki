@@ -51,7 +51,7 @@ public class ClientTest {
       int currentPosition = 0;
 
       private final List<Double> close01 = new LinkedList<>(),
-              close05 = new LinkedList<>();
+          close05 = new LinkedList<>();
 
       private Double average(int m, List<Double> close) {
         var rm = Math.min(m, close.size());
@@ -69,22 +69,22 @@ public class ClientTest {
       private void open(CDepthMarketData depth) throws Exception {
         if (Math.random() > 0.5) {
           var r = orderInsert(
-                  "c2101",
-                  "DCE",
-                  depth.HighestPrice,
-                  1,
-                  DirectionType.DIRECTION_BUY,
-                  CombOffsetFlagType.OFFSET_OPEN);
+              "c2101",
+              "DCE",
+              depth.HighestPrice,
+              1,
+              DirectionType.DIRECTION_BUY,
+              CombOffsetFlagType.OFFSET_OPEN);
           currentPosition += 1;
           getLogger().info("buy open");
         } else {
           var r = orderInsert(
-                  "c2101",
-                  "DCE",
-                  depth.LowestPrice,
-                  1,
-                  DirectionType.DIRECTION_SELL,
-                  CombOffsetFlagType.OFFSET_OPEN);
+              "c2101",
+              "DCE",
+              depth.LowestPrice,
+              1,
+              DirectionType.DIRECTION_SELL,
+              CombOffsetFlagType.OFFSET_OPEN);
           currentPosition -= 1;
           getLogger().info("sell open");
         }
@@ -93,22 +93,22 @@ public class ClientTest {
       private void close(CDepthMarketData depth) throws Exception {
         if (currentPosition > 0) {
           var r = orderInsert(
-                  "c2101",
-                  "DCE",
-                  depth.LowerLimitPrice,
-                  currentPosition,
-                  DirectionType.DIRECTION_SELL,
-                  CombOffsetFlagType.OFFSET_CLOSE);
+              "c2101",
+              "DCE",
+              depth.LowerLimitPrice,
+              currentPosition,
+              DirectionType.DIRECTION_SELL,
+              CombOffsetFlagType.OFFSET_CLOSE);
           currentPosition = 0;
           getLogger().info("sell close");
         } else {
           var r = orderInsert(
-                  "c2101",
-                  "DCE",
-                  depth.UpperLimitPrice,
-                  -currentPosition,
-                  DirectionType.DIRECTION_BUY,
-                  CombOffsetFlagType.OFFSET_CLOSE);
+              "c2101",
+              "DCE",
+              depth.UpperLimitPrice,
+              -currentPosition,
+              DirectionType.DIRECTION_BUY,
+              CombOffsetFlagType.OFFSET_CLOSE);
           currentPosition = 0;
           getLogger().info("buy close");
         }
@@ -186,36 +186,36 @@ public class ClientTest {
             try {
               TimeUnit.SECONDS.sleep(5);
               orderInsert(
-                      "c2101",
-                      "DCE",
-                      2450,
-                      1,
-                      DirectionType.DIRECTION_BUY,
-                      CombOffsetFlagType.OFFSET_OPEN);
+                  "c2101",
+                  "DCE",
+                  2450,
+                  1,
+                  DirectionType.DIRECTION_BUY,
+                  CombOffsetFlagType.OFFSET_OPEN);
               getLogger().info("buy open");
               orderInsert(
-                      "c2101",
-                      "DCE",
-                      2350,
-                      1,
-                      DirectionType.DIRECTION_SELL,
-                      CombOffsetFlagType.OFFSET_CLOSE);
+                  "c2101",
+                  "DCE",
+                  2350,
+                  1,
+                  DirectionType.DIRECTION_SELL,
+                  CombOffsetFlagType.OFFSET_CLOSE);
               getLogger().info("sell close");
               orderInsert(
-                      "c2101",
-                      "DCE",
-                      2350,
-                      1,
-                      DirectionType.DIRECTION_SELL,
-                      CombOffsetFlagType.OFFSET_OPEN);
+                  "c2101",
+                  "DCE",
+                  2350,
+                  1,
+                  DirectionType.DIRECTION_SELL,
+                  CombOffsetFlagType.OFFSET_OPEN);
               getLogger().info("sell open");
               orderInsert(
-                      "c2101",
-                      "DCE",
-                      2450,
-                      1,
-                      DirectionType.DIRECTION_BUY,
-                      CombOffsetFlagType.OFFSET_CLOSE);
+                  "c2101",
+                  "DCE",
+                  2450,
+                  1,
+                  DirectionType.DIRECTION_BUY,
+                  CombOffsetFlagType.OFFSET_CLOSE);
               getLogger().info("buy close");
             } catch (Throwable th) {
               getLogger().warning("can't trade");

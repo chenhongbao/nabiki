@@ -31,11 +31,12 @@ package com.nabiki.iop;
 import com.nabiki.objects.CRspInfo;
 
 public class Message implements java.io.Serializable {
-    public MessageType Type;
-    public Object Body;
-    public CRspInfo RspInfo;
-    public String RequestID, ResponseID;
-    public int CurrentCount, TotalCount;
+  public MessageType Type;
+  public Object Body;
+  public CRspInfo RspInfo;
+  public String RequestID, ResponseID;
+  public int CurrentCount, TotalCount;
 
-    public Message() {}
+  public Message() {
+  }
 }

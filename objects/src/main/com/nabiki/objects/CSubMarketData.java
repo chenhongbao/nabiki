@@ -29,7 +29,8 @@
 package com.nabiki.objects;
 
 public class CSubMarketData implements java.io.Serializable {
-    public String[] InstrumentID;
+  public String[] InstrumentID;
 
-    public CSubMarketData() {}
+  public CSubMarketData() {
+  }
 }

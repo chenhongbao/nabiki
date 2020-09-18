@@ -42,98 +42,99 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 public class RequestExecutor extends RequestSuper {
-    private final Global global;
-    RequestExecutor(Global global) {
-        this.global = global;
-    }
+  private final Global global;
 
-    @Override
-    public void doReqOrderInsert(
-            ServerSession session,
-            CInputOrder request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-        Message rsp = new Message();
-        rsp.Type = MessageType.RSP_REQ_ORDER_INSERT;
-        rsp.RequestID = requestID;
-        rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.CurrentCount = 1;
-        rsp.TotalCount = 1;
-        if (attr == null) {
-            rsp.Body = new COrder();
-            rsp.RspInfo = new CRspInfo();
-            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-            rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
-        } else {
-            var activeUser = (ActiveUser)attr;
-            // Measure performance.
-            var max = this.global.getPerformanceMeasure().start("order.insert.max");
-            var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
-            // Order insert.
-            var uuid = activeUser.insertOrder(request);
-            // End measurement.
-            max.endWithMax();
-            cur.end();
-            // Build response.
-            var o = toRtnOrder(request);
-            var info = activeUser.getExecRsp(uuid);
-            if (info.ErrorID == ErrorCodes.NONE) {
-                o.OrderLocalID = uuid;
-                o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
-                o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
-            } else {
-                o.OrderLocalID = null;
-                o.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
-                o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
-            }
-            o.InsertDate = Utils.getDay(LocalDate.now(), null);
-            o.InsertTime = Utils.getTime(LocalTime.now(), null);
-            rsp.Body = o;
-            rsp.RspInfo = info;
-        }
-        session.sendResponse(rsp);
-        session.done();
-    }
+  RequestExecutor(Global global) {
+    this.global = global;
+  }
 
-    @Override
-    public void doReqOrderAction(
-            ServerSession session,
-            CInputOrderAction request,
-            String requestID,
-            int current,
-            int total) {
-        var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-        Message rsp = new Message();
-        rsp.Type = MessageType.RSP_REQ_ORDER_ACTION;
-        rsp.RequestID = requestID;
-        rsp.ResponseID = UUID.randomUUID().toString();
-        rsp.CurrentCount = 1;
-        rsp.TotalCount = 1;
-        if (attr == null) {
-            rsp.Body = new COrderAction();
-            rsp.RspInfo = new CRspInfo();
-            rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-            rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
-        } else {
-            var activeUser = (ActiveUser)attr;
-            // Measure performance.
-            var max = this.global.getPerformanceMeasure().start("order.insert.max");
-            var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
-            // Order action.
-            var uuid = activeUser.orderAction(request);
-            // End measurement.
-            max.endWithMax();
-            cur.end();
-            // Build response.
-            var o = toOrderAction(request);
-            o.OrderLocalID = request.OrderSysID;
-            o.OrderSysID = null;
-            rsp.Body = o;
-            rsp.RspInfo = activeUser.getExecRsp(uuid);
-        }
-        session.sendResponse(rsp);
-        session.done();
+  @Override
+  public void doReqOrderInsert(
+      ServerSession session,
+      CInputOrder request,
+      String requestID,
+      int current,
+      int total) {
+    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    Message rsp = new Message();
+    rsp.Type = MessageType.RSP_REQ_ORDER_INSERT;
+    rsp.RequestID = requestID;
+    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.CurrentCount = 1;
+    rsp.TotalCount = 1;
+    if (attr == null) {
+      rsp.Body = new COrder();
+      rsp.RspInfo = new CRspInfo();
+      rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
+      rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    } else {
+      var activeUser = (ActiveUser) attr;
+      // Measure performance.
+      var max = this.global.getPerformanceMeasure().start("order.insert.max");
+      var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
+      // Order insert.
+      var uuid = activeUser.insertOrder(request);
+      // End measurement.
+      max.endWithMax();
+      cur.end();
+      // Build response.
+      var o = toRtnOrder(request);
+      var info = activeUser.getExecRsp(uuid);
+      if (info.ErrorID == ErrorCodes.NONE) {
+        o.OrderLocalID = uuid;
+        o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+        o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
+      } else {
+        o.OrderLocalID = null;
+        o.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
+        o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
+      }
+      o.InsertDate = Utils.getDay(LocalDate.now(), null);
+      o.InsertTime = Utils.getTime(LocalTime.now(), null);
+      rsp.Body = o;
+      rsp.RspInfo = info;
     }
+    session.sendResponse(rsp);
+    session.done();
+  }
+
+  @Override
+  public void doReqOrderAction(
+      ServerSession session,
+      CInputOrderAction request,
+      String requestID,
+      int current,
+      int total) {
+    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    Message rsp = new Message();
+    rsp.Type = MessageType.RSP_REQ_ORDER_ACTION;
+    rsp.RequestID = requestID;
+    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.CurrentCount = 1;
+    rsp.TotalCount = 1;
+    if (attr == null) {
+      rsp.Body = new COrderAction();
+      rsp.RspInfo = new CRspInfo();
+      rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
+      rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    } else {
+      var activeUser = (ActiveUser) attr;
+      // Measure performance.
+      var max = this.global.getPerformanceMeasure().start("order.insert.max");
+      var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
+      // Order action.
+      var uuid = activeUser.orderAction(request);
+      // End measurement.
+      max.endWithMax();
+      cur.end();
+      // Build response.
+      var o = toOrderAction(request);
+      o.OrderLocalID = request.OrderSysID;
+      o.OrderSysID = null;
+      rsp.Body = o;
+      rsp.RspInfo = activeUser.getExecRsp(uuid);
+    }
+    session.sendResponse(rsp);
+    session.done();
+  }
 }

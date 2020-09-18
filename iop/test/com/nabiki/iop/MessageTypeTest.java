@@ -32,13 +32,13 @@ import org.junit.Test;
 
 public class MessageTypeTest {
 
-    @Test
-    public void generate() {
-        String str = "";
-        for (var type : MessageType.values())
-            str += "#define MESSAGE_" + type + " _str(" + type + ")" + System.lineSeparator();
+  @Test
+  public void generate() {
+    String str = "";
+    for (var type : MessageType.values())
+      str += "#define MESSAGE_" + type + " _str(" + type + ")" + System.lineSeparator();
 
-        System.out.println(str);
-    }
+    System.out.println(str);
+  }
 
 }

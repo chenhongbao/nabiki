@@ -52,11 +52,11 @@ public class TickProvider implements Connectable {
   protected final CandleEngine engine;
   protected final ReqRspWriter msgWriter;
   protected final Set<String> toSubscribe = new HashSet<>(),
-    subscribed = new HashSet<>();
+      subscribed = new HashSet<>();
   protected ExecutorService es = Executors.newCachedThreadPool();
 
   protected boolean isConnected = false,
-    isLogin = false;
+      isLogin = false;
   protected WorkingState workingState = WorkingState.STOPPED;
 
   // Login signal.
@@ -158,9 +158,9 @@ public class TickProvider implements Connectable {
          C++ objects.
          */
     this.api = CThostFtdcMdApi.CreateFtdcMdApi(
-      this.loginCfg.FlowDirectory,
-      this.loginCfg.IsUsingUDP,
-      this.loginCfg.IsMulticast);
+        this.loginCfg.FlowDirectory,
+        this.loginCfg.IsUsingUDP,
+        this.loginCfg.IsMulticast);
     this.spi = new JniMdSpi(this);
     this.api.RegisterSpi(spi);
     for (var addr : this.loginCfg.FrontAddresses)
@@ -240,12 +240,12 @@ public class TickProvider implements Connectable {
     req.UserID = this.loginCfg.UserID;
     req.Password = this.loginCfg.Password;
     var r = this.api.ReqUserLogin(
-      JNI.toJni(req),
-      Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-        Utils.formatLog("failed login request", null,
-          null, r));
+          Utils.formatLog("failed login request", null,
+              null, r));
   }
 
   private void doLogout() {
@@ -253,17 +253,17 @@ public class TickProvider implements Connectable {
     req.BrokerID = this.loginCfg.BrokerID;
     req.UserID = this.loginCfg.UserID;
     var r = this.api.ReqUserLogout(
-      JNI.toJni(req),
-      Utils.getIncrementID());
+        JNI.toJni(req),
+        Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().warning(
-        Utils.formatLog("failed logout request", null,
-          null, r));
+          Utils.formatLog("failed logout request", null,
+              null, r));
   }
 
   private boolean isTrading(String instrumentID) {
     var keeper = this.global.getTradingHour(
-      null, instrumentID);
+        null, instrumentID);
     return keeper != null && keeper.contains(LocalTime.now());
   }
 
@@ -271,7 +271,7 @@ public class TickProvider implements Connectable {
     this.isConnected = true;
     this.stateSignal.signal();
     if (this.workingState == WorkingState.STARTING
-      || this.workingState == WorkingState.STARTED) {
+        || this.workingState == WorkingState.STARTED) {
       doLogin();
       this.global.getLogger().info("md reconnected");
     } else
@@ -288,8 +288,8 @@ public class TickProvider implements Connectable {
                            boolean isLast) {
     this.msgWriter.writeErr(rspInfo);
     this.global.getLogger().severe(
-      Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
-        rspInfo.ErrorID));
+        Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
+            rspInfo.ErrorID));
   }
 
   public void whenRspUserLogin(CRspUserLogin rspUserLogin,
@@ -318,8 +318,8 @@ public class TickProvider implements Connectable {
       });
     } else {
       this.global.getLogger().severe(
-        Utils.formatLog("md failed login", null,
-          rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("md failed login", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
   }
@@ -337,8 +337,8 @@ public class TickProvider implements Connectable {
       this.toSubscribe.clear();
     } else {
       this.global.getLogger().warning(
-        Utils.formatLog("failed logout", null,
-          rspInfo.ErrorMsg, rspInfo.ErrorID));
+          Utils.formatLog("failed logout", null,
+              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
   }
@@ -346,7 +346,7 @@ public class TickProvider implements Connectable {
   public void checkSubscription() {
     if (this.subscribed.size() == this.toSubscribe.size())
       this.global.getLogger().info(
-        "subscribe all " + this.toSubscribe.size() + "instruments");
+          "subscribe all " + this.toSubscribe.size() + "instruments");
     else {
       var r = new HashSet<String>();
       for (var in0 : this.toSubscribe) {
@@ -370,12 +370,12 @@ public class TickProvider implements Connectable {
   }
 
   public void whenRspSubMarketData(
-    CSpecificInstrument specificInstrument,
-    CRspInfo rspInfo, int requestId, boolean isLast) {
+      CSpecificInstrument specificInstrument,
+      CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID != 0) {
       this.global.getLogger().warning(Utils.formatLog(
-        "failed subscription", specificInstrument.InstrumentID,
-        rspInfo.ErrorMsg, rspInfo.ErrorID));
+          "failed subscription", specificInstrument.InstrumentID,
+          rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     } else {
       this.subscribed.add(specificInstrument.InstrumentID);
@@ -383,12 +383,12 @@ public class TickProvider implements Connectable {
   }
 
   public void whenRspUnSubMarketData(
-    CSpecificInstrument specificInstrument,
-    CRspInfo rspInfo, int nRequestID, boolean isLast) {
+      CSpecificInstrument specificInstrument,
+      CRspInfo rspInfo, int nRequestID, boolean isLast) {
     if (rspInfo.ErrorID != 0) {
       this.global.getLogger().warning(Utils.formatLog(
-        "failed un-subscription", specificInstrument.InstrumentID,
-        rspInfo.ErrorMsg, rspInfo.ErrorID));
+          "failed un-subscription", specificInstrument.InstrumentID,
+          rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
   }

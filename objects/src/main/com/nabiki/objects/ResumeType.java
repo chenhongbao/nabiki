@@ -29,7 +29,7 @@
 package com.nabiki.objects;
 
 public class ResumeType {
-    public static final int THOST_TERT_RESTART = 0;
-    public static final int THOST_TERT_RESUME = 1;
-    public static final int THOST_TERT_QUICK = 2;
+  public static final int THOST_TERT_RESTART = 0;
+  public static final int THOST_TERT_RESUME = 1;
+  public static final int THOST_TERT_QUICK = 2;
 }

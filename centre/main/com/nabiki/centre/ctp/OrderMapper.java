@@ -41,98 +41,98 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OrderMapper {
-    private final Map<String, ActiveRequest>
-            ref2req = new ConcurrentHashMap<>(); // ref -> active order
-    private final Map<String, ActiveRequest>
-            uid2req = new ConcurrentHashMap<>();   // UUID -> active order
-    private final Map<String, Set<String>>
-            uid2ref = new ConcurrentHashMap<>();     // UUID -> ref
-    private final Map<String, COrder>
-            detRef2Rtn = new ConcurrentHashMap<>();   // ref -> rtn order
-    private final Map<String, CInputOrder>
-            ref2input = new ConcurrentHashMap<>();   // ref -> input order
+  private final Map<String, ActiveRequest>
+      ref2req = new ConcurrentHashMap<>(); // ref -> active order
+  private final Map<String, ActiveRequest>
+      uid2req = new ConcurrentHashMap<>();   // UUID -> active order
+  private final Map<String, Set<String>>
+      uid2ref = new ConcurrentHashMap<>();     // UUID -> ref
+  private final Map<String, COrder>
+      detRef2Rtn = new ConcurrentHashMap<>();   // ref -> rtn order
+  private final Map<String, CInputOrder>
+      ref2input = new ConcurrentHashMap<>();   // ref -> input order
 
-    public OrderMapper() {
-    }
+  public OrderMapper() {
+  }
 
-    public void settle() {
-        // Change unfilled orders' states.
-        for (var o : detRef2Rtn.values()) {
-            switch (o.OrderStatus) {
-                case OrderStatusType.PART_TRADED_QUEUEING:
-                    o.OrderStatus = OrderStatusType.PART_TRADED_NOT_QUEUEING;
-                    break;
-                case OrderStatusType.NO_TRADE_QUEUEING:
-                case OrderStatusType.NOT_TOUCHED:
-                case OrderStatusType.TOUCHED:
-                case OrderStatusType.UNKNOWN:
-                    o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
-                    break;
-            }
-        }
+  public void settle() {
+    // Change unfilled orders' states.
+    for (var o : detRef2Rtn.values()) {
+      switch (o.OrderStatus) {
+        case OrderStatusType.PART_TRADED_QUEUEING:
+          o.OrderStatus = OrderStatusType.PART_TRADED_NOT_QUEUEING;
+          break;
+        case OrderStatusType.NO_TRADE_QUEUEING:
+        case OrderStatusType.NOT_TOUCHED:
+        case OrderStatusType.TOUCHED:
+        case OrderStatusType.UNKNOWN:
+          o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
+          break;
+      }
     }
+  }
 
-    /**
-     * Register the detailed order and active order, and create mappings.
-     *
-     * @param order detailed order
-     * @param active active order that issues the detailed order
-     */
-    public void register(CInputOrder order, ActiveRequest active) {
-        this.ref2req.put(order.OrderRef, active);
-        this.uid2req.put(active.getRequestUUID(), active);
-        this.uid2ref.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
-        this.uid2ref.get(active.getRequestUUID()).add(order.OrderRef);
-        this.ref2input.put(order.OrderRef, order);
-    }
+  /**
+   * Register the detailed order and active order, and create mappings.
+   *
+   * @param order  detailed order
+   * @param active active order that issues the detailed order
+   */
+  public void register(CInputOrder order, ActiveRequest active) {
+    this.ref2req.put(order.OrderRef, active);
+    this.uid2req.put(active.getRequestUUID(), active);
+    this.uid2ref.computeIfAbsent(active.getRequestUUID(), k -> new HashSet<>());
+    this.uid2ref.get(active.getRequestUUID()).add(order.OrderRef);
+    this.ref2input.put(order.OrderRef, order);
+  }
 
-    /**
-     * Register return order and create mapping.
-     *
-     * @param rtn return order
-     */
-    public void register(COrder rtn) {
-        this.detRef2Rtn.put(rtn.OrderRef, rtn);
-    }
+  /**
+   * Register return order and create mapping.
+   *
+   * @param rtn return order
+   */
+  public void register(COrder rtn) {
+    this.detRef2Rtn.put(rtn.OrderRef, rtn);
+  }
 
-    /**
-     * Get the specified return order of the detail ref. If no order has the UUID,
-     * return {@code null}.
-     *
-     * @param detailRef ref of the order
-     * @return last updated return order, or {@code null} if no order has the UUID
-     */
-    public COrder getRtnOrder(String detailRef) {
-        return this.detRef2Rtn.get(detailRef);
-    }
+  /**
+   * Get the specified return order of the detail ref. If no order has the UUID,
+   * return {@code null}.
+   *
+   * @param detailRef ref of the order
+   * @return last updated return order, or {@code null} if no order has the UUID
+   */
+  public COrder getRtnOrder(String detailRef) {
+    return this.detRef2Rtn.get(detailRef);
+  }
 
-    /**
-     * Get all detail order refs under the specified {@link UUID}. If no mapping
-     * found, return an empty set.
-     *
-     * @param uuid UUID of the alive order that issues the detail orders
-     * @return {@link Set} of detail order refs
-     */
-    public Set<String> getOrderRef(String uuid) {
-        return Utils.deepCopy(this.uid2ref.get(uuid));
-    }
+  /**
+   * Get all detail order refs under the specified {@link UUID}. If no mapping
+   * found, return an empty set.
+   *
+   * @param uuid UUID of the alive order that issues the detail orders
+   * @return {@link Set} of detail order refs
+   */
+  public Set<String> getOrderRef(String uuid) {
+    return Utils.deepCopy(this.uid2ref.get(uuid));
+  }
 
-    /**
-     * Get detail order of the specified detail ref. If no mapping found, return
-     * {@code null}.
-     *
-     * @param ref detail order reference
-     * @return detail order, or {@code null} if no such ref
-     */
-    public CInputOrder getInputOrder(String ref) {
-        return this.ref2input.get(ref);
-    }
+  /**
+   * Get detail order of the specified detail ref. If no mapping found, return
+   * {@code null}.
+   *
+   * @param ref detail order reference
+   * @return detail order, or {@code null} if no such ref
+   */
+  public CInputOrder getInputOrder(String ref) {
+    return this.ref2input.get(ref);
+  }
 
-    /*
-    Get alive order that issued the detail order with the specified detail order
-    reference.
-     */
-    public ActiveRequest getActiveRequest(String detailRef) {
-        return this.ref2req.get(detailRef);
-    }
+  /*
+  Get alive order that issued the detail order with the specified detail order
+  reference.
+   */
+  public ActiveRequest getActiveRequest(String detailRef) {
+    return this.ref2req.get(detailRef);
+  }
 }

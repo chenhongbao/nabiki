@@ -37,26 +37,26 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import java.util.UUID;
 
 class FrameDecoder extends CumulativeProtocolDecoder {
-    private static final String PARSER_ATTR = UUID.randomUUID().toString();
+  private static final String PARSER_ATTR = UUID.randomUUID().toString();
 
-    @Override
-    protected boolean doDecode(IoSession session, IoBuffer in,
-                               ProtocolDecoderOutput out) throws Exception {
-        // Get frame parser for this session.
-        FrameParser parser = (FrameParser)session.getAttribute(PARSER_ATTR);
-        if (parser == null) {
-            parser = new FrameParser();
-            session.setAttribute(PARSER_ATTR, parser);
-        }
-        // Read bytes.
-        byte[] bytes = new byte[in.remaining()];
-        in.get(bytes);
-        // Parse.
-        boolean r = parser.parse(bytes);
-        if (r) {
-            while (parser.size() > 0)
-                out.write(parser.poll());
-        }
-        return false;
+  @Override
+  protected boolean doDecode(IoSession session, IoBuffer in,
+                             ProtocolDecoderOutput out) throws Exception {
+    // Get frame parser for this session.
+    FrameParser parser = (FrameParser) session.getAttribute(PARSER_ATTR);
+    if (parser == null) {
+      parser = new FrameParser();
+      session.setAttribute(PARSER_ATTR, parser);
     }
+    // Read bytes.
+    byte[] bytes = new byte[in.remaining()];
+    in.get(bytes);
+    // Parse.
+    boolean r = parser.parse(bytes);
+    if (r) {
+      while (parser.size() > 0)
+        out.write(parser.poll());
+    }
+    return false;
+  }
 }

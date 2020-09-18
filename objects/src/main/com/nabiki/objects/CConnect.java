@@ -31,5 +31,6 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CConnect implements Serializable {
-    public CConnect() {}
+  public CConnect() {
+  }
 }

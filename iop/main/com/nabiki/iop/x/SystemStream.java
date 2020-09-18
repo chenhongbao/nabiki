@@ -37,120 +37,120 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class SystemStream extends PrintStream {
-    private static final DateTimeFormatter formatter
-            = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ");
+  private static final DateTimeFormatter formatter
+      = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ");
 
-    private SystemStream(OutputStream out, boolean autoFlush,
-                         Charset charset) {
-        super(out, autoFlush, charset);
-    }
+  private SystemStream(OutputStream out, boolean autoFlush,
+                       Charset charset) {
+    super(out, autoFlush, charset);
+  }
 
-    public static void setErr(String filepath)
-            throws IOException {
-        setErr(Path.of(filepath));
-    }
+  public static void setErr(String filepath)
+      throws IOException {
+    setErr(Path.of(filepath));
+  }
 
-    public static void setErr(Path path)
-            throws IOException {
-        setErr(path.toFile());
-    }
+  public static void setErr(Path path)
+      throws IOException {
+    setErr(path.toFile());
+  }
 
-    public static void setErr(File file)
-            throws IOException {
-        ensure(file);
-        System.setErr(new SystemStream(new FileOutputStream(file, true),
-                true, StandardCharsets.UTF_8));
-    }
+  public static void setErr(File file)
+      throws IOException {
+    ensure(file);
+    System.setErr(new SystemStream(new FileOutputStream(file, true),
+        true, StandardCharsets.UTF_8));
+  }
 
-    public static void setOut(String filepath)
-            throws IOException {
-        setOut(Path.of(filepath));
-    }
+  public static void setOut(String filepath)
+      throws IOException {
+    setOut(Path.of(filepath));
+  }
 
-    public static void setOut(Path path)
-            throws IOException {
-        setOut(path.toFile());
-    }
+  public static void setOut(Path path)
+      throws IOException {
+    setOut(path.toFile());
+  }
 
-    public static void setOut(File file)
-            throws IOException {
-        ensure(file);
-        System.setOut(new SystemStream(new FileOutputStream(file, true),
-                true, StandardCharsets.UTF_8));
-    }
+  public static void setOut(File file)
+      throws IOException {
+    ensure(file);
+    System.setOut(new SystemStream(new FileOutputStream(file, true),
+        true, StandardCharsets.UTF_8));
+  }
 
-    private static void ensure(File file) throws IOException {
-        if (!file.exists()) {
-            ensureDir(file.getParent());
-            file.createNewFile();
-        }
+  private static void ensure(File file) throws IOException {
+    if (!file.exists()) {
+      ensureDir(file.getParent());
+      file.createNewFile();
     }
+  }
 
-    private static void ensureDir(String dir) throws IOException {
-        if (dir == null || dir.trim().length() == 0)
-            return;
-        var parent = Path.of(dir);
-        if (!Files.exists(parent))
-            Files.createDirectories(parent);
-    }
+  private static void ensureDir(String dir) throws IOException {
+    if (dir == null || dir.trim().length() == 0)
+      return;
+    var parent = Path.of(dir);
+    if (!Files.exists(parent))
+      Files.createDirectories(parent);
+  }
 
-    private static String format(LocalDateTime timeStamp) {
-        if (timeStamp == null)
-            timeStamp = LocalDateTime.now();
-        return timeStamp.format(formatter);
-    }
+  private static String format(LocalDateTime timeStamp) {
+    if (timeStamp == null)
+      timeStamp = LocalDateTime.now();
+    return timeStamp.format(formatter);
+  }
 
-    @Override
-    public void println(boolean x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(boolean x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(char x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(char x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(int x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(int x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(long x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(long x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(float x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(float x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(double x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(double x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(char[] x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(char[] x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(String x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(String x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 
-    @Override
-    public void println(Object x) {
-        super.print(format(LocalDateTime.now()));
-        super.println(x);
-    }
+  @Override
+  public void println(Object x) {
+    super.print(format(LocalDateTime.now()));
+    super.println(x);
+  }
 }

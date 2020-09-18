@@ -29,9 +29,10 @@
 package com.nabiki.iop.frame;
 
 public class Frame implements java.io.Serializable {
-    public int Type;
-    public int Length;
-    public byte[] Body;
+  public int Type;
+  public int Length;
+  public byte[] Body;
 
-    public Frame() {}
+  public Frame() {
+  }
 }

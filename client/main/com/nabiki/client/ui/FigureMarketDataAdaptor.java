@@ -32,41 +32,41 @@ import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
 
 public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
-    private final AbstractFigure figure;
+  private final AbstractFigure figure;
 
-    FigureMarketDataAdaptor(MarketDataHandler handler, AbstractFigure figure) {
-        super(handler);
-        this.figure = figure;
+  FigureMarketDataAdaptor(MarketDataHandler handler, AbstractFigure figure) {
+    super(handler);
+    this.figure = figure;
+  }
+
+  @Override
+  public void onDepthMarketData(CDepthMarketData depth) {
+    try {
+      super.onDepthMarketData(depth);
+    } catch (Throwable th) {
+      th.printStackTrace();
     }
+  }
 
-    @Override
-    public void onDepthMarketData(CDepthMarketData depth) {
-        try {
-            super.onDepthMarketData(depth);
-        } catch (Throwable th) {
-            th.printStackTrace();
+  @Override
+  public void onCandle(CCandle candle) {
+    try {
+      for (var fid : figure.getFigureID()) {
+        if (figure.getBoundInstrumentID(fid).compareTo(candle.InstrumentID) == 0
+            && figure.getBoundMinute(fid) == candle.Minute) {
+          figure.stick(fid,
+              candle.OpenPrice,
+              candle.HighestPrice,
+              candle.LowestPrice,
+              candle.ClosePrice,
+              candle.EndTime);
         }
+      }
+      super.onCandle(candle);
+      for (var fid : figure.getFigureID())
+        figure.update(fid);
+    } catch (Throwable th) {
+      th.printStackTrace();
     }
-
-    @Override
-    public void onCandle(CCandle candle) {
-        try {
-            for (var fid : figure.getFigureID()) {
-                if (figure.getBoundInstrumentID(fid).compareTo(candle.InstrumentID) == 0
-                        && figure.getBoundMinute(fid) == candle.Minute) {
-                    figure.stick(fid,
-                            candle.OpenPrice,
-                            candle.HighestPrice,
-                            candle.LowestPrice,
-                            candle.ClosePrice,
-                            candle.EndTime);
-                }
-            }
-            super.onCandle(candle);
-            for (var fid : figure.getFigureID())
-                figure.update(fid);
-        } catch (Throwable th) {
-            th.printStackTrace();
-        }
-    }
+  }
 }

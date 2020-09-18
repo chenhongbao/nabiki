@@ -31,15 +31,16 @@ package com.nabiki.centre.user.auth;
 import java.util.List;
 
 public class UserAuthProfile {
-    public static class InstrumentAuth {
-        public String InstrumentID;
-        public OrderOffset AllowOffset;
-    }
+  public static class InstrumentAuth {
+    public String InstrumentID;
+    public OrderOffset AllowOffset;
+  }
 
-    public String UserID;
-    public String Password;
-    public boolean CanLogin;
-    public List<InstrumentAuth> InstrumentAuths;
+  public String UserID;
+  public String Password;
+  public boolean CanLogin;
+  public List<InstrumentAuth> InstrumentAuths;
 
-    public UserAuthProfile() {}
+  public UserAuthProfile() {
+  }
 }

@@ -38,32 +38,32 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 public interface Trader {
-    void setUser(String userID, String password);
+  void setUser(String userID, String password);
 
-    String getUserID();
+  String getUserID();
 
-    String getPassword();
+  String getPassword();
 
-    void subscribe(String instrument, int... minutes);
+  void subscribe(String instrument, int... minutes);
 
-    Collection<String> getSubscribe();
+  Collection<String> getSubscribe();
 
-    Response<COrder> orderInsert(
-            String instrumentID, String exchangeID, double price, int volume,
-            char direction, char offset) throws Exception;
+  Response<COrder> orderInsert(
+      String instrumentID, String exchangeID, double price, int volume,
+      char direction, char offset) throws Exception;
 
-    Response<CInvestorPosition> getPosition() throws Exception;
+  Response<CInvestorPosition> getPosition() throws Exception;
 
-    Response<CInvestorPosition> getPosition(
-            String instrumentID, String exchangeID) throws Exception;
+  Response<CInvestorPosition> getPosition(
+      String instrumentID, String exchangeID) throws Exception;
 
-    Response<CTradingAccount> getAccount() throws Exception;
+  Response<CTradingAccount> getAccount() throws Exception;
 
-    Logger getLogger();
+  Logger getLogger();
 
-    TradeClient getClient();
+  TradeClient getClient();
 
-    void setClient(TradeClient client);
+  void setClient(TradeClient client);
 
-    void stop();
+  void stop();
 }

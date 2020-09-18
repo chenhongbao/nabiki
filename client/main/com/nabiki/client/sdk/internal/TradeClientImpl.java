@@ -40,214 +40,214 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 class TradeClientImpl implements TradeClient {
-    private final IOPClient client = IOP.createClient();
-    private final TradeClientAdaptor clientAdaptor = new TradeClientAdaptor();
-    private final TradeClientSessionAdaptor sessionAdaptor
-            = new TradeClientSessionAdaptor();
+  private final IOPClient client = IOP.createClient();
+  private final TradeClientAdaptor clientAdaptor = new TradeClientAdaptor();
+  private final TradeClientSessionAdaptor sessionAdaptor
+      = new TradeClientSessionAdaptor();
 
-    private CReqUserLogin lastLoginReq;
+  private CReqUserLogin lastLoginReq;
 
-    public TradeClientImpl() {
-    }
+  public TradeClientImpl() {
+  }
 
-    private ClientSession getSession() {
-        var session = this.client.getSession();
-        if (session == null || session.isClosed())
-            throw new IllegalStateException("session closed");
-        else
-            return session;
-    }
+  private ClientSession getSession() {
+    var session = this.client.getSession();
+    if (session == null || session.isClosed())
+      throw new IllegalStateException("session closed");
+    else
+      return session;
+  }
 
-    private <T> Message toMessage(MessageType type, T object, String requestID) {
-        Objects.requireNonNull(object, "request null");
-        Objects.requireNonNull(requestID, "request ID null");
-        var message = new Message();
-        message.Type = type;
-        message.Body = object;
-        message.RequestID = requestID;
-        message.CurrentCount = 1;
-        message.TotalCount = 1;
-        return message;
-    }
+  private <T> Message toMessage(MessageType type, T object, String requestID) {
+    Objects.requireNonNull(object, "request null");
+    Objects.requireNonNull(requestID, "request ID null");
+    var message = new Message();
+    message.Type = type;
+    message.Body = object;
+    message.RequestID = requestID;
+    message.CurrentCount = 1;
+    message.TotalCount = 1;
+    return message;
+  }
 
-    private <T, V> Response<T> send(
-            MessageType type,
-            V request,
-            String requestID,
-            Class<T> clz) throws InterruptedException {
-        var rsp = new ResponseImpl<T>();
-        this.clientAdaptor.setResponse(rsp, requestID);
-        getSession().sendRequest(toMessage(type, request, requestID));
-        return rsp;
-    }
+  private <T, V> Response<T> send(
+      MessageType type,
+      V request,
+      String requestID,
+      Class<T> clz) throws InterruptedException {
+    var rsp = new ResponseImpl<T>();
+    this.clientAdaptor.setResponse(rsp, requestID);
+    getSession().sendRequest(toMessage(type, request, requestID));
+    return rsp;
+  }
 
-    private void requireLogin() {
-        if (lastLoginReq == null)
-            throw new NullPointerException("need login");
-    }
+  private void requireLogin() {
+    if (lastLoginReq == null)
+      throw new NullPointerException("need login");
+  }
 
-    @Override
-    public Response<CRspUserLogin> login(
-            CReqUserLogin request, String requestID) {
-        var rsp = new ResponseImpl<CRspUserLogin>();
-        this.clientAdaptor.setResponse(rsp, requestID);
-        getSession().sendLogin(
-                toMessage(MessageType.REQ_LOGIN, request, requestID));
-        // Preserve login request.
-        this.lastLoginReq = request;
-        return rsp;
-    }
+  @Override
+  public Response<CRspUserLogin> login(
+      CReqUserLogin request, String requestID) {
+    var rsp = new ResponseImpl<CRspUserLogin>();
+    this.clientAdaptor.setResponse(rsp, requestID);
+    getSession().sendLogin(
+        toMessage(MessageType.REQ_LOGIN, request, requestID));
+    // Preserve login request.
+    this.lastLoginReq = request;
+    return rsp;
+  }
 
-    @Override
-    public void setListener(TradeClientListener listener) {
-        if (listener != null)
-            this.sessionAdaptor.setListener(listener);
-    }
+  @Override
+  public void setListener(TradeClientListener listener) {
+    if (listener != null)
+      this.sessionAdaptor.setListener(listener);
+  }
 
-    @Override
-    public void setListener(MarketDataListener listener) {
-        if (listener != null)
-            this.clientAdaptor.setListener(listener);
-    }
+  @Override
+  public void setListener(MarketDataListener listener) {
+    if (listener != null)
+      this.clientAdaptor.setListener(listener);
+  }
 
-    @Override
-    public void open(InetSocketAddress address) throws IOException {
-        this.client.setMessageAdaptor(this.clientAdaptor);
-        this.client.setSessionAdaptor(this.sessionAdaptor);
-        this.client.connect(address);
-    }
+  @Override
+  public void open(InetSocketAddress address) throws IOException {
+    this.client.setMessageAdaptor(this.clientAdaptor);
+    this.client.setSessionAdaptor(this.sessionAdaptor);
+    this.client.connect(address);
+  }
 
-    @Override
-    public void close() {
-        this.client.disconnect();
-    }
+  @Override
+  public void close() {
+    this.client.disconnect();
+  }
 
-    @Override
-    public boolean isClosed() {
-        return !this.client.isConnected();
-    }
+  @Override
+  public boolean isClosed() {
+    return !this.client.isConnected();
+  }
 
-    @Override
-    public String getTradingDay() {
-        return this.clientAdaptor.getTradingDay();
-    }
+  @Override
+  public String getTradingDay() {
+    return this.clientAdaptor.getTradingDay();
+  }
 
-    @Override
-    public Response<COrder> orderInsert(
-            CInputOrder order, String requestID) throws Exception {
-        requireLogin();
-        order.InvestorID
-                = order.UserID
-                = order.AccountID
-                = this.lastLoginReq.UserID;
-        order.BrokerID = this.lastLoginReq.BrokerID;
-        return send(
-                MessageType.REQ_ORDER_INSERT,
-                order,
-                requestID,
-                COrder.class);
-    }
+  @Override
+  public Response<COrder> orderInsert(
+      CInputOrder order, String requestID) throws Exception {
+    requireLogin();
+    order.InvestorID
+        = order.UserID
+        = order.AccountID
+        = this.lastLoginReq.UserID;
+    order.BrokerID = this.lastLoginReq.BrokerID;
+    return send(
+        MessageType.REQ_ORDER_INSERT,
+        order,
+        requestID,
+        COrder.class);
+  }
 
-    @Override
-    public Response<COrderAction> orderAction(
-            CInputOrderAction action, String requestID) throws Exception {
-        requireLogin();
-        action.InvestorID
-                = action.UserID
-                = this.lastLoginReq.UserID;
-        action.BrokerID = this.lastLoginReq.BrokerID;
-        return send(
-                MessageType.REQ_ORDER_ACTION,
-                action,
-                requestID,
-                COrderAction.class);
-    }
+  @Override
+  public Response<COrderAction> orderAction(
+      CInputOrderAction action, String requestID) throws Exception {
+    requireLogin();
+    action.InvestorID
+        = action.UserID
+        = this.lastLoginReq.UserID;
+    action.BrokerID = this.lastLoginReq.BrokerID;
+    return send(
+        MessageType.REQ_ORDER_ACTION,
+        action,
+        requestID,
+        COrderAction.class);
+  }
 
-    @Override
-    public Response<CDepthMarketData> queryDepthMarketData(
-            CQryDepthMarketData query, String requestID) throws Exception {
-        requireLogin();
-        return send(
-                MessageType.QRY_MD,
-                query,
-                requestID,
-                CDepthMarketData.class);
-    }
+  @Override
+  public Response<CDepthMarketData> queryDepthMarketData(
+      CQryDepthMarketData query, String requestID) throws Exception {
+    requireLogin();
+    return send(
+        MessageType.QRY_MD,
+        query,
+        requestID,
+        CDepthMarketData.class);
+  }
 
-    @Override
-    public Response<CInvestorPosition> queryPosition(
-            CQryInvestorPosition query, String requestID) throws Exception {
-        requireLogin();
-        query.InvestorID = this.lastLoginReq.UserID;
-        query.BrokerID = this.lastLoginReq.BrokerID;
-        return send(
-                MessageType.QRY_POSITION,
-                query,
-                requestID,
-                CInvestorPosition.class);
-    }
+  @Override
+  public Response<CInvestorPosition> queryPosition(
+      CQryInvestorPosition query, String requestID) throws Exception {
+    requireLogin();
+    query.InvestorID = this.lastLoginReq.UserID;
+    query.BrokerID = this.lastLoginReq.BrokerID;
+    return send(
+        MessageType.QRY_POSITION,
+        query,
+        requestID,
+        CInvestorPosition.class);
+  }
 
-    @Override
-    public Response<CInvestorPositionDetail> queryPositionDetail(
-            CQryInvestorPositionDetail query, String requestID) throws Exception {
-        requireLogin();
-        query.InvestorID = this.lastLoginReq.UserID;
-        query.BrokerID = this.lastLoginReq.BrokerID;
-        return send(
-                MessageType.QRY_POSI_DETAIL,
-                query,
-                requestID,
-                CInvestorPositionDetail.class);
-    }
+  @Override
+  public Response<CInvestorPositionDetail> queryPositionDetail(
+      CQryInvestorPositionDetail query, String requestID) throws Exception {
+    requireLogin();
+    query.InvestorID = this.lastLoginReq.UserID;
+    query.BrokerID = this.lastLoginReq.BrokerID;
+    return send(
+        MessageType.QRY_POSI_DETAIL,
+        query,
+        requestID,
+        CInvestorPositionDetail.class);
+  }
 
-    @Override
-    public Response<CTradingAccount> queryAccount(
-            CQryTradingAccount query, String requestID) throws Exception {
-        requireLogin();
-        query.InvestorID
-                = query.AccountID
-                = this.lastLoginReq.UserID;
-        query.BrokerID = this.lastLoginReq.BrokerID;
-        query.CurrencyID = "CNY";
-        return send(
-                MessageType.QRY_ACCOUNT,
-                query,
-                requestID,
-                CTradingAccount.class);
-    }
+  @Override
+  public Response<CTradingAccount> queryAccount(
+      CQryTradingAccount query, String requestID) throws Exception {
+    requireLogin();
+    query.InvestorID
+        = query.AccountID
+        = this.lastLoginReq.UserID;
+    query.BrokerID = this.lastLoginReq.BrokerID;
+    query.CurrencyID = "CNY";
+    return send(
+        MessageType.QRY_ACCOUNT,
+        query,
+        requestID,
+        CTradingAccount.class);
+  }
 
-    @Override
-    public Response<COrder> queryOrder(
-            CQryOrder query, String requestID) throws Exception {
-        requireLogin();
-        query.InvestorID = this.lastLoginReq.UserID;
-        query.BrokerID = this.lastLoginReq.BrokerID;
-        return send(
-                MessageType.QRY_ORDER,
-                query,
-                requestID,
-                COrder.class);
-    }
+  @Override
+  public Response<COrder> queryOrder(
+      CQryOrder query, String requestID) throws Exception {
+    requireLogin();
+    query.InvestorID = this.lastLoginReq.UserID;
+    query.BrokerID = this.lastLoginReq.BrokerID;
+    return send(
+        MessageType.QRY_ORDER,
+        query,
+        requestID,
+        COrder.class);
+  }
 
-    @Override
-    public Response<CSpecificInstrument> subscribeMarketData(
-            CSubMarketData subscription, String requestID) throws Exception {
-        requireLogin();
-        return send(
-                MessageType.SUB_MD,
-                subscription,
-                requestID,
-                CSpecificInstrument.class);
-    }
+  @Override
+  public Response<CSpecificInstrument> subscribeMarketData(
+      CSubMarketData subscription, String requestID) throws Exception {
+    requireLogin();
+    return send(
+        MessageType.SUB_MD,
+        subscription,
+        requestID,
+        CSpecificInstrument.class);
+  }
 
-    @Override
-    public Response<CSpecificInstrument> unSubscribeMarketData(
-            CUnsubMarketData subscription, String requestID) throws Exception {
-        requireLogin();
-        return send(
-                MessageType.UNSUB_MD,
-                subscription,
-                requestID,
-                CSpecificInstrument.class);
-    }
+  @Override
+  public Response<CSpecificInstrument> unSubscribeMarketData(
+      CUnsubMarketData subscription, String requestID) throws Exception {
+    requireLogin();
+    return send(
+        MessageType.UNSUB_MD,
+        subscription,
+        requestID,
+        CSpecificInstrument.class);
+  }
 }

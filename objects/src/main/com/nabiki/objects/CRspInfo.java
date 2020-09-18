@@ -31,9 +31,9 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CRspInfo implements Serializable {
-	public int ErrorID;
-	public String ErrorMsg;
+  public int ErrorID;
+  public String ErrorMsg;
 
-	public CRspInfo() {
-	}
+  public CRspInfo() {
+  }
 }

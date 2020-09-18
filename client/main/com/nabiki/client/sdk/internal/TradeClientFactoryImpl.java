@@ -32,25 +32,25 @@ import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.TradeClientFactory;
 
 public class TradeClientFactoryImpl
-        extends ServiceCounter implements TradeClientFactory {
-    @Override
-    public TradeClient get() {
-        var r = new TradeClientImpl();
-        super.add(r);
-        return r;
-    }
+    extends ServiceCounter implements TradeClientFactory {
+  @Override
+  public TradeClient get() {
+    var r = new TradeClientImpl();
+    super.add(r);
+    return r;
+  }
 
-    @Override
-    public void unget(TradeClient client) {
-        super.remove(client);
-    }
+  @Override
+  public void unget(TradeClient client) {
+    super.remove(client);
+  }
 
-    @Override
-    public void release() {
-        super.forEach(client -> {
-            if (client instanceof TradeClient)
-                ((TradeClient) client).close();
-        });
-        super.clear();
-    }
+  @Override
+  public void release() {
+    super.forEach(client -> {
+      if (client instanceof TradeClient)
+        ((TradeClient) client).close();
+    });
+    super.clear();
+  }
 }

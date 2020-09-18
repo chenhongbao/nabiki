@@ -29,7 +29,8 @@
 package com.nabiki.centre.user.core.plain;
 
 public class AccountTradedCash implements java.io.Serializable {
-    public double Commission;
+  public double Commission;
 
-    public AccountTradedCash() {}
+  public AccountTradedCash() {
+  }
 }

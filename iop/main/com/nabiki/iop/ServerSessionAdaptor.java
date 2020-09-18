@@ -29,5 +29,6 @@
 package com.nabiki.iop;
 
 public abstract class ServerSessionAdaptor {
-    public void doEvent(ServerSession session, SessionEvent event, Object eventObject) {}
+  public void doEvent(ServerSession session, SessionEvent event, Object eventObject) {
+  }
 }

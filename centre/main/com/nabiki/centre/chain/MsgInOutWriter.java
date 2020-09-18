@@ -42,62 +42,62 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MsgInOutWriter {
-    private final Global global;
-    private final Path inDir, outDir;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+  private final Global global;
+  private final Path inDir, outDir;
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-    MsgInOutWriter(Global cfg) {
-        this.global = cfg;
-        this.inDir = getPath(cfg, "dir.flow.client_in");
-        this.outDir = getPath(cfg, "dir.flow.client_out");
-    }
+  MsgInOutWriter(Global cfg) {
+    this.global = cfg;
+    this.inDir = getPath(cfg, "dir.flow.client_in");
+    this.outDir = getPath(cfg, "dir.flow.client_out");
+  }
 
-    private Path getPath(Global cfg, String key) {
-        var dirs = cfg.getRootDirectory().recursiveGet(key);
-        if (dirs.size() > 0)
-            return dirs.iterator().next().path();
-        else
-            return Path.of("");
-    }
+  private Path getPath(Global cfg, String key) {
+    var dirs = cfg.getRootDirectory().recursiveGet(key);
+    if (dirs.size() > 0)
+      return dirs.iterator().next().path();
+    else
+      return Path.of("");
+  }
 
-    private void write(String text, File file) {
-        try {
-            Utils.writeText(text, file, StandardCharsets.UTF_8, false);
-        } catch (IOException e) {
-            this.global.getLogger()
-                    .warning(file.toString() + ". " + e.getMessage());
-        }
+  private void write(String text, File file) {
+    try {
+      Utils.writeText(text, file, StandardCharsets.UTF_8, false);
+    } catch (IOException e) {
+      this.global.getLogger()
+          .warning(file.toString() + ". " + e.getMessage());
     }
+  }
 
-    private File ensureFile(Path root, String fn) {
-        try {
-            var r = Path.of(root.toAbsolutePath().toString(), fn);
-            Utils.createFile(root, true);
-            Utils.createFile(r, false);
-            return r.toFile();
-        } catch (IOException e) {
-            this.global.getLogger().warning(root.toString() + "/" + fn + ". "
-                    + e.getMessage());
-            return new File(".failover");
-        }
+  private File ensureFile(Path root, String fn) {
+    try {
+      var r = Path.of(root.toAbsolutePath().toString(), fn);
+      Utils.createFile(root, true);
+      Utils.createFile(r, false);
+      return r.toFile();
+    } catch (IOException e) {
+      this.global.getLogger().warning(root.toString() + "/" + fn + ". "
+          + e.getMessage());
+      return new File(".failover");
     }
+  }
 
-    private Path getClientDir(Path root, IOPSession session) {
-        return Path.of(root.toString(), getUserID(session));
-    }
+  private Path getClientDir(Path root, IOPSession session) {
+    return Path.of(root.toString(), getUserID(session));
+  }
 
-    private String getUserID(IOPSession session) {
-        var id = session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
-        return id == null ? "null" : (String)id;
-    }
+  private String getUserID(IOPSession session) {
+    var id = session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
+    return id == null ? "null" : (String) id;
+  }
 
-    void writeOut(Message out, IOPSession session) {
-        write(OP.toJson(out), ensureFile(getClientDir(this.outDir, session),
-                out.Type + "." + LocalDateTime.now().format(this.formatter) + "." + out.RequestID + ".json"));
-    }
+  void writeOut(Message out, IOPSession session) {
+    write(OP.toJson(out), ensureFile(getClientDir(this.outDir, session),
+        out.Type + "." + LocalDateTime.now().format(this.formatter) + "." + out.RequestID + ".json"));
+  }
 
-    void writeIn(Message in, IOPSession session) {
-        write(OP.toJson(in), ensureFile(getClientDir(this.inDir, session),
-                in.Type + "." + LocalDateTime.now().format(this.formatter) + "." + in.RequestID + ".json"));
-    }
+  void writeIn(Message in, IOPSession session) {
+    write(OP.toJson(in), ensureFile(getClientDir(this.inDir, session),
+        in.Type + "." + LocalDateTime.now().format(this.formatter) + "." + in.RequestID + ".json"));
+  }
 }

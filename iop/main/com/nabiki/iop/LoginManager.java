@@ -31,7 +31,7 @@ package com.nabiki.iop;
 import com.nabiki.objects.ErrorCodes;
 
 public abstract class LoginManager {
-    public int doLogin(ServerSession session, Message message) {
-        return ErrorCodes.INVALID_LOGIN;
-    }
+  public int doLogin(ServerSession session, Message message) {
+    return ErrorCodes.INVALID_LOGIN;
+  }
 }

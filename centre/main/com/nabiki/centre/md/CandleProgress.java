@@ -38,84 +38,84 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 public class CandleProgress {
-    private final CCandle candle = new CCandle();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+  private final CCandle candle = new CCandle();
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
-    private int lastVolume = 0, lastVolumeUpdated = 0;
-    private double lastClosePrice = 0.0D;
-    private boolean popped = true;
+  private int lastVolume = 0, lastVolumeUpdated = 0;
+  private double lastClosePrice = 0.0D;
+  private boolean popped = true;
 
-    public CandleProgress(String instrID, int minute) {
-        this.candle.InstrumentID = instrID;
-        this.candle.Minute = minute;
+  public CandleProgress(String instrID, int minute) {
+    this.candle.InstrumentID = instrID;
+    this.candle.Minute = minute;
+  }
+
+  public void update(CDepthMarketData md) {
+    if (this.lastVolume == 0)
+      this.lastVolume = md.Volume;
+    synchronized (this.candle) {
+      if (this.popped) {
+        this.candle.InstrumentID = md.InstrumentID;
+        this.candle.ActionDay
+            = Utils.getDay(LocalDate.now(), "yyyyMMdd");
+        this.candle.TradingDay = md.TradingDay;
+        this.candle.OpenPrice
+            = this.candle.HighestPrice
+            = this.candle.LowestPrice
+            = md.LastPrice;
+        this.popped = false;
+      } else {
+
+        this.candle.HighestPrice = Math.max(this.candle.HighestPrice,
+            md.LastPrice);
+        this.candle.LowestPrice = Math.min(this.candle.LowestPrice,
+            md.LastPrice);
+      }
+      this.candle.Volume = md.Volume - this.lastVolume;
+      this.candle.OpenInterest = md.OpenInterest;
+      this.candle.ClosePrice = md.LastPrice;
+      this.candle.UpdateTime = md.UpdateTime;
     }
+    this.lastClosePrice = md.LastPrice;
+    this.lastVolumeUpdated = md.Volume;
+  }
 
-    public void update(CDepthMarketData md) {
-        if (this.lastVolume == 0)
-            this.lastVolume = md.Volume;
-        synchronized (this.candle) {
-            if (this.popped) {
-                this.candle.InstrumentID = md.InstrumentID;
-                this.candle.ActionDay
-                        = Utils.getDay(LocalDate.now(), "yyyyMMdd");
-                this.candle.TradingDay = md.TradingDay;
-                this.candle.OpenPrice
-                        = this.candle.HighestPrice
-                        = this.candle.LowestPrice
-                        = md.LastPrice;
-                this.popped = false;
-            } else {
-
-                this.candle.HighestPrice = Math.max(this.candle.HighestPrice,
-                        md.LastPrice);
-                this.candle.LowestPrice = Math.min(this.candle.LowestPrice,
-                        md.LastPrice);
-            }
-            this.candle.Volume = md.Volume - this.lastVolume;
-            this.candle.OpenInterest = md.OpenInterest;
-            this.candle.ClosePrice = md.LastPrice;
-            this.candle.UpdateTime = md.UpdateTime;
-        }
-        this.lastClosePrice = md.LastPrice;
-        this.lastVolumeUpdated = md.Volume;
+  public CCandle peak(String tradingDay) {
+    synchronized (this.candle) {
+      if (this.popped) {
+        // Not updated since last pop.
+        this.candle.TradingDay = tradingDay;
+        this.candle.ActionDay
+            = Utils.getDay(LocalDate.now(), "yyyyMMdd");
+        this.candle.UpdateTime
+            = Utils.getTime(LocalTime.now(), "HH:mm:ss");
+        this.candle.OpenPrice
+            = this.candle.ClosePrice
+            = this.candle.HighestPrice
+            = this.candle.LowestPrice
+            = this.lastClosePrice;
+      }
+      if (this.candle.EndTime == null)
+        this.candle.EndTime = "";
+      return Utils.deepCopy(this.candle);
     }
+  }
 
-    public CCandle peak(String tradingDay) {
-        synchronized (this.candle) {
-            if (this.popped) {
-                // Not updated since last pop.
-                this.candle.TradingDay = tradingDay;
-                this.candle.ActionDay
-                        = Utils.getDay(LocalDate.now(), "yyyyMMdd");
-                this.candle.UpdateTime
-                        = Utils.getTime(LocalTime.now(), "HH:mm:ss");
-                this.candle.OpenPrice
-                        = this.candle.ClosePrice
-                        = this.candle.HighestPrice
-                        = this.candle.LowestPrice
-                        = this.lastClosePrice;
-            }
-            if (this.candle.EndTime == null)
-                this.candle.EndTime = "";
-            return Utils.deepCopy(this.candle);
-        }
-    }
+  public CCandle pop(String tradingDay) {
+    var r = peak(tradingDay);
+    r.EndTime = getEndTime();
+    this.lastVolume = this.lastVolumeUpdated;
+    this.lastVolumeUpdated = 0;
+    this.popped = true;
+    return r;
+  }
 
-    public CCandle pop(String tradingDay) {
-        var r = peak(tradingDay);
-        r.EndTime = getEndTime();
-        this.lastVolume = this.lastVolumeUpdated;
-        this.lastVolumeUpdated = 0;
-        this.popped = true;
-        return r;
-    }
-
-    private String getEndTime() {
-        var nowSec = LocalTime.now().toSecondOfDay();
-        var roundMinute = Math.round(
-                1.0D * nowSec / TimeUnit.MINUTES.toSeconds(1));
-        return LocalTime.ofSecondOfDay(
-                roundMinute * TimeUnit.MINUTES.toSeconds(1))
-                .format(formatter);
-    }
+  private String getEndTime() {
+    var nowSec = LocalTime.now().toSecondOfDay();
+    var roundMinute = Math.round(
+        1.0D * nowSec / TimeUnit.MINUTES.toSeconds(1));
+    return LocalTime.ofSecondOfDay(
+        roundMinute * TimeUnit.MINUTES.toSeconds(1))
+        .format(formatter);
+  }
 }

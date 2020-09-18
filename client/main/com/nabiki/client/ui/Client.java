@@ -37,94 +37,94 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class Client extends AbstractClient {
-    private Trader trader;
-    private MarketDataHandler handler;
+  private Trader trader;
+  private MarketDataHandler handler;
 
-    private void checkLogin() {
-        if (!loginRsp.hasResponse())
-            throw new RuntimeException("login timeout");
-        var info = loginRsp.getRspInfo(loginRsp.poll());
-        if (info == null || info.ErrorID != ErrorCodes.NONE)
-            throw new RuntimeException("login failed");
-    }
+  private void checkLogin() {
+    if (!loginRsp.hasResponse())
+      throw new RuntimeException("login timeout");
+    var info = loginRsp.getRspInfo(loginRsp.poll());
+    if (info == null || info.ErrorID != ErrorCodes.NONE)
+      throw new RuntimeException("login failed");
+  }
 
-    private void checkSubMd() {
-        if (!subRsp.hasResponse())
-            throw new RuntimeException("sub md timeout");
-        if (subRsp.getTotalCount() != subRsp.getArrivalCount())
-            throw new RuntimeException("sub msd rsp uncompleted");
-        CSpecificInstrument in = null;
-        while ((in = subRsp.poll()) != null) {
-            var info = subRsp.getRspInfo(in);
-            if (info == null || info.ErrorID != ErrorCodes.NONE)
-                throw new RuntimeException("sub md " + in.InstrumentID + " failed");
-        }
+  private void checkSubMd() {
+    if (!subRsp.hasResponse())
+      throw new RuntimeException("sub md timeout");
+    if (subRsp.getTotalCount() != subRsp.getArrivalCount())
+      throw new RuntimeException("sub msd rsp uncompleted");
+    CSpecificInstrument in = null;
+    while ((in = subRsp.poll()) != null) {
+      var info = subRsp.getRspInfo(in);
+      if (info == null || info.ErrorID != ErrorCodes.NONE)
+        throw new RuntimeException("sub md " + in.InstrumentID + " failed");
     }
+  }
 
-    private void checkAll() throws InterruptedException {
-        // It takes quite a long time for server to send all history data,
-        // so just wait a bit longer.
-        TimeUnit.SECONDS.sleep(60);
-        checkLogin();
-        checkSubMd();
-    }
+  private void checkAll() throws InterruptedException {
+    // It takes quite a long time for server to send all history data,
+    // so just wait a bit longer.
+    TimeUnit.SECONDS.sleep(60);
+    checkLogin();
+    checkSubMd();
+  }
 
-    public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
-        this.trader = trader;
-        this.handler = trader;
-        try {
-            super.startHeadless(trader, serverAddress);
-            checkAll();
-        } catch (Throwable th) {
-            th.printStackTrace();
-            trader.getLogger().severe(th.getMessage());
-        }
+  public void start(HeadlessTrader trader, InetSocketAddress serverAddress) {
+    this.trader = trader;
+    this.handler = trader;
+    try {
+      super.startHeadless(trader, serverAddress);
+      checkAll();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      trader.getLogger().severe(th.getMessage());
     }
+  }
 
-    public void start(FigureTrader trader, InetSocketAddress serverAddress) {
-        this.trader = trader;
-        this.handler = trader;
-        try {
-            super.startFigure(trader, serverAddress);
-            checkAll();
-        } catch (Throwable th) {
-            th.printStackTrace();
-            trader.getLogger().severe(th.getMessage());
-        }
+  public void start(FigureTrader trader, InetSocketAddress serverAddress) {
+    this.trader = trader;
+    this.handler = trader;
+    try {
+      super.startFigure(trader, serverAddress);
+      checkAll();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      trader.getLogger().severe(th.getMessage());
     }
+  }
 
-    public void noExit() {
-        while (true) {
-            try {
-                new CountDownLatch(1).await();
-            } catch (InterruptedException e) {
-                trader.getLogger().warning(e.getMessage());
-                e.printStackTrace();
-            }
-        }
+  public void noExit() {
+    while (true) {
+      try {
+        new CountDownLatch(1).await();
+      } catch (InterruptedException e) {
+        trader.getLogger().warning(e.getMessage());
+        e.printStackTrace();
+      }
     }
+  }
 
-    public void exitAt(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            trader.getLogger().severe(
-                    "client exits immediately because exit time has passed");
-            return;
-        }
-       while (LocalDateTime.now().isBefore(dateTime)) {
-           try {
-               TimeUnit.SECONDS.sleep(1);
-           } catch (InterruptedException ignored) {
-           }
-       }
-       // Stop.
-       try {
-           handler.onStop();
-       } catch (Throwable th) {
-           th.printStackTrace();
-           trader.getLogger().warning(th.getMessage());
-       } finally {
-           super.stop();
-           trader.stop();
-       }
+  public void exitAt(LocalDateTime dateTime) {
+    if (dateTime == null) {
+      trader.getLogger().severe(
+          "client exits immediately because exit time has passed");
+      return;
     }
+    while (LocalDateTime.now().isBefore(dateTime)) {
+      try {
+        TimeUnit.SECONDS.sleep(1);
+      } catch (InterruptedException ignored) {
+      }
+    }
+    // Stop.
+    try {
+      handler.onStop();
+    } catch (Throwable th) {
+      th.printStackTrace();
+      trader.getLogger().warning(th.getMessage());
+    } finally {
+      super.stop();
+      trader.stop();
+    }
+  }
 }

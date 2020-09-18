@@ -30,5 +30,5 @@ package com.nabiki.client.portal;
 
 public class Constants {
 
-    public static int GLOBAL_WAIT_SECONDS = 3;
+  public static int GLOBAL_WAIT_SECONDS = 3;
 }

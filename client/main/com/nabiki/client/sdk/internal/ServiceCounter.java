@@ -31,5 +31,5 @@ package com.nabiki.client.sdk.internal;
 import java.util.HashSet;
 
 public abstract class ServiceCounter extends HashSet<Object> {
-    public abstract void release();
+  public abstract void release();
 }

@@ -37,64 +37,64 @@ import com.nabiki.iop.SessionEvent;
 import com.nabiki.iop.x.OP;
 
 public class SessionAdaptor extends ServerSessionAdaptor {
-    private final MarketDataRouter router;
-    private final Global global;
+  private final MarketDataRouter router;
+  private final Global global;
 
-    SessionAdaptor(MarketDataRouter router, Global cfg) {
-        this.router = router;
-        this.global = cfg;
-    }
+  SessionAdaptor(MarketDataRouter router, Global cfg) {
+    this.router = router;
+    this.global = cfg;
+  }
 
-    @Override
-    public void doEvent(
-            ServerSession session,
-            SessionEvent event,
-            Object eventObject) {
-        switch (event) {
-            case ERROR:
-                this.global.getLogger().warning(
-                        ((Throwable) eventObject).getMessage());
-                break;
-            case MISS_HEARTBEAT:
-                this.global.getLogger().warning(
-                        "miss heartbeat(" + eventObject + ")");
-                break;
-            case MESSAGE_NOT_DONE:
-                this.global.getLogger().warning("message not processed");
-                this.global.getLogger().warning(OP.toJson(eventObject));
-                break;
-            case STRANGE_MESSAGE:
-            case BROKEN_BODY:
-                this.global.getLogger().warning("fail parsing message: "
-                        + event);
-                this.global.getLogger().warning(OP.toJson(eventObject));
-                break;
-            case INPUT_CLOSED:
-                this.global.getLogger().info(
-                        "input closed(" + session.getRemoteAddress() + ")");
-                session.close();
-                break;
-            case CLOSED:
-                var recv = session.getAttribute(
-                        SubscriptionAdaptor.FRONT_MDRECEIVER_KEY);
-                if (recv != null)
-                    this.router.removeReceiver((MarketDataReceiver) recv);
-                this.global.getLogger().info(
-                        "session closed(" + session.getRemoteAddress() + ")");
-                if (!session.isClosed())
-                    session.close();
-                break;
-            case CREATED:
-                this.global.getLogger().info(
-                        "session created(" + session.getRemoteAddress() + ")");
-                break;
-            case OPENED:
-                this.global.getLogger().info(
-                        "session opened(" + session.getRemoteAddress() + ")");
-                break;
-            case IDLE:
-            default:
-                break;
-        }
+  @Override
+  public void doEvent(
+      ServerSession session,
+      SessionEvent event,
+      Object eventObject) {
+    switch (event) {
+      case ERROR:
+        this.global.getLogger().warning(
+            ((Throwable) eventObject).getMessage());
+        break;
+      case MISS_HEARTBEAT:
+        this.global.getLogger().warning(
+            "miss heartbeat(" + eventObject + ")");
+        break;
+      case MESSAGE_NOT_DONE:
+        this.global.getLogger().warning("message not processed");
+        this.global.getLogger().warning(OP.toJson(eventObject));
+        break;
+      case STRANGE_MESSAGE:
+      case BROKEN_BODY:
+        this.global.getLogger().warning("fail parsing message: "
+            + event);
+        this.global.getLogger().warning(OP.toJson(eventObject));
+        break;
+      case INPUT_CLOSED:
+        this.global.getLogger().info(
+            "input closed(" + session.getRemoteAddress() + ")");
+        session.close();
+        break;
+      case CLOSED:
+        var recv = session.getAttribute(
+            SubscriptionAdaptor.FRONT_MDRECEIVER_KEY);
+        if (recv != null)
+          this.router.removeReceiver((MarketDataReceiver) recv);
+        this.global.getLogger().info(
+            "session closed(" + session.getRemoteAddress() + ")");
+        if (!session.isClosed())
+          session.close();
+        break;
+      case CREATED:
+        this.global.getLogger().info(
+            "session created(" + session.getRemoteAddress() + ")");
+        break;
+      case OPENED:
+        this.global.getLogger().info(
+            "session opened(" + session.getRemoteAddress() + ")");
+        break;
+      case IDLE:
+      default:
+        break;
     }
+  }
 }

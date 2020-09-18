@@ -33,32 +33,32 @@ import com.nabiki.client.sdk.TradeClientListener;
 import com.nabiki.client.sdk.internal.TradeClientFactoryImpl;
 
 public class Portal {
-    private final TradeClient client = new TradeClientFactoryImpl().get();
+  private final TradeClient client = new TradeClientFactoryImpl().get();
 
-    Portal() {
-        prepareClient();
-    }
+  Portal() {
+    prepareClient();
+  }
 
-    TradeClient getClient() {
-        return client;
-    }
+  TradeClient getClient() {
+    return client;
+  }
 
-    private void prepareClient() {
-        client.setListener(new TradeClientListener() {
-            @Override
-            public void onError(Throwable th) {
+  private void prepareClient() {
+    client.setListener(new TradeClientListener() {
+      @Override
+      public void onError(Throwable th) {
 
-            }
+      }
 
-            @Override
-            public void onClose() {
+      @Override
+      public void onClose() {
 
-            }
+      }
 
-            @Override
-            public void onOpen() {
+      @Override
+      public void onOpen() {
 
-            }
-        });
-    }
+      }
+    });
+  }
 }

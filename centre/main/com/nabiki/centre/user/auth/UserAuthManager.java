@@ -41,92 +41,92 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class UserAuthManager  {
-    private final Map<String, UserAuthProfile> profiles = new ConcurrentHashMap<>();
-    private final Path dataDir;
+public class UserAuthManager {
+  private final Map<String, UserAuthProfile> profiles = new ConcurrentHashMap<>();
+  private final Path dataDir;
 
-    public UserAuthManager(Path dataDir) {
-        Objects.requireNonNull(dataDir, "user profile data root null");
-        this.dataDir = dataDir;
-    }
+  public UserAuthManager(Path dataDir) {
+    Objects.requireNonNull(dataDir, "user profile data root null");
+    this.dataDir = dataDir;
+  }
 
-    private void init(Path dir) {
-        if (!Files.exists(dir) || !Files.isDirectory(dir))
-            throw new IllegalArgumentException("user profile data root not exist");
-        dir.toFile().listFiles(file -> {
-            for (var auth : readUser(file.toPath()))
-                profiles.put(auth.UserID, auth);
-            return false;
-        });
-        if (this.profiles.size() < 1)
-            throw new IllegalStateException("no user auth");
-    }
+  private void init(Path dir) {
+    if (!Files.exists(dir) || !Files.isDirectory(dir))
+      throw new IllegalArgumentException("user profile data root not exist");
+    dir.toFile().listFiles(file -> {
+      for (var auth : readUser(file.toPath()))
+        profiles.put(auth.UserID, auth);
+      return false;
+    });
+    if (this.profiles.size() < 1)
+      throw new IllegalStateException("no user auth");
+  }
 
-    private Collection<UserAuthProfile> readUser(Path userDir) {
-        var r = new LinkedList<UserAuthProfile>();
-        userDir.toFile().listFiles(file -> {
-            var name = file.getName();
-            if (name.startsWith("auth.") && name.endsWith(".json")) {
-                try {
-                    var profile = OP.fromJson(
-                            Utils.readText(file, StandardCharsets.UTF_8),
-                            UserAuthProfile.class);
-                    if (profile != null && profile.UserID != null)
-                        r.add(profile);
-                    else
-                        throw new IOException("invalid auth json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            return false;
-        });
-        return r;
-    }
-
-    private void write(Path dir) throws IOException {
-        for (var user : this.profiles.values()) {
-            var userDir = Path.of(dir.toString(), user.UserID);
-            try {
-                writeUser(userDir, user);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
+  private Collection<UserAuthProfile> readUser(Path userDir) {
+    var r = new LinkedList<UserAuthProfile>();
+    userDir.toFile().listFiles(file -> {
+      var name = file.getName();
+      if (name.startsWith("auth.") && name.endsWith(".json")) {
+        try {
+          var profile = OP.fromJson(
+              Utils.readText(file, StandardCharsets.UTF_8),
+              UserAuthProfile.class);
+          if (profile != null && profile.UserID != null)
+            r.add(profile);
+          else
+            throw new IOException("invalid auth json");
+        } catch (IOException e) {
+          e.printStackTrace();
         }
-    }
+      }
+      return false;
+    });
+    return r;
+  }
 
-    private void checkWriteSuccess(Path p, String content) throws IOException {
-        if (!p.toFile().exists())
-            throw new IllegalStateException("fail creating auth file: " + p);
-        var text = Utils.readText(p.toFile(), StandardCharsets.UTF_8);
-        if (text.compareTo(content) != 0)
-            throw new IllegalStateException("auth write wrong content");
+  private void write(Path dir) throws IOException {
+    for (var user : this.profiles.values()) {
+      var userDir = Path.of(dir.toString(), user.UserID);
+      try {
+        writeUser(userDir, user);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
     }
+  }
 
-    private void writeUser(Path userDir, UserAuthProfile profile)
-            throws IOException {
-        var path = Path.of(userDir.toString(),
-                "auth." + profile.UserID + ".json");
-        Utils.createFile(userDir, true);
-        var json = OP.toJson(profile);
-        Utils.writeText(
-                json,
-                path.toFile(),
-                StandardCharsets.UTF_8,
-                false);
-        checkWriteSuccess(path, json);
-    }
+  private void checkWriteSuccess(Path p, String content) throws IOException {
+    if (!p.toFile().exists())
+      throw new IllegalStateException("fail creating auth file: " + p);
+    var text = Utils.readText(p.toFile(), StandardCharsets.UTF_8);
+    if (text.compareTo(content) != 0)
+      throw new IllegalStateException("auth write wrong content");
+  }
 
-    public UserAuthProfile getAuthProfile(String userID) {
-        return this.profiles.get(userID);
-    }
+  private void writeUser(Path userDir, UserAuthProfile profile)
+      throws IOException {
+    var path = Path.of(userDir.toString(),
+        "auth." + profile.UserID + ".json");
+    Utils.createFile(userDir, true);
+    var json = OP.toJson(profile);
+    Utils.writeText(
+        json,
+        path.toFile(),
+        StandardCharsets.UTF_8,
+        false);
+    checkWriteSuccess(path, json);
+  }
 
-    public void load() throws Exception {
-        this.profiles.clear();
-        init(this.dataDir);
-    }
+  public UserAuthProfile getAuthProfile(String userID) {
+    return this.profiles.get(userID);
+  }
 
-    public void flush() throws Exception {
-        write(this.dataDir);
-    }
+  public void load() throws Exception {
+    this.profiles.clear();
+    init(this.dataDir);
+  }
+
+  public void flush() throws Exception {
+    write(this.dataDir);
+  }
 }

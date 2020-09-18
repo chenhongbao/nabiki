@@ -33,20 +33,21 @@ import com.nabiki.objects.CInstrumentCommissionRate;
 import com.nabiki.objects.CInstrumentMarginRate;
 
 public class InstrumentInfo {
-    /**
-     * Instrument.
-     */
-    public CInstrument Instrument;
+  /**
+   * Instrument.
+   */
+  public CInstrument Instrument;
 
-    /**
-     * Commission.
-     */
-    public CInstrumentCommissionRate Commission;
+  /**
+   * Commission.
+   */
+  public CInstrumentCommissionRate Commission;
 
-    /**
-     * Margin.
-     */
-    public CInstrumentMarginRate Margin;
+  /**
+   * Margin.
+   */
+  public CInstrumentMarginRate Margin;
 
-    public InstrumentInfo() {}
+  public InstrumentInfo() {
+  }
 }

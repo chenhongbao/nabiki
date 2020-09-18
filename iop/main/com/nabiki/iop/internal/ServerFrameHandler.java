@@ -43,183 +43,183 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 class ServerFrameHandler implements IoHandler {
-    /*
-        Default adaptors. The adaptors can be override by setter.
-         */
-    static class DefaultServerSessionAdaptor extends ServerSessionAdaptor {
-    }
+  /*
+      Default adaptors. The adaptors can be override by setter.
+       */
+  static class DefaultServerSessionAdaptor extends ServerSessionAdaptor {
+  }
 
-    static class DefaultLoginManager extends LoginManager {
-    }
+  static class DefaultLoginManager extends LoginManager {
+  }
 
-    static class DefaultServerMessageHandler implements ServerMessageHandler {
-        @Override
-        public void onMessage(ServerSession session, Message message) {
-        }
-    }
-
-    private static final String IOP_ISLOGIN_KEY = "iop.islogin";
-    private final AdaptorChainImpl chain = new AdaptorChainImpl();
-
-    private ServerSessionAdaptor sessionAdaptor = new DefaultServerSessionAdaptor();
-    private LoginManager loginManager = new DefaultLoginManager();
-    private ServerMessageHandler
-            msgHandlerOut = new DefaultServerMessageHandler(),
-            msgHandlerIn = new DefaultServerMessageHandler();
-
-    void setLoginManager(LoginManager manager) {
-        this.loginManager = manager;
-    }
-
-    void setSessionAdaptor(ServerSessionAdaptor adaptor) {
-        this.sessionAdaptor = adaptor;
-        this.chain.setSessionAdaptor(this.sessionAdaptor);
-    }
-
-    void setHandlerOut(ServerMessageHandler handler) {
-        this.msgHandlerOut = handler;
-    }
-
-    void setHandlerIn(ServerMessageHandler handler) {
-        this.msgHandlerIn = handler;
-    }
-
-    AdaptorChain getAdaptorChain() {
-        return this.chain;
-    }
-
-    private void handleLogin(ServerSession session, Message message) {
-        if (message.Type == MessageType.REQ_LOGIN) {
-            var code = this.loginManager.doLogin(session, message);
-            session.setAttribute(IOP_ISLOGIN_KEY,
-                    code == ErrorCodes.NONE);
-        }
-    }
-
-    private void sendHeartbeat(ServerSession session, Message message) {
-        session.sendHeartbeat(message.RequestID);
-    }
-
-    private boolean isLogin(IoSession session) {
-        var isLogin = session.getAttribute(IOP_ISLOGIN_KEY);
-        if (isLogin == null)
-            return false;
-        else
-            return (Boolean) isLogin;
-    }
-
-    private Message toMessage(Body body) throws IOException {
-        try {
-            return MessageImpl.toMessage(body);
-        } catch (Throwable th) {
-            throw new IOException("frame body broken", th);
-        }
-    }
-
+  static class DefaultServerMessageHandler implements ServerMessageHandler {
     @Override
-    public void sessionCreated(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.CREATED, null);
+    public void onMessage(ServerSession session, Message message) {
     }
+  }
 
-    @Override
-    public void sessionOpened(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.OPENED, null);
-    }
+  private static final String IOP_ISLOGIN_KEY = "iop.islogin";
+  private final AdaptorChainImpl chain = new AdaptorChainImpl();
 
-    @Override
-    public void sessionClosed(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.CLOSED, null);
-    }
+  private ServerSessionAdaptor sessionAdaptor = new DefaultServerSessionAdaptor();
+  private LoginManager loginManager = new DefaultLoginManager();
+  private ServerMessageHandler
+      msgHandlerOut = new DefaultServerMessageHandler(),
+      msgHandlerIn = new DefaultServerMessageHandler();
 
-    @Override
-    public void sessionIdle(IoSession session, IdleStatus status)
-            throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.IDLE, status);
-    }
+  void setLoginManager(LoginManager manager) {
+    this.loginManager = manager;
+  }
 
-    @Override
-    public void exceptionCaught(IoSession session, Throwable cause)
-            throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.ERROR, cause);
-    }
+  void setSessionAdaptor(ServerSessionAdaptor adaptor) {
+    this.sessionAdaptor = adaptor;
+    this.chain.setSessionAdaptor(this.sessionAdaptor);
+  }
 
-    @Override
-    public void messageReceived(IoSession session, Object message)
-            throws Exception {
-        if (!(message instanceof Frame))
-            throw new IllegalStateException("message is not frame");
-        Body body = null;
-        Message iopMessage;
-        ServerSessionImpl iopSession = ServerSessionImpl.from(session);
-        var frame = (Frame) message;
-        try {
-            body = OP.fromJson(new String(
-                    frame.Body, StandardCharsets.UTF_8), Body.class);
-            iopMessage = toMessage(body);
-            // 1. call message adaptor chain.
-            switch (frame.Type) {
-                case FrameType.REQUEST:
-                    if (isLogin(session))
-                        this.chain.invoke(iopSession, iopMessage);
-                    break;
-                case FrameType.HEARTBEAT:
-                    sendHeartbeat(iopSession, iopMessage);
-                    break;
-                case FrameType.LOGIN:
-                    handleLogin(iopSession, iopMessage);
-                    break;
-                default:
-                    throw new IllegalStateException(
-                            "unknown frame type " + frame.Type);
-            }
-            // 2. call message handler.
-            try {
-                this.msgHandlerIn.onMessage(iopSession, iopMessage);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-        } catch (IOException e) {
-            this.sessionAdaptor.doEvent(
-                    iopSession, SessionEvent.BROKEN_BODY, body);
-        }
-    }
+  void setHandlerOut(ServerMessageHandler handler) {
+    this.msgHandlerOut = handler;
+  }
 
-    @Override
-    public void messageSent(IoSession session, Object message) throws Exception {
-        if (!(message instanceof Frame))
-            throw new IllegalStateException("message is not frame");
-        Body body = null;
-        Message iopMessage;
-        ServerSessionImpl iopSession = ServerSessionImpl.from(session);
-        var frame = (Frame) message;
-        try {
-            body = OP.fromJson(new String(
-                    frame.Body, StandardCharsets.UTF_8), Body.class);
-            iopMessage = toMessage(body);
-            try {
-                this.msgHandlerOut.onMessage(iopSession, iopMessage);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            }
-        } catch (IOException e) {
-            this.sessionAdaptor.doEvent(
-                    iopSession, SessionEvent.BROKEN_BODY, body);
-        }
-    }
+  void setHandlerIn(ServerMessageHandler handler) {
+    this.msgHandlerIn = handler;
+  }
 
-    @Override
-    public void inputClosed(IoSession session) throws Exception {
-        this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
-                SessionEvent.INPUT_CLOSED, null);
-    }
+  AdaptorChain getAdaptorChain() {
+    return this.chain;
+  }
 
-    @Override
-    public void event(IoSession session, FilterEvent event) throws Exception {
-        // nothing.
+  private void handleLogin(ServerSession session, Message message) {
+    if (message.Type == MessageType.REQ_LOGIN) {
+      var code = this.loginManager.doLogin(session, message);
+      session.setAttribute(IOP_ISLOGIN_KEY,
+          code == ErrorCodes.NONE);
     }
+  }
+
+  private void sendHeartbeat(ServerSession session, Message message) {
+    session.sendHeartbeat(message.RequestID);
+  }
+
+  private boolean isLogin(IoSession session) {
+    var isLogin = session.getAttribute(IOP_ISLOGIN_KEY);
+    if (isLogin == null)
+      return false;
+    else
+      return (Boolean) isLogin;
+  }
+
+  private Message toMessage(Body body) throws IOException {
+    try {
+      return MessageImpl.toMessage(body);
+    } catch (Throwable th) {
+      throw new IOException("frame body broken", th);
+    }
+  }
+
+  @Override
+  public void sessionCreated(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.CREATED, null);
+  }
+
+  @Override
+  public void sessionOpened(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.OPENED, null);
+  }
+
+  @Override
+  public void sessionClosed(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.CLOSED, null);
+  }
+
+  @Override
+  public void sessionIdle(IoSession session, IdleStatus status)
+      throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.IDLE, status);
+  }
+
+  @Override
+  public void exceptionCaught(IoSession session, Throwable cause)
+      throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.ERROR, cause);
+  }
+
+  @Override
+  public void messageReceived(IoSession session, Object message)
+      throws Exception {
+    if (!(message instanceof Frame))
+      throw new IllegalStateException("message is not frame");
+    Body body = null;
+    Message iopMessage;
+    ServerSessionImpl iopSession = ServerSessionImpl.from(session);
+    var frame = (Frame) message;
+    try {
+      body = OP.fromJson(new String(
+          frame.Body, StandardCharsets.UTF_8), Body.class);
+      iopMessage = toMessage(body);
+      // 1. call message adaptor chain.
+      switch (frame.Type) {
+        case FrameType.REQUEST:
+          if (isLogin(session))
+            this.chain.invoke(iopSession, iopMessage);
+          break;
+        case FrameType.HEARTBEAT:
+          sendHeartbeat(iopSession, iopMessage);
+          break;
+        case FrameType.LOGIN:
+          handleLogin(iopSession, iopMessage);
+          break;
+        default:
+          throw new IllegalStateException(
+              "unknown frame type " + frame.Type);
+      }
+      // 2. call message handler.
+      try {
+        this.msgHandlerIn.onMessage(iopSession, iopMessage);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    } catch (IOException e) {
+      this.sessionAdaptor.doEvent(
+          iopSession, SessionEvent.BROKEN_BODY, body);
+    }
+  }
+
+  @Override
+  public void messageSent(IoSession session, Object message) throws Exception {
+    if (!(message instanceof Frame))
+      throw new IllegalStateException("message is not frame");
+    Body body = null;
+    Message iopMessage;
+    ServerSessionImpl iopSession = ServerSessionImpl.from(session);
+    var frame = (Frame) message;
+    try {
+      body = OP.fromJson(new String(
+          frame.Body, StandardCharsets.UTF_8), Body.class);
+      iopMessage = toMessage(body);
+      try {
+        this.msgHandlerOut.onMessage(iopSession, iopMessage);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    } catch (IOException e) {
+      this.sessionAdaptor.doEvent(
+          iopSession, SessionEvent.BROKEN_BODY, body);
+    }
+  }
+
+  @Override
+  public void inputClosed(IoSession session) throws Exception {
+    this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
+        SessionEvent.INPUT_CLOSED, null);
+  }
+
+  @Override
+  public void event(IoSession session, FilterEvent event) throws Exception {
+    // nothing.
+  }
 }

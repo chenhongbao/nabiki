@@ -43,166 +43,166 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserManager {
-    private final Map<String, User> users = new ConcurrentHashMap<>();
-    private final Path dataDir;
+  private final Map<String, User> users = new ConcurrentHashMap<>();
+  private final Path dataDir;
 
-    private static UserManager singleton;
+  private static UserManager singleton;
 
-    UserManager(Path dataDir) {
-        Objects.requireNonNull(dataDir, "user data directory null");
-        this.dataDir = dataDir;
-    }
+  UserManager(Path dataDir) {
+    Objects.requireNonNull(dataDir, "user data directory null");
+    this.dataDir = dataDir;
+  }
 
-    static UserManager create(Path dataDir) {
-        if (singleton == null)
-            singleton = new UserManager(dataDir);
-        return singleton;
-    }
+  static UserManager create(Path dataDir) {
+    if (singleton == null)
+      singleton = new UserManager(dataDir);
+    return singleton;
+  }
 
-    Collection<String> getAllUserID() {
-        return this.users.keySet();
-    }
+  Collection<String> getAllUserID() {
+    return this.users.keySet();
+  }
 
-    private void init(Path dir) {
-        if (!Files.exists(dir) || !Files.isDirectory(dir))
-            throw new IllegalArgumentException("user account root not exist");
-        dir.toFile().listFiles(file -> {
-            if (file.isDirectory()) {
-                var user = readUser(file.toPath());
-                users.put(user.getUserID(), user);
-            }
-            return false;
-        });
-    }
+  private void init(Path dir) {
+    if (!Files.exists(dir) || !Files.isDirectory(dir))
+      throw new IllegalArgumentException("user account root not exist");
+    dir.toFile().listFiles(file -> {
+      if (file.isDirectory()) {
+        var user = readUser(file.toPath());
+        users.put(user.getUserID(), user);
+      }
+      return false;
+    });
+  }
 
-    private File findLatestDir(Path userDir) {
-        final File[] r = {null};
-        userDir.toFile().listFiles(file -> {
-            if (file.isDirectory()) {
-                if (r[0] == null)
-                    r[0] = file;
-                else if (file.getName().compareTo(r[0].getName()) > 0)
-                    r[0] = file;
-            }
-            return false;
-        });
-        return r[0];
-    }
+  private File findLatestDir(Path userDir) {
+    final File[] r = {null};
+    userDir.toFile().listFiles(file -> {
+      if (file.isDirectory()) {
+        if (r[0] == null)
+          r[0] = file;
+        else if (file.getName().compareTo(r[0].getName()) > 0)
+          r[0] = file;
+      }
+      return false;
+    });
+    return r[0];
+  }
 
-    private User readUser(Path userDir) {
-        final var account = new CTradingAccount[1];
-        var positions = new ConcurrentHashMap<String, List<UserPositionDetail>>();
-        findLatestDir(userDir).listFiles(file -> {
-            var name = file.getName();
-            try {
-                if (name.startsWith("account.") && name.endsWith(".json")) {
-                    if (account[0] != null)
-                        throw new IOException("ambiguous account");
-                    account[0] = OP.fromJson(
-                            Utils.readText(file, StandardCharsets.UTF_8),
-                            CTradingAccount.class);
-                    // Get account ready for today's trading.
-                    renewAccount(account[0]);
-                }
-                if (name.startsWith("position.") && name.endsWith(".json")) {
-                    var pos = OP.fromJson(Utils.readText(
-                            file, StandardCharsets.UTF_8),
-                            CInvestorPositionDetail.class);
-                    // Filter out position that is completely closed.
-                    if (pos.Volume > 0) {
-                        // Get position ready for today's trading.
-                        renewPosition(pos);
-                        var instrPos = positions.computeIfAbsent(
-                                pos.InstrumentID, k -> new LinkedList<>());
-                        instrPos.add(new UserPositionDetail((pos)));
-                    }
-                }
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            }
-            return false;
-        });
-        return new User(account[0], positions);
-    }
-
-    private void renewAccount(CTradingAccount account) {
-        account.PreMargin = account.CurrMargin;
-        account.CurrMargin = 0;
-        account.PreDeposit = account.Deposit;
-        account.Deposit = 0;
-        account.PreBalance = account.Balance;
-        account.Balance = 0;
-        account.PreCredit = account.Credit;
-        account.Credit = 0;
-        account.PreFundMortgageIn = account.FundMortgageIn;
-        account.FundMortgageIn = 0;
-        account.PreFundMortgageOut = account.FundMortgageOut;
-        account.FundMortgageOut = 0;
-        account.PreMortgage = account.Mortgage;
-        account.Mortgage = 0;
-        account.Commission = 0;
-        account.CloseProfit = 0;
-        account.PositionProfit = 0;
-    }
-
-    private void renewPosition(CInvestorPositionDetail position) {
-        position.CloseVolume = 0;
-        position.CloseAmount
-                = position.CloseProfitByTrade
-                = position.CloseProfitByDate
-                = position.PositionProfitByTrade
-                = position.PositionProfitByDate = 0;
-        position.LastSettlementPrice = position.SettlementPrice;
-        position.SettlementPrice = 0;
-    }
-
-    private void write(Path dir) throws IOException {
-        for (var user : this.users.values()) {
-            var userDir = Path.of(dir.toString(), user.getUserID());
-            writeUser(userDir, user);
+  private User readUser(Path userDir) {
+    final var account = new CTradingAccount[1];
+    var positions = new ConcurrentHashMap<String, List<UserPositionDetail>>();
+    findLatestDir(userDir).listFiles(file -> {
+      var name = file.getName();
+      try {
+        if (name.startsWith("account.") && name.endsWith(".json")) {
+          if (account[0] != null)
+            throw new IOException("ambiguous account");
+          account[0] = OP.fromJson(
+              Utils.readText(file, StandardCharsets.UTF_8),
+              CTradingAccount.class);
+          // Get account ready for today's trading.
+          renewAccount(account[0]);
         }
-    }
-
-    private void writeUser(Path userDir, User user) throws IOException {
-        var todayDir = Path.of(userDir.toString(),
-                Utils.getDay(LocalDate.now(), null));
-        Utils.createFile(todayDir, true);
-        // Write trading account.
-        var account = user.getTradingAccount();
-        var path = Path.of(todayDir.toString(),
-                "account." + account.AccountID + ".json");
-        Utils.createFile(path, false);
-        Utils.writeText(OP.toJson(account),
-                Utils.createFile(path, false),
-                StandardCharsets.UTF_8, false);
-        // Write positions.
-        int count = 0;
-        for (var positions : user.getUserPosition().getPositionMap().values()) {
-            for (var pos : positions) {
-                // Don't filter all-closed position here, because need to save
-                // the trades of this day. And when reloading information, it will
-                // check the volume and filter out all-closed position.
-                path = Path.of(todayDir.toString(),
-                        "position." + (++count) + ".json");
-                Utils.writeText(OP.toJson(pos.copyRawPosition()),
-                        Utils.createFile(path, false),
-                        StandardCharsets.UTF_8,
-                        false);
-            }
+        if (name.startsWith("position.") && name.endsWith(".json")) {
+          var pos = OP.fromJson(Utils.readText(
+              file, StandardCharsets.UTF_8),
+              CInvestorPositionDetail.class);
+          // Filter out position that is completely closed.
+          if (pos.Volume > 0) {
+            // Get position ready for today's trading.
+            renewPosition(pos);
+            var instrPos = positions.computeIfAbsent(
+                pos.InstrumentID, k -> new LinkedList<>());
+            instrPos.add(new UserPositionDetail((pos)));
+          }
         }
-    }
+      } catch (IOException e) {
+        System.err.println(e.getMessage());
+        e.printStackTrace();
+      }
+      return false;
+    });
+    return new User(account[0], positions);
+  }
 
-    User getUser(String userID) {
-        return this.users.get(userID);
-    }
+  private void renewAccount(CTradingAccount account) {
+    account.PreMargin = account.CurrMargin;
+    account.CurrMargin = 0;
+    account.PreDeposit = account.Deposit;
+    account.Deposit = 0;
+    account.PreBalance = account.Balance;
+    account.Balance = 0;
+    account.PreCredit = account.Credit;
+    account.Credit = 0;
+    account.PreFundMortgageIn = account.FundMortgageIn;
+    account.FundMortgageIn = 0;
+    account.PreFundMortgageOut = account.FundMortgageOut;
+    account.FundMortgageOut = 0;
+    account.PreMortgage = account.Mortgage;
+    account.Mortgage = 0;
+    account.Commission = 0;
+    account.CloseProfit = 0;
+    account.PositionProfit = 0;
+  }
 
-    void load() throws Exception {
-        this.users.clear();
-        init(this.dataDir);
-    }
+  private void renewPosition(CInvestorPositionDetail position) {
+    position.CloseVolume = 0;
+    position.CloseAmount
+        = position.CloseProfitByTrade
+        = position.CloseProfitByDate
+        = position.PositionProfitByTrade
+        = position.PositionProfitByDate = 0;
+    position.LastSettlementPrice = position.SettlementPrice;
+    position.SettlementPrice = 0;
+  }
 
-    void flush() throws Exception {
-        write(this.dataDir);
+  private void write(Path dir) throws IOException {
+    for (var user : this.users.values()) {
+      var userDir = Path.of(dir.toString(), user.getUserID());
+      writeUser(userDir, user);
     }
+  }
+
+  private void writeUser(Path userDir, User user) throws IOException {
+    var todayDir = Path.of(userDir.toString(),
+        Utils.getDay(LocalDate.now(), null));
+    Utils.createFile(todayDir, true);
+    // Write trading account.
+    var account = user.getTradingAccount();
+    var path = Path.of(todayDir.toString(),
+        "account." + account.AccountID + ".json");
+    Utils.createFile(path, false);
+    Utils.writeText(OP.toJson(account),
+        Utils.createFile(path, false),
+        StandardCharsets.UTF_8, false);
+    // Write positions.
+    int count = 0;
+    for (var positions : user.getUserPosition().getPositionMap().values()) {
+      for (var pos : positions) {
+        // Don't filter all-closed position here, because need to save
+        // the trades of this day. And when reloading information, it will
+        // check the volume and filter out all-closed position.
+        path = Path.of(todayDir.toString(),
+            "position." + (++count) + ".json");
+        Utils.writeText(OP.toJson(pos.copyRawPosition()),
+            Utils.createFile(path, false),
+            StandardCharsets.UTF_8,
+            false);
+      }
+    }
+  }
+
+  User getUser(String userID) {
+    return this.users.get(userID);
+  }
+
+  void load() throws Exception {
+    this.users.clear();
+    init(this.dataDir);
+  }
+
+  void flush() throws Exception {
+    write(this.dataDir);
+  }
 }

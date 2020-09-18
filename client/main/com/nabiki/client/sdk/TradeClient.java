@@ -34,35 +34,35 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public interface TradeClient {
-    void setListener(TradeClientListener clientListener);
+  void setListener(TradeClientListener clientListener);
 
-    void setListener(MarketDataListener listener);
+  void setListener(MarketDataListener listener);
 
-    void open(InetSocketAddress address) throws IOException;
+  void open(InetSocketAddress address) throws IOException;
 
-    void close();
+  void close();
 
-    boolean isClosed();
+  boolean isClosed();
 
-    String getTradingDay();
+  String getTradingDay();
 
-    Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
+  Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
 
-    Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;
+  Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;
 
-    Response<COrderAction> orderAction(CInputOrderAction action, String requestID) throws Exception;
+  Response<COrderAction> orderAction(CInputOrderAction action, String requestID) throws Exception;
 
-    Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID) throws Exception;
+  Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID) throws Exception;
 
-    Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID) throws Exception;
+  Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID) throws Exception;
 
-    Response<CInvestorPositionDetail> queryPositionDetail(CQryInvestorPositionDetail query, String requestID) throws Exception;
+  Response<CInvestorPositionDetail> queryPositionDetail(CQryInvestorPositionDetail query, String requestID) throws Exception;
 
-    Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID) throws Exception;
+  Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID) throws Exception;
 
-    Response<COrder> queryOrder(CQryOrder query, String requestID) throws Exception;
+  Response<COrder> queryOrder(CQryOrder query, String requestID) throws Exception;
 
-    Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID) throws Exception;
+  Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID) throws Exception;
 
-    Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID) throws Exception;
+  Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID) throws Exception;
 }

@@ -38,61 +38,61 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SettlementPreparation {
-    private final Map<String, CDepthMarketData> depths
-            = new ConcurrentHashMap<>();
-    private final Map<String, CInstrument> instruments
-            = new ConcurrentHashMap<>();
-    private final Map<String, CInstrumentMarginRate> margins
-            = new ConcurrentHashMap<>();
-    private final Map<String, CInstrumentCommissionRate> commissions
-            = new ConcurrentHashMap<>();
-    private String tradingDay;
+  private final Map<String, CDepthMarketData> depths
+      = new ConcurrentHashMap<>();
+  private final Map<String, CInstrument> instruments
+      = new ConcurrentHashMap<>();
+  private final Map<String, CInstrumentMarginRate> margins
+      = new ConcurrentHashMap<>();
+  private final Map<String, CInstrumentCommissionRate> commissions
+      = new ConcurrentHashMap<>();
+  private String tradingDay;
 
-    public SettlementPreparation() {
-    }
+  public SettlementPreparation() {
+  }
 
-    public String getTradingDay() {
-        return this.tradingDay;
-    }
+  public String getTradingDay() {
+    return this.tradingDay;
+  }
 
-    public CDepthMarketData getDepth(String instrID) {
-        return this.depths.get(instrID);
-    }
+  public CDepthMarketData getDepth(String instrID) {
+    return this.depths.get(instrID);
+  }
 
-    public CInstrument getInstrument(String instrID) {
-        return this.instruments.get(instrID);
-    }
+  public CInstrument getInstrument(String instrID) {
+    return this.instruments.get(instrID);
+  }
 
-    public CInstrumentMarginRate getMargin(String instrID) {
-        return this.margins.get(instrID);
-    }
+  public CInstrumentMarginRate getMargin(String instrID) {
+    return this.margins.get(instrID);
+  }
 
-    public CInstrumentCommissionRate getCommission(String instrID) {
-        return this.commissions.get(instrID);
-    }
+  public CInstrumentCommissionRate getCommission(String instrID) {
+    return this.commissions.get(instrID);
+  }
 
-    public void prepare(String tradingDay) {
-        Objects.requireNonNull(tradingDay, "trading day null");
-        this.tradingDay = tradingDay;
-    }
+  public void prepare(String tradingDay) {
+    Objects.requireNonNull(tradingDay, "trading day null");
+    this.tradingDay = tradingDay;
+  }
 
-    public void prepare(CDepthMarketData depth) {
-        Objects.requireNonNull(depth, "depth null");
-        this.depths.put(depth.InstrumentID, depth);
-    }
+  public void prepare(CDepthMarketData depth) {
+    Objects.requireNonNull(depth, "depth null");
+    this.depths.put(depth.InstrumentID, depth);
+  }
 
-    public void prepare(CInstrument instrument) {
-        Objects.requireNonNull(instrument, "instrument null");
-        this.instruments.put(instrument.InstrumentID, instrument);
-    }
+  public void prepare(CInstrument instrument) {
+    Objects.requireNonNull(instrument, "instrument null");
+    this.instruments.put(instrument.InstrumentID, instrument);
+  }
 
-    public void prepare(CInstrumentMarginRate margin) {
-        Objects.requireNonNull(margin, "margin null");
-        this.margins.put(margin.InstrumentID, margin);
-    }
+  public void prepare(CInstrumentMarginRate margin) {
+    Objects.requireNonNull(margin, "margin null");
+    this.margins.put(margin.InstrumentID, margin);
+  }
 
-    public void prepare(CInstrumentCommissionRate commission) {
-        Objects.requireNonNull(commission, "commission null");
-        this.commissions.put(commission.InstrumentID, commission);
-    }
+  public void prepare(CInstrumentCommissionRate commission) {
+    Objects.requireNonNull(commission, "commission null");
+    this.commissions.put(commission.InstrumentID, commission);
+  }
 }

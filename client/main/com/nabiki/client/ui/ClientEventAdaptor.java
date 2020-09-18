@@ -36,70 +36,70 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientEventAdaptor implements TradeClientListener {
-    private final Lock lock = new ReentrantLock();
-    private final Condition cond = lock.newCondition();
+  private final Lock lock = new ReentrantLock();
+  private final Condition cond = lock.newCondition();
 
-    private boolean open = false;
+  private boolean open = false;
 
-    @Override
-    public void onError(Throwable th) {
+  @Override
+  public void onError(Throwable th) {
+    th.printStackTrace();
+  }
+
+  @Override
+  public void onClose() {
+    open = false;
+    signal();
+  }
+
+  @Override
+  public void onOpen() {
+    open = true;
+    signal();
+  }
+
+  private void signal() {
+    lock.lock();
+    try {
+      cond.signal();
+    } catch (Throwable th) {
+      th.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  boolean waitOpen(long millis) {
+    var toWait = millis;
+    while (!open && toWait > 0) {
+      var beg = System.currentTimeMillis();
+      lock.lock();
+      try {
+        cond.await(toWait, TimeUnit.MILLISECONDS);
+      } catch (Throwable th) {
         th.printStackTrace();
+      } finally {
+        lock.unlock();
+        toWait -= (System.currentTimeMillis() - beg);
+      }
     }
+    return open;
+  }
 
-    @Override
-    public void onClose() {
-        open = false;
-        signal();
+  boolean waitClose(long millis) {
+    var toWait = millis;
+    while (open && toWait > 0) {
+      var beg = System.currentTimeMillis();
+      lock.lock();
+      try {
+        cond.await(toWait, TimeUnit.MILLISECONDS);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      } finally {
+        lock.unlock();
+        toWait -= (System.currentTimeMillis() - beg);
+      }
     }
-
-    @Override
-    public void onOpen() {
-        open = true;
-        signal();
-    }
-
-    private void signal() {
-        lock.lock();
-        try {
-            cond.signal();
-        } catch (Throwable th) {
-            th.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    boolean waitOpen(long millis) {
-        var toWait = millis;
-        while (!open && toWait > 0) {
-            var beg = System.currentTimeMillis();
-            lock.lock();
-            try {
-                cond.await(toWait, TimeUnit.MILLISECONDS);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            } finally {
-                lock.unlock();
-                toWait -= (System.currentTimeMillis() - beg);
-            }
-        }
-        return open;
-    }
-
-    boolean waitClose(long millis) {
-        var toWait = millis;
-        while (open && toWait > 0) {
-            var beg = System.currentTimeMillis();
-            lock.lock();
-            try {
-                cond.await(toWait, TimeUnit.MILLISECONDS);
-            } catch (Throwable th) {
-                th.printStackTrace();
-            } finally {
-                lock.unlock();
-                toWait -= (System.currentTimeMillis() - beg);
-            }
-        }
-        return !open;
-    }
+    return !open;
+  }
 }

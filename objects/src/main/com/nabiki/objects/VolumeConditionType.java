@@ -29,7 +29,7 @@
 package com.nabiki.objects;
 
 public class VolumeConditionType {
-    public static final char ANY_VOLUME = '1';
-    public static final char MIN_VOLUME = '2';
-    public static final char COMPLETE_VOLUME = '3';
+  public static final char ANY_VOLUME = '1';
+  public static final char MIN_VOLUME = '2';
+  public static final char COMPLETE_VOLUME = '3';
 }

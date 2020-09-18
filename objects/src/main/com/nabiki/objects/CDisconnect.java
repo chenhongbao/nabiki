@@ -31,8 +31,8 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CDisconnect implements Serializable {
-	public int Reason;
+  public int Reason;
 
-	public CDisconnect() {
-	}
+  public CDisconnect() {
+  }
 }

@@ -35,80 +35,80 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class PositionPanel extends JPanel {
-    final PositionUpdater positionUpdater;
-    final JTextField instrumentField;
-    final JCheckBox positionCatCheck;
-    final JTable positionTable;
-    final JComboBox positionTypeComb;
+  final PositionUpdater positionUpdater;
+  final JTextField instrumentField;
+  final JCheckBox positionCatCheck;
+  final JTable positionTable;
+  final JComboBox positionTypeComb;
 
-    PositionPanel(TradeClient client) {
-        
-        SpringLayout sl_positionPanel = new SpringLayout();
-        this.setLayout(sl_positionPanel);
+  PositionPanel(TradeClient client) {
 
-        positionCatCheck = new JCheckBox("\u6240\u6709\u6301\u4ED3");
-        positionCatCheck.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                var check = (JCheckBox)e.getSource();
-                instrumentField.setEnabled(!check.isSelected());
-            }
-        });
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, positionCatCheck, 10, SpringLayout.NORTH, this);
-        sl_positionPanel.putConstraint(SpringLayout.WEST, positionCatCheck, 10, SpringLayout.WEST, this);
-        this.add(positionCatCheck);
+    SpringLayout sl_positionPanel = new SpringLayout();
+    this.setLayout(sl_positionPanel);
 
-        JLabel instrumentLabel = new JLabel("\u5408\u7EA6:");
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, instrumentLabel, 14, SpringLayout.NORTH, this);
-        sl_positionPanel.putConstraint(SpringLayout.WEST, instrumentLabel, 80, SpringLayout.WEST, positionCatCheck);
-        this.add(instrumentLabel);
+    positionCatCheck = new JCheckBox("\u6240\u6709\u6301\u4ED3");
+    positionCatCheck.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        var check = (JCheckBox) e.getSource();
+        instrumentField.setEnabled(!check.isSelected());
+      }
+    });
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, positionCatCheck, 10, SpringLayout.NORTH, this);
+    sl_positionPanel.putConstraint(SpringLayout.WEST, positionCatCheck, 10, SpringLayout.WEST, this);
+    this.add(positionCatCheck);
 
-        instrumentField = new JTextField();
-        sl_positionPanel.putConstraint(SpringLayout.WEST, instrumentField, 5, SpringLayout.EAST, instrumentLabel);
-        sl_positionPanel.putConstraint(SpringLayout.EAST, instrumentField, 100, SpringLayout.EAST, instrumentLabel);
-        instrumentLabel.setLabelFor(instrumentField);
-        instrumentField.setHorizontalAlignment(SwingConstants.CENTER);
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, instrumentField, 10, SpringLayout.NORTH, this);
-        this.add(instrumentField);
-        instrumentField.setColumns(10);
+    JLabel instrumentLabel = new JLabel("\u5408\u7EA6:");
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, instrumentLabel, 14, SpringLayout.NORTH, this);
+    sl_positionPanel.putConstraint(SpringLayout.WEST, instrumentLabel, 80, SpringLayout.WEST, positionCatCheck);
+    this.add(instrumentLabel);
 
-        JButton qryPositionBtn = new JButton("\u67E5\u8BE2");
-        qryPositionBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String instrument = "";
-                PositionUpdater.PositionType type;
-                if (!positionCatCheck.isSelected())
-                    instrument = instrumentField.getText().trim();
-                if (positionTypeComb.getSelectedIndex() == 0)
-                    type = PositionUpdater.PositionType.SUMMARY;
-                else
-                    type = PositionUpdater.PositionType.DETAIL;
-                positionUpdater.query(instrument, type, e.getSource());
-            }
-        });
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, qryPositionBtn, 0, SpringLayout.NORTH, instrumentField);
-        sl_positionPanel.putConstraint(SpringLayout.SOUTH, qryPositionBtn, 0, SpringLayout.SOUTH, instrumentField);
-        this.add(qryPositionBtn);
+    instrumentField = new JTextField();
+    sl_positionPanel.putConstraint(SpringLayout.WEST, instrumentField, 5, SpringLayout.EAST, instrumentLabel);
+    sl_positionPanel.putConstraint(SpringLayout.EAST, instrumentField, 100, SpringLayout.EAST, instrumentLabel);
+    instrumentLabel.setLabelFor(instrumentField);
+    instrumentField.setHorizontalAlignment(SwingConstants.CENTER);
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, instrumentField, 10, SpringLayout.NORTH, this);
+    this.add(instrumentField);
+    instrumentField.setColumns(10);
 
-        JScrollPane positionScrollPane = new JScrollPane();
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, positionScrollPane, 50, SpringLayout.NORTH, this);
-        sl_positionPanel.putConstraint(SpringLayout.WEST, positionScrollPane, 10, SpringLayout.WEST, this);
-        sl_positionPanel.putConstraint(SpringLayout.SOUTH, positionScrollPane, -10, SpringLayout.SOUTH, this);
-        sl_positionPanel.putConstraint(SpringLayout.EAST, positionScrollPane, -10, SpringLayout.EAST, this);
-        this.add(positionScrollPane);
+    JButton qryPositionBtn = new JButton("\u67E5\u8BE2");
+    qryPositionBtn.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        String instrument = "";
+        PositionUpdater.PositionType type;
+        if (!positionCatCheck.isSelected())
+          instrument = instrumentField.getText().trim();
+        if (positionTypeComb.getSelectedIndex() == 0)
+          type = PositionUpdater.PositionType.SUMMARY;
+        else
+          type = PositionUpdater.PositionType.DETAIL;
+        positionUpdater.query(instrument, type, e.getSource());
+      }
+    });
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, qryPositionBtn, 0, SpringLayout.NORTH, instrumentField);
+    sl_positionPanel.putConstraint(SpringLayout.SOUTH, qryPositionBtn, 0, SpringLayout.SOUTH, instrumentField);
+    this.add(qryPositionBtn);
 
-        positionTable = new JTable();
-        positionUpdater = new PositionUpdater(positionTable, client);
-        positionUpdater.start();
+    JScrollPane positionScrollPane = new JScrollPane();
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, positionScrollPane, 50, SpringLayout.NORTH, this);
+    sl_positionPanel.putConstraint(SpringLayout.WEST, positionScrollPane, 10, SpringLayout.WEST, this);
+    sl_positionPanel.putConstraint(SpringLayout.SOUTH, positionScrollPane, -10, SpringLayout.SOUTH, this);
+    sl_positionPanel.putConstraint(SpringLayout.EAST, positionScrollPane, -10, SpringLayout.EAST, this);
+    this.add(positionScrollPane);
 
-        positionScrollPane.setViewportView(positionTable);
+    positionTable = new JTable();
+    positionUpdater = new PositionUpdater(positionTable, client);
+    positionUpdater.start();
 
-        positionTypeComb = new JComboBox();
-        sl_positionPanel.putConstraint(SpringLayout.WEST, qryPositionBtn, 10, SpringLayout.EAST, positionTypeComb);
-        sl_positionPanel.putConstraint(SpringLayout.NORTH, positionTypeComb, 0, SpringLayout.NORTH, instrumentField);
-        sl_positionPanel.putConstraint(SpringLayout.WEST, positionTypeComb, 110, SpringLayout.WEST, instrumentField);
-        sl_positionPanel.putConstraint(SpringLayout.SOUTH, positionTypeComb, 0, SpringLayout.SOUTH, instrumentLabel);
-        sl_positionPanel.putConstraint(SpringLayout.EAST, positionTypeComb, 80, SpringLayout.EAST, instrumentField);
-        positionTypeComb.setModel(new DefaultComboBoxModel(new String[] {"\u6C47\u603B", "\u660E\u7EC6"}));
-        this.add(positionTypeComb);
-    }
+    positionScrollPane.setViewportView(positionTable);
+
+    positionTypeComb = new JComboBox();
+    sl_positionPanel.putConstraint(SpringLayout.WEST, qryPositionBtn, 10, SpringLayout.EAST, positionTypeComb);
+    sl_positionPanel.putConstraint(SpringLayout.NORTH, positionTypeComb, 0, SpringLayout.NORTH, instrumentField);
+    sl_positionPanel.putConstraint(SpringLayout.WEST, positionTypeComb, 110, SpringLayout.WEST, instrumentField);
+    sl_positionPanel.putConstraint(SpringLayout.SOUTH, positionTypeComb, 0, SpringLayout.SOUTH, instrumentLabel);
+    sl_positionPanel.putConstraint(SpringLayout.EAST, positionTypeComb, 80, SpringLayout.EAST, instrumentField);
+    positionTypeComb.setModel(new DefaultComboBoxModel(new String[]{"\u6C47\u603B", "\u660E\u7EC6"}));
+    this.add(positionTypeComb);
+  }
 }

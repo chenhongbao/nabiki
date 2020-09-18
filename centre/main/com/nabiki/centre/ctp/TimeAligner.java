@@ -34,35 +34,35 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TimeAligner {
-    private final Map<String, Integer> diff = new ConcurrentHashMap<>();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+  private final Map<String, Integer> diff = new ConcurrentHashMap<>();
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    TimeAligner() {
-    }
+  TimeAligner() {
+  }
 
-    void align(String name, LocalTime local, LocalTime remote) {
-        this.diff.put(name, local.toSecondOfDay() - remote.toSecondOfDay());
-    }
+  void align(String name, LocalTime local, LocalTime remote) {
+    this.diff.put(name, local.toSecondOfDay() - remote.toSecondOfDay());
+  }
 
-    void align(String name, LocalTime local, String remote) {
-        try {
-            // The string represents the unavailable login time.
-            // It returns from specific exchange.
-            if (remote.compareTo("--:--:--") == 0)
-                align(name, local, local);
-            else
-                align(name, local, LocalTime.parse(remote, this.formatter));
-        } catch (Throwable th) {
-            System.err.println("fail parsing login time for " + name);
-            th.printStackTrace();
-        }
+  void align(String name, LocalTime local, String remote) {
+    try {
+      // The string represents the unavailable login time.
+      // It returns from specific exchange.
+      if (remote.compareTo("--:--:--") == 0)
+        align(name, local, local);
+      else
+        align(name, local, LocalTime.parse(remote, this.formatter));
+    } catch (Throwable th) {
+      System.err.println("fail parsing login time for " + name);
+      th.printStackTrace();
     }
+  }
 
-    LocalTime getAlignTime(String name, LocalTime now) {
-        var diff = this.diff.get(name);
-        if (diff == null || diff == 0)
-            return now;
-        else
-            return now.minusSeconds(diff);
-    }
+  LocalTime getAlignTime(String name, LocalTime now) {
+    var diff = this.diff.get(name);
+    if (diff == null || diff == 0)
+      return now;
+    else
+      return now.minusSeconds(diff);
+  }
 }

@@ -31,20 +31,20 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CRspUserLogin implements Serializable {
-	public String TradingDay;
-	public String LoginTime;
-	public String BrokerID;
-	public String UserID;
-	public String SystemName;
-	public int FrontID;
-	public int SessionID;
-	public String MaxOrderRef;
-	public String SHFETime;
-	public String DCETime;
-	public String CZCETime;
-	public String FFEXTime;
-	public String INETime;
+  public String TradingDay;
+  public String LoginTime;
+  public String BrokerID;
+  public String UserID;
+  public String SystemName;
+  public int FrontID;
+  public int SessionID;
+  public String MaxOrderRef;
+  public String SHFETime;
+  public String DCETime;
+  public String CZCETime;
+  public String FFEXTime;
+  public String INETime;
 
-	public CRspUserLogin() {
-	}
+  public CRspUserLogin() {
+  }
 }

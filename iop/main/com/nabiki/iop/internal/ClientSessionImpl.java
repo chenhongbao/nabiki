@@ -39,105 +39,105 @@ import org.apache.mina.core.session.IoSession;
 import java.net.InetSocketAddress;
 
 class ClientSessionImpl extends SessionImpl implements ClientSession {
-    private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
+  private static final String IOP_HEARTBEAT_ID_KEY = "iop.heartbeat_id";
 
-    private ClientSessionImpl(IoSession ioSession) {
-        super(ioSession);
-    }
+  private ClientSessionImpl(IoSession ioSession) {
+    super(ioSession);
+  }
 
-    /*
-    Retrieve and return an iop session from the specified io session, or create
-    a new one when no session nothing found.
-    */
-    static synchronized ClientSessionImpl from(IoSession ioSession) {
-        var iop = findSelf(ioSession);
-        if (iop == null)
-            iop = new ClientSessionImpl(ioSession);
-        return (ClientSessionImpl) iop;
-    }
+  /*
+  Retrieve and return an iop session from the specified io session, or create
+  a new one when no session nothing found.
+  */
+  static synchronized ClientSessionImpl from(IoSession ioSession) {
+    var iop = findSelf(ioSession);
+    if (iop == null)
+      iop = new ClientSessionImpl(ioSession);
+    return (ClientSessionImpl) iop;
+  }
 
-    String getHeartbeatID() {
-        var id = getAttribute(IOP_HEARTBEAT_ID_KEY);
-        if (id != null)
-            return (String)id;
-        else
-            return null;
-    }
+  String getHeartbeatID() {
+    var id = getAttribute(IOP_HEARTBEAT_ID_KEY);
+    if (id != null)
+      return (String) id;
+    else
+      return null;
+  }
 
-    @Override
-    public void close() {
-        super.close();
-    }
+  @Override
+  public void close() {
+    super.close();
+  }
 
-    @Override
-    public boolean isClosed() {
-        return super.isClosed();
-    }
+  @Override
+  public boolean isClosed() {
+    return super.isClosed();
+  }
 
-    @Override
-    public void fix() {
-        super.fix();
-    }
+  @Override
+  public void fix() {
+    super.fix();
+  }
 
-    @Override
-    public void sendLogin(Message message) {
-        message.Type = MessageType.REQ_LOGIN;
-        // Need to wait until login request is actually sent.
-        try {
-            super.send(toBody(message), FrameType.LOGIN).await();
-        } catch (InterruptedException ignored) {
-        }
+  @Override
+  public void sendLogin(Message message) {
+    message.Type = MessageType.REQ_LOGIN;
+    // Need to wait until login request is actually sent.
+    try {
+      super.send(toBody(message), FrameType.LOGIN).await();
+    } catch (InterruptedException ignored) {
     }
+  }
 
-    private Body toBody(Message message) {
-        var body = new Body();
-        body.Type = message.Type;
-        body.RequestID = message.RequestID;
-        body.ResponseID = message.ResponseID;
-        body.CurrentCount = message.CurrentCount;
-        body.TotalCount = message.TotalCount;
-        if (message.Body != null)
-            body.Body = OP.toJson(message.Body);
-        if (message.RspInfo != null)
-            body.RspInfo = OP.toJson(message.RspInfo);
-        return body;
-    }
+  private Body toBody(Message message) {
+    var body = new Body();
+    body.Type = message.Type;
+    body.RequestID = message.RequestID;
+    body.ResponseID = message.ResponseID;
+    body.CurrentCount = message.CurrentCount;
+    body.TotalCount = message.TotalCount;
+    if (message.Body != null)
+      body.Body = OP.toJson(message.Body);
+    if (message.RspInfo != null)
+      body.RspInfo = OP.toJson(message.RspInfo);
+    return body;
+  }
 
-    @Override
-    public void sendRequest(Message message) throws InterruptedException {
-        // Send message and set response state.
-        // Need to ensure the request has been sent before return.
-        super.send(toBody(message), FrameType.REQUEST).await();
-    }
+  @Override
+  public void sendRequest(Message message) throws InterruptedException {
+    // Send message and set response state.
+    // Need to ensure the request has been sent before return.
+    super.send(toBody(message), FrameType.REQUEST).await();
+  }
 
-    @Override
-    public void sendHeartbeat(String heartbeatID) {
-        // Take down latest heartbeat ID.
-        setAttribute(IOP_HEARTBEAT_ID_KEY, heartbeatID);
-        var body = new Body();
-        body.RequestID = heartbeatID;
-        body.Type = MessageType.HEARTBEAT;
-        // NO NEED to wait heart beat sent.
-        super.send(body, FrameType.HEARTBEAT);
-    }
+  @Override
+  public void sendHeartbeat(String heartbeatID) {
+    // Take down latest heartbeat ID.
+    setAttribute(IOP_HEARTBEAT_ID_KEY, heartbeatID);
+    var body = new Body();
+    body.RequestID = heartbeatID;
+    body.Type = MessageType.HEARTBEAT;
+    // NO NEED to wait heart beat sent.
+    super.send(body, FrameType.HEARTBEAT);
+  }
 
-    @Override
-    public void setAttribute(String key, Object attribute) {
-        super.setAttribute(key, attribute);
-    }
+  @Override
+  public void setAttribute(String key, Object attribute) {
+    super.setAttribute(key, attribute);
+  }
 
-    @Override
-    public void removeAttribute(String key) {
-        super.removeAttribute(key);
-    }
+  @Override
+  public void removeAttribute(String key) {
+    super.removeAttribute(key);
+  }
 
-    @Override
-    public Object getAttribute(String key) {
-        return super.getAttribute(key);
-    }
+  @Override
+  public Object getAttribute(String key) {
+    return super.getAttribute(key);
+  }
 
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        return super.getRemoteAddress();
-    }
+  @Override
+  public InetSocketAddress getRemoteAddress() {
+    return super.getRemoteAddress();
+  }
 }

@@ -32,15 +32,16 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public interface IOPServer {
-    void bind(InetSocketAddress address) throws IOException;
+  void bind(InetSocketAddress address) throws IOException;
 
-    void setSessionAdaptor(ServerSessionAdaptor adaptor);
+  void setSessionAdaptor(ServerSessionAdaptor adaptor);
 
-    void setMessageHandlerOut(ServerMessageHandler handler);
-    void setMessageHandlerIn(ServerMessageHandler handler);
+  void setMessageHandlerOut(ServerMessageHandler handler);
+
+  void setMessageHandlerIn(ServerMessageHandler handler);
 
 
-    void setLoginManager(LoginManager manager);
+  void setLoginManager(LoginManager manager);
 
-    AdaptorChain getAdaptorChain();
+  AdaptorChain getAdaptorChain();
 }

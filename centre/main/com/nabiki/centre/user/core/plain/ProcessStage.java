@@ -29,5 +29,5 @@
 package com.nabiki.centre.user.core.plain;
 
 public enum ProcessStage implements java.io.Serializable {
-   ONGOING, CANCELED
+  ONGOING, CANCELED
 }

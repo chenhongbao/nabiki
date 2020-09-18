@@ -29,5 +29,5 @@
 package com.nabiki.iop;
 
 public interface ClientMessageHandler {
-    void onMessage(ClientSession session, Message message);
+  void onMessage(ClientSession session, Message message);
 }

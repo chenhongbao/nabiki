@@ -35,34 +35,34 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 
 public class UserAuthProfileTest {
-    @Test
-    public void basic() {
-        // Auth.
-        var auth = new UserAuthProfile.InstrumentAuth();
-        auth.InstrumentID = "c2101";
-        auth.AllowOffset = OrderOffset.ONLY_CLOSE;
+  @Test
+  public void basic() {
+    // Auth.
+    var auth = new UserAuthProfile.InstrumentAuth();
+    auth.InstrumentID = "c2101";
+    auth.AllowOffset = OrderOffset.ONLY_CLOSE;
 
-        var profile = new UserAuthProfile();
+    var profile = new UserAuthProfile();
 
-        profile.UserID = "0001";
-        profile.CanLogin = true;
-        profile.Password = "1234";
-        profile.InstrumentAuths = new LinkedList<>();
-        profile.InstrumentAuths.add(auth);
+    profile.UserID = "0001";
+    profile.CanLogin = true;
+    profile.Password = "1234";
+    profile.InstrumentAuths = new LinkedList<>();
+    profile.InstrumentAuths.add(auth);
 
-        System.out.println(OP.toJson(profile));
+    System.out.println(OP.toJson(profile));
+  }
+
+  @Test
+  public void renew_settle() {
+    var dir = Path.of("C:/Users/chenh/Desktop/.root/.user");
+    var auth = new UserAuthManager(dir);
+
+    try {
+      auth.load();
+      auth.flush();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-
-    @Test
-    public void renew_settle() {
-        var dir = Path.of("C:/Users/chenh/Desktop/.root/.user");
-        var auth = new UserAuthManager(dir);
-
-        try {
-            auth.load();
-            auth.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

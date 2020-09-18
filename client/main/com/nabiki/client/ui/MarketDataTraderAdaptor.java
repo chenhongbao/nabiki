@@ -31,5 +31,5 @@ package com.nabiki.client.ui;
 import com.nabiki.client.sdk.MarketDataListener;
 
 public interface MarketDataTraderAdaptor extends MarketDataListener {
-    void setSubscribeMinute(String instrument, int... minutes);
+  void setSubscribeMinute(String instrument, int... minutes);
 }

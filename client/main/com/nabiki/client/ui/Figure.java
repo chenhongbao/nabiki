@@ -32,25 +32,25 @@ import java.awt.*;
 import java.util.Set;
 
 public interface Figure {
-    void setFigure(int figureID, String instrumentID, int minute);
+  void setFigure(int figureID, String instrumentID, int minute);
 
-    Set<Integer> getFigureID();
+  Set<Integer> getFigureID();
 
-    String getBoundInstrumentID(int figureID);
+  String getBoundInstrumentID(int figureID);
 
-    int getBoundMinute(int figureID);
+  int getBoundMinute(int figureID);
 
-    void setTitle(int figureID, String title);
+  void setTitle(int figureID, String title);
 
-    void setLine(int figureID, String name, Color color);
+  void setLine(int figureID, String name, Color color);
 
-    void setDot(int figureID, String name, Color color);
+  void setDot(int figureID, String name, Color color);
 
-    void stick(int figureID, double open, double high, double low, double close, String xLabel);
+  void stick(int figureID, double open, double high, double low, double close, String xLabel);
 
-    void draw(int figureID, String name, Double value);
+  void draw(int figureID, String name, Double value);
 
-    void update(int figureID);
+  void update(int figureID);
 
-    void dispose(int figureID);
+  void dispose(int figureID);
 }

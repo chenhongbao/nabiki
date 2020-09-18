@@ -29,19 +29,20 @@
 package com.nabiki.objects;
 
 public class CCandle implements java.io.Serializable {
-    public String InstrumentID;
-    public double OpenPrice;
-    public double HighestPrice;
-    public double LowestPrice;
-    public double ClosePrice;
-    public double AveragePrice;
-    public double OpenInterest;
-    public int Volume;
-    public int Minute;
-    public String TradingDay;
-    public String ActionDay;
-    public String UpdateTime;
-    public String EndTime;
+  public String InstrumentID;
+  public double OpenPrice;
+  public double HighestPrice;
+  public double LowestPrice;
+  public double ClosePrice;
+  public double AveragePrice;
+  public double OpenInterest;
+  public int Volume;
+  public int Minute;
+  public String TradingDay;
+  public String ActionDay;
+  public String UpdateTime;
+  public String EndTime;
 
-    public CCandle() {}
+  public CCandle() {
+  }
 }

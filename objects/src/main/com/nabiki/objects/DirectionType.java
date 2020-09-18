@@ -29,6 +29,6 @@
 package com.nabiki.objects;
 
 public class DirectionType {
-    final public static char DIRECTION_BUY = '0';
-    final public static char DIRECTION_SELL = '1';
+  final public static char DIRECTION_BUY = '0';
+  final public static char DIRECTION_SELL = '1';
 }

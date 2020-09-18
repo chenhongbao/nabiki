@@ -31,12 +31,12 @@ package com.nabiki.objects;
 import java.io.Serializable;
 
 public class CQryInstrumentCommissionRate implements Serializable {
-	public String BrokerID;
-	public String InvestorID;
-	public String InstrumentID;
-	public String ExchangeID;
-	public String InvestUnitID;
+  public String BrokerID;
+  public String InvestorID;
+  public String InstrumentID;
+  public String ExchangeID;
+  public String InvestUnitID;
 
-	public CQryInstrumentCommissionRate() {
-	}
+  public CQryInstrumentCommissionRate() {
+  }
 }
