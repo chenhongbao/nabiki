@@ -88,6 +88,12 @@ class QueryTask implements Runnable {
     String ins = randomGet();
     int reqID;
     var in = orderProvider.global.getInstrInfo(ins);
+    if (in == null) {
+      orderProvider.global.getLogger()
+          .warning("unknown instrument ID: " + ins);
+      sleep(1, TimeUnit.SECONDS);
+      return;
+    }
     // Query margin.
     if (in.Margin == null) {
       var req = new CQryInstrumentMarginRate();
@@ -146,8 +152,12 @@ class QueryTask implements Runnable {
 
   protected String randomGet() {
     synchronized (orderProvider.instrumentIDs) {
-      return orderProvider.instrumentIDs.get(
-          Math.abs(rand.nextInt()) % orderProvider.instrumentIDs.size());
+      int r = rand.nextInt() % orderProvider.instrumentIDs.size();
+      // Don't use Math.abs() because it has an exceptional case that for spec
+      // value, it returns negative number.
+      if (r < 0)
+        r *= -1;
+      return orderProvider.instrumentIDs.get(r);
     }
   }
 }
