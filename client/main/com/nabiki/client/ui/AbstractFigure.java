@@ -75,10 +75,6 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
             return frame;
     }
 
-    private void display(ChartMainFrame frame) {
-        frame.setVisible(true);
-    }
-
     private void checkZeroValue(int figureID, String name, double value) {
         if (value == 0.0D)
             System.err.println(String.format(
@@ -133,8 +129,8 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
         var frame = new ChartMainFrame(logDlg);
         frame.setInstrumentID(instrumentID);
         frame.setMinute(minute);
-        setTitle(figureID, instrumentID + " - " + minute + "m");
-        display(frame);
+        frame.setTitle(instrumentID + " - " + minute + "m");
+        frame.setVisible(true);
         mains.put(figureID, frame);
     }
 
@@ -145,7 +141,9 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
     @Override
     public void update(int figureID) {
-        getFrame(figureID).getChartController().update();
+        var ctrl = getFrame(figureID).getChartController();
+        if (ctrl.getDataCount() > 0)
+            ctrl.update();
     }
 
     @Override
