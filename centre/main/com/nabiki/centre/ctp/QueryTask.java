@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CQryInstrumentCommissionRate;
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class QueryTask implements Runnable {
   private final OrderProvider provider;
+  private final Global global;
   protected final Random rand = new Random();
 
   // Wait last request return.
@@ -47,8 +49,9 @@ class QueryTask implements Runnable {
   protected final Signal lastRtn = new Signal();
   protected final AtomicInteger lastID = new AtomicInteger(0);
 
-  QueryTask(OrderProvider provider) {
+  QueryTask(OrderProvider provider, Global global) {
     this.provider = provider;
+    this.global = global;
   }
 
   void signalRequest(int requestID) {
@@ -71,7 +74,7 @@ class QueryTask implements Runnable {
           doQuery();
         } catch (Throwable th) {
           th.printStackTrace();
-          provider.getGlobal().getLogger().warning(th.getMessage());
+          global.getLogger().warning(th.getMessage());
         }
       }
     }
@@ -88,10 +91,9 @@ class QueryTask implements Runnable {
   protected void doQuery() {
     String ins = randomGet();
     int reqID;
-    var in = provider.getGlobal().getInstrInfo(ins);
+    var in = global.getInstrInfo(ins);
     if (in == null) {
-      provider.getGlobal().getLogger()
-          .warning("unknown instrument ID: " + ins);
+      global.getLogger().warning("unknown instrument ID: " + ins);
       sleep(1, TimeUnit.SECONDS);
       return;
     }
@@ -107,15 +109,13 @@ class QueryTask implements Runnable {
           JNI.toJni(req),
           reqID);
       if (r != 0) {
-        provider.getGlobal().getLogger().warning(
-            Utils.formatLog("failed query margin",
-                null, ins, r));
+        global.getLogger().warning(Utils.formatLog(
+            "failed query margin", null, ins, r));
       } else {
         // Sleep up tp some seconds.
         try {
           if (!waitRequestRsp(qryWaitMillis, reqID))
-            provider.getGlobal().getLogger()
-                .warning("query margin timeout: " + ins);
+            global.getLogger().warning("query margin timeout: " + ins);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -134,15 +134,13 @@ class QueryTask implements Runnable {
           JNI.toJni(req0),
           reqID);
       if (r != 0) {
-        provider.getGlobal().getLogger().warning(
-            Utils.formatLog("failed query commission",
-                null, ins, r));
+        global.getLogger().warning(Utils.formatLog(
+            "failed query commission", null, ins, r));
       } else {
         // Sleep up tp some seconds.
         try {
           if (!waitRequestRsp(qryWaitMillis, reqID))
-            provider.getGlobal().getLogger()
-                .warning("query margin timeout: " + ins);
+            global.getLogger().warning("query margin timeout: " + ins);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }

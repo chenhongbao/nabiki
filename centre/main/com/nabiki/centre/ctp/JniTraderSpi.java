@@ -28,15 +28,18 @@
 
 package com.nabiki.centre.ctp;
 
+import com.nabiki.centre.utils.Global;
 import com.nabiki.ctp4j.*;
 
 import java.util.Objects;
 
 public class JniTraderSpi extends CThostFtdcTraderSpi {
   private final OrderProvider provider;
+  private final Global global;
 
-  JniTraderSpi(OrderProvider provider) {
+  JniTraderSpi(OrderProvider provider, Global global) {
     this.provider = provider;
+    this.global = global;
   }
 
   @Override
@@ -45,7 +48,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenFrontConnected();
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -55,7 +58,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenFrontDisconnected(nReason);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -68,7 +71,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspAuthenticate(JNI.toLocal(pRspAuthenticateField), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -81,7 +84,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -94,7 +97,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspUserLogout(JNI.toLocal(pUserLogout), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -107,7 +110,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspOrderInsert(JNI.toLocal(pInputOrder), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -120,7 +123,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspOrderAction(JNI.toLocal(pInputOrderAction), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -133,7 +136,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspSettlementInfoConfirm(JNI.toLocal(pSettlementInfoConfirm), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -146,7 +149,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspQryInstrumentMarginRate(JNI.toLocal(pInstrumentMarginRate), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -159,7 +162,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspQryInstrumentCommissionRate(JNI.toLocal(pInstrumentCommissionRate), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -172,7 +175,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspQryInstrument(JNI.toLocal(pInstrument), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -183,7 +186,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRspError(JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -194,7 +197,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRtnOrder(JNI.toLocal(pOrder));
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -205,7 +208,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenRtnTrade(JNI.toLocal(pTrade));
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -218,7 +221,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenErrRtnOrderInsert(JNI.toLocal(pInputOrder), JNI.toLocal(pRspInfo));
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 
@@ -231,7 +234,7 @@ public class JniTraderSpi extends CThostFtdcTraderSpi {
       this.provider.whenErrRtnOrderAction(JNI.toLocal(pOrderAction), JNI.toLocal(pRspInfo));
     } catch (Throwable th) {
       th.printStackTrace();
-      this.provider.getGlobal().getLogger().warning(th.getMessage());
+      global.getLogger().warning(th.getMessage());
     }
   }
 }

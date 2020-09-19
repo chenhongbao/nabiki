@@ -46,25 +46,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TickProvider implements Connectable {
-  protected final Global global;
-  protected final LoginConfig loginCfg;
-  protected final MarketDataRouter router;
-  protected final CandleEngine engine;
-  protected final ReqRspWriter msgWriter;
-  protected final Set<String> toSubscribe = new HashSet<>(),
+  private final Global global;
+  private final LoginConfig loginCfg;
+  private final MarketDataRouter router;
+  private final CandleEngine engine;
+  private final ReqRspWriter msgWriter;
+  private final Set<String> toSubscribe = new HashSet<>(),
       subscribed = new HashSet<>();
-  protected ExecutorService es = Executors.newCachedThreadPool();
+  private final ExecutorService es = Executors.newCachedThreadPool();
 
-  protected boolean isConnected = false,
+  private boolean isConnected = false,
       isLogin = false;
-  protected WorkingState workingState = WorkingState.STOPPED;
+  private WorkingState workingState = WorkingState.STOPPED;
 
   // Login signal.
-  protected final Signal stateSignal = new Signal();
+  private final Signal stateSignal = new Signal();
 
-  protected String actionDay;
-  protected CThostFtdcMdApi api;
-  protected JniMdSpi spi;
+  private String actionDay;
+  private CThostFtdcMdApi api;
+  private JniMdSpi spi;
 
   public TickProvider(MarketDataRouter router, CandleEngine engine, Global global) {
     this.global = global;
@@ -161,7 +161,7 @@ public class TickProvider implements Connectable {
         this.loginCfg.FlowDirectory,
         this.loginCfg.IsUsingUDP,
         this.loginCfg.IsMulticast);
-    this.spi = new JniMdSpi(this);
+    this.spi = new JniMdSpi(this, global);
     this.api.RegisterSpi(spi);
     for (var addr : this.loginCfg.FrontAddresses)
       this.api.RegisterFront(addr);

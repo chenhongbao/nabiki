@@ -74,12 +74,12 @@ public class OrderProvider implements Connectable {
       qryLastInstrSignal = new Signal();
 
   // Query instrument info.
-  private final QueryTask qryTask = new QueryTask(this);
-  private final Thread qryDaemon = new Thread(this.qryTask);
+  private QueryTask qryTask;
+  private Thread qryDaemon;
 
   // Request daemon.
-  private final RequestDaemon reqDaemon = new RequestDaemon(this);
-  private final Thread orderDaemon = new Thread(this.reqDaemon);
+  private RequestDaemon reqTask;
+  private Thread orderDaemon;
 
   // State.
   private WorkingState workingState = WorkingState.STOPPED;
@@ -98,23 +98,27 @@ public class OrderProvider implements Connectable {
 
   private void orderDaemon() {
     // In case the method is called more than once, throwing exception.
-    if (orderDaemon.isAlive())
+    if (orderDaemon != null && orderDaemon.isAlive())
       return;
     // Start order daemon.
-    this.orderDaemon.setDaemon(true);
-    this.orderDaemon.start();
+    reqTask = new RequestDaemon(this, global);
+    orderDaemon = new Thread(reqTask);
+    orderDaemon.setDaemon(true);
+    orderDaemon.start();
   }
 
   private void qryDaemon() {
     // Count how many requests to send for info.
     estimateQueryCount();
     // Don't start more than once.
-    if (qryDaemon.isAlive())
+    if (qryDaemon != null && qryDaemon.isAlive())
       return;
     // Start the qry daemon whatever because this object is init only once and
     // instruments are updated on every login.
-    this.qryDaemon.setDaemon(true);
-    this.qryDaemon.start();
+    qryTask = new QueryTask(this, global);
+    qryDaemon = new Thread(qryTask);
+    qryDaemon.setDaemon(true);
+    qryDaemon.start();
   }
 
   TimeAligner getTimeAligner() {
@@ -135,10 +139,6 @@ public class OrderProvider implements Connectable {
 
   CRspUserLogin getLoginRsp() {
     return rspLogin;
-  }
-
-  Global getGlobal() {
-    return global;
   }
 
   LoginConfig getLoginCfg() {
@@ -209,7 +209,7 @@ public class OrderProvider implements Connectable {
          */
     this.api = CThostFtdcTraderApi
         .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
-    this.spi = new JniTraderSpi(this);
+    this.spi = new JniTraderSpi(this, global);
     for (var fa : this.loginCfg.FrontAddresses)
       this.api.RegisterFront(fa);
     this.api.SubscribePrivateTopic(THOST_TE_RESUME_TYPE.THOST_TERT_RESUME);
@@ -411,7 +411,7 @@ public class OrderProvider implements Connectable {
   public synchronized String getOrderRef() {
     if (orderRef.get() == Integer.MAX_VALUE) {
       orderRef.set(0);
-      reqDaemon.clearOrderRef();
+      reqTask.clearOrderRef();
     }
     return String.valueOf(orderRef.incrementAndGet());
   }

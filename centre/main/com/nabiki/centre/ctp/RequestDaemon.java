@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.ctp;
 
+import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 class RequestDaemon implements Runnable {
   private final OrderProvider provider;
+  private final Global global;
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
   private final Map<String, LocalDateTime> usedOrderRef = new ConcurrentHashMap<>();
   protected final int MAX_REQ_PER_SEC = 5;
@@ -47,8 +49,9 @@ class RequestDaemon implements Runnable {
   protected long threshold = TimeUnit.SECONDS.toMillis(1);
   protected long timeStamp = System.currentTimeMillis();
 
-  public RequestDaemon(OrderProvider provider) {
+  public RequestDaemon(OrderProvider provider, Global global) {
     this.provider = provider;
+    this.global = global;
   }
 
   private boolean isOrderRefUsed(String orderRef) {
@@ -89,7 +92,7 @@ class RequestDaemon implements Runnable {
             || provider.getWorkingState() == WorkingState.STOPPED)
           break;
         else
-          provider.getGlobal().getLogger().warning(
+          global.getLogger().warning(
               Utils.formatLog("order daemon interrupted",
                   null, e.getMessage(),
                   null));
@@ -116,7 +119,7 @@ class RequestDaemon implements Runnable {
     } else if (pend.order != null) {
       var ref = pend.order.OrderRef;
       if (isOrderRefUsed(ref)) {
-        provider.getGlobal().getLogger().severe(String.format(
+        global.getLogger().severe(String.format(
             "duplicated order[%s], previous order sent at %s",
             ref,
             getPrevOrderDateTime(ref)));
@@ -172,8 +175,7 @@ class RequestDaemon implements Runnable {
   }
 
   protected int fillAndSendAction(CInputOrderAction action) {
-    var instrInfo = provider.getGlobal()
-        .getInstrInfo(action.InstrumentID);
+    var instrInfo = global.getInstrInfo(action.InstrumentID);
     var rtn = provider.getMapper().getRtnOrder(action.OrderRef);
     // Use order ref + front ID + session ID by default.
     // Keep original order ref and instrument ID.
@@ -202,18 +204,18 @@ class RequestDaemon implements Runnable {
   }
 
   protected boolean canTrade(String instrID) {
-    var hour = provider.getGlobal()
-        .getTradingHour(null, instrID);
+    var hour = global.getTradingHour(null, instrID);
     if (hour == null) {
-      provider.getGlobal().getLogger().warning(
+      global.getLogger().warning(
           Utils.formatLog("trading hour global null", instrID,
               null, null));
       return false;
     }
     LocalTime now;
-    var ins = provider.getGlobal().getInstrInfo(instrID);
+    var ins = global.getInstrInfo(instrID);
     if (ins != null && ins.Instrument != null)
-      now = provider.getTimeAligner().getAlignTime(ins.Instrument.ExchangeID,
+      now = provider.getTimeAligner().getAlignTime(
+          ins.Instrument.ExchangeID,
           LocalTime.now());
     else
       now = LocalTime.now();
@@ -240,7 +242,6 @@ class RequestDaemon implements Runnable {
     } else {
       return;
     }
-    provider.getGlobal().getLogger().warning(
-        Utils.formatLog(hint, ref, null, r));
+    global.getLogger().warning(Utils.formatLog(hint, ref, null, r));
   }
 }
