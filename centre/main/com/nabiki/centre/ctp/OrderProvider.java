@@ -95,15 +95,24 @@ public class OrderProvider implements Connectable {
     this.loginCfg = this.global.getLoginConfigs().get("trader");
     this.msgWriter = new ReqRspWriter(this.mapper, this.global);
     this.pendingReqs = new LinkedBlockingQueue<>();
-    daemon();
+    orderDaemon();
   }
 
-  private void daemon() {
+  private void orderDaemon() {
+    // In case the method is called more than once, throwing exception.
+    if (orderDaemon.isAlive())
+      return;
     // Start order daemon.
     this.orderDaemon.setDaemon(true);
     this.orderDaemon.start();
+  }
+
+  private void qryDaemon() {
     // Count how many requests to send for info.
     estimateQueryCount();
+    // Don't start more than once.
+    if (qryDaemon.isAlive())
+      return;
     // Start the qry daemon whatever because this object is init only once and
     // instruments are updated on every login.
     this.qryDaemon.setDaemon(true);
@@ -699,6 +708,8 @@ public class OrderProvider implements Connectable {
       // First update config instrument info, then signal. So other waiting
       // thread can get the correct data.
       this.qryLastInstrSignal.signal();
+      // Start qry task.
+      qryDaemon();
       this.global.getLogger().info("get last qry instrument rsp");
     }
   }
