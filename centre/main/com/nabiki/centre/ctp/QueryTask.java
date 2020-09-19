@@ -39,15 +39,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class QueryTask implements Runnable {
-  private final OrderProvider orderProvider;
+  private final OrderProvider provider;
   protected final Random rand = new Random();
 
   // Wait last request return.
+  protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
   protected final Signal lastRtn = new Signal();
   protected final AtomicInteger lastID = new AtomicInteger(0);
 
-  QueryTask(OrderProvider orderProvider) {
-    this.orderProvider = orderProvider;
+  QueryTask(OrderProvider provider) {
+    this.provider = provider;
   }
 
   void signalRequest(int requestID) {
@@ -65,12 +66,12 @@ class QueryTask implements Runnable {
   @Override
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
-      if (orderProvider.qryInstrLast && orderProvider.isConfirmed) {
+      if (provider.isQryInstrLast() && provider.isConfirmed()) {
         try {
           doQuery();
         } catch (Throwable th) {
           th.printStackTrace();
-          orderProvider.global.getLogger().warning(th.getMessage());
+          provider.getGlobal().getLogger().warning(th.getMessage());
         }
       }
     }
@@ -87,9 +88,9 @@ class QueryTask implements Runnable {
   protected void doQuery() {
     String ins = randomGet();
     int reqID;
-    var in = orderProvider.global.getInstrInfo(ins);
+    var in = provider.getGlobal().getInstrInfo(ins);
     if (in == null) {
-      orderProvider.global.getLogger()
+      provider.getGlobal().getLogger()
           .warning("unknown instrument ID: " + ins);
       sleep(1, TimeUnit.SECONDS);
       return;
@@ -97,23 +98,23 @@ class QueryTask implements Runnable {
     // Query margin.
     if (in.Margin == null) {
       var req = new CQryInstrumentMarginRate();
-      req.BrokerID = orderProvider.loginCfg.BrokerID;
-      req.InvestorID = orderProvider.loginCfg.UserID;
+      req.BrokerID = provider.getLoginCfg().BrokerID;
+      req.InvestorID = provider.getLoginCfg().UserID;
       req.HedgeFlag = CombHedgeFlagType.SPECULATION;
       req.InstrumentID = ins;
       reqID = Utils.getIncrementID();
-      int r = orderProvider.api.ReqQryInstrumentMarginRate(
+      int r = provider.getApi().ReqQryInstrumentMarginRate(
           JNI.toJni(req),
           reqID);
       if (r != 0) {
-        orderProvider.global.getLogger().warning(
+        provider.getGlobal().getLogger().warning(
             Utils.formatLog("failed query margin",
                 null, ins, r));
       } else {
         // Sleep up tp some seconds.
         try {
-          if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-            orderProvider.global.getLogger()
+          if (!waitRequestRsp(qryWaitMillis, reqID))
+            provider.getGlobal().getLogger()
                 .warning("query margin timeout: " + ins);
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -125,22 +126,22 @@ class QueryTask implements Runnable {
     // Query commission.
     if (in.Commission == null) {
       var req0 = new CQryInstrumentCommissionRate();
-      req0.BrokerID = orderProvider.loginCfg.BrokerID;
-      req0.InvestorID = orderProvider.loginCfg.UserID;
+      req0.BrokerID = provider.getLoginCfg().BrokerID;
+      req0.InvestorID = provider.getLoginCfg().UserID;
       req0.InstrumentID = ins;
       reqID = Utils.getIncrementID();
-      var r = orderProvider.api.ReqQryInstrumentCommissionRate(
+      var r = provider.getApi().ReqQryInstrumentCommissionRate(
           JNI.toJni(req0),
           reqID);
       if (r != 0) {
-        orderProvider.global.getLogger().warning(
+        provider.getGlobal().getLogger().warning(
             Utils.formatLog("failed query commission",
                 null, ins, r));
       } else {
         // Sleep up tp some seconds.
         try {
-          if (!waitRequestRsp(orderProvider.qryWaitMillis, reqID))
-            orderProvider.global.getLogger()
+          if (!waitRequestRsp(qryWaitMillis, reqID))
+            provider.getGlobal().getLogger()
                 .warning("query margin timeout: " + ins);
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -151,13 +152,13 @@ class QueryTask implements Runnable {
   }
 
   protected String randomGet() {
-    synchronized (orderProvider.instrumentIDs) {
-      int r = rand.nextInt() % orderProvider.instrumentIDs.size();
+    synchronized (provider.getInstrumentIDs()) {
+      int r = rand.nextInt() % provider.getInstrumentIDs().size();
       // Don't use Math.abs() because it has an exceptional case that for spec
       // value, it returns negative number.
       if (r < 0)
         r *= -1;
-      return orderProvider.instrumentIDs.get(r);
+      return provider.getInstrumentIDs().get(r);
     }
   }
 }

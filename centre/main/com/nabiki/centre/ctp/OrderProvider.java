@@ -46,7 +46,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -54,40 +53,39 @@ import java.util.concurrent.atomic.AtomicInteger;
  * JNI interfaces and invoke callback methods to process responses.
  */
 public class OrderProvider implements Connectable {
-  protected final OrderMapper mapper = new OrderMapper();
-  protected final AtomicInteger orderRef = new AtomicInteger(0);
-  protected final Global global;
-  protected final CandleEngine candleEngine;
-  protected final LoginConfig loginCfg;
-  protected final ReqRspWriter msgWriter;
-  protected final List<String> instrumentIDs = new LinkedList<>();
-  protected final List<CInstrument> activeInstruments = new LinkedList<>();
-  protected final BlockingQueue<PendingRequest> pendingReqs;
-  protected final TimeAligner timeAligner = new TimeAligner();
+  private final OrderMapper mapper = new OrderMapper();
+  private final AtomicInteger orderRef = new AtomicInteger(0);
+  private final Global global;
+  private final CandleEngine candleEngine;
+  private final LoginConfig loginCfg;
+  private final ReqRspWriter msgWriter;
+  private final List<String> instrumentIDs = new LinkedList<>();
+  private final List<CInstrument> activeInstruments = new LinkedList<>();
+  private final BlockingQueue<PendingRequest> pendingReqs;
+  private final TimeAligner timeAligner = new TimeAligner();
 
-  protected boolean isConfirmed = false,
+  private boolean isConfirmed = false,
       isConnected = false,
       qryInstrLast = false;
-  protected CRspUserLogin rspLogin;
+  private CRspUserLogin rspLogin;
 
   // Wait and signaling.
-  protected final Signal stateSignal = new Signal(),
+  private final Signal stateSignal = new Signal(),
       qryLastInstrSignal = new Signal();
 
   // Query instrument info.
-  protected final QueryTask qryTask = new QueryTask(this);
-  protected final Thread qryDaemon = new Thread(this.qryTask);
-  protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
+  private final QueryTask qryTask = new QueryTask(this);
+  private final Thread qryDaemon = new Thread(this.qryTask);
 
   // Request daemon.
-  protected final RequestDaemon reqDaemon = new RequestDaemon(this);
-  protected final Thread orderDaemon = new Thread(this.reqDaemon);
+  private final RequestDaemon reqDaemon = new RequestDaemon(this);
+  private final Thread orderDaemon = new Thread(this.reqDaemon);
 
   // State.
-  protected WorkingState workingState = WorkingState.STOPPED;
+  private WorkingState workingState = WorkingState.STOPPED;
 
-  protected CThostFtdcTraderApi api;
-  protected JniTraderSpi spi;
+  private CThostFtdcTraderApi api;
+  private JniTraderSpi spi;
 
   public OrderProvider(CandleEngine cdl, Global global) {
     this.global = global;
@@ -117,6 +115,42 @@ public class OrderProvider implements Connectable {
     // instruments are updated on every login.
     this.qryDaemon.setDaemon(true);
     this.qryDaemon.start();
+  }
+
+  TimeAligner getTimeAligner() {
+    return timeAligner;
+  }
+
+  BlockingQueue<PendingRequest> getPendingRequests() {
+    return pendingReqs;
+  }
+
+  ReqRspWriter getMsgWriter() {
+    return msgWriter;
+  }
+
+  CThostFtdcTraderApi getApi() {
+    return api;
+  }
+
+  CRspUserLogin getLoginRsp() {
+    return rspLogin;
+  }
+
+  Global getGlobal() {
+    return global;
+  }
+
+  LoginConfig getLoginCfg() {
+    return loginCfg;
+  }
+
+  boolean isQryInstrLast() {
+    return qryInstrLast;
+  }
+
+  boolean isConfirmed() {
+    return isConfirmed;
   }
 
   @Override
@@ -231,9 +265,9 @@ public class OrderProvider implements Connectable {
   }
 
   public boolean waitLastInstrument(long millis) throws InterruptedException {
-    if (!this.qryInstrLast)
+    if (!isQryInstrLast())
       this.qryLastInstrSignal.waitSignal(millis);
-    return this.qryInstrLast;
+    return isQryInstrLast();
   }
 
   public boolean waitWorkingState(WorkingState stateToWait, long millis) {
@@ -692,7 +726,6 @@ public class OrderProvider implements Connectable {
         this.activeInstruments.add(instrument);
         this.instrumentIDs.add(instrument.InstrumentID);
       }
-      this.qryInstrLast = isLast;
     } else {
       this.global.getLogger().severe(
           Utils.formatLog("failed instrument query", null,
@@ -702,7 +735,7 @@ public class OrderProvider implements Connectable {
     // Signal request rtn.
     this.qryTask.signalRequest(requestID);
     // Signal last rsp.
-    if (this.qryInstrLast) {
+    if (isLast) {
       // Set active instruments into config, and remove obsolete ones.
       GlobalConfig.resetInstrConfig(this.activeInstruments);
       // First update config instrument info, then signal. So other waiting
@@ -712,6 +745,9 @@ public class OrderProvider implements Connectable {
       qryDaemon();
       this.global.getLogger().info("get last qry instrument rsp");
     }
+    // Set mark after config updates, so it always signals the daemon to
+    // qry after info is ready.
+    this.qryInstrLast = isLast;
   }
 
   public void whenRspQryInstrumentCommissionRate(

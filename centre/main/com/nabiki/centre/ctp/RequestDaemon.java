@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 class RequestDaemon implements Runnable {
-  private final OrderProvider orderProvider;
+  private final OrderProvider provider;
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
   private final Map<String, LocalDateTime> usedOrderRef = new ConcurrentHashMap<>();
   protected final int MAX_REQ_PER_SEC = 5;
@@ -47,8 +47,8 @@ class RequestDaemon implements Runnable {
   protected long threshold = TimeUnit.SECONDS.toMillis(1);
   protected long timeStamp = System.currentTimeMillis();
 
-  public RequestDaemon(OrderProvider orderProvider) {
-    this.orderProvider = orderProvider;
+  public RequestDaemon(OrderProvider provider) {
+    this.provider = provider;
   }
 
   private boolean isOrderRefUsed(String orderRef) {
@@ -82,14 +82,14 @@ class RequestDaemon implements Runnable {
         // loop.
         if (pend != null) {
           Thread.sleep(threshold);
-          orderProvider.pendingReqs.offer(pend);
+          provider.getPendingRequests().offer(pend);
         }
       } catch (InterruptedException e) {
-        if (orderProvider.workingState == WorkingState.STOPPING
-            || orderProvider.workingState == WorkingState.STOPPED)
+        if (provider.getWorkingState() == WorkingState.STOPPING
+            || provider.getWorkingState() == WorkingState.STOPPED)
           break;
         else
-          orderProvider.global.getLogger().warning(
+          provider.getGlobal().getLogger().warning(
               Utils.formatLog("order daemon interrupted",
                   null, e.getMessage(),
                   null));
@@ -100,7 +100,7 @@ class RequestDaemon implements Runnable {
   private PendingRequest trySendRequest() throws InterruptedException {
     PendingRequest pend = null;
     while (pend == null)
-      pend = orderProvider.pendingReqs.poll(1, TimeUnit.DAYS);
+      pend = provider.getPendingRequests().poll(1, TimeUnit.DAYS);
     // Await time out, or notified by new request.
     // Instrument not trading.
     if (!canTrade(getInstrID(pend))) {
@@ -112,18 +112,18 @@ class RequestDaemon implements Runnable {
     if (pend.action != null) {
       r = fillAndSendAction(pend.action);
       if (r == 0)
-        orderProvider.msgWriter.writeReq(pend.action);
+        provider.getMsgWriter().writeReq(pend.action);
     } else if (pend.order != null) {
       var ref = pend.order.OrderRef;
       if (isOrderRefUsed(ref)) {
-        orderProvider.global.getLogger().severe(String.format(
+        provider.getGlobal().getLogger().severe(String.format(
             "duplicated order[%s], previous order sent at %s",
             ref,
             getPrevOrderDateTime(ref)));
       } else {
         r = fillAndSendOrder(pend.order);
         if (r == 0)
-          orderProvider.msgWriter.writeReq(pend.order);
+          provider.getMsgWriter().writeReq(pend.order);
       }
     }
     // Check send ret code.
@@ -153,9 +153,9 @@ class RequestDaemon implements Runnable {
 
   protected int fillAndSendOrder(CInputOrder input) {
     // Set correct users.
-    input.BrokerID = orderProvider.rspLogin.BrokerID;
-    input.UserID = orderProvider.rspLogin.UserID;
-    input.InvestorID = orderProvider.rspLogin.UserID;
+    input.BrokerID = provider.getLoginRsp().BrokerID;
+    input.UserID = provider.getLoginRsp().UserID;
+    input.InvestorID = provider.getLoginRsp().UserID;
     // Adjust flags.
     input.CombHedgeFlag = CombHedgeFlagType.SPECULATION;
     input.ContingentCondition = ContingentConditionType.IMMEDIATELY;
@@ -166,22 +166,23 @@ class RequestDaemon implements Runnable {
     input.StopPrice = 0;
     input.TimeCondition = TimeConditionType.GFD;
     input.VolumeCondition = VolumeConditionType.ANY_VOLUME;
-    return orderProvider.api.ReqOrderInsert(
+    return provider.getApi().ReqOrderInsert(
         JNI.toJni(input),
         Utils.getIncrementID());
   }
 
   protected int fillAndSendAction(CInputOrderAction action) {
-    var instrInfo = orderProvider.global.getInstrInfo(action.InstrumentID);
-    var rtn = orderProvider.mapper.getRtnOrder(action.OrderRef);
+    var instrInfo = provider.getGlobal()
+        .getInstrInfo(action.InstrumentID);
+    var rtn = provider.getMapper().getRtnOrder(action.OrderRef);
     // Use order ref + front ID + session ID by default.
     // Keep original order ref and instrument ID.
-    action.FrontID = orderProvider.rspLogin.FrontID;
-    action.SessionID = orderProvider.rspLogin.SessionID;
+    action.FrontID = provider.getLoginRsp().FrontID;
+    action.SessionID = provider.getLoginRsp().SessionID;
     // Set common fields.
-    action.BrokerID = orderProvider.rspLogin.BrokerID;
-    action.InvestorID = orderProvider.rspLogin.UserID;
-    action.UserID = orderProvider.rspLogin.UserID;
+    action.BrokerID = provider.getLoginRsp().BrokerID;
+    action.InvestorID = provider.getLoginRsp().UserID;
+    action.UserID = provider.getLoginRsp().UserID;
     // Action delete.
     action.ActionFlag = ActionFlagType.DELETE;
     // Set order sys ID if possible.
@@ -195,27 +196,28 @@ class RequestDaemon implements Runnable {
       action.ExchangeID = (instrInfo.Instrument != null)
           ? instrInfo.Instrument.ExchangeID : null;
     }
-    return orderProvider.api.ReqOrderAction(
+    return provider.getApi().ReqOrderAction(
         JNI.toJni(action),
         Utils.getIncrementID());
   }
 
   protected boolean canTrade(String instrID) {
-    var hour = orderProvider.global.getTradingHour(null, instrID);
+    var hour = provider.getGlobal()
+        .getTradingHour(null, instrID);
     if (hour == null) {
-      orderProvider.global.getLogger().warning(
+      provider.getGlobal().getLogger().warning(
           Utils.formatLog("trading hour global null", instrID,
               null, null));
       return false;
     }
     LocalTime now;
-    var ins = orderProvider.global.getInstrInfo(instrID);
+    var ins = provider.getGlobal().getInstrInfo(instrID);
     if (ins != null && ins.Instrument != null)
-      now = orderProvider.timeAligner.getAlignTime(ins.Instrument.ExchangeID,
+      now = provider.getTimeAligner().getAlignTime(ins.Instrument.ExchangeID,
           LocalTime.now());
     else
       now = LocalTime.now();
-    return orderProvider.isConfirmed && hour.contains(now.minusSeconds(1));
+    return provider.isConfirmed() && hour.contains(now.minusSeconds(1));
   }
 
   protected String getInstrID(PendingRequest pend) {
@@ -235,9 +237,10 @@ class RequestDaemon implements Runnable {
     } else if (pend.action != null) {
       ref = pend.action.OrderRef;
       hint = "failed sending action";
-    } else
+    } else {
       return;
-    orderProvider.global.getLogger().warning(
+    }
+    provider.getGlobal().getLogger().warning(
         Utils.formatLog(hint, ref, null, r));
   }
 }
