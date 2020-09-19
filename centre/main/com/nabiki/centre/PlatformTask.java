@@ -40,7 +40,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 class PlatformTask extends TimerTask {
-  private final Platform P;
+  private final Platform main;
   private final Global global;
 
   private WorkingState workingState = WorkingState.STOPPED;
@@ -61,8 +61,8 @@ class PlatformTask extends TimerTask {
       LocalTime.of(15, 45)
   };
 
-  PlatformTask(Platform p, Global global) {
-    this.P = p;
+  PlatformTask(Platform main, Global global) {
+    this.main = main;
     this.global = global;
   }
 
@@ -93,8 +93,8 @@ class PlatformTask extends TimerTask {
   private void renew() {
     try {
       this.global.getLogger().info("platform renewing");
-      P.authMgr.load();
-      P.userMgr.renew();
+      main.getAuth().load();
+      main.getUsers().renew();
       GlobalConfig.config();
       this.userState = UserState.RENEW;
       this.global.getLogger().info("platform renewed");
@@ -107,9 +107,9 @@ class PlatformTask extends TimerTask {
   private void settle() {
     this.global.getLogger().info("platform settling");
     try {
-      P.authMgr.flush();
-      P.userMgr.settle();
-      P.orderProvider.getMapper().settle();
+      main.getAuth().flush();
+      main.getUsers().settle();
+      main.getOrder().getMapper().settle();
       this.userState = UserState.SETTLED;
       this.global.getLogger().info("platform settled");
     } catch (Throwable th) {
@@ -128,22 +128,22 @@ class PlatformTask extends TimerTask {
 
   private void startTrader() {
     try {
-      if (!connect(P.orderProvider)) {
+      if (!connect(main.getOrder())) {
         this.global.getLogger().warning("trader connect failed");
         return;
       }
-      P.orderProvider.login();
+      main.getOrder().login();
       // Wait query instruments completed.
-      if (!P.orderProvider.waitLastInstrument(TimeUnit.MINUTES.toMillis(1)))
+      if (!main.getOrder().waitLastInstrument(TimeUnit.MINUTES.toMillis(1)))
         this.global.getLogger().info("query instrument timeout");
       else
         // Update subscription so at next reconnect it will subscribe the
         // new instruments.
-        P.tickProvider.setSubscription(P.orderProvider.getInstrumentIDs());
+        main.getTick().setSubscription(main.getOrder().getInstrumentIDs());
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    if (P.orderProvider.getWorkingState() != WorkingState.STARTED)
+    if (main.getOrder().getWorkingState() != WorkingState.STARTED)
       this.global.getLogger().severe("trader didn't start up");
     else if (this.userState == UserState.SETTLED)
       // Renew user information.
@@ -152,12 +152,12 @@ class PlatformTask extends TimerTask {
 
   private void startMd() {
     try {
-      if (!connect(P.tickProvider)) {
+      if (!connect(main.getTick())) {
         this.global.getLogger().warning("md connect failed");
         return;
       }
-      P.tickProvider.login();
-      var r = P.tickProvider.waitWorkingState(
+      main.getTick().login();
+      var r = main.getTick().waitWorkingState(
           WorkingState.STARTED,
           TimeUnit.MINUTES.toMillis(1));
       if (!r)
@@ -178,13 +178,13 @@ class PlatformTask extends TimerTask {
     this.global.getLogger().info("platform starting");
     // Start order provider first because it qry available instruments used
     // in subscription in tick provider.
-    if (P.orderProvider.getWorkingState() != WorkingState.STARTED)
+    if (main.getOrder().getWorkingState() != WorkingState.STARTED)
       startTrader();
-    if (P.tickProvider.getWorkingState() != WorkingState.STARTED)
+    if (main.getTick().getWorkingState() != WorkingState.STARTED)
       startMd();
     // Check state.
-    if (P.orderProvider.getWorkingState() == WorkingState.STARTED
-        && P.tickProvider.getWorkingState() == WorkingState.STARTED) {
+    if (main.getOrder().getWorkingState() == WorkingState.STARTED
+        && main.getTick().getWorkingState() == WorkingState.STARTED) {
       this.workingState = WorkingState.STARTED;
       this.global.getLogger().info("platform started");
     } else {
@@ -197,9 +197,9 @@ class PlatformTask extends TimerTask {
       // The CTP docs says it is not encouraged to release api.
       // Users should wait reconnect and then login to reuse the api. So here
       // just logout, don't disconnect.
-      P.orderProvider.logout();
+      main.getOrder().logout();
       // Wait for logout.
-      var r = P.orderProvider.waitWorkingState(
+      var r = main.getOrder().waitWorkingState(
           WorkingState.STOPPED,
           TimeUnit.MINUTES.toMillis(1));
       if (!r)
@@ -212,11 +212,11 @@ class PlatformTask extends TimerTask {
   private void stop() {
     this.workingState = WorkingState.STOPPING;
     this.global.getLogger().info("platform stopping");
-    if (P.orderProvider.getWorkingState() != WorkingState.STOPPED)
+    if (main.getOrder().getWorkingState() != WorkingState.STOPPED)
       stopTrader();
     // Don't stop md because its logout return CTP error(77).
     // Change state.
-    if (P.orderProvider.getWorkingState() == WorkingState.STOPPED)
+    if (main.getOrder().getWorkingState() == WorkingState.STOPPED)
       this.global.getLogger().info("platform stopped");
     else
       this.global.getLogger()

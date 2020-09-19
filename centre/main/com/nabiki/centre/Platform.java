@@ -56,20 +56,36 @@ import java.util.concurrent.TimeUnit;
  * </ul>
  */
 public class Platform {
-  Global global;
-  CandleEngine candleEngine;
-  OrderProvider orderProvider;
-  TickProvider tickProvider;
-  UserAuthManager authMgr;
-  ActiveUserManager userMgr;
+  private Global global;
+  private CandleEngine candleEngine;
+  private OrderProvider orderProvider;
+  private TickProvider tickProvider;
+  private UserAuthManager authMgr;
+  private ActiveUserManager userMgr;
 
-  final MarketDataRouter router;
-  final Timer timerPlat;
-  final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
+  private final MarketDataRouter router;
+  private final Timer timerPlat;
+  private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
   Platform() {
     this.timerPlat = new Timer();
     this.router = new MarketDataRouter();
+  }
+
+  OrderProvider getOrder() {
+    return orderProvider;
+  }
+
+  TickProvider getTick() {
+    return tickProvider;
+  }
+
+  UserAuthManager getAuth() {
+    return authMgr;
+  }
+
+  ActiveUserManager getUsers() {
+    return userMgr;
   }
 
   private void loadDlls() {
