@@ -28,7 +28,6 @@
 
 package com.nabiki.iop.internal;
 
-import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.frame.FrameParser;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
@@ -52,37 +51,12 @@ class FrameDecoder extends CumulativeProtocolDecoder {
     // Read bytes.
     byte[] bytes = new byte[in.remaining()];
     in.get(bytes);
-    try {
-      // Parse.
-      boolean r = parser.parse(bytes);
-      if (r) {
-        while (parser.size() > 0)
-          out.write(parser.poll());
-      }
-      return false;
-    }catch (Throwable th) {
-      throw new IllegalStateException(
-          getFrameDigest(th.getMessage(), parser.getDecodingFrame()));
+    // Parse.
+    boolean r = parser.parse(bytes);
+    if (r) {
+      while (parser.size() > 0)
+        out.write(parser.poll());
     }
-  }
-
-  private String getFrameDigest(String error, Frame decoding) {
-    StringBuilder m = new StringBuilder(String.format(
-        "Frame[type:%d][length:%d] error: %s. ",
-        decoding.Type,
-        decoding.Length,
-        error));
-    int n = Math.min(decoding.Body.length, 1024);
-    int count = 0, index = 0;
-    m.append(System.lineSeparator()).append("\t");
-    while (index < n) {
-      ++count;
-      m.append(String.format("%02x ", decoding.Body[index++]));
-      if (count >= 32) {
-        m.append(System.lineSeparator()).append("\t");
-        count = 0;
-      }
-    }
-    return m.toString();
+    return false;
   }
 }

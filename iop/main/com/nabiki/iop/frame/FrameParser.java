@@ -44,10 +44,6 @@ public class FrameParser extends LinkedList<Frame> {
   public FrameParser() {
   }
 
-  public Frame getDecodingFrame() {
-    return decoding;
-  }
-
   /**
    * Get parser internal state {@link ParsingState}.
    *
@@ -76,9 +72,13 @@ public class FrameParser extends LinkedList<Frame> {
   public boolean parse(byte[] bytes) {
     if (bytes == null || bytes.length == 0)
       throw new IllegalArgumentException("no input bytes");
-    store(bytes);
-    parseBuffer();
-    return super.size() > 0;
+    try {
+      store(bytes);
+      parseBuffer();
+      return super.size() > 0;
+    } catch (Throwable th) {
+      throw new RuntimeException(getFrameDigest(th.getMessage(), decoding));
+    }
   }
 
   /*
@@ -208,5 +208,25 @@ public class FrameParser extends LinkedList<Frame> {
       return true;
     } else
       return false;
+  }
+
+  private String getFrameDigest(String error, Frame decoding) {
+    StringBuilder m = new StringBuilder(String.format(
+        "Frame[type:%d][length:%d] %s.",
+        decoding.Type,
+        decoding.Length,
+        error));
+    int n = Math.min(decoding.Body.length, 1024);
+    int count = 0, index = 0;
+    m.append(System.lineSeparator()).append("\t");
+    while (index < n) {
+      ++count;
+      m.append(String.format("%02x ", decoding.Body[index++]));
+      if (count >= 32) {
+        m.append(System.lineSeparator()).append("\t");
+        count = 0;
+      }
+    }
+    return m.toString();
   }
 }
