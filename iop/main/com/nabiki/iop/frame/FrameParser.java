@@ -77,7 +77,10 @@ public class FrameParser extends LinkedList<Frame> {
       parseBuffer();
       return super.size() > 0;
     } catch (Throwable th) {
-      throw new RuntimeException(getFrameDigest(th.getMessage(), decoding));
+      var m = getFrameDigest(th.getMessage(), decoding);
+      resetDecoding();
+      buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+      throw new RuntimeException(m);
     }
   }
 
@@ -131,9 +134,7 @@ public class FrameParser extends LinkedList<Frame> {
           // If the body is filled, a frame is successfully decoded.
           if (setBody()) {
             super.add(this.decoding);
-            this.decoding = new Frame();
-            this.bodyPosition = 0;
-            this.state = ParsingState.WAIT_HEADER_TYPE;
+            resetDecoding();
           }
           break;
         case WAIT_SYNC:
@@ -151,6 +152,12 @@ public class FrameParser extends LinkedList<Frame> {
     // Compact the buffer so that next write starts from position, which
     // is after the previous element.
     this.buffer.compact();
+  }
+
+  private void resetDecoding() {
+    this.decoding = new Frame();
+    this.bodyPosition = 0;
+    this.state = ParsingState.WAIT_HEADER_TYPE;
   }
 
   private void setHeaderType() {
