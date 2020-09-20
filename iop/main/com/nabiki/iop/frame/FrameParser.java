@@ -44,6 +44,10 @@ public class FrameParser extends LinkedList<Frame> {
   public FrameParser() {
   }
 
+  public Frame getDecodingFrame() {
+    return decoding;
+  }
+
   /**
    * Get parser internal state {@link ParsingState}.
    *
