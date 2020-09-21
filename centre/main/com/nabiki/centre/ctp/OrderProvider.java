@@ -44,6 +44,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -93,10 +94,10 @@ public class OrderProvider implements Connectable {
     this.loginCfg = this.global.getLoginConfigs().get("trader");
     this.msgWriter = new ReqRspWriter(this.mapper, this.global);
     this.pendingReqs = new LinkedBlockingQueue<>();
-    orderDaemon();
+    startOrderDaemonOnce();
   }
 
-  private void orderDaemon() {
+  private void startOrderDaemonOnce() {
     // In case the method is called more than once, throwing exception.
     if (orderDaemon != null && orderDaemon.isAlive())
       return;
@@ -107,7 +108,7 @@ public class OrderProvider implements Connectable {
     orderDaemon.start();
   }
 
-  private void qryDaemon() {
+  private void startQryDaemonOnce() {
     // Count how many requests to send for info.
     estimateQueryCount();
     // Don't start more than once.
@@ -298,24 +299,28 @@ public class OrderProvider implements Connectable {
    * @return always return 0
    */
   public synchronized int inputOrder(CInputOrder input, ActiveRequest active) {
-    if (!isOrderRefUnique(input.OrderRef)) {
-      global.getLogger().warning(
-          Utils.formatLog("duplicated order",
-              input.OrderRef, null, null));
-      return -1;
-    }
-    // Set the initial rtn order.
-    registerInitialOrderInsert(input, active);
     // Check time.
     if (isOver(input.InstrumentID)) {
       rspError(input, ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);
       return ErrorCodes.FRONT_NOT_ACTIVE;
     } else {
-      if (!this.pendingReqs.offer(new PendingRequest(input, active)))
+      // Check order ref only after it is time for sending requests.
+      if (!isOrderRefUnique(input.OrderRef)) {
+        global.getLogger().warning(
+            Utils.formatLog("duplicated order",
+                input.OrderRef, null, null));
+        return -1;
+      }
+      if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
         return (-2);
-      else
+      } else {
+        // Only after request is sent successfully, initialize rtn order.
+        // Otherwise, it looks like request is sent, actually hasn't, when there's
+        // error like exception.
+        registerInitialOrderInsert(input, active);
         return ErrorCodes.NONE;
+      }
     }
   }
 
@@ -355,11 +360,9 @@ public class OrderProvider implements Connectable {
 
   protected boolean isOver(String instrID) {
     var hour = this.global.getTradingHour(null, instrID);
-    if (hour == null)
-      throw new IllegalArgumentException("invalid instr for trading hour");
     var depth = this.global.getDepthMarketData(instrID);
-    if (depth == null)
-      throw new IllegalStateException("depth market data not found");
+    Objects.requireNonNull(hour, "invalid instr for trading hour");
+    Objects.requireNonNull(depth, "depth market data not found");
     var depthTradingDay = Utils.parseDay(depth.TradingDay, null);
     var day = LocalDate.now();
     var time = LocalTime.now();
@@ -732,22 +735,22 @@ public class OrderProvider implements Connectable {
               rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
-    // Signal request rtn.
-    this.qryTask.signalRequest(requestID);
+    // Don't signal qry task for instrument rsp because it doesn't qry instruments
+    // and it qry commission and margin.
     // Signal last rsp.
     if (isLast) {
       // Set active instruments into config, and remove obsolete ones.
       GlobalConfig.resetInstrConfig(this.activeInstruments);
       // First update config instrument info, then signal. So other waiting
       // thread can get the correct data.
+      this.qryInstrLast = true;
       this.qryLastInstrSignal.signal();
       // Start qry task.
-      qryDaemon();
+      startQryDaemonOnce();
       this.global.getLogger().info("get last qry instrument rsp");
+    } else {
+      this.qryInstrLast = false;
     }
-    // Set mark after config updates, so it always signals the daemon to
-    // qry after info is ready.
-    this.qryInstrLast = isLast;
   }
 
   public void whenRspQryInstrumentCommissionRate(
