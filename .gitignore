@@ -12,5 +12,5 @@ hs_err_pid*
 
 # Compiled output
 out/
-bundles/
+lib2/
 .idea/
