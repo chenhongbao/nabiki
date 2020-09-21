@@ -35,6 +35,7 @@ import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.centre.utils.Utils;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +96,6 @@ class PlatformTask extends TimerTask {
       this.global.getLogger().info("platform renewing");
       main.getAuth().load();
       main.getUsers().renew();
-      GlobalConfig.config();
       this.userState = UserState.RENEW;
       this.global.getLogger().info("platform renewed");
     } catch (Throwable th) {
@@ -175,6 +175,13 @@ class PlatformTask extends TimerTask {
   // especially on login/out failure.
   private void start() {
     this.workingState = WorkingState.STARTING;
+    // Re-load config before starting platform for a new day.
+    try {
+      GlobalConfig.config();
+    } catch (IOException e) {
+      e.printStackTrace();
+      this.global.getLogger().warning(e.getMessage());
+    }
     this.global.getLogger().info("platform starting");
     // Start order provider first because it qry available instruments used
     // in subscription in tick provider.
