@@ -72,7 +72,7 @@ public class UserPosition {
     r.FrozenMargin = 0;
     for (var lst : this.positionMap.values())
       for (var p : lst) {
-        r.FrozenCommission = p.getFrozenCommission();
+        r.FrozenCommission += p.getFrozenCommission();
         r.FrozenMargin += p.getFrozenMargin();
       }
     return r;
