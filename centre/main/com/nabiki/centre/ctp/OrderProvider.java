@@ -45,8 +45,8 @@ import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -62,7 +62,7 @@ public class OrderProvider implements Connectable {
   private final ReqRspWriter msgWriter;
   private final List<String> instrumentIDs = new LinkedList<>();
   private final List<CInstrument> activeInstruments = new LinkedList<>();
-  private final BlockingQueue<PendingRequest> pendingReqs;
+  private final BlockingDeque<PendingRequest> pendingReqs;
   private final TimeAligner timeAligner = new TimeAligner();
 
   private boolean isConfirmed = false,
@@ -93,7 +93,7 @@ public class OrderProvider implements Connectable {
     this.candleEngine = cdl;
     this.loginCfg = this.global.getLoginConfigs().get("trader");
     this.msgWriter = new ReqRspWriter(this.mapper, this.global);
-    this.pendingReqs = new LinkedBlockingQueue<>();
+    this.pendingReqs = new LinkedBlockingDeque<>();
     startOrderDaemonOnce();
   }
 
@@ -126,7 +126,7 @@ public class OrderProvider implements Connectable {
     return timeAligner;
   }
 
-  BlockingQueue<PendingRequest> getPendingRequests() {
+  BlockingDeque<PendingRequest> getPendingRequests() {
     return pendingReqs;
   }
 
@@ -581,6 +581,8 @@ public class OrderProvider implements Connectable {
     // were rewritten by the method, with local IDs.
     this.msgWriter.writeRtn(rtn);
     this.mapper.register(rtn);
+    // Signal request daemon that last order rsp has arrived.
+    this.reqTask.signalOrderRef(rtn.OrderRef);
   }
 
   protected void doTrade(CTrade trade) {

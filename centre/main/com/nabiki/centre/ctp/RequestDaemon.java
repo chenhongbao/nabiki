@@ -38,6 +38,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 class RequestDaemon implements Runnable {
   private final OrderProvider provider;
@@ -48,6 +50,10 @@ class RequestDaemon implements Runnable {
   protected int sendCnt = 0;
   protected long threshold = TimeUnit.SECONDS.toMillis(1);
   protected long timeStamp = System.currentTimeMillis();
+
+  private String lastOrderRef = "";
+  private final ReentrantLock lock = new ReentrantLock();
+  private final Condition cond = lock.newCondition();
 
   public RequestDaemon(OrderProvider provider, Global global) {
     this.provider = provider;
@@ -75,6 +81,34 @@ class RequestDaemon implements Runnable {
     usedOrderRef.clear();
   }
 
+  void signalOrderRef(String ref) {
+    if (lastOrderRef != null && ref.compareTo(lastOrderRef) == 0) {
+      lock.lock();
+      try {
+        cond.signal();
+      } finally {
+        lock.unlock();
+      }
+    }
+  }
+
+  private boolean waitOrderRsp(int value, TimeUnit unit) {
+    if (lastOrderRef == null || lastOrderRef.length() == 0) {
+      return true;
+    }
+    lock.lock();
+    try {
+      return cond.await(value, unit);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return false;
+    } finally {
+      lock.unlock();
+      // Reset last order ref after getting signaled.
+      lastOrderRef = null;
+    }
+  }
+
   @Override
   public void run() {
 
@@ -85,7 +119,14 @@ class RequestDaemon implements Runnable {
         // loop.
         if (pend != null) {
           Thread.sleep(threshold);
-          provider.getPendingRequests().offer(pend);
+          // Don't change the order of requests in queue. The request is polled from
+          // the front of the queue, then reset it to the first.
+          provider.getPendingRequests().offerFirst(pend);
+        } else {
+          // Wait order rsp because async inserting order causes refs no auto-inc.
+          // For example, ref(14) arrives, and then ref(13) arrives.
+          if (!waitOrderRsp(15, TimeUnit.SECONDS))
+            global.getLogger().warning("order rsp timeout");
         }
       } catch (InterruptedException e) {
         if (provider.getWorkingState() == WorkingState.STOPPING
@@ -103,7 +144,7 @@ class RequestDaemon implements Runnable {
   private PendingRequest trySendRequest() throws InterruptedException {
     PendingRequest pend = null;
     while (pend == null)
-      pend = provider.getPendingRequests().poll(1, TimeUnit.DAYS);
+      pend = provider.getPendingRequests().pollFirst(1, TimeUnit.DAYS);
     // Await time out, or notified by new request.
     // Instrument not trading.
     if (!canTrade(getInstrID(pend))) {
@@ -114,8 +155,9 @@ class RequestDaemon implements Runnable {
     // Fill and send order at first place so its fields are filled.
     if (pend.action != null) {
       r = fillAndSendAction(pend.action);
-      if (r == 0)
+      if (r == 0) {
         provider.getMsgWriter().writeReq(pend.action);
+      }
     } else if (pend.order != null) {
       var ref = pend.order.OrderRef;
       if (isOrderRefUsed(ref)) {
@@ -125,8 +167,11 @@ class RequestDaemon implements Runnable {
             getPrevOrderDateTime(ref)));
       } else {
         r = fillAndSendOrder(pend.order);
-        if (r == 0)
+        if (r == 0) {
+          // Remember the last order ref, wait for rsp.
+          lastOrderRef = ref;
           provider.getMsgWriter().writeReq(pend.order);
+        }
       }
     }
     // Check send ret code.
