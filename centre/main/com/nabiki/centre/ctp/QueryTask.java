@@ -150,13 +150,16 @@ class QueryTask implements Runnable {
   }
 
   protected String randomGet() {
-    synchronized (provider.getInstrumentIDs()) {
-      int r = rand.nextInt() % provider.getInstrumentIDs().size();
-      // Don't use Math.abs() because it has an exceptional case that for spec
-      // value, it returns negative number.
-      if (r < 0)
-        r *= -1;
-      return provider.getInstrumentIDs().get(r);
+    var ids = provider.getInstrumentIDs();
+    var size = ids.size();
+    if (size == 0) {
+      return "";
+    } else {
+      try {
+        return ids.get(Math.abs(rand.nextInt() % size));
+      } catch (Throwable ignored) {
+        return "";
+      }
     }
   }
 }

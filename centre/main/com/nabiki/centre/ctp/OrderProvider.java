@@ -42,10 +42,9 @@ import com.nabiki.objects.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,8 +59,8 @@ public class OrderProvider implements Connectable {
   private final CandleEngine candleEngine;
   private final LoginConfig loginCfg;
   private final ReqRspWriter msgWriter;
-  private final List<String> instrumentIDs = new LinkedList<>();
-  private final List<CInstrument> activeInstruments = new LinkedList<>();
+  private final Set<String> instrumentIDs = new HashSet<>();
+  private final Map<String, CInstrument> activeInstruments = new ConcurrentHashMap<>();
   private final BlockingDeque<PendingRequest> pendingReqs;
   private final TimeAligner timeAligner = new TimeAligner();
 
@@ -246,6 +245,9 @@ public class OrderProvider implements Connectable {
     // Reset qry last instrument to false so it will wait for the completion
     // of qry instruments.
     this.qryInstrLast = false;
+    // Clear old data.
+    this.instrumentIDs.clear();
+    this.activeInstruments.clear();
     doAuthentication();
   }
 
@@ -614,9 +616,6 @@ public class OrderProvider implements Connectable {
   }
 
   protected void doQueryInstr() {
-    // Clear old data.
-    this.instrumentIDs.clear();
-    this.activeInstruments.clear();
     var req = new CQryInstrument();
     var r = this.api.ReqQryInstrument(
         JNI.toJni(req),
@@ -728,7 +727,7 @@ public class OrderProvider implements Connectable {
     if (rspInfo.ErrorID == 0) {
       if (InstrumentFilter.accept(instrument)) {
         this.msgWriter.writeInfo(instrument);
-        this.activeInstruments.add(instrument);
+        this.activeInstruments.put(instrument.InstrumentID, instrument);
         this.instrumentIDs.add(instrument.InstrumentID);
       }
     } else {
@@ -742,7 +741,7 @@ public class OrderProvider implements Connectable {
     // Signal last rsp.
     if (isLast) {
       // Set active instruments into config, and remove obsolete ones.
-      GlobalConfig.resetInstrConfig(this.activeInstruments);
+      GlobalConfig.resetInstrConfig(this.activeInstruments.values());
       // First update config instrument info, then signal. So other waiting
       // thread can get the correct data.
       this.qryInstrLast = true;
