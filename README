@@ -5,8 +5,7 @@ Requisites
 ----------
 
 1. JDK 11+
-2. nabiki_chart4j, nabiki_ctp4j
-3. Other opensource 3rds
+2. Other opensource 3rds
 
 Communication Protocol between Server and Client
 ------------------------------------------------
@@ -34,9 +33,7 @@ Dependency Explanation
 
 1. Gson is for parsing and generating JSON.
 2. Apache Mina is for networking.
-3. SLF4J is required by Apache Mina.
-4. Nabiki_chart4j is for plotting charts with market data received by client.
-5. Nabiki_ctp4j is for communication with broker's counter.
+3. SLF4J is required by Apache Mina logging filter.
 
 For modules above,centre depends on iop and objects, and iop depends on objects,
 Gson and Apache Mina.
@@ -62,27 +59,33 @@ The module handles networking and frame/message codec.
 Core system that processes trades, receives ticks and generates candles, and manages
 user account and positions.
 
+4. /ctp4j
+
+Java SWIG port for CTP. Currently, native DLL is 64-bit, if you need a 32-bit version
+or Linux build, use the *.i swig profile to build one.
+
+5. /chart
+
+Charting for client.
+
 Make it Work
 ------------
 
 1. Acquire dependencies.
 
-All dependencies are kept within /lib and /lib2. /lib has 3rd deps and /lib2 has
-nabiki_* like deps.
+All dependencies are kept within /lib.
 
-ctp4j only has 64-bit windows JNI binding. If you need other choices, please go to
-https://github.com/chenhongbao/nabiki_chart4j for your version.
+ctp4j only has 64-bit windows JNI binding. If you need other choices, just build
+one from src by yourself. Detailed explain step by step can be found in ctp4j module
+directory.
 
 2. Configuration
 
-`center` will create dirs for you and generates sample configs for you if it doesn't
+`centre` will create dirs for you and generates sample configs for you if it doesn't
 find configuration in dirs. Just follow the sample configs to add your own setting.
 
 But it will not generate samples for user account and position, so you need to add
 an initial account with no position before you trade.
-
-Please go to https://github.com/chenhongbao/nabiki_install for a reference install
-setup.
 
 3. Setting JNI right
 
@@ -97,12 +100,6 @@ Use commandline option '--help' for detailed information.
     
 	java -jar centre.jar --help
 
-Reference
----------
-
-1. chart4j: https://github.com/chenhongbao/nabiki_chart4j
-2. ctp4j:   https://github.com/chenhongbao/nabiki_ctp4j
-3. install: https://github.com/chenhongbao/nabiki_install
 
 
 Good luck with trades.
