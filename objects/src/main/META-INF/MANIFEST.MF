@@ -1,2 +1,5 @@
 Manifest-Version: 1.0
-
+Implementation-Title: Nabiki-Objects
+Implementation-Vendor: Nabiki Inc.
+Implementation-Vendor-Id: com.nabiki
+Implementation-Version: 1.0.0
