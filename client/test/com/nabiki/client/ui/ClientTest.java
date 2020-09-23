@@ -47,6 +47,21 @@ public class ClientTest {
   public void basic() {
     var client = new Client();
     client.start(new FigureTrader() {
+      @Override
+      public String getAlgoName() {
+        return "Random Buy/Sell";
+      }
+
+      @Override
+      public String getAlgoVersion() {
+        return "0.0.1";
+      }
+
+      @Override
+      public String getAlgoDescription() {
+        return "Test case for UI client";
+      }
+
       CDepthMarketData depth;
       int currentPosition = 0;
 
@@ -173,6 +188,21 @@ public class ClientTest {
     System.out.println("start trader");
 
     client.start(new HeadlessTrader() {
+      @Override
+      public String getAlgoName() {
+        return "Random Buy/Sell";
+      }
+
+      @Override
+      public String getAlgoVersion() {
+        return "0.0.1";
+      }
+
+      @Override
+      public String getAlgoDescription() {
+        return "Test case for headless client";
+      }
+
       private Thread daemon;
 
       @Override

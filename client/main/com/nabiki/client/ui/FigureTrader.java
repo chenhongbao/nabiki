@@ -32,7 +32,7 @@ public abstract class FigureTrader
     extends AbstractFigure
     implements MarketDataHandler {
 
-  FigureTrader() {
+  public FigureTrader() {
     setDefaultAdaptor(new FigureMarketDataAdaptor(this, this));
   }
 

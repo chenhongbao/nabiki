@@ -71,6 +71,21 @@ public class PlatformTest {
   private void launch_client() {
     var client = new Client();
     client.start(new HeadlessTrader() {
+      @Override
+      public String getAlgoName() {
+        return "Test platform launch";
+      }
+
+      @Override
+      public String getAlgoVersion() {
+        return "0.0.1";
+      }
+
+      @Override
+      public String getAlgoDescription() {
+        return "Test the launch of platform";
+      }
+
       private Thread daemon;
 
       @Override

@@ -44,6 +44,12 @@ public interface Trader {
 
   String getPassword();
 
+  String getAlgoName();
+
+  String getAlgoVersion();
+
+  String getAlgoDescription();
+
   void subscribe(String instrument, int... minutes);
 
   Collection<String> getSubscribe();
