@@ -301,7 +301,8 @@ public class OrderProvider implements Connectable {
    * @return always return 0
    */
   public synchronized int inputOrder(CInputOrder input, ActiveRequest active) {
-    // Check time.
+    // Don't send order after market closes because it then settles account and
+    // and clear all frozen information. This will affect the pending request.
     if (isOver(input.InstrumentID)) {
       rspError(input, ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);
@@ -397,6 +398,8 @@ public class OrderProvider implements Connectable {
    * @return always return 0
    */
   public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
+    // Don't send action after market closes because it then settles account and
+    // and clear all frozen information. This will affect the pending request.
     if (isOver(action.InstrumentID)) {
       rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);

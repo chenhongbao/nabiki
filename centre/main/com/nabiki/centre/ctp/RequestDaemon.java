@@ -32,6 +32,8 @@ import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -258,12 +260,18 @@ class RequestDaemon implements Runnable {
     }
     LocalTime now;
     var ins = global.getInstrInfo(instrID);
-    if (ins != null && ins.Instrument != null)
+    if (ins != null && ins.Instrument != null) {
       now = provider.getTimeAligner().getAlignTime(
           ins.Instrument.ExchangeID,
           LocalTime.now());
-    else
+    } else {
       now = LocalTime.now();
+    }
+    // If remote counter opens for some while during weekend.
+    var dayOfWeek = LocalDate.now().getDayOfWeek();
+    if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+      return false;
+    }
     return provider.isConfirmed() && hour.contains(now.minusSeconds(1));
   }
 
