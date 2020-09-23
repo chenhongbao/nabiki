@@ -28,8 +28,8 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.chart4j.control.StickChartController;
-import com.nabiki.chart4j.control.StickChartPanel;
+import com.nabiki.chart.control.StickChartController;
+import com.nabiki.chart.control.StickChartPanel;
 
 import javax.swing.*;
 import java.awt.*;
