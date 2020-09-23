@@ -362,22 +362,21 @@ public class OrderProvider implements Connectable {
   protected static final int CONT_TRADE_BEG = 21;
 
   protected boolean isOver(String instrID) {
-    var hour = this.global.getTradingHour(null, instrID);
-    var depth = this.global.getDepthMarketData(instrID);
-    Objects.requireNonNull(hour, "invalid instr for trading hour");
-    Objects.requireNonNull(depth, "depth market data not found");
-    var depthTradingDay = Utils.parseDay(depth.TradingDay, null);
-    var day = LocalDate.now();
-    var time = LocalTime.now();
-    // Holiday.
-    if (depthTradingDay.isBefore(day))
+    if (rspLogin == null) {
       return true;
-    if (CONT_TRADE_BEG <= time.getHour()) {
+    }
+    var today = LocalDate.now();
+    var tradingDay = Utils.parseDay(rspLogin.TradingDay, null);
+    if (tradingDay.isBefore(today)) {
+      return true;
+    }
+    var hour = global.getTradingHour(null, instrID);
+    if (CONT_TRADE_BEG <= LocalTime.now().getHour()) {
       // The night before holiday.
-      return depthTradingDay.equals(day);
+      return tradingDay.equals(today);
     } else {
       // Workday.
-      var dayOfWeek = day.getDayOfWeek();
+      var dayOfWeek = today.getDayOfWeek();
       return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY
           && hour.isEndDay(LocalTime.now());
     }

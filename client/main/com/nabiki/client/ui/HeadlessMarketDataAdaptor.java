@@ -51,7 +51,7 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     handler = h;
   }
 
-  private boolean isTrading(String actionDay, String updateTime) {
+  private boolean isCandleTrading(String actionDay, String updateTime) {
     var dateTime = LocalDateTime.parse(
         actionDay + updateTime,
         formatter);
@@ -76,9 +76,8 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
       return;
     }
     try {
-      handler.onDepthMarketData(
-          depth,
-          isTrading(depth.ActionDay, depth.UpdateTime));
+      // All md is trading.
+      handler.onDepthMarketData(depth, true);
     } catch (Throwable th) {
       th.printStackTrace();
     }
@@ -97,7 +96,7 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     try {
       handler.onCandle(
           candle,
-          isTrading(candle.ActionDay, candle.UpdateTime));
+          isCandleTrading(candle.ActionDay, candle.UpdateTime));
     } catch (Throwable th) {
       th.printStackTrace();
     }

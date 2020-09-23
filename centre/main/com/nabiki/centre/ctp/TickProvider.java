@@ -261,6 +261,7 @@ public class TickProvider implements Connectable {
               null, r));
   }
 
+  // Simply test against trading hours because no md during weekend or holiday.
   private boolean isTrading(String instrumentID) {
     var keeper = this.global.getTradingHour(
         null, instrumentID);
