@@ -44,16 +44,16 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
   public final long MAX_ARRIVAL_SECONDS = TimeUnit.MINUTES.toSeconds(1);
   protected final MarketDataHandler handler;
   protected final DateTimeFormatter formatter
-      = DateTimeFormatter.ofPattern("yyyyMMddHH:mm:ss");
+      = DateTimeFormatter.ofPattern("yyyyMMddHH:mm");
   protected final Map<String, Set<Integer>> subscribes = new ConcurrentHashMap<>();
 
   HeadlessMarketDataAdaptor(MarketDataHandler h) {
     handler = h;
   }
 
-  private boolean isCandleTrading(String actionDay, String updateTime) {
+  private boolean isCandleTrading(String actionDay, String endTime) {
     var dateTime = LocalDateTime.parse(
-        actionDay + updateTime,
+        actionDay + endTime,
         formatter);
     var epocDiff = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
         - dateTime.toEpochSecond(ZoneOffset.UTC);
@@ -96,7 +96,7 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     try {
       handler.onCandle(
           candle,
-          isCandleTrading(candle.ActionDay, candle.UpdateTime));
+          isCandleTrading(candle.ActionDay, candle.EndTime));
     } catch (Throwable th) {
       th.printStackTrace();
     }
