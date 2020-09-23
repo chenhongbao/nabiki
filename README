@@ -64,10 +64,6 @@ user account and positions.
 Java SWIG port for CTP. Currently, native DLL is 64-bit, if you need a 32-bit version
 or Linux build, use the *.i swig profile to build one.
 
-5. /chart
-
-Charting for client.
-
 Make it Work
 ------------
 
