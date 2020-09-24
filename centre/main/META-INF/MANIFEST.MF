@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Implementation-Title: Nabiki-Centre
 Implementation-Vendor: Nabiki Inc.
 Implementation-Vendor-Id: com.nabiki
-Implementation-Version: 1.0.1
+Implementation-Version: 1.0.2
 Main-Class: com.nabiki.centre.Platform
 Class-Path: mina-core-2.1.3.jar thostctpapi_se-6.3.19-P1.jar gson-2.8.6.
  jar slf4j-jdk14-1.7.30.jar slf4j-api-1.7.30.jar
