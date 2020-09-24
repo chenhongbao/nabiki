@@ -84,6 +84,10 @@ public class User {
     return total;
   }
 
+  void updateTradingDay(String tradingDay) {
+    this.userAccount.setTradingDay(tradingDay);
+  }
+
   void setPanic(int code, String msg) {
     this.state = UserState.PANIC;
     this.panicReason.ErrorID = code;

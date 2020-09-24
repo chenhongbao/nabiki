@@ -82,6 +82,10 @@ public class UserAccount {
       acc.cancel();
   }
 
+  void setTradingDay(String tradingDay) {
+    this.raw.TradingDay = tradingDay;
+  }
+
   AccountFrozenCash getAccountFrozenCash() {
     var r = new com.nabiki.centre.user.core.plain.AccountFrozenCash();
     r.FrozenCash = 0;

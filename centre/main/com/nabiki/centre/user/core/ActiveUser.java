@@ -156,6 +156,7 @@ public class ActiveUser {
   void settle() {
     // Call user's method directly, sync here.
     synchronized (this.user) {
+      this.user.updateTradingDay(global.getTradingDay());
       this.user.settle(prepare());
     }
   }
