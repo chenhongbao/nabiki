@@ -304,18 +304,31 @@ public class OrderProvider implements Connectable {
     // Don't send order after market closes because it then settles account and
     // and clear all frozen information. This will affect the pending request.
     if (isOver(input.InstrumentID)) {
-      rspError(input, ErrorCodes.FRONT_NOT_ACTIVE,
+      rspError(
+          input,
+          ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);
       return ErrorCodes.FRONT_NOT_ACTIVE;
     } else {
       // Check order ref only after it is time for sending requests.
       if (!isOrderRefUnique(input.OrderRef)) {
         global.getLogger().warning(
-            Utils.formatLog("duplicated order",
-                input.OrderRef, null, null));
+            Utils.formatLog(
+                "duplicated order",
+                input.OrderRef,
+                null,
+                null));
+        rspError(
+            input,
+            ErrorCodes.DUPLICATE_ORDER_REF,
+            ErrorMessages.DUPLICATE_ORDER_REF);
         return ErrorCodes.DUPLICATE_ORDER_REF;
       }
       if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
+        rspError(
+            input,
+            ErrorCodes.NEED_RETRY,
+            ErrorMessages.NEED_RETRY);
         return ErrorCodes.NEED_RETRY;
       } else {
         // Only after request is sent successfully, initialize rtn order.
@@ -400,14 +413,21 @@ public class OrderProvider implements Connectable {
     // Don't send action after market closes because it then settles account and
     // and clear all frozen information. This will affect the pending request.
     if (isOver(action.InstrumentID)) {
-      rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
+      rspError(
+          action,
+          ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);
       return ErrorCodes.FRONT_NOT_ACTIVE;
     } else {
-      if (!this.pendingReqs.offer(new PendingRequest(action, active)))
+      if (!this.pendingReqs.offer(new PendingRequest(action, active))) {
+        rspError(
+            action,
+            ErrorCodes.NEED_RETRY,
+            ErrorMessages.NEED_RETRY);
         return ErrorCodes.NEED_RETRY;
-      else
+      } else {
         return ErrorCodes.NONE;
+      }
     }
   }
 
@@ -669,13 +689,12 @@ public class OrderProvider implements Connectable {
 
   public void whenErrRtnOrderInsert(CInputOrder inputOrder,
                                     CRspInfo rspInfo) {
-    // NO NEED to process the same error again.
-    // this.global.getLogger().severe(
-    //        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
-    //                rspInfo.ErrorMsg, rspInfo.ErrorID));
+    this.global.getLogger().severe(
+        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
+            rspInfo.ErrorMsg, rspInfo.ErrorID));
     // Failed order results in canceling the order.
-    // cancelInputOrder(inputOrder, rspInfo);
-    // this.msgWriter.writeErr(inputOrder, rspInfo);
+    cancelInputOrder(inputOrder, rspInfo);
+    this.msgWriter.writeErr(inputOrder, rspInfo);
   }
 
   public void whenRspAuthenticate(
@@ -704,11 +723,10 @@ public class OrderProvider implements Connectable {
   public void whenRspOrderAction(CInputOrderAction inputOrderAction,
                                  CRspInfo rspInfo, int requestId,
                                  boolean isLast) {
-    // NO NEED to process the same error again.
-    // this.msgWriter.writeErr(inputOrderAction, rspInfo);
-    // this.global.getLogger().warning(
-    //        Utils.formatLog("failed action", inputOrderAction.OrderRef,
-    //               rspInfo.ErrorMsg, rspInfo.ErrorID));
+    this.msgWriter.writeErr(inputOrderAction, rspInfo);
+    this.global.getLogger().warning(
+        Utils.formatLog("failed action", inputOrderAction.OrderRef,
+            rspInfo.ErrorMsg, rspInfo.ErrorID));
   }
 
   public void whenRspOrderInsert(CInputOrder inputOrder,
