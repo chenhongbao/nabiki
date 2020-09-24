@@ -31,7 +31,10 @@ package com.nabiki.client.ui;
 import java.awt.*;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -60,11 +63,35 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   private final Map<Integer, ChartMainFrame> mains = new ConcurrentHashMap<>();
   private final LogDialog logDlg = new LogDialog();
+  private final AtomicBoolean updated = new AtomicBoolean(false);
 
   protected AbstractFigure() {
+    prepareStd();
+    prepareTimer();
+  }
+
+  private void prepareStd() {
     logger.addHandler(new UILoggingHandler(logDlg));
     System.setOut(new UIPrintStream(logDlg, true));
     System.setErr(new UIPrintStream(logDlg, false));
+  }
+
+  private void prepareTimer() {
+    Timer figureTimer = new Timer();
+    figureTimer.schedule(
+        new TimerTask() {
+          @Override
+          public void run() {
+            synchronized (updated) {
+              if (updated.get()) {
+                for (var fid : getFigureID()) {
+                  update(fid);
+                }
+                updated.set(false);
+              }
+            }
+          }
+        }, 500, 500);
   }
 
   private ChartMainFrame getFrame(int figureID) {
@@ -95,13 +122,19 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   @Override
   public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
     checkZeroValue(figureID, "stick", open * high * low * close);
-    getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
+    synchronized (updated) {
+      getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
+      updated.set(true);
+    }
   }
 
   @Override
   public void draw(int figureID, String name, Double value) {
     checkZeroValue(figureID, name, value);
-    getFrame(figureID).getChartController().append(name, value);
+    synchronized (updated) {
+      getFrame(figureID).getChartController().append(name, value);
+      updated.set(true);
+    }
   }
 
   @Override

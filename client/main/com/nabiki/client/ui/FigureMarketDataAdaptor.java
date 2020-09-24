@@ -63,8 +63,6 @@ public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
         }
       }
       super.onCandle(candle);
-      for (var fid : figure.getFigureID())
-        figure.update(fid);
     } catch (Throwable th) {
       th.printStackTrace();
     }

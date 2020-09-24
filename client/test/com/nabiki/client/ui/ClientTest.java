@@ -177,7 +177,7 @@ public class ClientTest {
       public void onStop() {
         System.out.println("----------- END ----------");
       }
-    }, new InetSocketAddress("localhost", 9038));
+    }, new InetSocketAddress("106.54.254.193", 9038));
     client.exitAt(LocalDateTime.now().plusDays(1));
   }
 
@@ -270,7 +270,7 @@ public class ClientTest {
       public void onStop() {
 
       }
-    }, new InetSocketAddress("localhost", 9038));
+    }, new InetSocketAddress("106.54.254.193", 9038));
 
     System.out.println("wait trader exits");
     client.exitAt(LocalDateTime.now().plusMinutes(1));

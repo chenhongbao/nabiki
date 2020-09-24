@@ -41,7 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
-  public final long MAX_ARRIVAL_SECONDS = TimeUnit.MINUTES.toSeconds(1);
   protected final MarketDataHandler handler;
   protected final DateTimeFormatter formatter
       = DateTimeFormatter.ofPattern("yyyyMMddHH:mm");
@@ -51,15 +50,15 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     handler = h;
   }
 
-  private boolean isCandleTrading(String actionDay, String endTime) {
+  private boolean isCandleTrading(String actionDay, String endTime, int minute) {
     var dateTime = LocalDateTime.parse(
         actionDay + endTime,
         formatter);
     var epocDiff = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
         - dateTime.toEpochSecond(ZoneOffset.UTC);
-    // All real-time trading market data must arrive in one minute, or it
+    // All real-time trading market data must arrive in minutes, or it
     // is taken as history data.
-    return epocDiff <= MAX_ARRIVAL_SECONDS;
+    return epocDiff < TimeUnit.MINUTES.toSeconds(minute);
   }
 
   @Override
@@ -96,7 +95,7 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
     try {
       handler.onCandle(
           candle,
-          isCandleTrading(candle.ActionDay, candle.EndTime));
+          isCandleTrading(candle.ActionDay, candle.EndTime, candle.Minute));
     } catch (Throwable th) {
       th.printStackTrace();
     }
