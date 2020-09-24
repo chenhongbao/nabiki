@@ -118,7 +118,7 @@ public class StickChartController implements ViewController {
 
     @Override
     public void zoomOut() {
-        windowSize *= 2;
+        windowSize = Math.min(2 * windowSize, sticks.size());
         update();
     }
 
