@@ -313,10 +313,10 @@ public class OrderProvider implements Connectable {
         global.getLogger().warning(
             Utils.formatLog("duplicated order",
                 input.OrderRef, null, null));
-        return -1;
+        return ErrorCodes.DUPLICATE_ORDER_REF;
       }
       if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
-        return (-2);
+        return ErrorCodes.NEED_RETRY;
       } else {
         // Only after request is sent successfully, initialize rtn order.
         // Otherwise, it looks like request is sent, actually hasn't, when there's
@@ -402,12 +402,12 @@ public class OrderProvider implements Connectable {
     if (isOver(action.InstrumentID)) {
       rspError(action, ErrorCodes.FRONT_NOT_ACTIVE,
           ErrorMessages.FRONT_NOT_ACTIVE);
-      return (-1);
+      return ErrorCodes.FRONT_NOT_ACTIVE;
     } else {
       if (!this.pendingReqs.offer(new PendingRequest(action, active)))
-        return (-2);
+        return ErrorCodes.NEED_RETRY;
       else
-        return 0;
+        return ErrorCodes.NONE;
     }
   }
 
