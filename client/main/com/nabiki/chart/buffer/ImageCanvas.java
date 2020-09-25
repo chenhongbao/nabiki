@@ -57,6 +57,11 @@ public abstract class ImageCanvas implements Canvas {
     }
 
     @Override
+    public BufferedImage getBuffer() {
+        return image;
+    }
+
+    @Override
     public boolean isVisible(int x, int y) {
         return 0 <= x && x <= getVisibleSize()[0]
                 && 0 <= y && y <= getVisibleSize()[1];

@@ -29,6 +29,7 @@
 package com.nabiki.chart.buffer;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public interface Canvas {
     boolean isVisible(int x, int y);
@@ -62,6 +63,8 @@ public interface Canvas {
     void setStroke(Stroke stroke);
 
     Stroke getStroke();
+
+    BufferedImage getBuffer();
 
     void showBox(boolean show);
 

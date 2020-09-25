@@ -79,6 +79,10 @@ public class StickChartPanel extends ImagePanel {
         chart.addCustomData(name, type, vars);
     }
 
+    public Image getBuffer() {
+        return super.getImage();
+    }
+
     @Override
     protected void onResize(Dimension newSize) {
         synchronized (chart) {

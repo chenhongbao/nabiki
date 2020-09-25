@@ -31,10 +31,12 @@ package com.nabiki.client.ui;
 import com.nabiki.chart.control.StickChartController;
 import com.nabiki.chart.control.StickChartPanel;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 
 public class ChartMainFrame extends JFrame {
   private final StickChartController ctrl;
@@ -91,6 +93,7 @@ public class ChartMainFrame extends JFrame {
     JButton printBtn = new JButton("\u6253\u5370");
     printBtn.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
+        printImage();
       }
     });
     printBtn.setToolTipText("\u5C06\u5F53\u524D\u884C\u60C5\u4FDD\u5B58\u81F3\u56FE\u7247");
@@ -186,5 +189,20 @@ public class ChartMainFrame extends JFrame {
     var point = super.getLocationOnScreen();
     var size = super.getSize();
     return new Point(point.x + size.width, point.y);
+  }
+
+  private void printImage() {
+    JFileChooser fc=new JFileChooser();
+    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+    if(fc.showOpenDialog(contentPane)==JFileChooser.APPROVE_OPTION){
+      try {
+        ImageIO.write(
+            (BufferedImage)chart.getBuffer(),
+            "png",
+            fc.getSelectedFile());
+      } catch (Throwable th) {
+        JOptionPane.showMessageDialog(contentPane, th.getMessage());
+      }
+    }
   }
 }
