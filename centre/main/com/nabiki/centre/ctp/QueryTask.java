@@ -68,6 +68,9 @@ class QueryTask implements Runnable {
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
       try {
+        if (!provider.isQryInstrLast() || !provider.isConfirmed()) {
+          continue;
+        }
         var ids = new LinkedList<String>(provider.getInstrumentIDs());
         for (var id : ids) {
           var info = global.getInstrInfo(id);
