@@ -28,10 +28,11 @@
 
 package com.nabiki.centre;
 
-import com.nabiki.centre.chain.StaticChainInstaller;
+import com.nabiki.centre.chain.*;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.ctp.TickProvider;
 import com.nabiki.centre.md.CandleEngine;
+import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
@@ -57,11 +58,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class Platform {
   private Global global;
-  private CandleEngine candleEngine;
   private OrderProvider orderProvider;
   private TickProvider tickProvider;
   private UserAuthManager authMgr;
   private ActiveUserManager userMgr;
+  private ParkedRequestManager parkedReqMgr;
 
   private final MarketDataRouter router;
   private final Timer timerPlat;
@@ -101,17 +102,17 @@ public class Platform {
 
   private void providers() {
     // Prepare candle engine.
-    this.candleEngine = new CandleEngine(
+    var candleEngine = new CandleEngine(
         this.router,
         this.global);
     // Set order provider.
     this.orderProvider = new OrderProvider(
-        this.candleEngine,
+        candleEngine,
         this.global);
     // Set tick provider.
     this.tickProvider = new TickProvider(
         this.router,
-        this.candleEngine,
+        candleEngine,
         this.global);
   }
 
@@ -120,8 +121,24 @@ public class Platform {
     int port = Integer.parseInt(this.global.getArgument("--port"));
     // Server.
     var server = IOP.createServer();
-    StaticChainInstaller.install(
-        server, this.authMgr, this.userMgr, router, global);
+    // Install candle writer.
+    var rw = new CandleRW(global);
+    router.addReceiver(rw);
+    // Install login manager.
+    server.setLoginManager(new UserLoginManager(authMgr, userMgr, global));
+    // Install session adaptor.
+    server.setSessionAdaptor(new SessionAdaptor(router, global));
+    // Install adaptors.
+    var chain = server.getAdaptorChain();
+    chain.addAdaptor(new RequestValidator(parkedReqMgr, global));
+    chain.addAdaptor(new RequestExecutor(global));
+    chain.addAdaptor(new SubscriptionAdaptor(router, rw, global));
+    chain.addAdaptor(new QueryAdaptor(global));
+    // Install msg writer.
+    // Create msg in/out writer.
+    var msgWriter = new MsgInOutWriter(global);
+    server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
+    server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
     if (host == null || host.trim().length() == 0)
       server.bind(new InetSocketAddress(port));
     else
@@ -140,6 +157,10 @@ public class Platform {
         orderProvider,
         global,
         userDir);
+    this.parkedReqMgr = new ParkedRequestManager(
+        orderProvider,
+        userMgr,
+        global);
   }
 
   private void system() throws IOException {

@@ -58,7 +58,7 @@ public class TimeAligner {
     }
   }
 
-  LocalTime getAlignTime(String name, LocalTime now) {
+  public LocalTime getAlignTime(String name, LocalTime now) {
     var diff = this.diff.get(name);
     if (diff == null || diff == 0)
       return now;

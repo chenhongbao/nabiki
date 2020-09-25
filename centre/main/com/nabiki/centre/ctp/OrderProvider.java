@@ -39,7 +39,6 @@ import com.nabiki.ctp4j.CThostFtdcTraderApi;
 import com.nabiki.ctp4j.THOST_TE_RESUME_TYPE;
 import com.nabiki.objects.*;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -121,7 +120,7 @@ public class OrderProvider implements Connectable {
     qryDaemon.start();
   }
 
-  TimeAligner getTimeAligner() {
+  public TimeAligner getTimeAligner() {
     return timeAligner;
   }
 
@@ -149,7 +148,7 @@ public class OrderProvider implements Connectable {
     return qryInstrLast;
   }
 
-  boolean isConfirmed() {
+  public boolean isConfirmed() {
     return isConfirmed;
   }
 
@@ -301,42 +300,32 @@ public class OrderProvider implements Connectable {
    * @return always return 0
    */
   public synchronized int inputOrder(CInputOrder input, ActiveRequest active) {
-    // Don't send order after market closes because it then settles account and
-    // and clear all frozen information. This will affect the pending request.
-    if (isOver(input.InstrumentID)) {
+    // Check order ref only after it is time for sending requests.
+    if (!isOrderRefUnique(input.OrderRef)) {
+      global.getLogger().warning(
+          Utils.formatLog(
+              "duplicated order",
+              input.OrderRef,
+              null,
+              null));
       rspError(
           input,
-          ErrorCodes.FRONT_NOT_ACTIVE,
-          ErrorMessages.FRONT_NOT_ACTIVE);
-      return ErrorCodes.FRONT_NOT_ACTIVE;
+          ErrorCodes.DUPLICATE_ORDER_REF,
+          ErrorMessages.DUPLICATE_ORDER_REF);
+      return ErrorCodes.DUPLICATE_ORDER_REF;
+    }
+    if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
+      rspError(
+          input,
+          ErrorCodes.NEED_RETRY,
+          ErrorMessages.NEED_RETRY);
+      return ErrorCodes.NEED_RETRY;
     } else {
-      // Check order ref only after it is time for sending requests.
-      if (!isOrderRefUnique(input.OrderRef)) {
-        global.getLogger().warning(
-            Utils.formatLog(
-                "duplicated order",
-                input.OrderRef,
-                null,
-                null));
-        rspError(
-            input,
-            ErrorCodes.DUPLICATE_ORDER_REF,
-            ErrorMessages.DUPLICATE_ORDER_REF);
-        return ErrorCodes.DUPLICATE_ORDER_REF;
-      }
-      if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
-        rspError(
-            input,
-            ErrorCodes.NEED_RETRY,
-            ErrorMessages.NEED_RETRY);
-        return ErrorCodes.NEED_RETRY;
-      } else {
-        // Only after request is sent successfully, initialize rtn order.
-        // Otherwise, it looks like request is sent, actually hasn't, when there's
-        // error like exception.
-        registerInitialOrderInsert(input, active);
-        return ErrorCodes.NONE;
-      }
+      // Only after request is sent successfully, initialize rtn order.
+      // Otherwise, it looks like request is sent, actually hasn't, when there's
+      // error like exception.
+      registerInitialOrderInsert(input, active);
+      return ErrorCodes.NONE;
     }
   }
 
@@ -369,32 +358,6 @@ public class OrderProvider implements Connectable {
     whenRspOrderAction(action, rsp, 0, true);
   }
 
-  /*
-  Beginning hour of continuous trading, at night, 21 pm.
-   */
-  protected static final int CONT_TRADE_BEG = 21;
-
-  protected boolean isOver(String instrID) {
-    if (rspLogin == null) {
-      return true;
-    }
-    var today = LocalDate.now();
-    var tradingDay = Utils.parseDay(rspLogin.TradingDay, null);
-    if (tradingDay.isBefore(today)) {
-      return true;
-    }
-    var hour = global.getTradingHour(null, instrID);
-    if (CONT_TRADE_BEG <= LocalTime.now().getHour()) {
-      // The night before holiday.
-      return tradingDay.equals(today);
-    } else {
-      // Workday.
-      var dayOfWeek = today.getDayOfWeek();
-      return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY
-          && hour.isEndDay(LocalTime.now());
-    }
-  }
-
   /**
    * Send action request to remote server. The method first checks the type
    * of the specified order to be canceled. If it is an order, just cancel it. If
@@ -410,24 +373,14 @@ public class OrderProvider implements Connectable {
    * @return always return 0
    */
   public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
-    // Don't send action after market closes because it then settles account and
-    // and clear all frozen information. This will affect the pending request.
-    if (isOver(action.InstrumentID)) {
+    if (!this.pendingReqs.offer(new PendingRequest(action, active))) {
       rspError(
           action,
-          ErrorCodes.FRONT_NOT_ACTIVE,
-          ErrorMessages.FRONT_NOT_ACTIVE);
-      return ErrorCodes.FRONT_NOT_ACTIVE;
+          ErrorCodes.NEED_RETRY,
+          ErrorMessages.NEED_RETRY);
+      return ErrorCodes.NEED_RETRY;
     } else {
-      if (!this.pendingReqs.offer(new PendingRequest(action, active))) {
-        rspError(
-            action,
-            ErrorCodes.NEED_RETRY,
-            ErrorMessages.NEED_RETRY);
-        return ErrorCodes.NEED_RETRY;
-      } else {
-        return ErrorCodes.NONE;
-      }
+      return ErrorCodes.NONE;
     }
   }
 

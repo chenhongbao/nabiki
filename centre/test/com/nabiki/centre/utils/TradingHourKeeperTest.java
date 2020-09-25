@@ -71,14 +71,14 @@ public class TradingHourKeeperTest {
     };
     for (var s : notEndDay)
       Assert.assertFalse(s + " shouldn't be end-of day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     String[] endDay = new String[]{
         "15:00:01", "15:15:00", "15:59:59", "18:00:00", "20:59:59"
     };
     for (var s : endDay)
       Assert.assertTrue(s + " should be end-of-day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     // Test contains.
     String[] notContains = new String[]{
@@ -185,14 +185,14 @@ public class TradingHourKeeperTest {
     };
     for (var s : notEndDay)
       Assert.assertFalse(s + " shouldn't be end-of day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     String[] endDay = new String[]{
         "15:00:01", "15:15:00", "15:59:59", "18:00:00", "20:59:59"
     };
     for (var s : endDay)
       Assert.assertTrue(s + " should be end-of-day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     // Test contains.
     String[] notContains = new String[]{
@@ -301,7 +301,7 @@ public class TradingHourKeeperTest {
     };
     for (var s : notEndDay)
       Assert.assertFalse(s + " shouldn't be end-of day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     String[] endDay = new String[]{
         "08:59:00", "09:00:00", "09:14:59", "15:15:01", "15:30:00",
@@ -309,7 +309,7 @@ public class TradingHourKeeperTest {
     };
     for (var s : endDay)
       Assert.assertTrue(s + " should be end-of-day",
-          keeper.isEndDay(time(s)));
+          keeper.isEndOfDay(time(s)));
 
     // Test contains.
     String[] notContains = new String[]{
@@ -417,10 +417,10 @@ public class TradingHourKeeperTest {
     var round_before = getRoundTime(small_before, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
     var round_after = getRoundTime(small_after, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
 
-    Assert.assertFalse("small before - end of day", keeper.isEndDay(small_before));
-    Assert.assertTrue("small after - end of day", keeper.isEndDay(small_after));
-    Assert.assertFalse("round before - end of day", keeper.isEndDay(round_before));
-    Assert.assertFalse("round after - end of day", keeper.isEndDay(round_after));
+    Assert.assertFalse("small before - end of day", keeper.isEndOfDay(small_before));
+    Assert.assertTrue("small after - end of day", keeper.isEndOfDay(small_after));
+    Assert.assertFalse("round before - end of day", keeper.isEndOfDay(round_before));
+    Assert.assertFalse("round after - end of day", keeper.isEndOfDay(round_after));
 
     // Test contains.
     Assert.assertTrue("small before - contains", keeper.contains(small_before));

@@ -30,19 +30,26 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.user.auth.OrderOffset;
 import com.nabiki.centre.user.auth.UserAuthProfile;
+import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.Utils;
 import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.x.OP;
-import com.nabiki.objects.CInputOrder;
-import com.nabiki.objects.CRspInfo;
-import com.nabiki.objects.CombOffsetFlagType;
-import com.nabiki.objects.ErrorCodes;
+import com.nabiki.objects.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 public class RequestValidator extends RequestSuper {
-  RequestValidator() {
+  private final Global global;
+  private final ParkedRequestManager parked;
+
+  public RequestValidator(ParkedRequestManager parked, Global global) {
+    this.parked = parked;
+    this.global = global;
   }
 
   private boolean isAllowed(
@@ -74,6 +81,36 @@ public class RequestValidator extends RequestSuper {
     session.sendResponse(m);
   }
 
+  protected boolean isOver(String instrID) {
+    if (global.getTradingDay() == null) {
+      return true;
+    }
+    var today = LocalDate.now();
+    var tradingDay = Utils.parseDay(global.getTradingDay(), null);
+    // Holiday check.
+    if (tradingDay.isBefore(today)) {
+      return true;
+    }
+    var time = LocalTime.now();
+    var hour = global.getTradingHour(null, instrID);
+    // There's night trading.
+    if (hour.getBeginOfDay().isAfter(hour.getEndOfDay())) {
+      if (time.isAfter(hour.getBeginOfDay())) {
+        // The night before holiday.
+        return tradingDay.equals(today);
+      } else {
+        // Just handle working day here. Because holiday is checked before.
+        // Normal weekend is just a break between night of last Friday and day
+        // of next Monday, so it is not over.
+        var dayOfWeek = today.getDayOfWeek();
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY &&
+            hour.isEndOfDay(time);
+      }
+    } else {
+      return time.isAfter(hour.getEndOfDay());
+    }
+  }
+
   @Override
   public void doReqOrderInsert(
       ServerSession session,
@@ -103,8 +140,25 @@ public class RequestValidator extends RequestSuper {
         for (var instrAuth : auth.InstrumentAuths) {
           var instrumentID = request.InstrumentID;
           var offset = request.CombOffsetFlag;
-          if (isAllowed(instrAuth, instrumentID, offset))
-            return;
+          if (isAllowed(instrAuth, instrumentID, offset)) {
+            if (isOver(request.InstrumentID)) {
+              parked.offer(request);
+              // Set mark to indicate the order is inserted after market is closed.
+              // It turns to parked order.
+              var rsp = toRtnOrder(request);
+              rsp.OrderSubmitStatus = OrderSubmitStatusType.INSERT_SUBMITTED;
+              rsp.OrderStatus = OrderStatusType.NOT_TOUCHED;
+              reply(session,
+                  rsp,
+                  requestID,
+                  MessageType.RSP_REQ_ORDER_INSERT,
+                  ErrorCodes.NONE,
+                  OP.getErrorMsg(ErrorCodes.NONE));
+            } else {
+              // Allow the request goes to next handler on the chain.
+              return;
+            }
+          }
         }
         reply(session,
             toRtnOrder(request),

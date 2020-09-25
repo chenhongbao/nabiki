@@ -201,7 +201,7 @@ class RequestDaemon implements Runnable {
     return null;
   }
 
-  protected int fillAndSendOrder(CInputOrder input) {
+  private int fillAndSendOrder(CInputOrder input) {
     // Set correct users.
     input.BrokerID = provider.getLoginRsp().BrokerID;
     input.UserID = provider.getLoginRsp().UserID;
@@ -221,7 +221,7 @@ class RequestDaemon implements Runnable {
         Utils.getIncrementID());
   }
 
-  protected int fillAndSendAction(CInputOrderAction action) {
+  private int fillAndSendAction(CInputOrderAction action) {
     var instrInfo = global.getInstrInfo(action.InstrumentID);
     var rtn = provider.getMapper().getRtnOrder(action.OrderRef);
     // Use order ref + front ID + session ID by default.
@@ -250,7 +250,7 @@ class RequestDaemon implements Runnable {
         Utils.getIncrementID());
   }
 
-  protected boolean canTrade(String instrID) {
+  private boolean canTrade(String instrID) {
     var hour = global.getTradingHour(null, instrID);
     if (hour == null) {
       global.getLogger().warning(
@@ -275,7 +275,7 @@ class RequestDaemon implements Runnable {
     return provider.isConfirmed() && hour.contains(now.minusSeconds(1));
   }
 
-  protected String getInstrID(PendingRequest pend) {
+  private String getInstrID(PendingRequest pend) {
     if (pend.action != null)
       return pend.action.InstrumentID;
     else if (pend.order != null)

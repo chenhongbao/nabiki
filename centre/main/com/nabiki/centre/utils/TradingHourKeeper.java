@@ -144,16 +144,32 @@ public class TradingHourKeeper {
    * @return {@code true} if now is end of the previous trading day, {@code false}
    * otherwise
    */
-  public boolean isEndDay(LocalTime now) {
+  public boolean isEndOfDay(LocalTime now) {
     if (this.tradingHours.size() == 0)
       return true;    // no trading hour so it's always end-of-day
     if (contains(now))
       return false;   // now is trading hour
-    var beg = this.tradingHours.get(0);
-    var end = this.tradingHours.get(this.tradingHours.size() - 1);
-    if (beg.from.isBefore(end.to))
-      return beg.from.isAfter(now) || end.to.isBefore(now);
+    var beg = getBeginOfDay();
+    var end = getEndOfDay();
+    if (beg.isBefore(end))
+      return beg.isAfter(now) || end.isBefore(now);
     else
-      return end.to.isBefore(now) && beg.from.isAfter(now);
+      return end.isBefore(now) && beg.isAfter(now);
+  }
+
+  /**
+   * Get start time of a trading day.
+   * @return start time
+   */
+  public LocalTime getBeginOfDay() {
+    return this.tradingHours.get(0).from;
+  }
+
+  /**
+   * Get end time of a trading day.
+   * @return end time
+   */
+  public LocalTime getEndOfDay() {
+    return this.tradingHours.get(this.tradingHours.size() - 1).to;
   }
 }
