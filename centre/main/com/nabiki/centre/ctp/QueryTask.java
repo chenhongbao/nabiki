@@ -35,14 +35,13 @@ import com.nabiki.objects.CQryInstrumentCommissionRate;
 import com.nabiki.objects.CQryInstrumentMarginRate;
 import com.nabiki.objects.CombHedgeFlagType;
 
-import java.util.Random;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class QueryTask implements Runnable {
   private final OrderProvider provider;
   private final Global global;
-  protected final Random rand = new Random();
 
   // Wait last request return.
   protected final long qryWaitMillis = TimeUnit.SECONDS.toMillis(10);
@@ -65,17 +64,31 @@ class QueryTask implements Runnable {
     return this.lastRtn.waitSignal(millis);
   }
 
-
   @Override
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
-      if (provider.isQryInstrLast() && provider.isConfirmed()) {
-        try {
-          doQuery();
-        } catch (Throwable th) {
-          th.printStackTrace();
-          global.getLogger().warning(th.getMessage());
+      try {
+        var ids = new LinkedList<String>(provider.getInstrumentIDs());
+        for (var id : ids) {
+          var info = global.getInstrInfo(id);
+          // Instrument should be return by default.
+          if (info == null || info.Instrument == null) {
+            continue;
+          }
+          if (info.Margin == null) {
+            queryMargin(id);
+            sleep(1, TimeUnit.SECONDS);
+          } else if (info.Commission == null) {
+            queryCommission(id);
+            sleep(1, TimeUnit.SECONDS);
+          }
         }
+        // Sleep for next round.
+      } catch (Throwable th) {
+        th.printStackTrace();
+        global.getLogger().warning(th.getMessage());
+      } finally {
+        sleep(1, TimeUnit.HOURS);
       }
     }
   }
@@ -88,77 +101,49 @@ class QueryTask implements Runnable {
     }
   }
 
-  protected void doQuery() {
-    String ins = randomGet();
-    int reqID;
-    var in = global.getInstrInfo(ins);
-    if (in == null) {
-      global.getLogger().warning("unknown instrument ID: " + ins);
-      sleep(1, TimeUnit.SECONDS);
-      return;
-    }
-    // Query margin.
-    if (in.Margin == null) {
-      var req = new CQryInstrumentMarginRate();
-      req.BrokerID = provider.getLoginCfg().BrokerID;
-      req.InvestorID = provider.getLoginCfg().UserID;
-      req.HedgeFlag = CombHedgeFlagType.SPECULATION;
-      req.InstrumentID = ins;
-      reqID = Utils.getIncrementID();
-      int r = provider.getApi().ReqQryInstrumentMarginRate(
-          JNI.toJni(req),
-          reqID);
-      if (r != 0) {
-        global.getLogger().warning(Utils.formatLog(
-            "failed query margin", null, ins, r));
-      } else {
-        // Sleep up tp some seconds.
-        try {
-          if (!waitRequestRsp(qryWaitMillis, reqID))
-            global.getLogger().warning("query margin timeout: " + ins);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
+  private void queryMargin(String ins) {
+    var req = new CQryInstrumentMarginRate();
+    req.BrokerID = provider.getLoginCfg().BrokerID;
+    req.InvestorID = provider.getLoginCfg().UserID;
+    req.HedgeFlag = CombHedgeFlagType.SPECULATION;
+    req.InstrumentID = ins;
+    var reqID = Utils.getIncrementID();
+    int r = provider.getApi().ReqQryInstrumentMarginRate(
+        JNI.toJni(req),
+        reqID);
+    if (r != 0) {
+      global.getLogger().warning(Utils.formatLog(
+          "failed query margin", null, ins, r));
+    } else {
+      // Sleep up tp some seconds.
+      try {
+        if (!waitRequestRsp(qryWaitMillis, reqID))
+          global.getLogger().warning("query margin timeout: " + ins);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
-      // Sleep only when actually query margin.
-      sleep(1, TimeUnit.SECONDS);
-    }
-    // Query commission.
-    if (in.Commission == null) {
-      var req0 = new CQryInstrumentCommissionRate();
-      req0.BrokerID = provider.getLoginCfg().BrokerID;
-      req0.InvestorID = provider.getLoginCfg().UserID;
-      req0.InstrumentID = ins;
-      reqID = Utils.getIncrementID();
-      var r = provider.getApi().ReqQryInstrumentCommissionRate(
-          JNI.toJni(req0),
-          reqID);
-      if (r != 0) {
-        global.getLogger().warning(Utils.formatLog(
-            "failed query commission", null, ins, r));
-      } else {
-        // Sleep up tp some seconds.
-        try {
-          if (!waitRequestRsp(qryWaitMillis, reqID))
-            global.getLogger().warning("query margin timeout: " + ins);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-      sleep(1, TimeUnit.SECONDS);
     }
   }
 
-  protected String randomGet() {
-    var ids = provider.getInstrumentIDs();
-    var size = ids.size();
-    if (size == 0) {
-      return "";
+  private void queryCommission(String ins) {
+    var req0 = new CQryInstrumentCommissionRate();
+    req0.BrokerID = provider.getLoginCfg().BrokerID;
+    req0.InvestorID = provider.getLoginCfg().UserID;
+    req0.InstrumentID = ins;
+    var reqID = Utils.getIncrementID();
+    var r = provider.getApi().ReqQryInstrumentCommissionRate(
+        JNI.toJni(req0),
+        reqID);
+    if (r != 0) {
+      global.getLogger().warning(Utils.formatLog(
+          "failed query commission", null, ins, r));
     } else {
+      // Sleep up tp some seconds.
       try {
-        return ids.get(Math.abs(rand.nextInt() % size));
-      } catch (Throwable ignored) {
-        return "";
+        if (!waitRequestRsp(qryWaitMillis, reqID))
+          global.getLogger().warning("query margin timeout: " + ins);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     }
   }

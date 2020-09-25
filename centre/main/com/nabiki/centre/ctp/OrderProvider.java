@@ -41,7 +41,10 @@ import com.nabiki.objects.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -107,8 +110,6 @@ public class OrderProvider implements Connectable {
   }
 
   private void startQryDaemonOnce() {
-    // Count how many requests to send for info.
-    estimateQueryCount();
     // Don't start more than once.
     if (qryDaemon != null && qryDaemon.isAlive())
       return;
@@ -165,24 +166,6 @@ public class OrderProvider implements Connectable {
       e.printStackTrace();
     }
     return isConnected();
-  }
-
-  private boolean estimateQueryCount() {
-    int estimatedQueryCount = 0;
-    for (var i : global.getAllInstrInfo()) {
-      if (i == null)
-        continue;
-      if (i.Instrument == null)
-        ++estimatedQueryCount;
-      if (i.Commission == null)
-        ++estimatedQueryCount;
-      if (i.Margin == null)
-        ++estimatedQueryCount;
-    }
-    if (estimatedQueryCount > 0)
-      global.getLogger().info(
-          "estimated query count: " + estimatedQueryCount);
-    return estimatedQueryCount != 0;
   }
 
   /**
@@ -389,8 +372,8 @@ public class OrderProvider implements Connectable {
     }
   }
 
-  public List<String> getInstrumentIDs() {
-    return new LinkedList<>(this.instrumentIDs);
+  public Collection<String> getInstrumentIDs() {
+    return this.instrumentIDs;
   }
 
   public synchronized String getOrderRef() {
