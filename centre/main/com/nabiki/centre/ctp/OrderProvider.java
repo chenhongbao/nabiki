@@ -527,8 +527,9 @@ public class OrderProvider implements Connectable {
   }
 
   protected void doOrder(COrder rtn) {
-    if (isOrderCompleted(rtn.OrderRef))
+    if (isOrderCompleted(rtn.OrderRef)) {
       return;
+    }
     var active = this.mapper.getActiveRequest(rtn.OrderRef);
     if (active == null) {
       this.global.getLogger().warning(
