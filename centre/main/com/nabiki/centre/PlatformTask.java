@@ -67,13 +67,31 @@ class PlatformTask extends TimerTask {
     this.global = global;
   }
 
+  private UserState getUserState() {
+    return userState;
+  }
+
+  private void setUserState(UserState state) {
+    userState = state;
+    global.getLogger().info("user state: " + getUserState());
+  }
+
+  private WorkingState getWorkingState() {
+    return workingState;
+  }
+
+  private void setWorkingState(WorkingState state) {
+    workingState = state;
+    global.getLogger().info("platform state: " + getWorkingState());
+  }
+
   private LocalTime now() {
     var now = LocalTime.now();
     return LocalTime.of(now.getHour(), now.getMinute());
   }
 
   private boolean needStart() {
-    if (this.workingState == WorkingState.STARTED)
+    if (getWorkingState() == WorkingState.STARTED)
       return false;
     var startNow = global.getArgument(Global.CMD_START_NOW_PREFIX);
     if (startNow != null && startNow.compareToIgnoreCase("true") == 0) {
@@ -88,33 +106,29 @@ class PlatformTask extends TimerTask {
     // No need to check work day because it depends on whether the platform
     // starts prior to being stopped.
     return Utils.equalsAny(now(), whenStop)
-        && this.workingState != WorkingState.STOPPED;
+        && getWorkingState() != WorkingState.STOPPED;
   }
 
   private void renew() {
     try {
-      this.global.getLogger().info("platform renewing");
       main.getAuth().load();
       main.getUsers().renew();
-      this.userState = UserState.RENEW;
-      this.global.getLogger().info("platform renewed");
+      setUserState(UserState.RENEW);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.global.getLogger().severe("load failed");
+      global.getLogger().severe("load failed, " + th.getMessage());
     }
   }
 
   private void settle() {
-    this.global.getLogger().info("platform settling");
     try {
       main.getAuth().flush();
       main.getUsers().settle();
       main.getOrder().getMapper().settle();
-      this.userState = UserState.SETTLED;
-      this.global.getLogger().info("platform settled");
+      setUserState(UserState.SETTLED);
     } catch (Throwable th) {
       th.printStackTrace();
-      this.global.getLogger().severe("settlement failed");
+      global.getLogger().severe("settlement failed, " + th.getMessage());
     }
   }
 
@@ -129,13 +143,15 @@ class PlatformTask extends TimerTask {
   private void startTrader() {
     try {
       if (!connect(main.getOrder())) {
-        this.global.getLogger().warning("trader connect failed");
+        global.getLogger().warning("trader connect failed");
         return;
       }
       main.getOrder().login();
       // Wait query instruments completed.
-      if (!main.getOrder().waitLastInstrument(TimeUnit.MINUTES.toMillis(1)))
-        this.global.getLogger().info("query instrument timeout");
+      if (!main.getOrder()
+          .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
+        global.getLogger().info("query instrument timeout");
+      }
       // Update subscription so at next reconnect it will subscribe the
       // new instruments, no matter whether it's completed or timeout. This approach
       // makes the sub md robust.
@@ -144,8 +160,8 @@ class PlatformTask extends TimerTask {
       e.printStackTrace();
     }
     if (main.getOrder().getWorkingState() != WorkingState.STARTED) {
-      this.global.getLogger().severe("trader didn't start up");
-    } else if (this.userState == UserState.SETTLED) {
+      global.getLogger().severe("trader didn't start up");
+    } else if (getUserState() == UserState.SETTLED) {
       // Renew user information.
       renew();
     }
@@ -154,7 +170,7 @@ class PlatformTask extends TimerTask {
   private void startMd() {
     try {
       if (!connect(main.getTick())) {
-        this.global.getLogger().warning("md connect failed");
+        global.getLogger().warning("md connect failed");
         return;
       }
       main.getTick().login();
@@ -162,7 +178,7 @@ class PlatformTask extends TimerTask {
           WorkingState.STARTED,
           TimeUnit.MINUTES.toMillis(1));
       if (!r)
-        this.global.getLogger().info("wait md login timeout");
+        global.getLogger().info("wait md login timeout");
       // No need to call TickProvider.subscribe() here because it is called
       // internally by tick provider after it logins.
     } catch (Throwable th) {
@@ -175,15 +191,14 @@ class PlatformTask extends TimerTask {
   // providers for more accurate report of the login/out ops,
   // especially on login/out failure.
   private void start() {
-    this.workingState = WorkingState.STARTING;
+    setWorkingState(WorkingState.STARTING);
     // Re-load config before starting platform for a new day.
     try {
       GlobalConfig.config();
     } catch (IOException e) {
       e.printStackTrace();
-      this.global.getLogger().warning(e.getMessage());
+      global.getLogger().warning(e.getMessage());
     }
-    this.global.getLogger().info("platform starting");
     // Start order provider first because it qry available instruments used
     // in subscription in tick provider.
     if (main.getOrder().getWorkingState() != WorkingState.STARTED)
@@ -193,10 +208,9 @@ class PlatformTask extends TimerTask {
     // Check state.
     if (main.getOrder().getWorkingState() == WorkingState.STARTED
         && main.getTick().getWorkingState() == WorkingState.STARTED) {
-      this.workingState = WorkingState.STARTED;
-      this.global.getLogger().info("platform started");
+      setWorkingState(WorkingState.STARTED);
     } else {
-      this.global.getLogger().warning("platform doesn't start");
+      global.getLogger().warning("platform doesn't start");
     }
   }
 
@@ -211,12 +225,12 @@ class PlatformTask extends TimerTask {
           WorkingState.STOPPED,
           TimeUnit.MINUTES.toMillis(1));
       if (!r) {
-        this.global.getLogger().severe("trader logout timeout");
+        global.getLogger().severe("trader logout timeout");
       } else {
         //Settle user information after platform stops at the end of a trading day.
         var hour = LocalTime.now().getHour();
         if (14 < hour && hour < 21) {
-          if (this.userState == UserState.RENEW) {
+          if (getUserState() == UserState.RENEW) {
             settle();
             checkPerformance();
           }
@@ -228,27 +242,26 @@ class PlatformTask extends TimerTask {
   }
 
   private void stop() {
-    this.workingState = WorkingState.STOPPING;
-    this.global.getLogger().info("platform stopping");
-    if (main.getOrder().getWorkingState() != WorkingState.STOPPED)
+    setWorkingState(WorkingState.STOPPING);
+    if (main.getOrder().getWorkingState() != WorkingState.STOPPED) {
       stopTrader();
+    }
     // Don't stop md because its logout return CTP error(77).
     // Change state.
-    if (main.getOrder().getWorkingState() == WorkingState.STOPPED)
-      this.global.getLogger().info("platform stopped");
-    else
-      this.global.getLogger()
+    if (main.getOrder().getWorkingState() != WorkingState.STOPPED) {
+      global.getLogger()
           .warning("platform doesn't stop, wait for disconnect");
+    }
     // Front is disconnected automatically after remote shutdown, so no
     // need to force all logout here.
-    this.workingState = WorkingState.STOPPED;
+    setWorkingState(WorkingState.STOPPED);
   }
 
   private void checkPerformance() {
     var m = this.global.getPerformanceMeasure().getAllMeasures();
     for (var entry : m.entrySet()) {
       var ms = entry.getValue().toMillis();
-      this.global.getLogger().info(
+      global.getLogger().info(
           "performance, " + entry.getKey() + ": " + ms + "ms");
     }
   }
@@ -262,7 +275,7 @@ class PlatformTask extends TimerTask {
         stop();
     } catch (Throwable th) {
       th.printStackTrace();
-      this.global.getLogger().severe(th.getMessage());
+      global.getLogger().severe(th.getMessage());
     }
   }
 }
