@@ -33,6 +33,7 @@ import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CInputOrder;
+import com.nabiki.objects.ErrorCodes;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -114,7 +115,15 @@ public class ParkedRequestManager extends TimerTask {
                 String.format("user[%s] not found", in.UserID));
           } else {
             try {
-              user.insertOrder(in);
+              var uuid = user.insertOrder(in);
+              var rsp = user.getExecRsp(uuid);
+              if (rsp.ErrorID != ErrorCodes.NONE) {
+                global.getLogger().warning(String.format(
+                    "order insert error[%d], %s, %s",
+                    rsp.ErrorID,
+                    rsp.ErrorMsg,
+                    uuid));
+              }
             } catch (Throwable th) {
               th.printStackTrace();
               global.getLogger().warning(th.getMessage());

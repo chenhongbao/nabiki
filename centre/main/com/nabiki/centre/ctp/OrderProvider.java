@@ -308,14 +308,14 @@ public class OrderProvider implements Connectable {
               input.OrderRef,
               null,
               null));
-      rspError(
+      doInsertError(
           input,
           ErrorCodes.DUPLICATE_ORDER_REF,
           ErrorMessages.DUPLICATE_ORDER_REF);
       return ErrorCodes.DUPLICATE_ORDER_REF;
     }
     if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
-      rspError(
+      doInsertError(
           input,
           ErrorCodes.NEED_RETRY,
           ErrorMessages.NEED_RETRY);
@@ -333,7 +333,7 @@ public class OrderProvider implements Connectable {
     return this.mapper.getInputOrder(orderRef) == null;
   }
 
-  protected void registerInitialOrderInsert(CInputOrder input, ActiveRequest active) {
+  private void registerInitialOrderInsert(CInputOrder input, ActiveRequest active) {
     var o = toRtnOrder(input);
     o.OrderLocalID = active.getRequestUUID();
     o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
@@ -343,19 +343,24 @@ public class OrderProvider implements Connectable {
     this.mapper.register(o);
   }
 
-  protected void rspError(CInputOrder order, int code, String msg) {
+  private void doInsertError(CInputOrder input, int code, String msg) {
     var rsp = new CRspInfo();
     rsp.ErrorID = code;
     rsp.ErrorMsg = msg;
-    whenErrRtnOrderInsert(order, rsp);
+    this.global.getLogger().severe(Utils.formatLog(
+        "failed order insertion", input.OrderRef, msg, code));
+    // Failed order results in canceling the order.
+    cancelInputOrder(input, rsp);
+    this.msgWriter.writeErr(input, rsp);
   }
 
-  protected void rspError(CInputOrderAction action, int code,
-                          String msg) {
+  private void doInsertError(CInputOrderAction action, int code, String msg) {
     var rsp = new CRspInfo();
     rsp.ErrorID = code;
     rsp.ErrorMsg = msg;
-    whenRspOrderAction(action, rsp, 0, true);
+    this.global.getLogger().warning(Utils.formatLog(
+        "failed action", action.OrderRef, msg, code));
+    this.msgWriter.writeErr(action, rsp);
   }
 
   /**
@@ -374,7 +379,7 @@ public class OrderProvider implements Connectable {
    */
   public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
     if (!this.pendingReqs.offer(new PendingRequest(action, active))) {
-      rspError(
+      doInsertError(
           action,
           ErrorCodes.NEED_RETRY,
           ErrorMessages.NEED_RETRY);
@@ -642,12 +647,7 @@ public class OrderProvider implements Connectable {
 
   public void whenErrRtnOrderInsert(CInputOrder inputOrder,
                                     CRspInfo rspInfo) {
-    this.global.getLogger().severe(
-        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
-            rspInfo.ErrorMsg, rspInfo.ErrorID));
-    // Failed order results in canceling the order.
-    cancelInputOrder(inputOrder, rspInfo);
-    this.msgWriter.writeErr(inputOrder, rspInfo);
+    // Process the error only once in rsp-order-insert.
   }
 
   public void whenRspAuthenticate(
@@ -676,10 +676,7 @@ public class OrderProvider implements Connectable {
   public void whenRspOrderAction(CInputOrderAction inputOrderAction,
                                  CRspInfo rspInfo, int requestId,
                                  boolean isLast) {
-    this.msgWriter.writeErr(inputOrderAction, rspInfo);
-    this.global.getLogger().warning(
-        Utils.formatLog("failed action", inputOrderAction.OrderRef,
-            rspInfo.ErrorMsg, rspInfo.ErrorID));
+    // Process error only in err-rtn-order-action.
   }
 
   public void whenRspOrderInsert(CInputOrder inputOrder,
