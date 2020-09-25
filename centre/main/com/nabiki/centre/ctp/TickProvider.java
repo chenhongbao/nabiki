@@ -55,8 +55,7 @@ public class TickProvider implements Connectable {
       subscribed = new HashSet<>();
   private final ExecutorService es = Executors.newCachedThreadPool();
 
-  private boolean isConnected = false,
-      isLogin = false;
+  private boolean isConnected = false, isLogin = false;
   private WorkingState workingState = WorkingState.STOPPED;
 
   // Login signal.
@@ -117,6 +116,20 @@ public class TickProvider implements Connectable {
     }
   }
 
+  public boolean isLogin() {
+    return isLogin;
+  }
+
+  private void setLogin(boolean login) {
+    isLogin = login;
+    global.getLogger().info("md login: " + isLogin());
+  }
+
+  private void setConnected(boolean connected) {
+    isConnected = connected;
+    global.getLogger().info("md connected: " + isConnected());
+  }
+
   public void subscribe() {
     if (this.toSubscribe.size() == 0)
       throw new IllegalStateException("no instrument to subscribe");
@@ -150,30 +163,27 @@ public class TickProvider implements Connectable {
 
   @Override
   public void connect() {
-    if (this.api != null)
+    if (this.api != null) {
       throw new IllegalStateException("need disconnect before connect");
-        /*
-         IMPORTANT!
-         Kept reference to SPI so GC won't disconnect the object, hence the underlining
-         C++ objects.
-         */
+    }
     this.api = CThostFtdcMdApi.CreateFtdcMdApi(
         this.loginCfg.FlowDirectory,
         this.loginCfg.IsUsingUDP,
         this.loginCfg.IsMulticast);
     this.spi = new JniMdSpi(this, global);
     this.api.RegisterSpi(spi);
-    for (var addr : this.loginCfg.FrontAddresses)
+    for (var addr : this.loginCfg.FrontAddresses) {
       this.api.RegisterFront(addr);
+    }
     this.api.Init();
   }
 
   @Override
   public void disconnect() {
     // Set states.
-    this.isLogin = false;
-    this.isConnected = false;
-    this.workingState = WorkingState.STOPPED;
+    setLogin(false);
+    setConnected(false);
+    setWorkingState(WorkingState.STOPPED);
     // Release resources.
     this.api.Release();
     this.api = null;
@@ -181,29 +191,37 @@ public class TickProvider implements Connectable {
   }
 
   public void login() {
-    if (!this.isConnected)
+    if (!isConnected()) {
       throw new IllegalStateException("not connected");
-    if (isLogin)
+    }
+    if (isLogin()) {
       throw new IllegalStateException("duplicated login");
-    this.workingState = WorkingState.STARTING;
+    }
+    setWorkingState(WorkingState.STARTING);
     doLogin();
   }
 
   public void logout() {
-    if (!this.isLogin)
+    if (!isLogin()) {
       throw new IllegalStateException("duplicated logout");
-    this.workingState = WorkingState.STOPPING;
+    }
+    setWorkingState(WorkingState.STOPPING);
     doLogout();
   }
 
   public WorkingState getWorkingState() {
-    return this.workingState;
+    return workingState;
+  }
+
+  private void setWorkingState(WorkingState state) {
+    workingState = state;
+    global.getLogger().info("md state: " + getWorkingState());
   }
 
   public boolean waitWorkingState(WorkingState stateToWait, long millis) {
     var wait = millis;
     var beg = System.currentTimeMillis();
-    while (this.workingState != stateToWait) {
+    while (getWorkingState() != stateToWait) {
       try {
         this.stateSignal.waitSignal(wait);
       } catch (InterruptedException e) {
@@ -215,7 +233,7 @@ public class TickProvider implements Connectable {
       else
         break;
     }
-    return this.workingState == stateToWait;
+    return getWorkingState() == stateToWait;
   }
 
   private void updateActionDay() {
@@ -269,20 +287,20 @@ public class TickProvider implements Connectable {
   }
 
   public void whenFrontConnected() {
-    this.isConnected = true;
+    setConnected(true);
     this.stateSignal.signal();
-    if (this.workingState == WorkingState.STARTING
-        || this.workingState == WorkingState.STARTED) {
+    if (getWorkingState() == WorkingState.STARTED) {
       doLogin();
-      this.global.getLogger().info("md reconnected");
-    } else
-      this.global.getLogger().info("md connected");
+    }
   }
 
   public void whenFrontDisconnected(int reason) {
-    this.global.getLogger().warning("md disconnected");
-    this.isLogin = false;
-    this.isConnected = false;
+    setLogin(false);
+    setConnected(false);
+    // It doesn't start up, then it is disconnected. So remote is not available.
+    if (getWorkingState() == WorkingState.STARTING) {
+      setWorkingState(WorkingState.STOPPED);
+    }
   }
 
   public void whenRspError(CRspInfo rspInfo, int requestId,
@@ -297,11 +315,10 @@ public class TickProvider implements Connectable {
                                CRspInfo rspInfo, int requestId,
                                boolean isLast) {
     if (rspInfo.ErrorID == 0) {
-      this.isLogin = true;
-      this.workingState = WorkingState.STARTED;
+      setLogin(true);
+      setWorkingState(WorkingState.STARTED);
       // Signal login state changed.
       this.stateSignal.signal();
-      this.global.getLogger().info("md login");
       updateActionDay();
       // The subscribe method uses instruments set by order provider.
       // Because it needs to send requests many times, costing around 10 secs,
@@ -329,11 +346,10 @@ public class TickProvider implements Connectable {
                                 CRspInfo rspInfo, int nRequestID,
                                 boolean isLast) {
     if (rspInfo.ErrorID == 0) {
-      this.isLogin = false;
-      this.workingState = WorkingState.STOPPED;
+      setLogin(false);
+      setWorkingState(WorkingState.STOPPED);
       // Signal login state changed to logout.
       this.stateSignal.signal();
-      this.global.getLogger().info("md logout");
       // Clear last subscription on successful logout.
       this.toSubscribe.clear();
     } else {

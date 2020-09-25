@@ -66,14 +66,11 @@ public class OrderProvider implements Connectable {
   private final BlockingDeque<PendingRequest> pendingReqs;
   private final TimeAligner timeAligner = new TimeAligner();
 
-  private boolean isConfirmed = false,
-      isConnected = false,
-      qryInstrLast = false;
+  private boolean isConfirmed = false, isConnected = false, qryInstrLast = false;
   private CRspUserLogin rspLogin;
 
   // Wait and signaling.
-  private final Signal stateSignal = new Signal(),
-      qryLastInstrSignal = new Signal();
+  private final Signal stateSignal = new Signal(), qryLastInstrSignal = new Signal();
 
   // Query instrument info.
   private QueryTask qryTask;
@@ -149,13 +146,28 @@ public class OrderProvider implements Connectable {
     return qryInstrLast;
   }
 
+  private void setQryLast(boolean last) {
+    qryInstrLast = last;
+    global.getLogger().info("qry last instrument: " + isQryInstrLast());
+  }
+
   public boolean isConfirmed() {
     return isConfirmed;
+  }
+
+  private void setConfirmed(boolean confirmed) {
+    isConfirmed = confirmed;
+    global.getLogger().info("trader confirmed: " + isConfirmed());
   }
 
   @Override
   public boolean isConnected() {
     return this.isConnected;
+  }
+
+  private void setConnected(boolean connected) {
+    isConnected = connected;
+    global.getLogger().info("trader connected: " + isConnected());
   }
 
   @Override
@@ -206,9 +218,9 @@ public class OrderProvider implements Connectable {
   @Override
   public void disconnect() {
     // Set states.
-    this.isConfirmed = false;
-    this.isConnected = false;
-    this.workingState = WorkingState.STOPPED;
+    setConfirmed(false);
+    setConnected(false);
+    setWorkingState(WorkingState.STOPPED);
     // Release resources.
     this.api.Release();
     this.api = null;
@@ -219,14 +231,16 @@ public class OrderProvider implements Connectable {
    * Request login.
    */
   public void login() {
-    if (!this.isConnected)
+    if (!isConnected()) {
       throw new IllegalStateException("not connected");
-    if (this.isConfirmed)
+    }
+    if (isConfirmed()) {
       throw new IllegalStateException("repeated login");
-    this.workingState = WorkingState.STARTING;
+    }
+    setWorkingState(WorkingState.STARTING);
     // Reset qry last instrument to false so it will wait for the completion
     // of qry instruments.
-    this.qryInstrLast = false;
+    setQryLast(false);
     // Clear old data.
     this.instrumentIDs.clear();
     this.activeInstruments.clear();
@@ -237,16 +251,22 @@ public class OrderProvider implements Connectable {
    * Request logout;
    */
   public void logout() {
-    if (!this.isConfirmed)
+    if (!isConfirmed()) {
       throw new IllegalStateException("repeated logout");
-    this.workingState = WorkingState.STOPPING;
+    }
+    setWorkingState(WorkingState.STOPPING);
     // Set candle working state.
     this.candleEngine.setWorking(false);
     doLogout();
   }
 
   public WorkingState getWorkingState() {
-    return this.workingState;
+    return workingState;
+  }
+
+  private void setWorkingState(WorkingState state) {
+    workingState = state;
+    global.getLogger().info("trader state: " + getWorkingState());
   }
 
   public boolean waitLastInstrument(long millis) throws InterruptedException {
@@ -257,7 +277,7 @@ public class OrderProvider implements Connectable {
 
   public boolean waitWorkingState(WorkingState stateToWait, long millis) {
     var wait = millis;
-    while (this.workingState != stateToWait && wait > 0) {
+    while (getWorkingState() != stateToWait && wait > 0) {
       var beg = System.currentTimeMillis();
       try {
         this.stateSignal.waitSignal(wait);
@@ -266,7 +286,7 @@ public class OrderProvider implements Connectable {
       }
       wait -= (System.currentTimeMillis() - beg);
     }
-    return this.workingState == stateToWait;
+    return getWorkingState() == stateToWait;
   }
 
   /**
@@ -600,20 +620,21 @@ public class OrderProvider implements Connectable {
   }
 
   public void whenFrontConnected() {
-    this.isConnected = true;
+    setConnected(true);
     this.stateSignal.signal();
-    if (this.workingState == WorkingState.STARTING
-        || this.workingState == WorkingState.STARTED) {
+    if (getWorkingState() == WorkingState.STARTED) {
       doAuthentication();
-      this.global.getLogger().info("trader reconnected");
-    } else
-      this.global.getLogger().info("trader connected");
+    }
   }
 
   public void whenFrontDisconnected(int reason) {
-    this.global.getLogger().warning("trader disconnected");
-    this.isConnected = false;
-    this.isConfirmed = false;
+    setConnected(false);
+    setConfirmed(false);
+    // If the state is starting, it doesn't start up successfully.
+    // Then it is disconnected, so remote server is not available.
+    if (getWorkingState() == WorkingState.STARTING) {
+      setWorkingState(WorkingState.STOPPED);
+    }
     // Don't change working state here because it may disconnect in half way.
   }
 
@@ -645,7 +666,7 @@ public class OrderProvider implements Connectable {
           Utils.formatLog("failed authentication", null,
               rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
-      this.workingState = WorkingState.STOPPED;
+      setWorkingState(WorkingState.STOPPED);
     }
   }
 
@@ -698,13 +719,12 @@ public class OrderProvider implements Connectable {
       GlobalConfig.resetInstrConfig(this.activeInstruments.values());
       // First update config instrument info, then signal. So other waiting
       // thread can get the correct data.
-      this.qryInstrLast = true;
+      setQryLast(true);
       this.qryLastInstrSignal.signal();
       // Start qry task.
       startQryDaemonOnce();
-      this.global.getLogger().info("get last qry instrument rsp");
     } else {
-      this.qryInstrLast = false;
+      setQryLast(false);
     }
   }
 
@@ -744,9 +764,8 @@ public class OrderProvider implements Connectable {
       CSettlementInfoConfirm settlementInfoConfirm,
       CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
-      this.global.getLogger().info("trader confirm settlement");
-      this.isConfirmed = true;
-      this.workingState = WorkingState.STARTED;
+      setConfirmed(true);
+      setWorkingState(WorkingState.STARTED);
       // Set candle working state.
       this.candleEngine.setWorking(true);
       // Query instruments.
@@ -769,7 +788,6 @@ public class OrderProvider implements Connectable {
       doRspLogin(rspUserLogin);
       // Set trading day.
       GlobalConfig.setTradingDay(rspUserLogin.TradingDay);
-      this.global.getLogger().info("trader login");
       // Align time.
       this.timeAligner.align("SHFE", LocalTime.now(), rspLogin.SHFETime);
       this.timeAligner.align("CZCE", LocalTime.now(), rspLogin.CZCETime);
@@ -781,7 +799,7 @@ public class OrderProvider implements Connectable {
           Utils.formatLog("trader failed login", null,
               rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
-      this.workingState = WorkingState.STOPPED;
+      setWorkingState(WorkingState.STOPPED);
     }
   }
 
@@ -789,9 +807,8 @@ public class OrderProvider implements Connectable {
                                 CRspInfo rspInfo, int requestId,
                                 boolean isLast) {
     if (rspInfo.ErrorID == 0) {
-      this.global.getLogger().info("trader logout");
-      this.isConfirmed = false;
-      this.workingState = WorkingState.STOPPED;
+      setConfirmed(false);
+      setWorkingState(WorkingState.STOPPED);
       // Signal logout.
       this.stateSignal.signal();
     } else {

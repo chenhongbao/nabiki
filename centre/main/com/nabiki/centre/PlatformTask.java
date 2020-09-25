@@ -143,11 +143,12 @@ class PlatformTask extends TimerTask {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    if (main.getOrder().getWorkingState() != WorkingState.STARTED)
+    if (main.getOrder().getWorkingState() != WorkingState.STARTED) {
       this.global.getLogger().severe("trader didn't start up");
-    else if (this.userState == UserState.SETTLED)
+    } else if (this.userState == UserState.SETTLED) {
       // Renew user information.
       renew();
+    }
   }
 
   private void startMd() {
@@ -209,8 +210,18 @@ class PlatformTask extends TimerTask {
       var r = main.getOrder().waitWorkingState(
           WorkingState.STOPPED,
           TimeUnit.MINUTES.toMillis(1));
-      if (!r)
+      if (!r) {
         this.global.getLogger().severe("trader logout timeout");
+      } else {
+        //Settle user information after platform stops at the end of a trading day.
+        var hour = LocalTime.now().getHour();
+        if (14 < hour && hour < 21) {
+          if (this.userState == UserState.RENEW) {
+            settle();
+            checkPerformance();
+          }
+        }
+      }
     } catch (Throwable th) {
       th.printStackTrace();
     }
@@ -231,12 +242,6 @@ class PlatformTask extends TimerTask {
     // Front is disconnected automatically after remote shutdown, so no
     // need to force all logout here.
     this.workingState = WorkingState.STOPPED;
-    //Settle user information after platform stops at the end of a trading day.
-    var hour = LocalTime.now().getHour();
-    if (14 < hour && hour < 21) {
-      settle();
-      checkPerformance();
-    }
   }
 
   private void checkPerformance() {
