@@ -71,8 +71,7 @@ public class CandleEngine extends TimerTask {
   }
 
   public void setWorking(boolean working) {
-    this.global.getLogger().info(
-        "candle engine: " + (working ? "working" : "stopped"));
+    global.getLogger().info("candle engine working: " + working);
     this.working.set(working);
   }
 
@@ -83,33 +82,38 @@ public class CandleEngine extends TimerTask {
    * @param instrID instrument ID
    */
   public void addInstrument(String instrID) {
-    if (instrID == null || instrID.length() == 0)
+    if (instrID == null || instrID.length() == 0) {
       throw new IllegalArgumentException("illegal instr ID");
+    }
     var product = ensureProduct(Utils.getProductID(instrID));
     product.registerInstr(instrID);
-    this.instrProducts.put(instrID, product);
+    instrProducts.put(instrID, product);
   }
 
   public void removeInstrument(String instrID) {
-    if (instrID == null || instrID.length() == 0)
+    if (instrID == null || instrID.length() == 0) {
       throw new IllegalArgumentException("illegal instr ID");
+    }
     var productID = Utils.getProductID(instrID);
-    if (this.products.containsKey(productID))
-      this.products.get(productID).unregisterInstr(instrID);
+    if (this.products.containsKey(productID)) {
+      products.get(productID).unregisterInstr(instrID);
+    }
   }
 
   public void setupDurations() {
-    for (var p : this.products.values())
-      for (var du : this.global.getDurations())
+    for (var p : this.products.values()) {
+      for (var du : this.global.getDurations()) {
         p.registerDuration(du);
+      }
+    }
   }
 
   private Product ensureProduct(String product) {
     Product p;
     synchronized (this.products) {
-      if (this.products.containsKey(product))
+      if (this.products.containsKey(product)) {
         return this.products.get(product);
-      else {
+      } else {
         this.products.put(product, new Product());
         p = this.products.get(product);
       }
@@ -119,16 +123,18 @@ public class CandleEngine extends TimerTask {
 
   public void update(CDepthMarketData md) {
     var product = this.instrProducts.get(md.InstrumentID);
-    if (product == null)
+    if (product == null) {
       product = ensureProduct(Utils.getProductID(md.InstrumentID));
+    }
     product.update(md);
   }
 
   @Override
   public void run() {
     // Not working, don't generate candles.
-    if (!this.working.get())
+    if (!this.working.get()) {
       return;
+    }
     // Working now.
     var now = getRoundTime(
         LocalTime.now(),
@@ -168,8 +174,9 @@ public class CandleEngine extends TimerTask {
     }
 
     public void registerInstr(String instrID) {
-      if (!this.candles.containsKey(instrID))
+      if (!this.candles.containsKey(instrID)) {
         this.candles.put(instrID, new SingleCandle(instrID));
+      }
     }
 
     public void unregisterInstr(String instrID) {
@@ -177,32 +184,38 @@ public class CandleEngine extends TimerTask {
     }
 
     public void registerDuration(Duration du) {
-      if (du == null)
+      if (du == null) {
         throw new NullPointerException("duration null");
+      }
       synchronized (this.candles) {
-        for (var c : this.candles.values())
+        for (var c : this.candles.values()) {
           c.register(du);
+        }
       }
     }
 
     public Set<CCandle> peak(Duration du) {
-      if (du == null)
+      if (du == null) {
         throw new NullPointerException("duration null");
+      }
       var r = new HashSet<CCandle>();
       synchronized (this.candles) {
-        for (var c : this.candles.values())
+        for (var c : this.candles.values()) {
           r.add(c.peak(du, global.getTradingDay()));
+        }
       }
       return r;
     }
 
     public Set<CCandle> pop(Duration du) {
-      if (du == null)
+      if (du == null) {
         throw new IllegalArgumentException("duration null");
+      }
       var r = new HashSet<CCandle>();
       synchronized (this.candles) {
-        for (var c : this.candles.values())
+        for (var c : this.candles.values()) {
           r.add(c.pop(du, global.getTradingDay()));
+        }
       }
       return r;
     }

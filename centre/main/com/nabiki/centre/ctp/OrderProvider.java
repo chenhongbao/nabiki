@@ -148,7 +148,9 @@ public class OrderProvider implements Connectable {
 
   private void setQryLast(boolean last) {
     qryInstrLast = last;
-    global.getLogger().info("qry last instrument: " + isQryInstrLast());
+    if (last) {
+      global.getLogger().info("qry last instrument: " + isQryInstrLast());
+    }
   }
 
   public boolean isConfirmed() {
