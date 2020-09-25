@@ -57,7 +57,7 @@ public class UserLoginManager extends LoginManager {
   private final ActiveUserManager userMgr;
   private final Global global;
 
-  UserLoginManager(UserAuthManager auth, ActiveUserManager user, Global global) {
+  public UserLoginManager(UserAuthManager auth, ActiveUserManager user, Global global) {
     this.authMgr = auth;
     this.userMgr = user;
     this.global = global;

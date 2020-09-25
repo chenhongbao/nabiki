@@ -92,7 +92,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
   private final CandleRW candlRW;
   private final Global global;
 
-  SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global global) {
+  public SubscriptionAdaptor(MarketDataRouter router, CandleRW rw, Global global) {
     this.router = router;
     this.candlRW = rw;
     this.global = global;

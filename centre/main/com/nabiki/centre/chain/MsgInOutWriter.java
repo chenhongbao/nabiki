@@ -46,7 +46,7 @@ public class MsgInOutWriter {
   private final Path inDir, outDir;
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-  MsgInOutWriter(Global cfg) {
+  public MsgInOutWriter(Global cfg) {
     this.global = cfg;
     this.inDir = getPath(cfg, "dir.flow.client_in");
     this.outDir = getPath(cfg, "dir.flow.client_out");

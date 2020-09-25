@@ -35,7 +35,7 @@ import com.nabiki.iop.ServerSession;
 public class InputFromClientLogger implements ServerMessageHandler {
   private final MsgInOutWriter writer;
 
-  InputFromClientLogger(MsgInOutWriter writer) {
+  public InputFromClientLogger(MsgInOutWriter writer) {
     this.writer = writer;
   }
 

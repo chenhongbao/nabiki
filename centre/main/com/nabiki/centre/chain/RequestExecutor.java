@@ -44,7 +44,7 @@ import java.util.UUID;
 public class RequestExecutor extends RequestSuper {
   private final Global global;
 
-  RequestExecutor(Global global) {
+  public RequestExecutor(Global global) {
     this.global = global;
   }
 

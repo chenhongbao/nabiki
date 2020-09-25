@@ -40,7 +40,7 @@ public class SessionAdaptor extends ServerSessionAdaptor {
   private final MarketDataRouter router;
   private final Global global;
 
-  SessionAdaptor(MarketDataRouter router, Global cfg) {
+  public SessionAdaptor(MarketDataRouter router, Global cfg) {
     this.router = router;
     this.global = cfg;
   }
