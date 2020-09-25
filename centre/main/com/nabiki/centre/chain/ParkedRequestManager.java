@@ -129,6 +129,8 @@ public class ParkedRequestManager extends TimerTask {
               global.getLogger().warning(th.getMessage());
             }
           }
+          // Because the trader may be offline or lost previous order context, no
+          // need to send rsp. Client queries the position to check the order result.
           // Remove the processed parked order.
           iterator.remove();
         }
