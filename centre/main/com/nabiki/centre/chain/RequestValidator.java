@@ -98,17 +98,15 @@ public class RequestValidator extends RequestSuper {
       if (time.isAfter(hour.getBeginOfDay())) {
         // The night before holiday.
         return tradingDay.equals(today);
-      } else {
-        // Just handle working day here. Because holiday is checked before.
-        // Normal weekend is just a break between night of last Friday and day
-        // of next Monday, so it is not over.
-        var dayOfWeek = today.getDayOfWeek();
-        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY &&
-            hour.isEndOfDay(time);
       }
-    } else {
-      return time.isAfter(hour.getEndOfDay());
     }
+    // Workday.
+    // Just handle working day here. Because holiday is checked before.
+    // Normal weekend is just a break between night of last Friday and day
+    // of next Monday, so it is not over.
+    var dayOfWeek = today.getDayOfWeek();
+    return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY &&
+        hour.isEndOfDay(time);
   }
 
   @Override
