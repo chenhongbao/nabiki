@@ -40,19 +40,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ActiveRequest {
   private final Map<String, FrozenAccount> frozenAccount = new HashMap<>();
   private final Map<String, FrozenPositionDetail> frozenPosition = new HashMap<>();
-
   private final String uuid = UUID.randomUUID().toString();
   private final User user;
   private final OrderProvider orderProvider;
   private final Global global;
   private final CInputOrder order;
   private final CInputOrderAction action;
-
   private final CRspInfo execRsp = new CRspInfo();
+  // Count total traded volume from all sub-orders.
+  private final AtomicInteger tradedCount = new AtomicInteger(0);
 
   ActiveRequest(
       CInputOrder order,
@@ -429,8 +430,29 @@ public class ActiveRequest {
    * @param trade trade response
    */
   public void updateTrade(CTrade trade) {
-    synchronized (this.user) {
-      directUpdateTrade(trade);
+    if (order == null) {
+      global.getLogger().severe(Utils.formatLog(
+          "null original input order",
+          trade.OrderRef,
+          null,
+          null));
+      return;
+    }
+    // Increase return trade counter.
+    tradedCount.addAndGet(trade.Volume);
+    // If trade more than input, it is an order from other client, otherwise update
+    // the trade into account.
+    if (tradedCount.get() > order.VolumeTotalOriginal) {
+      global.getLogger().severe(String.format(
+          "update more traded volume than input, expected %d, count %d. [%s][%s]",
+          order.VolumeTotalOriginal,
+          tradedCount.get(),
+          trade.OrderRef,
+          getRequestUUID()));
+    } else {
+      synchronized (this.user) {
+        directUpdateTrade(trade);
+      }
     }
   }
 
