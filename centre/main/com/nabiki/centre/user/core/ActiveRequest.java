@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ActiveRequest {
@@ -54,6 +55,7 @@ public class ActiveRequest {
   private final CRspInfo execRsp = new CRspInfo();
   // Count total traded volume from all sub-orders.
   private final AtomicInteger tradedCount = new AtomicInteger(0);
+  private final AtomicBoolean isCanceled = new AtomicBoolean(false);
 
   ActiveRequest(
       CInputOrder order,
@@ -85,6 +87,10 @@ public class ActiveRequest {
 
   public CInputOrder getOriginOrder() {
     return this.order;
+  }
+
+  public boolean isCanceled() {
+    return isCanceled.get();
   }
 
   public CInputOrderAction getOriginAction() {
@@ -342,7 +348,12 @@ public class ActiveRequest {
    */
   public void updateRtnOrder(COrder rtn) {
     synchronized (this.user) {
-      directUpdateRtnOrder(rtn);
+      try {
+        directUpdateRtnOrder(rtn);
+      } catch (Throwable th) {
+        th.printStackTrace();
+        global.getLogger().warning(th.getMessage());
+      }
     }
   }
 
@@ -417,6 +428,8 @@ public class ActiveRequest {
             + this.order.CombOffsetFlag);
         break;
     }
+    // Set canceling mark.
+    isCanceled.set(true);
   }
 
   /**
@@ -449,9 +462,17 @@ public class ActiveRequest {
           tradedCount.get(),
           trade.OrderRef,
           getRequestUUID()));
+    } else if (isCanceled()) {
+      global.getLogger().severe(String.format(
+          "update an canceled order. [%s][%s]", trade.OrderRef, getRequestUUID()));
     } else {
       synchronized (this.user) {
-        directUpdateTrade(trade);
+        try {
+          directUpdateTrade(trade);
+        } catch (Throwable th) {
+          th.printStackTrace();
+          global.getLogger().warning(th.getMessage());
+        }
       }
     }
   }
