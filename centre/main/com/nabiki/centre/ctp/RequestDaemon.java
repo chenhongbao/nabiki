@@ -268,6 +268,7 @@ class RequestDaemon implements Runnable {
       now = LocalTime.now();
     }
     // If remote counter opens for some while during weekend.
+    // Yes, some hosts do open for some time and the if-clause stops wrong sending.
     var dayOfWeek = LocalDate.now().getDayOfWeek();
     if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
       return false;
