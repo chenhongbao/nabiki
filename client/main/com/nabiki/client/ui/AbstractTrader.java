@@ -45,7 +45,7 @@ public abstract class AbstractTrader implements Trader {
   private TradeClient client;
   private String userID, password;
   private final Collection<String> instruments = new LinkedList<>();
-  protected final Logger logger = Logger.getLogger(this.getClass().getName());
+  protected Logger logger;
 
   private MarketDataTraderAdaptor traderAdaptor;
 
@@ -55,6 +55,7 @@ public abstract class AbstractTrader implements Trader {
 
   private void prepare() {
     try {
+      logger = Logger.getLogger(getLoggerName());
       logger.addHandler(new SimpleFileHandler());
       logger.setUseParentHandlers(false);
       // Set default err/out.
@@ -63,6 +64,10 @@ public abstract class AbstractTrader implements Trader {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private String getLoggerName() {
+    return getUserID() + "/" + getAlgoName();
   }
 
   private String getRequestID() {
