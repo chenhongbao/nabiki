@@ -113,7 +113,6 @@ class RequestDaemon implements Runnable {
 
   @Override
   public void run() {
-
     while (!Thread.interrupted()) {
       try {
         var pend = trySendRequest();
@@ -127,19 +126,41 @@ class RequestDaemon implements Runnable {
         } else {
           // Wait order rsp because async inserting order causes refs no auto-inc.
           // For example, ref(14) arrives, and then ref(13) arrives.
-          if (!waitOrderRsp(15, TimeUnit.SECONDS))
-            global.getLogger().warning("order rsp timeout");
+          if (!waitOrderRsp(15, TimeUnit.SECONDS)) {
+            global.getLogger().warning("order rsp timeout[" + lastOrderRef + "]");
+          }
+          // Control max number of requests sent per second.
+          trafficControl();
         }
       } catch (InterruptedException e) {
         if (provider.getWorkingState() == WorkingState.STOPPING
-            || provider.getWorkingState() == WorkingState.STOPPED)
+            || provider.getWorkingState() == WorkingState.STOPPED) {
           break;
-        else
+        } else {
           global.getLogger().warning(
               Utils.formatLog("order daemon interrupted",
                   null, e.getMessage(),
                   null));
+        }
       }
+    }
+  }
+
+  private void trafficControl() throws InterruptedException {
+    long curTimeStamp = System.currentTimeMillis();
+    long diffTimeStamp = threshold - (curTimeStamp - timeStamp);
+    if (diffTimeStamp > 0) {
+      ++sendCnt;
+      // Sleep before next second.
+      if (sendCnt > MAX_REQ_PER_SEC) {
+        Thread.sleep(diffTimeStamp);
+        // Reset send count for next second.
+        sendCnt = 0;
+        timeStamp = System.currentTimeMillis();
+      }
+    } else {
+      sendCnt = 1;
+      timeStamp = System.currentTimeMillis();
     }
   }
 
@@ -182,23 +203,11 @@ class RequestDaemon implements Runnable {
     if (r != 0) {
       warn(r, pend);
       return pend;
-    }
-    // Flow control.
-    long curTimeStamp = System.currentTimeMillis();
-    long diffTimeStamp = threshold - (curTimeStamp - timeStamp);
-    if (diffTimeStamp > 0) {
-      ++sendCnt;
-      if (sendCnt > MAX_REQ_PER_SEC) {
-        Thread.sleep(diffTimeStamp);
-        timeStamp = System.currentTimeMillis();
-      }
     } else {
-      sendCnt = 0;
-      timeStamp = System.currentTimeMillis();
+      // Return null, indicates the request has been sent.
+      // Otherwise, enqueue the request and wait.
+      return null;
     }
-    // Return null, indicates the request has been sent.
-    // Otherwise, enqueue the request and wait.
-    return null;
   }
 
   private int fillAndSendOrder(CInputOrder input) {
