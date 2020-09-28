@@ -40,6 +40,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,19 +49,20 @@ class RequestDaemon implements Runnable {
   private final Global global;
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
   private final Map<String, LocalDateTime> usedOrderRef = new ConcurrentHashMap<>();
-  protected final int MAX_REQ_PER_SEC = 5;
-  protected final int WAIT_RSP_SEC = 15;
-  protected int sendCnt = 0;
-  protected long threshold = TimeUnit.SECONDS.toMillis(1);
-  protected long timeStamp = System.currentTimeMillis();
+  private final int MAX_REQ_PER_SEC = 5;
+  private final int WAIT_RSP_SEC = 15;
+  private int sendCnt = 0;
+  private final long threshold = TimeUnit.SECONDS.toMillis(1);
+  private long timeStamp = System.currentTimeMillis();
 
-  private String lastOrderRef = "";
+  private AtomicReference<String> lastOrderRef = new AtomicReference<>();
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition cond = lock.newCondition();
 
   public RequestDaemon(OrderProvider provider, Global global) {
     this.provider = provider;
     this.global = global;
+    lastOrderRef.set("");
   }
 
   private boolean isOrderRefUsed(String orderRef) {
@@ -85,7 +87,7 @@ class RequestDaemon implements Runnable {
   }
 
   void signalOrderRef(String ref) {
-    if (lastOrderRef != null && ref.compareTo(lastOrderRef) == 0) {
+    if (lastOrderRef.get() != null && ref.compareTo(lastOrderRef.get()) == 0) {
       lock.lock();
       try {
         cond.signal();
@@ -96,7 +98,7 @@ class RequestDaemon implements Runnable {
   }
 
   private boolean waitOrderRsp(int value, TimeUnit unit) {
-    if (lastOrderRef == null || lastOrderRef.length() == 0) {
+    if (lastOrderRef.get() == null || lastOrderRef.get().length() == 0) {
       return true;
     }
     lock.lock();
@@ -193,7 +195,7 @@ class RequestDaemon implements Runnable {
         r = fillAndSendOrder(pend.order);
         if (r == 0) {
           // Remember the last order ref, wait for rsp.
-          lastOrderRef = ref;
+          lastOrderRef.set(ref);
           provider.getMsgWriter().writeReq(pend.order);
         }
       }
