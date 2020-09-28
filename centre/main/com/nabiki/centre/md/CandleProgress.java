@@ -51,8 +51,12 @@ public class CandleProgress {
   }
 
   public void update(CDepthMarketData md) {
-    if (this.lastVolume == 0)
+    // If last volume is not set, set it to current volume.
+    // If last volume is bigger than current volume, which means last volume is
+    // probably total traded volume of previous trading day, set it.
+    if (this.lastVolume == 0 || this.lastVolume > md.Volume) {
       this.lastVolume = md.Volume;
+    }
     synchronized (this.candle) {
       if (this.popped) {
         this.candle.InstrumentID = md.InstrumentID;
