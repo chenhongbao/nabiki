@@ -49,6 +49,7 @@ class RequestDaemon implements Runnable {
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
   private final Map<String, LocalDateTime> usedOrderRef = new ConcurrentHashMap<>();
   protected final int MAX_REQ_PER_SEC = 5;
+  protected final int WAIT_RSP_SEC = 15;
   protected int sendCnt = 0;
   protected long threshold = TimeUnit.SECONDS.toMillis(1);
   protected long timeStamp = System.currentTimeMillis();
@@ -126,7 +127,7 @@ class RequestDaemon implements Runnable {
         } else {
           // Wait order rsp because async inserting order causes refs no auto-inc.
           // For example, ref(14) arrives, and then ref(13) arrives.
-          if (!waitOrderRsp(15, TimeUnit.SECONDS)) {
+          if (!waitOrderRsp(WAIT_RSP_SEC, TimeUnit.SECONDS)) {
             global.getLogger().warning("order rsp timeout[" + lastOrderRef + "]");
           }
           // Control max number of requests sent per second.
