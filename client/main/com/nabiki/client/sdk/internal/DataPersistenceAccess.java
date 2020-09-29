@@ -75,7 +75,8 @@ class DataPersistenceAccess {
         var kv = this.kvs.poll(1, TimeUnit.DAYS);
         if (kv != null)
           process(kv);
-      } catch (InterruptedException | IOException ignored) {
+      } catch (Throwable th) {
+        th.printStackTrace();
       }
     }
   });

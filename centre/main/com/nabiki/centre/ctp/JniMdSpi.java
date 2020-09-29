@@ -158,8 +158,8 @@ public class JniMdSpi extends CThostFtdcMdSpi {
       while (!Thread.currentThread().isInterrupted()) {
         try {
           provider.whenRtnDepthMarketData(depths.take());
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+        } catch (Throwable th) {
+          th.printStackTrace();
         }
       }
     }
