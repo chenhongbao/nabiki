@@ -28,6 +28,7 @@
 
 package com.nabiki.centre.md;
 
+import com.nabiki.centre.utils.UncaughtWriter;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.objects.CCandle;
 import com.nabiki.objects.CDepthMarketData;
@@ -48,8 +49,9 @@ public class MarketDataRouter implements Runnable {
   private final Thread daemon;
 
   public MarketDataRouter() {
-    this.daemon = new Thread(this);
-    this.daemon.start();
+    daemon = new Thread(this);
+    daemon.setUncaughtExceptionHandler(UncaughtWriter.getDefault());
+    daemon.start();
   }
 
   public void addReceiver(MarketDataReceiver recv) {

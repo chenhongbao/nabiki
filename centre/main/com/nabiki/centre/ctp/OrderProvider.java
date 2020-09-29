@@ -30,10 +30,7 @@ package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.user.core.ActiveRequest;
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.GlobalConfig;
-import com.nabiki.centre.utils.Signal;
-import com.nabiki.centre.utils.Utils;
+import com.nabiki.centre.utils.*;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.ctp4j.CThostFtdcTraderApi;
 import com.nabiki.ctp4j.THOST_TE_RESUME_TYPE;
@@ -103,6 +100,7 @@ public class OrderProvider implements Connectable {
     reqTask = new RequestDaemon(this, global);
     orderDaemon = new Thread(reqTask);
     orderDaemon.setDaemon(true);
+    orderDaemon.setUncaughtExceptionHandler(UncaughtWriter.getDefault());
     orderDaemon.start();
   }
 
@@ -115,6 +113,7 @@ public class OrderProvider implements Connectable {
     qryTask = new QueryTask(this, global);
     qryDaemon = new Thread(qryTask);
     qryDaemon.setDaemon(true);
+    qryDaemon.setUncaughtExceptionHandler(UncaughtWriter.getDefault());
     qryDaemon.start();
   }
 

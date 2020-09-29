@@ -29,6 +29,7 @@
 package com.nabiki.centre.ctp;
 
 import com.nabiki.centre.utils.Global;
+import com.nabiki.centre.utils.UncaughtWriter;
 import com.nabiki.ctp4j.*;
 import com.nabiki.objects.CDepthMarketData;
 
@@ -50,8 +51,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
 
   private void prepare() {
     // The update may take long time, so do it in another thread.
-    this.depthUpdateThread = new Thread(new DepthUpdateDaemon());
-    this.depthUpdateThread.start();
+    depthUpdateThread = new Thread(new DepthUpdateDaemon());
+    depthUpdateThread.setUncaughtExceptionHandler(UncaughtWriter.getDefault());
+    depthUpdateThread.start();
   }
 
   @Override

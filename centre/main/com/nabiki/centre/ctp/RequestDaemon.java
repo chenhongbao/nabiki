@@ -55,7 +55,7 @@ class RequestDaemon implements Runnable {
   private final long threshold = TimeUnit.SECONDS.toMillis(1);
   private long timeStamp = System.currentTimeMillis();
 
-  private AtomicReference<String> lastOrderRef = new AtomicReference<>();
+  private final AtomicReference<String> lastOrderRef = new AtomicReference<>();
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition cond = lock.newCondition();
 
@@ -110,7 +110,7 @@ class RequestDaemon implements Runnable {
     } finally {
       lock.unlock();
       // Reset last order ref after getting signaled.
-      lastOrderRef = null;
+      lastOrderRef.set(null);
     }
   }
 
@@ -130,7 +130,8 @@ class RequestDaemon implements Runnable {
           // Wait order rsp because async inserting order causes refs no auto-inc.
           // For example, ref(14) arrives, and then ref(13) arrives.
           if (!waitOrderRsp(WAIT_RSP_SEC, TimeUnit.SECONDS)) {
-            global.getLogger().warning("order rsp timeout[" + lastOrderRef + "]");
+            global.getLogger().warning(
+                "order rsp timeout[" + lastOrderRef.get() + "]");
           }
           // Control max number of requests sent per second.
           trafficControl();
@@ -140,11 +141,12 @@ class RequestDaemon implements Runnable {
             || provider.getWorkingState() == WorkingState.STOPPED) {
           break;
         } else {
-          global.getLogger().warning(
-              Utils.formatLog("order daemon interrupted",
-                  null, e.getMessage(),
-                  null));
+          e.printStackTrace();
+          global.getLogger().warning(e.getMessage());
         }
+      } catch (Throwable th) {
+        th.printStackTrace();
+        global.getLogger().warning(th.getMessage());
       }
     }
   }
