@@ -78,9 +78,10 @@ public class FrameParser extends LinkedList<Frame> {
       return super.size() > 0;
     } catch (Throwable th) {
       var m = getFrameDigest(th.getMessage(), decoding);
+      throw new RuntimeException(m);
+    } finally {
       resetDecoding();
       buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
-      throw new RuntimeException(m);
     }
   }
 
@@ -113,7 +114,7 @@ public class FrameParser extends LinkedList<Frame> {
             this.state = ParsingState.WAIT_HEADER_TYPE;
             break;
           }
-          setHeaderType();
+          setFrameType();
           this.state = ParsingState.WAIT_HEADER_LENGTH;
           break;
         case WAIT_HEADER_LENGTH:
@@ -121,7 +122,7 @@ public class FrameParser extends LinkedList<Frame> {
             this.state = ParsingState.WAIT_HEADER_LENGTH;
             break;
           }
-          setHeaderLength();
+          setFrameLength();
           // Prepare for bytes.
           if (this.decoding.Length < 1) {
             this.state = ParsingState.WAIT_SYNC;
@@ -154,20 +155,34 @@ public class FrameParser extends LinkedList<Frame> {
     this.buffer.compact();
   }
 
+  private void checkFrameType(int type) {
+    switch (type) {
+      case FrameType.HEARTBEAT:
+      case FrameType.REQUEST:
+      case FrameType.RESPONSE:
+      case FrameType.LOGIN:
+        break;
+      default:
+        throw new IllegalArgumentException(
+            String.format("invalid frame type: %X", type));
+    }
+  }
+
   private void resetDecoding() {
     this.decoding = new Frame();
     this.bodyPosition = 0;
     this.state = ParsingState.WAIT_HEADER_TYPE;
   }
 
-  private void setHeaderType() {
+  private void setFrameType() {
     var order = this.buffer.order();
     this.buffer.order(ByteOrder.BIG_ENDIAN);
     this.decoding.Type = this.buffer.getInt();
     this.buffer.order(order);
+    checkFrameType(decoding.Type);
   }
 
-  private void setHeaderLength() {
+  private void setFrameLength() {
     var order = this.buffer.order();
     this.buffer.order(ByteOrder.BIG_ENDIAN);
     this.decoding.Length = this.buffer.getInt();
@@ -217,22 +232,31 @@ public class FrameParser extends LinkedList<Frame> {
       return false;
   }
 
-  private String getFrameDigest(String error, Frame decoding) {
-    StringBuilder m = new StringBuilder(String.format(
-        "Frame[type:%d][length:%d] %s.",
-        decoding.Type,
-        decoding.Length,
-        error));
-    int n = Math.min(decoding.Body.length, 1024);
+  private String summarizeHex(byte[] bytes) {
+    StringBuilder m = new StringBuilder();
+    int n = Math.min(bytes.length, 1024);
     int count = 0, index = 0;
     m.append(System.lineSeparator()).append("\t");
     while (index < n) {
       ++count;
-      m.append(String.format("%02x ", decoding.Body[index++]));
+      m.append(String.format("%02x ", bytes[index++]));
       if (count >= 32) {
         m.append(System.lineSeparator()).append("\t");
         count = 0;
       }
+    }
+    return m.toString();
+  }
+
+  private String getFrameDigest(String error, Frame decoding) {
+    StringBuilder m = new StringBuilder(String.format(
+        "Frame[type:%X][length:%d] %s.",
+        decoding.Type,
+        decoding.Length,
+        error));
+    // If parser fails to parse input, frame body could be null. Must check.
+    if (decoding.Body != null) {
+      m.append(summarizeHex(decoding.Body));
     }
     return m.toString();
   }
