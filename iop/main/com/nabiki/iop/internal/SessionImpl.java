@@ -66,7 +66,11 @@ class SessionImpl {
         // Just close the session ans don't wait for the CloseFuture to
         // return because it may continue checking input while waiting,
         // causing dead lock.
-        this.session.closeNow();
+        session.closeNow();
+        // Clear all attributes.
+        for (var attr : session.getAttributeKeys()) {
+          session.removeAttribute(attr);
+        }
       }
     }
   }
