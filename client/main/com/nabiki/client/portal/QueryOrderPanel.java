@@ -86,7 +86,7 @@ public class QueryOrderPanel extends JPanel {
     JButton cancelOrderBtn = new JButton("\u64A4\u5355");
     cancelOrderBtn.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        orderActioner.cancel(orderIDField.getText().trim(), e.getSource());
+        orderActioner.cancel(orderIDField.getText().trim(), e.getSource(), queryOrderBtn);
       }
     });
     sl_queryOrderPanel.putConstraint(SpringLayout.NORTH, cancelOrderBtn, 0, SpringLayout.NORTH, orderIDField);

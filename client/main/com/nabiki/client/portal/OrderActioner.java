@@ -41,15 +41,16 @@ public class OrderActioner extends Updater implements Runnable {
   private final OrderUpdater updater;
   private Thread daemon;
   private String orderID;
-  private JButton src;
+  private JButton src, rel;
 
   OrderActioner(TradeClient client, OrderUpdater updater) {
     this.client = client;
     this.updater = updater;
   }
 
-  public void cancel(String orderID, Object src) {
+  public void cancel(String orderID, Object src, Object rel) {
     this.src = (JButton) src;
+    this.rel = (JButton) rel;
     this.orderID = orderID;
     super.fire();
   }
@@ -89,7 +90,7 @@ public class OrderActioner extends Updater implements Runnable {
       else if (rspInfo.ErrorID != ErrorCodes.NONE)
         showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       else
-        updater.query(orderID, src);
+        updater.query(orderID, rel);
     }
   }
 
