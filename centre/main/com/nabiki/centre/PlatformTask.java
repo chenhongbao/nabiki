@@ -226,14 +226,14 @@ class PlatformTask extends TimerTask {
           TimeUnit.MINUTES.toMillis(1));
       if (!r) {
         global.getLogger().severe("trader logout timeout");
-      } else {
-        //Settle user information after platform stops at the end of a trading day.
-        var hour = LocalTime.now().getHour();
-        if (14 < hour && hour < 21) {
-          if (getUserState() == UserState.RENEW) {
-            settle();
-            checkPerformance();
-          }
+      }
+      //Settle user information at the end of a trading day.
+      // Settlement is a must no matter whether trader logout successfully.
+      var hour = LocalTime.now().getHour();
+      if (14 < hour && hour < 21) {
+        if (getUserState() == UserState.RENEW) {
+          settle();
+          checkPerformance();
         }
       }
     } catch (Throwable th) {

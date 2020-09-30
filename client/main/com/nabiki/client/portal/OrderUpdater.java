@@ -104,7 +104,7 @@ public class OrderUpdater extends Updater implements Runnable {
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
     if (!rsp.hasResponse())
-      showMsg("\u67E5\u8BE2\u4E0D\u5230\u8D26\u6237\u4fE1\u606F");
+      showMsg("\u67E5\u8BE2\u4E0D\u5230\u62A5\u5355\u4FE1\u606F");
     else {
       CRspInfo error = null;
       COrder o = null;
