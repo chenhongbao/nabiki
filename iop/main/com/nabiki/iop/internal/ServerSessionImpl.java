@@ -33,7 +33,6 @@ import com.nabiki.iop.MessageType;
 import com.nabiki.iop.ServerSession;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.FrameType;
-import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
 import java.net.InetSocketAddress;
@@ -88,20 +87,6 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
     super.fix();
   }
 
-  private Body toBody(Message message) {
-    var body = new Body();
-    body.Type = message.Type;
-    body.RequestID = message.RequestID;
-    body.ResponseID = message.ResponseID;
-    body.CurrentCount = message.CurrentCount;
-    body.TotalCount = message.TotalCount;
-    if (message.Body != null)
-      body.Body = OP.toJson(message.Body);
-    if (message.RspInfo != null)
-      body.RspInfo = OP.toJson(message.RspInfo);
-    return body;
-  }
-
   @Override
   public void sendLogin(Message message) {
     message.Type = MessageType.RSP_REQ_LOGIN;
@@ -141,5 +126,10 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
   @Override
   public InetSocketAddress getRemoteAddress() {
     return super.getRemoteAddress();
+  }
+
+  @Override
+  public long getLag() {
+    return super.getLag();
   }
 }

@@ -134,6 +134,17 @@ class ClientFrameHandler implements IoHandler {
     }
   }
 
+  private void checkLag(SessionImpl session, Message msg) {
+    if (session != null && msg != null) {
+      if (msg.timeStamp > 0) {
+        session.setLag(System.currentTimeMillis() - msg.timeStamp);
+      } else {
+        // Backward compatible
+        session.setLag(0);
+      }
+    }
+  }
+
   private void handleHeartbeat(ClientSessionImpl session, Message message) {
     if (message.Type != MessageType.HEARTBEAT)
       return;
@@ -145,6 +156,8 @@ class ClientFrameHandler implements IoHandler {
   private void messageProc(IoSession session, Message message, int type) {
     try {
       ClientSessionImpl iopSession = ClientSessionImpl.from(session);
+      // Take down lag from server to client.
+      checkLag(iopSession, message);
       // First call message handler.
       try {
         this.msgHandler.onMessage(iopSession, message);

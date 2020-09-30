@@ -71,6 +71,11 @@ public class Body implements java.io.Serializable {
    */
   public String RspInfo;
 
+  /**
+   * Milliseconds since epoch.
+   */
+  public long timeStamp;
+
   public Body() {
   }
 }

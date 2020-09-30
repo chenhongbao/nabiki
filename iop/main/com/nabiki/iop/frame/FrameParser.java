@@ -78,10 +78,9 @@ public class FrameParser extends LinkedList<Frame> {
       return super.size() > 0;
     } catch (Throwable th) {
       var m = getFrameDigest(th.getMessage(), decoding);
-      throw new RuntimeException(m);
-    } finally {
       resetDecoding();
       buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+      throw new RuntimeException(m);
     }
   }
 

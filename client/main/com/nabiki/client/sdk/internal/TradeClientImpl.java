@@ -133,6 +133,11 @@ class TradeClientImpl implements TradeClient {
   }
 
   @Override
+  public long getLag() {
+    return client.getSession().getLag();
+  }
+
+  @Override
   public Response<COrder> orderInsert(
       CInputOrder order, String requestID) throws Exception {
     requireLogin();

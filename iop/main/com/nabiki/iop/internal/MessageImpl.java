@@ -183,6 +183,7 @@ class MessageImpl extends Message {
     msg.ResponseID = body.ResponseID;
     msg.CurrentCount = body.CurrentCount;
     msg.TotalCount = body.TotalCount;
+    msg.timeStamp = body.timeStamp;
     return msg;
   }
 }

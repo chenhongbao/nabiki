@@ -48,4 +48,6 @@ public interface IOPSession {
   Object getAttribute(String key);
 
   InetSocketAddress getRemoteAddress();
+
+  long getLag();
 }

@@ -116,6 +116,17 @@ class ServerFrameHandler implements IoHandler {
     }
   }
 
+  private void checkLag(SessionImpl session, Message msg) {
+    if (session != null && msg != null) {
+      if (msg.timeStamp > 0) {
+        session.setLag(System.currentTimeMillis() - msg.timeStamp);
+      } else {
+        // Backward compatible
+        session.setLag(0);
+      }
+    }
+  }
+
   @Override
   public void sessionCreated(IoSession session) throws Exception {
     this.sessionAdaptor.doEvent(ServerSessionImpl.from(session),
@@ -161,6 +172,8 @@ class ServerFrameHandler implements IoHandler {
       body = OP.fromJson(new String(
           frame.Body, StandardCharsets.UTF_8), Body.class);
       iopMessage = toMessage(body);
+      // Taken down lag from client to server.
+      checkLag(iopSession, iopMessage);
       // 1. call message adaptor chain.
       switch (frame.Type) {
         case FrameType.REQUEST:

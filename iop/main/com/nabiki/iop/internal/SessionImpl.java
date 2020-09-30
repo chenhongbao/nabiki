@@ -28,6 +28,7 @@
 
 package com.nabiki.iop.internal;
 
+import com.nabiki.iop.Message;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.Frame;
 import com.nabiki.iop.x.OP;
@@ -39,7 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class SessionImpl {
-  private static final String IOP_SESSION_KEY = "iop.session";
+  protected static final String IOP_SESSION_KEY = "iop.session";
+  protected static final String IOP_LAG_KEY = "iop.lag.ms";
 
   private final IoSession session;
   static AtomicInteger countX = new AtomicInteger(0);
@@ -54,10 +56,40 @@ class SessionImpl {
     this.session = ioSession;
   }
 
+  void setLag(long lag) {
+    session.setAttribute(IOP_LAG_KEY, lag);
+  }
+
+  protected long getLag() {
+    var r = session.getAttribute(IOP_LAG_KEY);
+    if (r instanceof Long) {
+      return (long)r;
+    } else {
+      return Long.MAX_VALUE;
+    }
+  }
+
   protected static Object findSelf(IoSession session) {
     if (session == null)
       throw new NullPointerException("io session null");
     return session.getAttribute(IOP_SESSION_KEY);
+  }
+
+  protected Body toBody(Message message) {
+    var body = new Body();
+    body.Type = message.Type;
+    body.RequestID = message.RequestID;
+    body.ResponseID = message.ResponseID;
+    body.CurrentCount = message.CurrentCount;
+    body.TotalCount = message.TotalCount;
+    body.timeStamp = System.currentTimeMillis();
+    if (message.Body != null) {
+      body.Body = OP.toJson(message.Body);
+    }
+    if (message.RspInfo != null) {
+      body.RspInfo = OP.toJson(message.RspInfo);
+    }
+    return body;
   }
 
   protected void close() {

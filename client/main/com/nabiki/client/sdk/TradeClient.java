@@ -46,6 +46,8 @@ public interface TradeClient {
 
   String getTradingDay();
 
+  long getLag();
+
   Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
 
   Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;

@@ -36,6 +36,7 @@ public class Message implements java.io.Serializable {
   public CRspInfo RspInfo;
   public String RequestID, ResponseID;
   public int CurrentCount, TotalCount;
+  public long timeStamp;
 
   public Message() {
   }

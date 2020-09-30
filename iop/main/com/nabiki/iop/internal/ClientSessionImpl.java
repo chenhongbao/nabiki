@@ -33,7 +33,6 @@ import com.nabiki.iop.Message;
 import com.nabiki.iop.MessageType;
 import com.nabiki.iop.frame.Body;
 import com.nabiki.iop.frame.FrameType;
-import com.nabiki.iop.x.OP;
 import org.apache.mina.core.session.IoSession;
 
 import java.net.InetSocketAddress;
@@ -89,20 +88,6 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     }
   }
 
-  private Body toBody(Message message) {
-    var body = new Body();
-    body.Type = message.Type;
-    body.RequestID = message.RequestID;
-    body.ResponseID = message.ResponseID;
-    body.CurrentCount = message.CurrentCount;
-    body.TotalCount = message.TotalCount;
-    if (message.Body != null)
-      body.Body = OP.toJson(message.Body);
-    if (message.RspInfo != null)
-      body.RspInfo = OP.toJson(message.RspInfo);
-    return body;
-  }
-
   @Override
   public void sendRequest(Message message) throws InterruptedException {
     // Send message and set response state.
@@ -139,5 +124,10 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
   @Override
   public InetSocketAddress getRemoteAddress() {
     return super.getRemoteAddress();
+  }
+
+  @Override
+  public long getLag() {
+    return super.getLag();
   }
 }
