@@ -52,9 +52,13 @@ public class SessionAdaptor extends ServerSessionAdaptor {
       Object eventObject) {
     switch (event) {
       case ERROR:
-        var th = (Throwable) eventObject;
-        th.printStackTrace();
-        global.getLogger().warning(th.getMessage());
+        if (eventObject != null) {
+          var cause = ((Throwable) eventObject).getCause();
+          if (cause != null) {
+            cause.printStackTrace();
+            global.getLogger().warning(cause.getMessage());
+          }
+        }
         break;
       case MISS_HEARTBEAT:
         global.getLogger().warning(
