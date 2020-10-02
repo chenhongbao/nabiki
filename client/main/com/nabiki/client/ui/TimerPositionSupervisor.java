@@ -47,14 +47,15 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   @Override
-  public void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double price) {
+  public void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double priceHigh, double priceLow) {
     var su = new Suggestion();
     su.instrumentID = instrumentID;
     su.exchangeID = exchangeID;
     su.direction = direction;
     su.position = position;
     su.posDiff = 0;
-    su.price = price;
+    su.priceHigh = priceHigh;
+    su.priceLow = priceLow;
     su.state = SuggestionState.QryAccount;
     suggestions.put(instrumentID, su);
   }
@@ -103,12 +104,15 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   private void open(Suggestion su) throws Exception {
     char direction;
+    double price;
     switch (su.state) {
       case OpenLong:
         direction = DirectionType.DIRECTION_BUY;
+        price = su.priceHigh;
         break;
       case OpenShort:
         direction = DirectionType.DIRECTION_SELL;
+        price = su.priceLow;
         break;
       default:
         trader.getLogger().severe("wrong state: " + su.state);
@@ -117,7 +121,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     trader.orderInsert(
         su.instrumentID,
         su.exchangeID,
-        su.price,
+        price,
         su.posDiff,
         direction,
         CombOffsetFlagType.OFFSET_OPEN);
@@ -125,14 +129,17 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   private void close(Suggestion su) throws Exception {
     char direction;
+    double price;
     switch (su.state) {
       case CloseLong:
       case CutCloseLong:
         direction = DirectionType.DIRECTION_SELL;
+        price = su.priceLow;
         break;
       case CloseShort:
       case CutCloseShort:
         direction = DirectionType.DIRECTION_BUY;
+        price = su.priceHigh;
         break;
       default:
         trader.getLogger().severe("wrong state: " + su.state);
@@ -141,7 +148,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     trader.orderInsert(
         su.instrumentID,
         su.exchangeID,
-        su.price,
+        price,
         su.posDiff,
         direction,
         CombOffsetFlagType.OFFSET_CLOSE);
@@ -186,7 +193,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     String instrumentID, exchangeID;
     Character direction;
     Integer position, posDiff;
-    Double price;
+    Double priceHigh, priceLow;
     SuggestionState state;
     CTradingAccount account;
     Collection<CInvestorPosition> investorPos = new HashSet<>();

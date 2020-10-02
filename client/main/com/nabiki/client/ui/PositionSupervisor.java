@@ -29,7 +29,7 @@
 package com.nabiki.client.ui;
 
 public interface PositionSupervisor {
-  void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double price) throws Exception;
+  void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double priceHigh, double priceLow) throws Exception;
 
   int getPosition(String instrumentID);
 }
