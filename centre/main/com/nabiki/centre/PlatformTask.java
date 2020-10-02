@@ -166,7 +166,7 @@ class PlatformTask extends TimerTask {
   private void startMd() {
     try {
       boolean r = true;
-      if (!main.getOrder().isInit()) {
+      if (!main.getTick().isInit()) {
         main.getTick().init();
         r = main.getTick().waitConnected(TimeUnit.SECONDS.toMillis(5));
       }
@@ -178,8 +178,9 @@ class PlatformTask extends TimerTask {
       r = main.getTick().waitWorkingState(
           WorkingState.STARTED,
           TimeUnit.MINUTES.toMillis(1));
-      if (!r)
+      if (!r) {
         global.getLogger().info("wait md login timeout");
+      }
       // No need to call TickProvider.subscribe() here because it is called
       // internally by tick provider after it logins.
     } catch (Throwable th) {
