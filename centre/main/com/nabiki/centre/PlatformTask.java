@@ -28,7 +28,6 @@
 
 package com.nabiki.centre;
 
-import com.nabiki.centre.ctp.Connectable;
 import com.nabiki.centre.ctp.WorkingState;
 import com.nabiki.centre.user.core.plain.UserState;
 import com.nabiki.centre.utils.Global;
@@ -132,17 +131,14 @@ class PlatformTask extends TimerTask {
     }
   }
 
-  private boolean connect(Connectable conn) {
-    if (!conn.isConnected()) {
-      conn.connect();
-      return conn.waitConnected(TimeUnit.SECONDS.toMillis(5));
-    }
-    return true;
-  }
-
   private void startTrader() {
     try {
-      if (!connect(main.getOrder())) {
+      boolean r = true;
+      if (!main.getOrder().isInit()) {
+        main.getOrder().init();
+        r = main.getOrder().waitConnected(TimeUnit.SECONDS.toMillis(5));
+      }
+      if (!r) {
         global.getLogger().warning("trader connect failed");
         return;
       }
@@ -169,12 +165,17 @@ class PlatformTask extends TimerTask {
 
   private void startMd() {
     try {
-      if (!connect(main.getTick())) {
+      boolean r = true;
+      if (!main.getOrder().isInit()) {
+        main.getTick().init();
+        r = main.getTick().waitConnected(TimeUnit.SECONDS.toMillis(5));
+      }
+      if (!r) {
         global.getLogger().warning("md connect failed");
         return;
       }
       main.getTick().login();
-      var r = main.getTick().waitWorkingState(
+      r = main.getTick().waitWorkingState(
           WorkingState.STARTED,
           TimeUnit.MINUTES.toMillis(1));
       if (!r)

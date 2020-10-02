@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * {@code AliveOrderManager} keeps the status of all alive orders, interacts with
  * JNI interfaces and invoke callback methods to process responses.
  */
-public class OrderProvider implements Connectable {
+public class OrderProvider {
   private final OrderMapper mapper = new OrderMapper();
   private final AtomicInteger orderRef = new AtomicInteger(0);
   private final Global global;
@@ -161,7 +161,6 @@ public class OrderProvider implements Connectable {
     global.getLogger().info("trader confirmed: " + isConfirmed());
   }
 
-  @Override
   public boolean isConnected() {
     return this.isConnected;
   }
@@ -171,7 +170,6 @@ public class OrderProvider implements Connectable {
     global.getLogger().info("trader connected: " + isConnected());
   }
 
-  @Override
   public boolean waitConnected(long millis) {
     try {
       this.stateSignal.waitSignal(millis);
@@ -190,18 +188,17 @@ public class OrderProvider implements Connectable {
     return this.mapper;
   }
 
+  public boolean isInit() {
+    return api != null;
+  }
+
   /**
    * Initialize connection to remote counter.
    */
-  @Override
-  public void connect() {
-    if (this.api != null)
-      throw new IllegalStateException("need disconnect before connect");
-        /*
-         IMPORTANT!
-         Must kept reference to SPi explicitly so GC won't release the underlining
-         C++ objects.
-         */
+  public void init() {
+    if (api != null) {
+      throw new IllegalStateException("trader duplicated init");
+    }
     this.api = CThostFtdcTraderApi
         .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
     this.spi = new JniTraderSpi(this, global);
@@ -216,8 +213,7 @@ public class OrderProvider implements Connectable {
   /**
    * Disconnect the trader api and release resources.
    */
-  @Override
-  public void disconnect() {
+  public void release() {
     // Set states.
     setConfirmed(false);
     setConnected(false);

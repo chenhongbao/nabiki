@@ -45,7 +45,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TickProvider implements Connectable {
+public class TickProvider {
   private final Global global;
   private final LoginConfig loginCfg;
   private final MarketDataRouter router;
@@ -86,12 +86,10 @@ public class TickProvider implements Connectable {
     }, m - System.currentTimeMillis() % m, m);
   }
 
-  @Override
   public boolean isConnected() {
     return this.isConnected;
   }
 
-  @Override
   public boolean waitConnected(long millis) {
     try {
       this.stateSignal.waitSignal(millis);
@@ -161,10 +159,13 @@ public class TickProvider implements Connectable {
     checkSubscription();
   }
 
-  @Override
-  public void connect() {
+  public boolean isInit() {
+    return api != null;
+  }
+
+  public void init() {
     if (this.api != null) {
-      throw new IllegalStateException("need disconnect before connect");
+      throw new IllegalStateException("md duplicated init");
     }
     this.api = CThostFtdcMdApi.CreateFtdcMdApi(
         this.loginCfg.FlowDirectory,
@@ -178,7 +179,6 @@ public class TickProvider implements Connectable {
     this.api.Init();
   }
 
-  @Override
   public void disconnect() {
     // Set states.
     setLogin(false);
