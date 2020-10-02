@@ -73,7 +73,7 @@ public class Client extends AbstractClient {
     this.trader = trader;
     this.handler = trader;
     try {
-      super.startHeadless(trader, serverAddress);
+      super.start(trader, serverAddress);
       checkAll();
     } catch (Throwable th) {
       th.printStackTrace();
@@ -85,7 +85,7 @@ public class Client extends AbstractClient {
     this.trader = trader;
     this.handler = trader;
     try {
-      super.startFigure(trader, serverAddress);
+      super.start(trader, serverAddress);
       checkAll();
     } catch (Throwable th) {
       th.printStackTrace();

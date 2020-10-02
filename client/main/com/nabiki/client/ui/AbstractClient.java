@@ -102,22 +102,25 @@ public abstract class AbstractClient {
     }
   }
 
-  protected void startHeadless(HeadlessTrader trader, InetSocketAddress address) throws Exception {
-    setListener(trader.getDefaultAdaptor());
+  protected void init(
+      Trader trader,
+      MarketDataHandler handler,
+      InetSocketAddress address) throws Exception {
     openConnection(address);
     trader.setClient(client);
-    callStart(trader);
+    callStart(handler);
     reqLogin(trader);
     reqSubscription(trader);
   }
 
-  protected void startFigure(FigureTrader trader, InetSocketAddress address) throws Exception {
+  protected void start(HeadlessTrader trader, InetSocketAddress address) throws Exception {
     setListener(trader.getDefaultAdaptor());
-    openConnection(address);
-    trader.setClient(client);
-    callStart(trader);
-    reqLogin(trader);
-    reqSubscription(trader);
+    init(trader, trader, address);
+  }
+
+  protected void start(FigureTrader trader, InetSocketAddress address) throws Exception {
+    setListener(trader.getDefaultAdaptor());
+    init(trader, trader, address);
   }
 
   protected void stop() {
