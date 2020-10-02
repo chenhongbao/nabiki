@@ -289,16 +289,12 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       }
       switch (su.state) {
         case CutCloseShort:
-          if (su.direction == PosiDirectionType.LONG) {
-            su.posDiff = su.position;
-            su.state = SuggestionState.OpenLong;
-          }
+          su.posDiff = su.position;
+          su.state = SuggestionState.OpenLong;
           break;
         case CutCloseLong:
-          if (su.direction == PosiDirectionType.SHORT) {
-            su.posDiff = su.position;
-            su.state = SuggestionState.OpenShort;
-          }
+          su.posDiff = su.position;
+          su.state = SuggestionState.OpenShort;
           break;
         default:
           trader.getLogger().severe("wrong state: " + su.state);
