@@ -254,7 +254,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
             } else if (p > su.position) {
               // Current position is more than required, close some.
               su.posDiff = p - su.position;
-              su.state = SuggestionState.CutCloseLong;
+              su.state = SuggestionState.CloseLong;
             }
           } else if (su.direction == PosiDirectionType.SHORT) {
             // Current position is not required, close all.
@@ -271,7 +271,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
             } else if (xp > su.position) {
               // Current position is more than required, close some.
               su.posDiff = xp - su.position;
-              su.state = SuggestionState.CutCloseShort;
+              su.state = SuggestionState.CloseShort;
             }
           } else if (su.direction == PosiDirectionType.LONG) {
             // Current position is not required, close all.
@@ -290,11 +290,13 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       switch (su.state) {
         case CutCloseShort:
           if (su.direction == PosiDirectionType.LONG) {
+            su.posDiff = su.position;
             su.state = SuggestionState.OpenLong;
           }
           break;
         case CutCloseLong:
           if (su.direction == PosiDirectionType.SHORT) {
+            su.posDiff = su.position;
             su.state = SuggestionState.OpenShort;
           }
           break;
