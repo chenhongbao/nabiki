@@ -197,9 +197,7 @@ public class BarChartController implements ViewController {
           types.get(entry.getKey()),
           entry.getValue());
     this.chart.getXAxis().mapLabels(mapLabels);
-    this.chart.getXAxis().paint();
-    this.chart.getYAxis().paint();
-    this.chart.getChart().paint();
+    this.chart.paintAll();
     this.chart.updateUI();
   }
 }

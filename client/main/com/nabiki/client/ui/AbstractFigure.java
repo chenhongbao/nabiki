@@ -141,7 +141,12 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public StickChartController getStickController(int figureID) {
-    return (StickChartController) getStickFrame(figureID).getChartController();
+    var frame = getStickFrame(figureID);
+    if (frame != null) {
+      return (StickChartController) frame.getChartController();
+    } else {
+      throw new IllegalArgumentException("figure(" + figureID + ") not found");
+    }
   }
 
   @Override
@@ -151,8 +156,9 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
       if (frame != null) {
         ((BarChartController) frame.getChartController()).appendBar(value, xLabel);
         updated.set(true);
+      } else {
+        throw new IllegalArgumentException("figure(" + figureID + ") not found");
       }
-      throw new IllegalArgumentException("figure(" + figureID + ") not found");
     }
   }
 

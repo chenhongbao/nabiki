@@ -110,6 +110,12 @@ public abstract class ChartPanel extends ImagePanel {
     }
   }
 
+  public void paintAll() {
+    getChart().paint();
+    getXAxis().paint();
+    getYAxis().paint();
+  }
+
   private void updateChart(Dimension newSize) {
     var image = new BufferedImage(
         newSize.width,
@@ -135,9 +141,7 @@ public abstract class ChartPanel extends ImagePanel {
     var size = getProperChartSize(newSize);
     getWorld().setSize(size.width, size.height);
     // Paint.
-    getChart().paint();
-    getYAxis().paint();
-    getYAxis().paint();
+    paintAll();
   }
 
   private void prepare() {
