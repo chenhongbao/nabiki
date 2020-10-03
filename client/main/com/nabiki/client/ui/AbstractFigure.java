@@ -28,6 +28,11 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.chart.control.BarChartController;
+import com.nabiki.chart.control.BarChartPanel;
+import com.nabiki.chart.control.StickChartController;
+import com.nabiki.chart.control.StickChartPanel;
+
 import java.awt.*;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +66,8 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     }
   }
 
-  private final Map<Integer, ChartMainFrame> mains = new ConcurrentHashMap<>();
+  private final Map<Integer, ChartMainFrame> stickFrames = new ConcurrentHashMap<>();
+  private final Map<Integer, ChartMainFrame> barFrames = new ConcurrentHashMap<>();
   private final LogDialog logDlg = new LogDialog();
   private final AtomicBoolean updated = new AtomicBoolean(false);
 
@@ -94,12 +100,12 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
         }, 500, 500);
   }
 
-  private ChartMainFrame getFrame(int figureID) {
-    var frame = mains.get(figureID);
-    if (frame == null)
-      throw new RuntimeException("no such figure ID: " + figureID);
-    else
-      return frame;
+  private ChartMainFrame getStickFrame(int figureID) {
+    return stickFrames.get(figureID);
+  }
+
+  private ChartMainFrame getBarFrame(int figureID) {
+    return barFrames.get(figureID);
   }
 
   private void checkZeroValue(int figureID, String name, double value) {
@@ -109,22 +115,52 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
           figureID, name);
   }
 
+  private void checkFigureID(int id) {
+    if (stickFrames.containsKey(id) || barFrames.containsKey(id)) {
+      throw new RuntimeException("figure(" + id + ") already exists");
+    }
+  }
+
   @Override
   public void setLine(int figureID, String name, Color color) {
-    getFrame(figureID).getChartController().createLine(name, color);
+    var frame = getStickFrame(figureID);
+    if (frame != null) {
+      ((StickChartController) frame.getChartController()).createLine(name, color);
+      return;
+    }
+    frame = getBarFrame(figureID);
+    if (frame != null) {
+      ((BarChartController) frame.getChartController()).createLine(name, color);
+      return;
+    }
+    throw new IllegalArgumentException("figure(" + figureID + ") not found");
   }
 
   @Override
   public void setDot(int figureID, String name, Color color) {
-    getFrame(figureID).getChartController().createDot(name, color);
+    var frame = getStickFrame(figureID);
+    if (frame != null) {
+      ((StickChartController) frame.getChartController()).createDot(name, color);
+      return;
+    }
+    frame = getBarFrame(figureID);
+    if (frame != null) {
+      ((BarChartController) frame.getChartController()).createDot(name, color);
+      return;
+    }
+    throw new IllegalArgumentException("figure(" + figureID + ") not found");
   }
 
   @Override
   public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
     checkZeroValue(figureID, "stick", open * high * low * close);
     synchronized (updated) {
-      getFrame(figureID).getChartController().append(open, high, low, close, xLabel);
-      updated.set(true);
+      var frame = getStickFrame(figureID);
+      if (frame != null) {
+        ((StickChartController) frame.getChartController()).append(open, high, low, close, xLabel);
+        updated.set(true);
+      }
+      throw new IllegalArgumentException("figure(" + figureID + ") not found");
     }
   }
 
@@ -132,39 +168,60 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   public void draw(int figureID, String name, Double value) {
     checkZeroValue(figureID, name, value);
     synchronized (updated) {
-      getFrame(figureID).getChartController().append(name, value);
-      updated.set(true);
+      var frame = getStickFrame(figureID);
+      if (frame != null) {
+        ((StickChartController) frame.getChartController()).append(name, value);
+        updated.set(true);
+        return;
+      }
+      frame = getBarFrame(figureID);
+      if (frame != null) {
+        ((BarChartController) frame.getChartController()).append(name, value);
+        updated.set(true);
+        return;
+      }
+      throw new IllegalArgumentException("figure(" + figureID + ") not found");
     }
   }
 
   @Override
   public String getBoundInstrumentID(int figureID) {
-    return getFrame(figureID).getInstrumentID();
+    return getStickFrame(figureID).getInstrumentID();
   }
 
   @Override
   public int getBoundMinute(int figureID) {
-    return getFrame(figureID).getMinute();
+    return getStickFrame(figureID).getMinute();
   }
 
   @Override
   public void setTitle(int figureID, String title) {
     if (title != null && title.length() > 0)
-      getFrame(figureID).setTitle(title);
+      getStickFrame(figureID).setTitle(title);
     else
-      getFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
+      getStickFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
   }
 
   @Override
   public void setFigure(int figureID, String instrumentID, int minute) {
-    if (mains.containsKey(figureID))
-      throw new RuntimeException("figure(" + figureID + ") already exists");
-    var frame = new ChartMainFrame(logDlg);
+    checkFigureID(figureID);
+    var frame = new ChartMainFrame(logDlg, new StickChartPanel());
     frame.setInstrumentID(instrumentID);
     frame.setMinute(minute);
     frame.setTitle(instrumentID + " - " + minute + "m");
     frame.setVisible(true);
-    mains.put(figureID, frame);
+    stickFrames.put(figureID, frame);
+  }
+
+  @Override
+  public void setBarFigure(int figureID, String instrumentID, int minute) {
+    checkFigureID(figureID);
+    var frame = new ChartMainFrame(logDlg, new BarChartPanel());
+    frame.setInstrumentID(instrumentID);
+    frame.setMinute(minute);
+    frame.setTitle(instrumentID + " - " + minute + "m");
+    frame.setVisible(true);
+    barFrames.put(figureID, frame);
   }
 
   @Override
@@ -174,19 +231,19 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public void update(int figureID) {
-    var ctrl = getFrame(figureID).getChartController();
+    var ctrl = getStickFrame(figureID).getChartController();
     if (ctrl.getDataCount() > 0)
       ctrl.update();
   }
 
   @Override
   public Set<Integer> getFigureID() {
-    return mains.keySet();
+    return stickFrames.keySet();
   }
 
   @Override
   public void dispose(int figureID) {
-    var frame = getFrame(figureID);
+    var frame = getStickFrame(figureID);
     frame.setVisible(false);
     frame.dispose();
   }

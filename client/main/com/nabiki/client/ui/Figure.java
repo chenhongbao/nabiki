@@ -34,6 +34,8 @@ import java.util.Set;
 public interface Figure {
   void setFigure(int figureID, String instrumentID, int minute);
 
+  void setBarFigure(int figureID, String instrumentID, int minute);
+
   Set<Integer> getFigureID();
 
   String getBoundInstrumentID(int figureID);

@@ -28,8 +28,7 @@
 
 package com.nabiki.client.ui;
 
-import com.nabiki.chart.control.StickChartController;
-import com.nabiki.chart.control.StickChartPanel;
+import com.nabiki.chart.control.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -39,12 +38,11 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 public class ChartMainFrame extends JFrame {
-  private final StickChartController ctrl;
   private final JPanel contentPane;
-  private final StickChartPanel chart;
-
   private final LogDialog logDialog;
 
+  private ViewController ctrl;
+  private ChartPanel chart;
   private String instrumentID;
   private int minute;
 
@@ -68,26 +66,27 @@ public class ChartMainFrame extends JFrame {
     return this.minute;
   }
 
-  public StickChartController getChartController() {
+  public ViewController getChartController() {
     return ctrl;
   }
 
   /**
    * Create the frame.
    */
-  public ChartMainFrame(LogDialog logDlg) {
+  public ChartMainFrame(LogDialog logDlg, ChartPanel chart) {
     // Set default ops.
     setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     setBounds(100, 100, 900, 600);
-    // Content panel.
-    contentPane = new JPanel();
-    contentPane.setBorder(null);
-    setContentPane(contentPane);
-    contentPane.setLayout(new BorderLayout(0, 0));
-    // Tool bar.
+    contentPane = getContentPanel();
+    contentPane.add(getToolBar(), BorderLayout.NORTH);
+    contentPane.add(chart, BorderLayout.CENTER);
+    setController(chart);
+    logDialog = logDlg;
+  }
+
+  private JToolBar getToolBar() {
     JToolBar toolBar = new JToolBar();
     toolBar.setFloatable(false);
-    contentPane.add(toolBar, BorderLayout.NORTH);
     // Buttons on toolbar.
     // Print btn.
     JButton printBtn = new JButton("\u6253\u5370");
@@ -177,12 +176,25 @@ public class ChartMainFrame extends JFrame {
     });
     logBtn.setToolTipText("\u6253\u5F00\u65E5\u5FD7\u7A97\u53E3");
     toolBar.add(logBtn);
-    // Stick chart.
-    chart = new StickChartPanel();
-    contentPane.add(chart, BorderLayout.CENTER);
-    ctrl = new StickChartController(chart);
-    // Log dialog.
-    logDialog = logDlg;
+    return toolBar;
+  }
+
+  private JPanel getContentPanel() {
+    var panel = new JPanel();
+    contentPane.setBorder(null);
+    setContentPane(contentPane);
+    contentPane.setLayout(new BorderLayout(0, 0));
+    return panel;
+  }
+
+  void setController(ChartPanel chart) {
+    if (chart instanceof StickChartPanel) {
+      ctrl = new StickChartController((StickChartPanel) chart);
+    } else if (chart instanceof BarChartPanel) {
+      ctrl = new BarChartController((BarChartPanel) chart);
+    } else {
+      throw new IllegalArgumentException("unknown instance " + chart.getClass().getName());
+    }
   }
 
   private Point getLogDialogPosition() {
