@@ -35,22 +35,17 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CustomStickChart extends StickChart {
+public class CustomChart {
+    private final GridXY world;
     private final Map<String, CustomData> data = new HashMap<>();
     private final Legend legend = new Legend();
     private boolean legendShown = false;
 
-    public CustomStickChart() {
-        legend.setMargin(
-                DefaultStyles.LEGEND_MARGIN,
-                DefaultStyles.LEGEND_MARGIN,
-                DefaultStyles.LEGEND_MARGIN,
-                DefaultStyles.LEGEND_MARGIN);
-    }
-
-    public CustomStickChart(BufferedImage image) {
-        super(image);
-        legend.setImage(image);
+    public CustomChart(GridXY parent) {
+        world = parent;
+        if (world.getBuffer() != null) {
+            legend.setImage(world.getBuffer());
+        }
         legend.setMargin(
                 DefaultStyles.LEGEND_MARGIN,
                 DefaultStyles.LEGEND_MARGIN,
@@ -70,16 +65,14 @@ public class CustomStickChart extends StickChart {
         legendShown = shown;
     }
 
-    @Override
     public void paint() {
-        super.paint();
+        world.paint();
         paintCustomData();
         paintLegend();
     }
 
-    @Override
     public void setImage(BufferedImage image) {
-        super.setImage(image);
+        world.setImage(image);
         legend.setImage(image);
     }
 
@@ -97,61 +90,61 @@ public class CustomStickChart extends StickChart {
     }
 
     private void paintCustomLine(CustomData line) {
-        var xLabels = getShowLabelX();
-        var yLabels = getShowLabelY();
+        var xLabels = world.getShowLabelX();
+        var yLabels = world.getShowLabelY();
         var xAxisMin = xLabels[0];
         var xAxisMax = xLabels[xLabels.length-1];
         var yAxisMin = yLabels[0];
         var yAxisMax = yLabels[yLabels.length-1];
         // Preserve color.
-        var oldColor = getColor();
-        setColor(line.getType().getColor());
+        var oldColor = world.getColor();
+        world.setColor(line.getType().getColor());
         int revIdx = 0;
         // Previous start of line.
         int pixelX0 = -1, pixelY0 = -1;
         for (int i = line.getValue().length - 1;
-             0 <= i && revIdx < getX().length;
+             0 <= i && revIdx < world.getX().length;
              --i, ++revIdx) {
             var value = line.getValue()[i];
             if (value == null)
                 continue;
-            var idx = getX().length - 1 - revIdx;
-            var pixelX = getVisiblePixelX(idx, xAxisMin, xAxisMax);
-            var pixelY = getVisiblePixelY(value, yAxisMin, yAxisMax);
+            var idx = world.getX().length - 1 - revIdx;
+            var pixelX = world.getVisiblePixelX(idx, xAxisMin, xAxisMax);
+            var pixelY = world.getVisiblePixelY(value, yAxisMin, yAxisMax);
             if (pixelX0 >= 0 && pixelY0 >= 0)
-                drawVisibleLine(pixelX, pixelY, pixelX0, pixelY0);
+                world.drawVisibleLine(pixelX, pixelY, pixelX0, pixelY0);
             // Move to next point.
             pixelX0 = pixelX;
             pixelY0 = pixelY;
         }
-        setColor(oldColor);
+        world.setColor(oldColor);
     }
 
     private void paintCustomDot(CustomData dot) {
-        var xLabels = getShowLabelX();
-        var yLabels = getShowLabelY();
+        var xLabels = world.getShowLabelX();
+        var yLabels = world.getShowLabelY();
         var xAxisMin = xLabels[0];
         var xAxisMax = xLabels[xLabels.length-1];
         var yAxisMin = yLabels[0];
         var yAxisMax = yLabels[yLabels.length-1];
         // Preserve color.
-        var oldColor = getColor();
-        setColor(dot.getType().getColor());
+        var oldColor = world.getColor();
+        world.setColor(dot.getType().getColor());
         int revIdx = 0;
         for (int i = dot.getValue().length - 1;
-             0 <= i && revIdx < getX().length;
+             0 <= i && revIdx < world.getX().length;
              --i, ++revIdx) {
             var value = dot.getValue()[i];
             if (value == null)
                 continue;
-            var idx = getX().length - 1 - revIdx;
-            var pixelX = getVisiblePixelX(idx, xAxisMin, xAxisMax);
-            var pixelY = getVisiblePixelY(value, yAxisMin, yAxisMax);
+            var idx = world.getX().length - 1 - revIdx;
+            var pixelX = world.getVisiblePixelX(idx, xAxisMin, xAxisMax);
+            var pixelY = world.getVisiblePixelY(value, yAxisMin, yAxisMax);
             var fromPixelX = pixelX - DefaultStyles.DOT_WIDTH / 2;
             var toPixelX = fromPixelX + DefaultStyles.DOT_WIDTH;
-            drawVisibleLine(fromPixelX, pixelY, toPixelX, pixelY);
+            world.drawVisibleLine(fromPixelX, pixelY, toPixelX, pixelY);
         }
-        setColor(oldColor);
+        world.setColor(oldColor);
     }
 
     private void paintCustomData() {
@@ -169,8 +162,8 @@ public class CustomStickChart extends StickChart {
     }
 
     private void setLegendPosition() {
-        var offsetX = getOffset()[0] + getMargin()[0];
-        var offsetY = getOffset()[1] + getMargin()[1];
+        var offsetX = world.getOffset()[0] + world.getMargin()[0];
+        var offsetY = world.getOffset()[1] + world.getMargin()[1];
         legend.setOffset(offsetX, offsetY);
     }
 }

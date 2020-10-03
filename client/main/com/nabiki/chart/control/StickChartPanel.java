@@ -28,10 +28,7 @@
 
 package com.nabiki.chart.control;
 
-import com.nabiki.chart.buffer.CustomStickChart;
-import com.nabiki.chart.buffer.DefaultStyles;
-import com.nabiki.chart.buffer.XAxis;
-import com.nabiki.chart.buffer.YAxis;
+import com.nabiki.chart.buffer.*;
 import com.nabiki.chart.custom.CustomType;
 
 import java.awt.*;
@@ -40,14 +37,15 @@ import java.awt.image.BufferedImage;
 public class StickChartPanel extends ImagePanel {
     private final XAxis x = new XAxis();
     private final YAxis y = new YAxis();
-    private final CustomStickChart chart = new CustomStickChart();
+    private final StickChart stickChart = new StickChart();
+    private final CustomChart chart = new CustomChart(stickChart);
 
     public StickChartPanel() {
         super();
         prepare();
     }
 
-    public CustomStickChart getChart() {
+    public CustomChart getChart() {
         return chart;
     }
 
@@ -61,13 +59,13 @@ public class StickChartPanel extends ImagePanel {
 
     public void setData(double[] open, double[] high, double[] low, double[] close) {
         synchronized (chart) {
-            chart.setData(open, high, low, close);
+            stickChart.setData(open, high, low, close);
         }
     }
 
     public void setY(double... y) {
         synchronized (chart) {
-            chart.setY(y);
+            stickChart.setY(y);
         }
     }
 
@@ -111,7 +109,7 @@ public class StickChartPanel extends ImagePanel {
                 BufferedImage.TYPE_INT_ARGB);
         setupChart(image, newSize);
         setImage(image);
-        setBackground(chart.getBackground());
+        setBackground(stickChart.getBackground());
     }
 
     private Dimension getProperChartSize(Dimension total) {
@@ -127,7 +125,7 @@ public class StickChartPanel extends ImagePanel {
         y.setImage(image);
         // Set chart size.
         var size = getProperChartSize(newSize);
-        chart.setSize(size.width, size.height);
+        stickChart.setSize(size.width, size.height);
         // Paint.
         chart.paint();
         x.paint();
@@ -135,18 +133,18 @@ public class StickChartPanel extends ImagePanel {
     }
 
     private void prepare() {
-        chart.setOffset(
+        stickChart.setOffset(
                 DefaultStyles.CHART_OFFSET,
                 DefaultStyles.CHART_OFFSET);
-        chart.setMargin(
+        stickChart.setMargin(
                 DefaultStyles.CHART_MARGIN,
                 DefaultStyles.CHART_MARGIN,
                 DefaultStyles.CHART_MARGIN,
                 DefaultStyles.CHART_MARGIN);
         // Axis.
-        x.bindXY(chart);
-        x.bindCanvas(chart);
-        y.bindXY(chart);
-        y.bindCanvas(chart);
+        x.bindXY(stickChart);
+        x.bindCanvas(stickChart);
+        y.bindXY(stickChart);
+        y.bindCanvas(stickChart);
     }
 }
