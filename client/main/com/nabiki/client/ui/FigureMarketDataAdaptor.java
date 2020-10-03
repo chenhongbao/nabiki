@@ -51,7 +51,7 @@ public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
   @Override
   public void onCandle(CCandle candle) {
     try {
-      for (var fid : figure.getFigureID()) {
+      for (var fid : figure.getStickFigureIDs()) {
         if (figure.getBoundInstrumentID(fid).compareTo(candle.InstrumentID) == 0
             && figure.getBoundMinute(fid) == candle.Minute) {
           figure.stick(fid,

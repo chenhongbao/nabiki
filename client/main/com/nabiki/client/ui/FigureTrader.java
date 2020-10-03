@@ -38,7 +38,7 @@ public abstract class FigureTrader
 
   @Override
   public void stop() {
-    for (var fid : getFigureID())
+    for (var fid : getStickFigureIDs())
       super.dispose(fid);
   }
 }

@@ -90,7 +90,10 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
           public void run() {
             synchronized (updated) {
               if (updated.get()) {
-                for (var fid : getFigureID()) {
+                for (var fid : getStickFigureIDs()) {
+                  update(fid);
+                }
+                for (var fid : getBarFigureIDs()) {
                   update(fid);
                 }
                 updated.set(false);
@@ -106,6 +109,18 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   private ChartMainFrame getBarFrame(int figureID) {
     return barFrames.get(figureID);
+  }
+
+  private ChartMainFrame getFrame(int figureID) {
+    var frame = getStickFrame(figureID);
+    if (frame != null) {
+      return frame;
+    }
+    frame = getBarFrame(figureID);
+    if (frame != null) {
+      return frame;
+    }
+    throw new IllegalArgumentException("figure(" + figureID + ") not found");
   }
 
   private void checkZeroValue(int figureID, String name, double value) {
@@ -186,20 +201,20 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public String getBoundInstrumentID(int figureID) {
-    return getStickFrame(figureID).getInstrumentID();
+    return getFrame(figureID).getInstrumentID();
   }
 
   @Override
   public int getBoundMinute(int figureID) {
-    return getStickFrame(figureID).getMinute();
+    return getFrame(figureID).getMinute();
   }
 
   @Override
   public void setTitle(int figureID, String title) {
     if (title != null && title.length() > 0)
-      getStickFrame(figureID).setTitle(title);
+      getFrame(figureID).setTitle(title);
     else
-      getStickFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
+      getFrame(figureID).setTitle("\u975E\u6CD5\u6807\u9898\u8BF7\u8054\u7CFB\u6280\u672F\u652F\u6301");
   }
 
   @Override
@@ -231,19 +246,25 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public void update(int figureID) {
-    var ctrl = getStickFrame(figureID).getChartController();
-    if (ctrl.getDataCount() > 0)
+    var ctrl = getFrame(figureID).getChartController();
+    if (ctrl.getDataCount() > 0) {
       ctrl.update();
+    }
   }
 
   @Override
-  public Set<Integer> getFigureID() {
+  public Set<Integer> getStickFigureIDs() {
     return stickFrames.keySet();
   }
 
   @Override
+  public Set<Integer> getBarFigureIDs() {
+    return barFrames.keySet();
+  }
+
+  @Override
   public void dispose(int figureID) {
-    var frame = getStickFrame(figureID);
+    var frame = getFrame(figureID);
     frame.setVisible(false);
     frame.dispose();
   }

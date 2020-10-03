@@ -36,7 +36,9 @@ public interface Figure {
 
   void setBarFigure(int figureID, String instrumentID, int minute);
 
-  Set<Integer> getFigureID();
+  Set<Integer> getStickFigureIDs();
+
+  Set<Integer> getBarFigureIDs();
 
   String getBoundInstrumentID(int figureID);
 

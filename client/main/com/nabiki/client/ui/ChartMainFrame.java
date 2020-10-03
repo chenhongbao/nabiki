@@ -181,9 +181,9 @@ public class ChartMainFrame extends JFrame {
 
   private JPanel getContentPanel() {
     var panel = new JPanel();
-    contentPane.setBorder(null);
-    setContentPane(contentPane);
-    contentPane.setLayout(new BorderLayout(0, 0));
+    panel.setBorder(null);
+    setContentPane(panel);
+    panel.setLayout(new BorderLayout(0, 0));
     return panel;
   }
 

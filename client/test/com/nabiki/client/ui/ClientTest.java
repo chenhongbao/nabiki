@@ -65,8 +65,7 @@ public class ClientTest {
       CDepthMarketData depth;
       int currentPosition = 0;
 
-      private final List<Double> close01 = new LinkedList<>(),
-          close05 = new LinkedList<>();
+      private final List<Double> close01 = new LinkedList<>();
 
       private Double average(int m, List<Double> close) {
         var rm = Math.min(m, close.size());
@@ -131,11 +130,11 @@ public class ClientTest {
 
       @Override
       public void onStart() {
-        subscribe("c2101", 1, 5);
+        subscribe("c2101", 1);
         setFigure(1, "c2101", 1);
         setLine(1, "ma", Color.MAGENTA);
 
-        setFigure(2, "c2101", 5);
+        setBarFigure(2, "c2101", 1);
         setLine(2, "ma", Color.MAGENTA);
 
         setUser("0001", "1234");
@@ -150,16 +149,13 @@ public class ClientTest {
 
       @Override
       public void onCandle(CCandle candle, boolean isTrading) {
-        if (candle.Minute != 1 && candle.Minute != 5)
+        if (candle.Minute != 1)
           getLogger().warning("i didn't subscribe this minute: " + candle.Minute);
 
         if (candle.Minute == 1) {
           close01.add(candle.ClosePrice);
           draw(1, "ma", average(20, close01));
-        }
-        if (candle.Minute == 5) {
-          close05.add(candle.ClosePrice);
-          draw(2, "ma", average(20, close05));
+          draw(2, "ma", (double) candle.Volume);
         }
         if (candle.Minute == 1 && depth != null && isTrading) {
           try {

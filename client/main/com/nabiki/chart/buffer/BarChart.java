@@ -81,6 +81,9 @@ public class BarChart extends GridXY {
     }
 
     private void paintBars() {
+        // No data at init.
+        if (getY() == null || getY().length == 0)
+            return;
         var xLabels = getShowLabelX();
         var yLabels = getShowLabelY();
         var xAxisMin = xLabels[0];
