@@ -38,53 +38,53 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 public class StickChartPanelTest {
-    private double[] sampleGridY(double[] open, double[] high, double[] low,
-                                 double[] close) {
-        var sample = Arrays.copyOf(open, open.length);
-        sample[0] = Charts.max(
-                Charts.max(open),
-                Charts.max(high),
-                Charts.max(low),
-                Charts.max(close));
-        sample[1] = Charts.min(
-                Charts.min(open),
-                Charts.min(high),
-                Charts.min(low),
-                Charts.min(close));
-        return sample;
+  private double[] sampleGridY(double[] open, double[] high, double[] low,
+                               double[] close) {
+    var sample = Arrays.copyOf(open, open.length);
+    sample[0] = Charts.max(
+        Charts.max(open),
+        Charts.max(high),
+        Charts.max(low),
+        Charts.max(close));
+    sample[1] = Charts.min(
+        Charts.min(open),
+        Charts.min(high),
+        Charts.min(low),
+        Charts.min(close));
+    return sample;
+  }
+
+  @Test
+  public void basic() {
+
+    var open = new double[]{3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
+    var high = new double[]{5.4, 6.0, 5.2, 4.5, 4.9, 6.5, 8.7, 8.5, 7.9};
+    var low = new double[]{3.0, 4.5, 4.1, 4.0, 4.1, 5.0, 6.0, 7.8, 6.5};
+    var close = new double[]{5.1, 5.2, 4.2, 4.2, 4.9, 6.5, 8.6, 7.9, 6.9};
+
+    Double[] line = new Double[]{3.1, 3.9, 3.7, 5.7, 3.0, 7.3, null, 5.4, 7.8};
+    Double[] dot = new Double[]{3.0, 4.9, 6.0, 7.7, 5.0, 3.3, 5.1, null, 4.5};
+
+    var sampleY = sampleGridY(open, high, low, close);
+
+    var chart = new StickChartPanel();
+
+    chart.setData(open, high, low, close);
+    chart.setY(sampleY);
+
+    chart.setCustomData("line", new CustomType(Color.BLACK, CustomType.LINE), line);
+    chart.setCustomData("dot", new CustomType(Color.MAGENTA, CustomType.DOT), dot);
+
+    var dialog = new JDialog();
+
+    dialog.add(chart);
+    dialog.setSize(new Dimension(500, 600));
+    dialog.setVisible(true);
+
+    try {
+      new CountDownLatch(1).await();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-
-    @Test
-    public void basic() {
-
-        var open = new double[] {3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
-        var high = new double[] {5.4, 6.0, 5.2, 4.5, 4.9, 6.5, 8.7, 8.5, 7.9};
-        var low = new double[] {3.0, 4.5, 4.1, 4.0, 4.1, 5.0, 6.0, 7.8, 6.5};
-        var close = new double[] {5.1, 5.2, 4.2, 4.2, 4.9, 6.5, 8.6, 7.9, 6.9};
-
-        Double[] line = new Double[] {3.1, 3.9, 3.7, 5.7, 3.0, 7.3, null, 5.4, 7.8};
-        Double[] dot = new Double[] {3.0, 4.9, 6.0, 7.7, 5.0, 3.3, 5.1, null, 4.5};
-
-        var sampleY = sampleGridY(open, high, low, close);
-
-        var chart = new StickChartPanel();
-
-        chart.setData(open, high, low, close);
-        chart.setY(sampleY);
-
-        chart.setCustomData("line", new CustomType(Color.BLACK, CustomType.LINE), line);
-        chart.setCustomData("dot", new CustomType(Color.MAGENTA, CustomType.DOT), dot);
-
-        var dialog = new JDialog();
-
-        dialog.add(chart);
-        dialog.setSize(new Dimension(500, 600));
-        dialog.setVisible(true);
-
-        try {
-            new CountDownLatch(1).await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

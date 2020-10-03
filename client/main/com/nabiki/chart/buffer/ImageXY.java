@@ -32,123 +32,124 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 public abstract class ImageXY extends ImageCanvas implements XYCoordinate {
-    private double[] x, y;
-    private double maxX, maxY, minX, minY;
-    private int preferredLabelCountX = DefaultStyles.AXIS_DEFAULT_X_LABEL_COUNT,
-            preferredLabelCountY = DefaultStyles.AXIS_DEFAULT_Y_LABEL_COUNT;
+  private double[] x, y;
+  private double maxX, maxY, minX, minY;
+  private int preferredLabelCountX = DefaultStyles.AXIS_DEFAULT_X_LABEL_COUNT,
+      preferredLabelCountY = DefaultStyles.AXIS_DEFAULT_Y_LABEL_COUNT;
 
-    public ImageXY() {}
+  public ImageXY() {
+  }
 
-    public ImageXY(BufferedImage image) {
-        super(image);
-        x = y =new double[0];
+  public ImageXY(BufferedImage image) {
+    super(image);
+    x = y = new double[0];
+  }
+
+  @Override
+  public void setX(double... labels) {
+    if (labels.length > 0)
+      x = Arrays.copyOf(labels, labels.length);
+    maxX = -Double.MAX_VALUE;
+    minX = Double.MAX_VALUE;
+    for (var l : labels) {
+      maxX = Math.max(maxX, l);
+      minX = Math.min(minX, l);
     }
+  }
 
-    @Override
-    public void setX(double... labels) {
-        if (labels.length > 0)
-            x = Arrays.copyOf(labels, labels.length);
-        maxX = -Double.MAX_VALUE;
-        minX = Double.MAX_VALUE;
-        for (var l : labels) {
-            maxX = Math.max(maxX, l);
-            minX = Math.min(minX, l);
-        }
-    }
+  @Override
+  public double[] getX() {
+    return x;
+  }
 
-    @Override
-    public double[] getX() {
-        return x;
+  @Override
+  public void setY(double... labels) {
+    if (labels.length > 0)
+      y = Arrays.copyOf(labels, labels.length);
+    maxY = -Double.MAX_VALUE;
+    minY = Double.MAX_VALUE;
+    for (var l : labels) {
+      maxY = Math.max(maxY, l);
+      minY = Math.min(minY, l);
     }
+  }
 
-    @Override
-    public void setY(double... labels) {
-        if (labels.length > 0)
-            y = Arrays.copyOf(labels, labels.length);
-        maxY = -Double.MAX_VALUE;
-        minY = Double.MAX_VALUE;
-        for (var l : labels) {
-            maxY = Math.max(maxY, l);
-            minY = Math.min(minY, l);
-        }
-    }
+  @Override
+  public double[] getY() {
+    return y;
+  }
 
-    @Override
-    public double[] getY() {
-        return y;
-    }
+  @Override
+  public void setPreferredLabelCountX(int count) {
+    preferredLabelCountX = count;
+  }
 
-    @Override
-    public void setPreferredLabelCountX(int count) {
-        preferredLabelCountX = count;
-    }
+  @Override
+  public int getPreferredLabelCountX() {
+    return preferredLabelCountX;
+  }
 
-    @Override
-    public int getPreferredLabelCountX() {
-        return preferredLabelCountX;
-    }
+  @Override
+  public void setPreferredLabelCountY(int count) {
+    preferredLabelCountY = count;
+  }
 
-    @Override
-    public void setPreferredLabelCountY(int count) {
-        preferredLabelCountY = count;
-    }
+  @Override
+  public int getPreferredLabelCountY() {
+    return preferredLabelCountY;
+  }
 
-    @Override
-    public int getPreferredLabelCountY() {
-        return preferredLabelCountY;
-    }
+  @Override
+  public double[] getShowLabelX() {
+    var properMaxX = minX == maxX ? minX + 1 : maxX;
+    return getPreferredLabels(minX, properMaxX, getPreferredLabelCountX());
+  }
 
-    @Override
-    public double[] getShowLabelX() {
-        var properMaxX = minX == maxX ? minX + 1 : maxX;
-        return getPreferredLabels(minX, properMaxX, getPreferredLabelCountX());
-    }
+  @Override
+  public double[] getShowLabelY() {
+    var properMaxY = minY == maxY ? minY + 1 : maxY;
+    return getPreferredLabels(minY, properMaxY, getPreferredLabelCountY());
+  }
 
-    @Override
-    public double[] getShowLabelY() {
-        var properMaxY = minY == maxY ? minY + 1 : maxY;
-        return getPreferredLabels(minY, properMaxY, getPreferredLabelCountY());
-    }
+  @Override
+  public int getVisiblePixelX(double x, double axisMin, double axisMax) {
+    return (int) Math.round(x * getVisibleSize()[0] / (axisMax - axisMin));
+  }
 
-    @Override
-    public int getVisiblePixelX(double x, double axisMin, double axisMax) {
-        return (int)Math.round(x * getVisibleSize()[0] / (axisMax - axisMin));
-    }
+  @Override
+  public int getVisiblePixelY(double y, double axisMin, double axisMax) {
+    return (int) Math.round((axisMax - y) * getVisibleSize()[1] / (axisMax - axisMin));
+  }
 
-    @Override
-    public int getVisiblePixelY(double y, double axisMin, double axisMax) {
-        return (int)Math.round((axisMax - y) * getVisibleSize()[1] / (axisMax - axisMin));
-    }
-
-    protected double[] getPreferredLabels(double min, double max, int num) {
-        double step = (max - min) / num;
-        double temp = 0;
-        // Normalize step into [0, 1).
-        if (Math.pow(10, (int)Math.log10(step)) == step)
-            temp = Math.pow(10, (int)(Math.log10(step)));
-        else
-            temp = Math.pow(10, (int)(Math.log10(step))+ 1);
-        var tempStep = step / temp;
-        var stdStep = 0.0D;
-        if (0 <= tempStep && tempStep <= 0.1)
-            stdStep = 0.1;
-        else if (0.1 < tempStep && tempStep <= 0.2)
-            stdStep = 0.2;
-        else if (0.2 < tempStep && tempStep <= 0.25)
-            stdStep = 0.25;
-        else if (0.25 < tempStep && tempStep <= 0.5)
-            stdStep = 0.5;
-        else
-            stdStep = 1.0;
-        // Recover step from [0, 1).
-        var finalStep = stdStep * temp;
-        double beg, end;
-        beg = Math.floor(min / finalStep);
-        end = Math.ceil(max / finalStep);
-        // Create return array.
-        var array = new double[(int)(end - beg + 1)];
-        for (int i = 0; i < array.length; ++i)
-            array[i] = (beg + i) * finalStep;
-        return array;
-    }
+  protected double[] getPreferredLabels(double min, double max, int num) {
+    double step = (max - min) / num;
+    double temp = 0;
+    // Normalize step into [0, 1).
+    if (Math.pow(10, (int) Math.log10(step)) == step)
+      temp = Math.pow(10, (int) (Math.log10(step)));
+    else
+      temp = Math.pow(10, (int) (Math.log10(step)) + 1);
+    var tempStep = step / temp;
+    var stdStep = 0.0D;
+    if (0 <= tempStep && tempStep <= 0.1)
+      stdStep = 0.1;
+    else if (0.1 < tempStep && tempStep <= 0.2)
+      stdStep = 0.2;
+    else if (0.2 < tempStep && tempStep <= 0.25)
+      stdStep = 0.25;
+    else if (0.25 < tempStep && tempStep <= 0.5)
+      stdStep = 0.5;
+    else
+      stdStep = 1.0;
+    // Recover step from [0, 1).
+    var finalStep = stdStep * temp;
+    double beg, end;
+    beg = Math.floor(min / finalStep);
+    end = Math.ceil(max / finalStep);
+    // Create return array.
+    var array = new double[(int) (end - beg + 1)];
+    for (int i = 0; i < array.length; ++i)
+      array[i] = (beg + i) * finalStep;
+    return array;
+  }
 }

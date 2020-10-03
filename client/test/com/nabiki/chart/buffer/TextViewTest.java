@@ -36,36 +36,36 @@ import java.io.File;
 import java.io.IOException;
 
 public class TextViewTest {
-    private TextItem[] getTextItems() {
-        var items = new TextItem[5];
-        items[0] = new TextItem("Hello");
-        items[1] = new TextItem("你好", DefaultStyles.FONT_DOWN_COLOR);
-        items[2] = new TextItem("你好，China");
-        items[3] = new TextItem("ABC一二三四", DefaultStyles.FONT_UP_COLOR);
-        items[4] = new TextItem("43483648");
-        return items;
+  private TextItem[] getTextItems() {
+    var items = new TextItem[5];
+    items[0] = new TextItem("Hello");
+    items[1] = new TextItem("你好", DefaultStyles.FONT_DOWN_COLOR);
+    items[2] = new TextItem("你好，China");
+    items[3] = new TextItem("ABC一二三四", DefaultStyles.FONT_UP_COLOR);
+    items[4] = new TextItem("43483648");
+    return items;
+  }
+
+  @Test
+  public void basic() {
+    var image = new BufferedImage(
+        500,
+        500,
+        BufferedImage.TYPE_INT_ARGB);
+
+    var view = new TextView(image);
+    view.setOrientation(TextView.VERTICAL);
+    view.setData(getTextItems());
+
+    view.paint();
+
+    try {
+      ImageIO.write(
+          image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\text_view.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    @Test
-    public void basic() {
-        var image = new BufferedImage(
-                500,
-                500,
-                BufferedImage.TYPE_INT_ARGB);
-
-        var view = new TextView(image);
-        view.setOrientation(TextView.VERTICAL);
-        view.setData(getTextItems());
-
-        view.paint();
-
-        try {
-            ImageIO.write(
-                    image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\text_view.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

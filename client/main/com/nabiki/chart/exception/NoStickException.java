@@ -29,15 +29,15 @@
 package com.nabiki.chart.exception;
 
 public class NoStickException extends RuntimeException {
-    public NoStickException(String message) {
-        super(message);
-    }
+  public NoStickException(String message) {
+    super(message);
+  }
 
-    public NoStickException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public NoStickException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public NoStickException(Throwable cause) {
-        super(cause);
-    }
+  public NoStickException(Throwable cause) {
+    super(cause);
+  }
 }

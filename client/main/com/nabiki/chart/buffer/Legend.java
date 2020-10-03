@@ -36,76 +36,76 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Legend extends ImageCanvas {
-    private final Map<String, CustomData> data = new HashMap<>();
+  private final Map<String, CustomData> data = new HashMap<>();
 
-    public Legend() {
-    }
+  public Legend() {
+  }
 
-    public Legend(BufferedImage image) {
-        super(image);
-    }
+  public Legend(BufferedImage image) {
+    super(image);
+  }
 
-    public void addCustomData(CustomData custom) {
-        synchronized (data) {
-            data.put(custom.getName(), custom);
-        }
+  public void addCustomData(CustomData custom) {
+    synchronized (data) {
+      data.put(custom.getName(), custom);
     }
+  }
 
-    @Override
-    public void paint() {
-        resizeLegend();
-        clear();
-        showBox(true);
-        paintLegend();
-    }
+  @Override
+  public void paint() {
+    resizeLegend();
+    clear();
+    showBox(true);
+    paintLegend();
+  }
 
-    private void paintLegend() {
-        int index = 0;
-        for (var custom : data.values())
-            paintSingleLegend(index++, custom);
-    }
+  private void paintLegend() {
+    int index = 0;
+    for (var custom : data.values())
+      paintSingleLegend(index++, custom);
+  }
 
-    private void paintSingleLegend(int index, CustomData custom) {
-        paintLegendText(index, custom.getName());
-        paintLegendSample(index, custom.getType());
-    }
+  private void paintSingleLegend(int index, CustomData custom) {
+    paintLegendText(index, custom.getName());
+    paintLegendSample(index, custom.getType());
+  }
 
-    private void paintLegendText(int index, String text) {
-        int y = index * DefaultStyles.LEGEND_SINGLE_HEIGHT + getFont().getSize();
-        var oldColor = getColor();
-        setColor(DefaultStyles.AXIS_LINE_COLOR);
-        drawVisibleString(text, 0, y);
-        setColor(oldColor);
-    }
+  private void paintLegendText(int index, String text) {
+    int y = index * DefaultStyles.LEGEND_SINGLE_HEIGHT + getFont().getSize();
+    var oldColor = getColor();
+    setColor(DefaultStyles.AXIS_LINE_COLOR);
+    drawVisibleString(text, 0, y);
+    setColor(oldColor);
+  }
 
-    private void paintLegendSample(int index, CustomType type) {
-        int y = index * DefaultStyles.LEGEND_SINGLE_HEIGHT + getFont().getSize() / 2;
-        int x = getVisibleSize()[0] - DefaultStyles.LEGEND_SAMPLE_WIDTH;
-        var oldColor = getColor();
-        setColor(type.getColor());
-        switch (type.getType()) {
-            case CustomType.DOT:
-                drawVisibleLine(x, y, x + DefaultStyles.DOT_WIDTH, y);
-                break;
-            case CustomType.LINE:
-                drawVisibleLine(x, y, x + DefaultStyles.LEGEND_SAMPLE_WIDTH, y);
-                break;
-            default:
-                break;
-        }
-        setColor(oldColor);
+  private void paintLegendSample(int index, CustomType type) {
+    int y = index * DefaultStyles.LEGEND_SINGLE_HEIGHT + getFont().getSize() / 2;
+    int x = getVisibleSize()[0] - DefaultStyles.LEGEND_SAMPLE_WIDTH;
+    var oldColor = getColor();
+    setColor(type.getColor());
+    switch (type.getType()) {
+      case CustomType.DOT:
+        drawVisibleLine(x, y, x + DefaultStyles.DOT_WIDTH, y);
+        break;
+      case CustomType.LINE:
+        drawVisibleLine(x, y, x + DefaultStyles.LEGEND_SAMPLE_WIDTH, y);
+        break;
+      default:
+        break;
     }
+    setColor(oldColor);
+  }
 
-    private void resizeLegend() {
-        int maxNameWidth = 0;
-        for (var custom : data.values())
-            maxNameWidth = Math.max(getStringWidth(custom.getName()), maxNameWidth);
-        var width = maxNameWidth
-                + DefaultStyles.LEGEND_BLANK_WIDTH
-                + DefaultStyles.LEGEND_SAMPLE_WIDTH
-                + 2 * DefaultStyles.LEGEND_MARGIN;
-        var height = DefaultStyles.LEGEND_SINGLE_HEIGHT * data.size()
-                + 2 * DefaultStyles.LEGEND_MARGIN;
-        setSize(width, height);
-    }
+  private void resizeLegend() {
+    int maxNameWidth = 0;
+    for (var custom : data.values())
+      maxNameWidth = Math.max(getStringWidth(custom.getName()), maxNameWidth);
+    var width = maxNameWidth
+        + DefaultStyles.LEGEND_BLANK_WIDTH
+        + DefaultStyles.LEGEND_SAMPLE_WIDTH
+        + 2 * DefaultStyles.LEGEND_MARGIN;
+    var height = DefaultStyles.LEGEND_SINGLE_HEIGHT * data.size()
+        + 2 * DefaultStyles.LEGEND_MARGIN;
+    setSize(width, height);
+  }
 }

@@ -31,25 +31,25 @@ package com.nabiki.chart.buffer;
 import com.nabiki.chart.exception.ValuesNotSameException;
 
 public class Charts {
-    public static void requireSame(int... vars) {
-        if (vars.length > 1) {
-            for (int i = 1; i < vars.length; ++i)
-                if (vars[i-1] != vars[i])
-                    throw new ValuesNotSameException(vars[i-1] + "!=" + vars[i]);
-        }
+  public static void requireSame(int... vars) {
+    if (vars.length > 1) {
+      for (int i = 1; i < vars.length; ++i)
+        if (vars[i - 1] != vars[i])
+          throw new ValuesNotSameException(vars[i - 1] + "!=" + vars[i]);
     }
+  }
 
-    public static double max(double...vars) {
-        double m = -Double.MAX_VALUE;
-        for (var v : vars)
-            m = Math.max(m, v);
-        return m;
-    }
+  public static double max(double... vars) {
+    double m = -Double.MAX_VALUE;
+    for (var v : vars)
+      m = Math.max(m, v);
+    return m;
+  }
 
-    public static double min(double...vars) {
-        double m = Double.MAX_VALUE;
-        for (var v : vars)
-            m = Math.min(m, v);
-        return m;
-    }
+  public static double min(double... vars) {
+    double m = Double.MAX_VALUE;
+    for (var v : vars)
+      m = Math.min(m, v);
+    return m;
+  }
 }

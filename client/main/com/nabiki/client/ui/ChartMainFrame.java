@@ -204,14 +204,14 @@ public class ChartMainFrame extends JFrame {
   }
 
   private void printImage() {
-    JFileChooser fc=new JFileChooser();
+    JFileChooser fc = new JFileChooser();
     fc.setApproveButtonText("\u6253\u5370");
     fc.setDialogTitle("\u628a\u56fe\u7247\u6253\u5370\u5230\u6587\u4ef6");
     fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-    if(fc.showOpenDialog(contentPane)==JFileChooser.APPROVE_OPTION){
+    if (fc.showOpenDialog(contentPane) == JFileChooser.APPROVE_OPTION) {
       try {
         ImageIO.write(
-            (BufferedImage)chart.getBuffer(),
+            (BufferedImage) chart.getBuffer(),
             "png",
             fc.getSelectedFile());
       } catch (Throwable th) {

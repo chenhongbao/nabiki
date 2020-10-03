@@ -36,39 +36,39 @@ import java.io.File;
 import java.io.IOException;
 
 public class GridXYTest {
-    @Test
-    public void basic() {
-        var image = new BufferedImage(
-                500,
-                600,
-                BufferedImage.TYPE_INT_ARGB);
+  @Test
+  public void basic() {
+    var image = new BufferedImage(
+        500,
+        600,
+        BufferedImage.TYPE_INT_ARGB);
 
-        var grid = new GridXY(image);
-        grid.setOffset(100, 100);
-        grid.setMargin(20, 20, 20, 20);
-        grid.setSize(300, 400);
-        grid.setX(1, 1.5, 2.8, 5, 6, 7.3, 9, 10, 13, 14.5, 17);
-        grid.setY(3, 1.5, 4.8, 5.1, 4.6, 10.3, 9.4, 8.7, 11.5, 16.7, 11.3);
+    var grid = new GridXY(image);
+    grid.setOffset(100, 100);
+    grid.setMargin(20, 20, 20, 20);
+    grid.setSize(300, 400);
+    grid.setX(1, 1.5, 2.8, 5, 6, 7.3, 9, 10, 13, 14.5, 17);
+    grid.setY(3, 1.5, 4.8, 5.1, 4.6, 10.3, 9.4, 8.7, 11.5, 16.7, 11.3);
 
-        var x = new XAxis(image);
-        x.bindXY(grid);
-        x.bindCanvas(grid);
+    var x = new XAxis(image);
+    x.bindXY(grid);
+    x.bindCanvas(grid);
 
-        var y = new YAxis(image);
-        y.bindXY(grid);
-        y.bindCanvas(grid);
+    var y = new YAxis(image);
+    y.bindXY(grid);
+    y.bindCanvas(grid);
 
-        grid.paint();
-        x.paint();
-        y.paint();
+    grid.paint();
+    x.paint();
+    y.paint();
 
-        try {
-            ImageIO.write(
-                    image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\grid_xy.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    try {
+      ImageIO.write(
+          image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\grid_xy.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 }

@@ -63,7 +63,7 @@ class SessionImpl {
   protected long getLag() {
     var r = session.getAttribute(IOP_LAG_KEY);
     if (r instanceof Long) {
-      return (long)r;
+      return (long) r;
     } else {
       return Long.MAX_VALUE;
     }

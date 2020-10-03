@@ -31,57 +31,57 @@ package com.nabiki.chart.buffer;
 import java.awt.*;
 
 public class DefaultStyles {
-    public static int AXIS_DEFAULT_Y_LABEL_COUNT = 7;
-    public static int AXIS_DEFAULT_X_LABEL_COUNT = 10;
+  public static int AXIS_DEFAULT_Y_LABEL_COUNT = 7;
+  public static int AXIS_DEFAULT_X_LABEL_COUNT = 10;
 
-    public static int TEXTVIEW_FONT_BLANK_WIDTH = 15;
-    public static float TEXTVIEW_FONT_SIZE = 18;
-    public static float TEXTVIEW_FONT_LINESEP = 1.5F;
+  public static int TEXTVIEW_FONT_BLANK_WIDTH = 15;
+  public static float TEXTVIEW_FONT_SIZE = 18;
+  public static float TEXTVIEW_FONT_LINESEP = 1.5F;
 
-    public static double X_NODE_BLANK_PORTION = 0.25;
+  public static double X_NODE_BLANK_PORTION = 0.25;
 
-    public static Stroke GRID_DASHLINE_STROKE = new BasicStroke(
-            1,
-            BasicStroke.CAP_ROUND,
-            BasicStroke.JOIN_ROUND,
-            1.0f,
-            new float[]{1f, 4f},
-            2f);
+  public static Stroke GRID_DASHLINE_STROKE = new BasicStroke(
+      1,
+      BasicStroke.CAP_ROUND,
+      BasicStroke.JOIN_ROUND,
+      1.0f,
+      new float[]{1f, 4f},
+      2f);
 
-    public static Color CANVAS_BG_COLOR = Color.WHITE;
+  public static Color CANVAS_BG_COLOR = Color.WHITE;
 
-    public static Color GRID_DASHLINE_COLOR = Color.BLUE;
-    public static Color GRID_LINE_COLOR = Color.BLUE;
-    public static Color AXIS_LINE_COLOR = Color.BLUE;
-    public static Color AXIS_LABEL_COLOR = Color.BLUE;
-    public static int AXIS_TICK_LENGTH = 5;
-    public static int AXIS_X_HEIGHT = 30;
-    public static int AXIS_Y_WIDTH = 50;
+  public static Color GRID_DASHLINE_COLOR = Color.BLUE;
+  public static Color GRID_LINE_COLOR = Color.BLUE;
+  public static Color AXIS_LINE_COLOR = Color.BLUE;
+  public static Color AXIS_LABEL_COLOR = Color.BLUE;
+  public static int AXIS_TICK_LENGTH = 5;
+  public static int AXIS_X_HEIGHT = 30;
+  public static int AXIS_Y_WIDTH = 50;
 
-    public static Color STICK_UP_COLOR = Color.RED;
-    public static Color STICK_DOWN_COLOR = new Color(23, 145, 45);
-    public static Color STICK_FAIR_COLOR = Color.BLUE;
+  public static Color STICK_UP_COLOR = Color.RED;
+  public static Color STICK_DOWN_COLOR = new Color(23, 145, 45);
+  public static Color STICK_FAIR_COLOR = Color.BLUE;
 
-    public static Color BAR_UP_COLOR = Color.RED;
-    public static Color BAR_DOWN_COLOR = new Color(23, 145, 45);
-    public static Color BAR_FAIR_COLOR = Color.BLUE;
+  public static Color BAR_UP_COLOR = Color.RED;
+  public static Color BAR_DOWN_COLOR = new Color(23, 145, 45);
+  public static Color BAR_FAIR_COLOR = Color.BLUE;
 
-    public static Color FONT_UP_COLOR = Color.RED;
-    public static Color FONT_DOWN_COLOR = new Color(23, 145, 45);
-    public static Color FONT_FAIR_COLOR = Color.BLUE;
+  public static Color FONT_UP_COLOR = Color.RED;
+  public static Color FONT_DOWN_COLOR = new Color(23, 145, 45);
+  public static Color FONT_FAIR_COLOR = Color.BLUE;
 
-    public static Stroke STICK_STROKE = new BasicStroke(1.0f);
+  public static Stroke STICK_STROKE = new BasicStroke(1.0f);
 
-    public static int CHART_MARGIN = 20;
-    public static int CHART_OFFSET = 10;
+  public static int CHART_MARGIN = 20;
+  public static int CHART_OFFSET = 10;
 
-    public static int LEGEND_SINGLE_HEIGHT = 20;
-    public static int LEGEND_BLANK_WIDTH = 20;
-    public static int LEGEND_SAMPLE_WIDTH = 20;
-    public static int LEGEND_MARGIN = 10;
+  public static int LEGEND_SINGLE_HEIGHT = 20;
+  public static int LEGEND_BLANK_WIDTH = 20;
+  public static int LEGEND_SAMPLE_WIDTH = 20;
+  public static int LEGEND_MARGIN = 10;
 
-    public static int DOT_WIDTH = 5;
+  public static int DOT_WIDTH = 5;
 
-    public static int VIEW_DEFAULT_WINSIZE = 60;
-    public static int VIEW_MIN_WINSIZE = 10;
+  public static int VIEW_DEFAULT_WINSIZE = 60;
+  public static int VIEW_MIN_WINSIZE = 10;
 }

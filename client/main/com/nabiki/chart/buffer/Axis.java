@@ -31,11 +31,11 @@ package com.nabiki.chart.buffer;
 import java.util.Map;
 
 public interface Axis {
-    void setName(String name);
+  void setName(String name);
 
-    String getName();
+  String getName();
 
-    void bindXY(XYCoordinate xy);
+  void bindXY(XYCoordinate xy);
 
-    void mapLabels(Map<Double, String> map);
+  void mapLabels(Map<Double, String> map);
 }

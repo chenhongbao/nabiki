@@ -29,15 +29,15 @@
 package com.nabiki.chart.exception;
 
 public class CanvasSizeOverflowException extends RuntimeException {
-    public CanvasSizeOverflowException(String message) {
-        super(message);
-    }
+  public CanvasSizeOverflowException(String message) {
+    super(message);
+  }
 
-    public CanvasSizeOverflowException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public CanvasSizeOverflowException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public CanvasSizeOverflowException(Throwable cause) {
-        super(cause);
-    }
+  public CanvasSizeOverflowException(Throwable cause) {
+    super(cause);
+  }
 }

@@ -33,50 +33,50 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractAxis extends ImageCanvas implements Axis {
-    protected final Map<Double, String> map = new HashMap<>();
-    protected String name;
-    protected XYCoordinate xy;
+  protected final Map<Double, String> map = new HashMap<>();
+  protected String name;
+  protected XYCoordinate xy;
 
-    public AbstractAxis() {
+  public AbstractAxis() {
+  }
+
+  public AbstractAxis(BufferedImage image) {
+    super(image);
+  }
+
+  @Override
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public void bindXY(XYCoordinate xy) {
+    this.xy = xy;
+  }
+
+  @Override
+  public void mapLabels(Map<Double, String> m) {
+    map.clear();
+    if (m != null)
+      map.putAll(m);
+  }
+
+  protected abstract void paintLabel(double label, double axisMin, double axisMax);
+
+  protected String getLabelString(double label) {
+    if (map.isEmpty())
+      return String.format("%.1f", label);
+    else {
+      var str = map.get(label);
+      if (str == null)
+        return "";
+      else
+        return str;
     }
-
-    public AbstractAxis(BufferedImage image) {
-        super(image);
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void bindXY(XYCoordinate xy) {
-        this.xy = xy;
-    }
-
-    @Override
-    public void mapLabels(Map<Double, String> m) {
-        map.clear();
-        if (m != null)
-            map.putAll(m);
-    }
-
-    protected abstract void paintLabel(double label, double axisMin, double axisMax);
-
-    protected String getLabelString(double label) {
-        if (map.isEmpty())
-            return String.format("%.1f", label);
-        else {
-            var str = map.get(label);
-            if (str == null)
-                return "";
-            else
-                return str;
-        }
-    }
+  }
 }

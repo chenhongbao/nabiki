@@ -41,11 +41,12 @@ public abstract class ChartPanel extends ImagePanel {
   private CustomChart chart;
   private GridXY world;
 
-  public ChartPanel() {}
+  public ChartPanel() {
+  }
 
   public ChartPanel(GridXY world) {
     this.world = world;
-    this.chart =  new CustomChart(world);
+    this.chart = new CustomChart(world);
     prepare();
   }
 

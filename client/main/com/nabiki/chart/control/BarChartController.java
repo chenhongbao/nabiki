@@ -165,7 +165,7 @@ public class BarChartController implements ViewController {
     for (var key : types.keySet())
       customs.put(key, new Double[size]);
     int tmpIdx = size - 1;
-    for (int index = cursor; 0 <= index && 0 <= tmpIdx; --index, -- tmpIdx) {
+    for (int index = cursor; 0 <= index && 0 <= tmpIdx; --index, --tmpIdx) {
       values[tmpIdx] = bars.get(index).value;
       mapLabels.put((double) tmpIdx, bars.get(index).label);
       // Set customs' data.

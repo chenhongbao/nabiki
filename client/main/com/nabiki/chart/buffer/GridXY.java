@@ -31,49 +31,50 @@ package com.nabiki.chart.buffer;
 import java.awt.image.BufferedImage;
 
 public class GridXY extends ImageXY {
-    public GridXY() {}
+  public GridXY() {
+  }
 
-    public GridXY(BufferedImage image) {
-        super(image);
-    }
+  public GridXY(BufferedImage image) {
+    super(image);
+  }
 
-    @Override
-    public void paint() {
-        clear();
-        showBox(true);
-        paintDashGrid();
-    }
+  @Override
+  public void paint() {
+    clear();
+    showBox(true);
+    paintDashGrid();
+  }
 
-    private void gridLH(double label, double axisMin, double axisMax) {
-        var y = getVisiblePixelY(label, axisMin, axisMax) + getMargin()[0];
-        drawLine(0, y, getSize()[0], y);
-    }
+  private void gridLH(double label, double axisMin, double axisMax) {
+    var y = getVisiblePixelY(label, axisMin, axisMax) + getMargin()[0];
+    drawLine(0, y, getSize()[0], y);
+  }
 
-    private void gridV(double label, double axisMin, double axisMax) {
-        var x = getVisiblePixelX(label, axisMin, axisMax) + getMargin()[3];
-        drawLine(x, 0, x, getSize()[1]);
-    }
+  private void gridV(double label, double axisMin, double axisMax) {
+    var x = getVisiblePixelX(label, axisMin, axisMax) + getMargin()[3];
+    drawLine(x, 0, x, getSize()[1]);
+  }
 
-    private void paintGridH() {
-        var labels = getShowLabelY();
-        for (var label : labels)
-            gridLH(label, labels[0], labels[labels.length - 1]);
-    }
+  private void paintGridH() {
+    var labels = getShowLabelY();
+    for (var label : labels)
+      gridLH(label, labels[0], labels[labels.length - 1]);
+  }
 
-    private void paintGridV() {
-        var labels = getShowLabelX();
-        for (var label : labels)
-            gridV(label, labels[0], labels[labels.length - 1]);
-    }
+  private void paintGridV() {
+    var labels = getShowLabelX();
+    for (var label : labels)
+      gridV(label, labels[0], labels[labels.length - 1]);
+  }
 
-    private void paintDashGrid() {
-        var oldColor = getColor();
-        var oldStroke = getStroke();
-        setColor(DefaultStyles.GRID_DASHLINE_COLOR);
-        setStroke(DefaultStyles.GRID_DASHLINE_STROKE);
-        paintGridH();
-        paintGridV();
-        setColor(oldColor);
-        setStroke(oldStroke);
-    }
+  private void paintDashGrid() {
+    var oldColor = getColor();
+    var oldStroke = getStroke();
+    setColor(DefaultStyles.GRID_DASHLINE_COLOR);
+    setStroke(DefaultStyles.GRID_DASHLINE_STROKE);
+    paintGridH();
+    paintGridV();
+    setColor(oldColor);
+    setStroke(oldStroke);
+  }
 }

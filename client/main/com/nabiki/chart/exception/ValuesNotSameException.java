@@ -29,15 +29,15 @@
 package com.nabiki.chart.exception;
 
 public class ValuesNotSameException extends RuntimeException {
-    public ValuesNotSameException(String message) {
-        super(message);
-    }
+  public ValuesNotSameException(String message) {
+    super(message);
+  }
 
-    public ValuesNotSameException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public ValuesNotSameException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public ValuesNotSameException(Throwable cause) {
-        super(cause);
-    }
+  public ValuesNotSameException(Throwable cause) {
+    super(cause);
+  }
 }

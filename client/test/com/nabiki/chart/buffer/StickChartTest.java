@@ -37,62 +37,62 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class StickChartTest {
-    private double[] sampleGridY(double[] open, double[] high, double[] low,
-                                 double[] close) {
-        var sample = Arrays.copyOf(open, open.length);
-        sample[0] = Charts.max(
-                Charts.max(open),
-                Charts.max(high),
-                Charts.max(low),
-                Charts.max(close));
-        sample[1] = Charts.min(
-                Charts.min(open),
-                Charts.min(high),
-                Charts.min(low),
-                Charts.min(close));
-        return sample;
+  private double[] sampleGridY(double[] open, double[] high, double[] low,
+                               double[] close) {
+    var sample = Arrays.copyOf(open, open.length);
+    sample[0] = Charts.max(
+        Charts.max(open),
+        Charts.max(high),
+        Charts.max(low),
+        Charts.max(close));
+    sample[1] = Charts.min(
+        Charts.min(open),
+        Charts.min(high),
+        Charts.min(low),
+        Charts.min(close));
+    return sample;
+  }
+
+  @Test
+  public void basic() {
+    var image = new BufferedImage(
+        500,
+        600,
+        BufferedImage.TYPE_INT_ARGB);
+
+    var open = new double[]{3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
+    var high = new double[]{5.4, 6.0, 5.2, 4.5, 4.9, 6.5, 8.7, 8.5, 7.9};
+    var low = new double[]{3.0, 4.5, 4.1, 4.0, 4.1, 5.0, 6.0, 7.8, 6.5};
+    var close = new double[]{5.1, 5.2, 4.2, 4.2, 4.9, 6.5, 8.6, 7.9, 6.9};
+
+    var sampleY = sampleGridY(open, high, low, close);
+
+    var chart = new StickChart(image);
+    chart.setOffset(100, 100);
+    chart.setMargin(20, 20, 20, 20);
+    chart.setSize(300, 400);
+    chart.setData(open, high, low, close);
+    chart.setY(sampleY);
+
+    var x = new XAxis(image);
+    x.bindXY(chart);
+    x.bindCanvas(chart);
+
+    var y = new YAxis(image);
+    y.bindXY(chart);
+    y.bindCanvas(chart);
+
+    chart.paint();
+    x.paint();
+    y.paint();
+
+    try {
+      ImageIO.write(
+          image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\stick_chart.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    @Test
-    public void basic() {
-        var image = new BufferedImage(
-                500,
-                600,
-                BufferedImage.TYPE_INT_ARGB);
-
-        var open = new double[] {3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
-        var high = new double[] {5.4, 6.0, 5.2, 4.5, 4.9, 6.5, 8.7, 8.5, 7.9};
-        var low = new double[] {3.0, 4.5, 4.1, 4.0, 4.1, 5.0, 6.0, 7.8, 6.5};
-        var close = new double[] {5.1, 5.2, 4.2, 4.2, 4.9, 6.5, 8.6, 7.9, 6.9};
-
-        var sampleY = sampleGridY(open, high, low, close);
-
-        var chart = new StickChart(image);
-        chart.setOffset(100, 100);
-        chart.setMargin(20, 20, 20, 20);
-        chart.setSize(300, 400);
-        chart.setData(open, high, low, close);
-        chart.setY(sampleY);
-
-        var x = new XAxis(image);
-        x.bindXY(chart);
-        x.bindCanvas(chart);
-
-        var y = new YAxis(image);
-        y.bindXY(chart);
-        y.bindCanvas(chart);
-
-        chart.paint();
-        x.paint();
-        y.paint();
-
-        try {
-            ImageIO.write(
-                    image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\stick_chart.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

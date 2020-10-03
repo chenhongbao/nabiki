@@ -31,51 +31,52 @@ package com.nabiki.chart.buffer;
 import java.awt.image.BufferedImage;
 
 public class XAxis extends AbstractAxis {
-    private ImageCanvas canvas;
+  private ImageCanvas canvas;
 
-    public XAxis() {}
+  public XAxis() {
+  }
 
-    public XAxis(BufferedImage image) {
-        super(image);
-    }
+  public XAxis(BufferedImage image) {
+    super(image);
+  }
 
-    public void bindCanvas(ImageCanvas canvas) {
-        this.canvas = canvas;
-    }
+  public void bindCanvas(ImageCanvas canvas) {
+    this.canvas = canvas;
+  }
 
-    @Override
-    protected void paintLabel(double label, double axisMin, double axisMax) {
-        var oldColor = getColor();
-        // Draw axis tick.
-        setColor(DefaultStyles.AXIS_LINE_COLOR);
-        int x = xy.getVisiblePixelX(label, axisMin, axisMax);
-        drawVisibleLine(x, 0, x, DefaultStyles.AXIS_TICK_LENGTH);
-        // Draw axis label.
-        setColor(DefaultStyles.AXIS_LABEL_COLOR);
-        var str = getLabelString(label);
-        int xOff = getStringWidth(str) / 2;
-        drawVisibleString(
-                str,
-                x - xOff,
-                getFont().getSize() + DefaultStyles.AXIS_TICK_LENGTH * 2);
-        setColor(oldColor);
-    }
+  @Override
+  protected void paintLabel(double label, double axisMin, double axisMax) {
+    var oldColor = getColor();
+    // Draw axis tick.
+    setColor(DefaultStyles.AXIS_LINE_COLOR);
+    int x = xy.getVisiblePixelX(label, axisMin, axisMax);
+    drawVisibleLine(x, 0, x, DefaultStyles.AXIS_TICK_LENGTH);
+    // Draw axis label.
+    setColor(DefaultStyles.AXIS_LABEL_COLOR);
+    var str = getLabelString(label);
+    int xOff = getStringWidth(str) / 2;
+    drawVisibleString(
+        str,
+        x - xOff,
+        getFont().getSize() + DefaultStyles.AXIS_TICK_LENGTH * 2);
+    setColor(oldColor);
+  }
 
-    @Override
-    public void paint() {
-        setupAxis();
-        clear();
-        var labels = xy.getShowLabelX();
-        for (var label : labels)
-            paintLabel(label, labels[0], labels[labels.length - 1]);
-    }
+  @Override
+  public void paint() {
+    setupAxis();
+    clear();
+    var labels = xy.getShowLabelX();
+    for (var label : labels)
+      paintLabel(label, labels[0], labels[labels.length - 1]);
+  }
 
-    private void setupAxis() {
-        var size = canvas.getSize();
-        var offset = canvas.getOffset();
-        var margin = canvas.getMargin();
-        setSize(size[0], DefaultStyles.AXIS_X_HEIGHT);
-        setOffset(offset[0], offset[1] + size[1] + 1);
-        setMargin(0, margin[1], 0, margin[3]);
-    }
+  private void setupAxis() {
+    var size = canvas.getSize();
+    var offset = canvas.getOffset();
+    var margin = canvas.getMargin();
+    setSize(size[0], DefaultStyles.AXIS_X_HEIGHT);
+    setOffset(offset[0], offset[1] + size[1] + 1);
+    setMargin(0, margin[1], 0, margin[3]);
+  }
 }

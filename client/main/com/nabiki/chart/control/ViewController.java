@@ -31,25 +31,25 @@ package com.nabiki.chart.control;
 import java.awt.*;
 
 public interface ViewController {
-    void createLine(String name, Color color);
+  void createLine(String name, Color color);
 
-    void createDot(String name, Color color);
+  void createDot(String name, Color color);
 
-    void appendCustom(String name, Double value);
+  void appendCustom(String name, Double value);
 
-    void forward(int count);
+  void forward(int count);
 
-    void backward(int count);
+  void backward(int count);
 
-    void reset();
+  void reset();
 
-    void zoomIn();
+  void zoomIn();
 
-    void zoomOut();
+  void zoomOut();
 
-    int getDataCount();
+  int getDataCount();
 
-    int getShownSize();
+  int getShownSize();
 
-    void update();
+  void update();
 }

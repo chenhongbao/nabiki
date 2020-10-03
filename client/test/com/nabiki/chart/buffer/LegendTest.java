@@ -39,36 +39,36 @@ import java.io.File;
 import java.io.IOException;
 
 public class LegendTest {
-    @Test
-    public void basic() {
-        var image = new BufferedImage(
-                500,
-                600,
-                BufferedImage.TYPE_INT_RGB);
+  @Test
+  public void basic() {
+    var image = new BufferedImage(
+        500,
+        600,
+        BufferedImage.TYPE_INT_RGB);
 
-        var legend = new Legend();
-        legend.setImage(image);
-        legend.setOffset(100, 200);
-        legend.setMargin(10, 10, 10, 10);
+    var legend = new Legend();
+    legend.setImage(image);
+    legend.setOffset(100, 200);
+    legend.setMargin(10, 10, 10, 10);
 
-        Double[] line = new Double[] {1.0, 2.9, 3.0, 5.7, 3.0, 2.3, 1.1};
-        Double[] dot = new Double[] {3.0, 4.9, 1.0, 7.7, 5.0, 0.3, 2.1};
+    Double[] line = new Double[]{1.0, 2.9, 3.0, 5.7, 3.0, 2.3, 1.1};
+    Double[] dot = new Double[]{3.0, 4.9, 1.0, 7.7, 5.0, 0.3, 2.1};
 
-        var d0 = new CustomData("line", new CustomType(Color.PINK, CustomType.LINE), line);
-        var d1 = new CustomData("dot", new CustomType(Color.CYAN, CustomType.DOT), dot);
+    var d0 = new CustomData("line", new CustomType(Color.PINK, CustomType.LINE), line);
+    var d1 = new CustomData("dot", new CustomType(Color.CYAN, CustomType.DOT), dot);
 
-        legend.addCustomData(d0);
-        legend.addCustomData(d1);
+    legend.addCustomData(d0);
+    legend.addCustomData(d1);
 
-        legend.paint();
+    legend.paint();
 
-        try {
-            ImageIO.write(image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\legend.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    try {
+      ImageIO.write(image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\legend.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
 }

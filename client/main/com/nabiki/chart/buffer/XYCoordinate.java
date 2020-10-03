@@ -29,27 +29,27 @@
 package com.nabiki.chart.buffer;
 
 public interface XYCoordinate {
-    void setX(double... labels);
+  void setX(double... labels);
 
-    double[] getX();
+  double[] getX();
 
-    void setY(double... labels);
+  void setY(double... labels);
 
-    double[] getY();
+  double[] getY();
 
-    void setPreferredLabelCountX(int count);
+  void setPreferredLabelCountX(int count);
 
-    int getPreferredLabelCountX();
+  int getPreferredLabelCountX();
 
-    void setPreferredLabelCountY(int count);
+  void setPreferredLabelCountY(int count);
 
-    int getPreferredLabelCountY();
+  int getPreferredLabelCountY();
 
-    double[] getShowLabelX();
+  double[] getShowLabelX();
 
-    double[] getShowLabelY();
+  double[] getShowLabelY();
 
-    int getVisiblePixelX(double x, double axisMin, double axisMax);
+  int getVisiblePixelX(double x, double axisMin, double axisMax);
 
-    int getVisiblePixelY(double y, double axisMin, double axisMax);
+  int getVisiblePixelY(double y, double axisMin, double axisMax);
 }

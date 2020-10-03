@@ -32,65 +32,65 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public interface Canvas {
-    boolean isVisible(int x, int y);
+  boolean isVisible(int x, int y);
 
-    void setSize(int width, int height);
+  void setSize(int width, int height);
 
-    int[] getSize();
+  int[] getSize();
 
-    int[] getVisibleSize();
+  int[] getVisibleSize();
 
-    void setMargin(int top, int right, int bottom, int left);
+  void setMargin(int top, int right, int bottom, int left);
 
-    int[] getMargin();
+  int[] getMargin();
 
-    void drawLine(int x1, int y1, int x2, int y2);
+  void drawLine(int x1, int y1, int x2, int y2);
 
-    void drawString(String text, int x, int y);
+  void drawString(String text, int x, int y);
 
-    void drawRect(int x, int y, int width, int height);
+  void drawRect(int x, int y, int width, int height);
 
-    void fillRect(int x, int y, int width, int height);
+  void fillRect(int x, int y, int width, int height);
 
-    void drawVisibleLine(int x1, int y1, int x2, int y2);
+  void drawVisibleLine(int x1, int y1, int x2, int y2);
 
-    void drawVisibleString(String text, int x, int y);
+  void drawVisibleString(String text, int x, int y);
 
-    void drawVisibleRect(int x, int y, int width, int height);
+  void drawVisibleRect(int x, int y, int width, int height);
 
-    void fillVisibleRect(int x, int y, int width, int height);
+  void fillVisibleRect(int x, int y, int width, int height);
 
-    void setStroke(Stroke stroke);
+  void setStroke(Stroke stroke);
 
-    Stroke getStroke();
+  Stroke getStroke();
 
-    BufferedImage getBuffer();
+  BufferedImage getBuffer();
 
-    void showBox(boolean show);
+  void showBox(boolean show);
 
-    void setColor(Color color);
+  void setColor(Color color);
 
-    Color getColor();
+  Color getColor();
 
-    void setOffset(int offsetX, int offsetY);
+  void setOffset(int offsetX, int offsetY);
 
-    int[] getOffset();
+  int[] getOffset();
 
-    void paint();
+  void paint();
 
-    void clear();
+  void clear();
 
-    void dispose();
+  void dispose();
 
-    void setBackground(Color c);
+  void setBackground(Color c);
 
-    Color getBackground();
+  Color getBackground();
 
-    void setFont(Font font);
+  void setFont(Font font);
 
-    Font getFont();
+  Font getFont();
 
-    FontMetrics getFontMetrics(Font font);
+  FontMetrics getFontMetrics(Font font);
 
-    int getStringWidth(String text);
+  int getStringWidth(String text);
 }

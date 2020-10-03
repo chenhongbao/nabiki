@@ -31,16 +31,16 @@ package com.nabiki.chart.buffer;
 import java.awt.*;
 
 public class TextItem {
-    public final Object value;
-    public final Color color;
+  public final Object value;
+  public final Color color;
 
-    public TextItem(Object value) {
-        this.value = value;
-        this.color = DefaultStyles.FONT_FAIR_COLOR;
-    }
+  public TextItem(Object value) {
+    this.value = value;
+    this.color = DefaultStyles.FONT_FAIR_COLOR;
+  }
 
-    public TextItem(Object value, Color color) {
-        this.value = value;
-        this.color = color;
-    }
+  public TextItem(Object value, Color color) {
+    this.value = value;
+    this.color = color;
+  }
 }

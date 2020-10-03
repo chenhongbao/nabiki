@@ -34,73 +34,73 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 public abstract class ImagePanel extends JPanel {
-    private final Object sync = new Object();
-    private Image image;
+  private final Object sync = new Object();
+  private Image image;
 
-    public ImagePanel() {
-        prepare();
+  public ImagePanel() {
+    prepare();
+  }
+
+  public ImagePanel(Image img) {
+    this.image = img;
+    prepare();
+  }
+
+  protected void setImage(Image img) {
+    synchronized (this.sync) {
+      this.image = img;
     }
+  }
 
-    public ImagePanel(Image img) {
-        this.image = img;
-        prepare();
+  protected Image getImage() {
+    synchronized (this.sync) {
+      return this.image;
     }
+  }
 
-    protected void setImage(Image img) {
-        synchronized (this.sync) {
-            this.image = img;
+  @Override
+  public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    synchronized (this.sync) {
+      if (this.image != null)
+        g.drawImage(this.image, 0, 0, null);
+    }
+  }
+
+  protected abstract void onResize(Dimension newSize);
+
+  protected abstract void onShown(Dimension newSize);
+
+  protected abstract void onHidden(Dimension newSize);
+
+  private void prepare() {
+    super.addComponentListener(new ComponentAdapter() {
+      @Override
+      public void componentResized(ComponentEvent e) {
+        try {
+          onResize(e.getComponent().getSize());
+        } catch (Throwable th) {
+          th.printStackTrace();
         }
-    }
+      }
 
-    protected Image getImage() {
-        synchronized (this.sync) {
-            return this.image;
+      @Override
+      public void componentShown(ComponentEvent e) {
+        try {
+          onShown(e.getComponent().getSize());
+        } catch (Throwable th) {
+          th.printStackTrace();
         }
-    }
+      }
 
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        synchronized (this.sync) {
-            if (this.image != null)
-                g.drawImage(this.image, 0, 0, null);
+      @Override
+      public void componentHidden(ComponentEvent e) {
+        try {
+          onHidden(e.getComponent().getSize());
+        } catch (Throwable th) {
+          th.printStackTrace();
         }
-    }
-
-    protected abstract void onResize(Dimension newSize);
-
-    protected abstract void onShown(Dimension newSize);
-
-    protected abstract void onHidden(Dimension newSize);
-
-    private void prepare() {
-        super.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                try {
-                    onResize(e.getComponent().getSize());
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-            }
-
-            @Override
-            public void componentShown(ComponentEvent e) {
-                try {
-                    onShown(e.getComponent().getSize());
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                try {
-                    onHidden(e.getComponent().getSize());
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                }
-            }
-        });
-    }
+      }
+    });
+  }
 }

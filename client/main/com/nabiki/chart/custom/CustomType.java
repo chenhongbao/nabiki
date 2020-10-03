@@ -31,22 +31,22 @@ package com.nabiki.chart.custom;
 import java.awt.*;
 
 public class CustomType {
-    public final static int LINE = 0;
-    public final static int DOT = 1;
+  public final static int LINE = 0;
+  public final static int DOT = 1;
 
-    private final Color color;
-    private final int type;
+  private final Color color;
+  private final int type;
 
-    public CustomType(Color color, int type) {
-        this.color = color;
-        this.type = type;
-    }
+  public CustomType(Color color, int type) {
+    this.color = color;
+    this.type = type;
+  }
 
-    public Color getColor() {
-        return color;
-    }
+  public Color getColor() {
+    return color;
+  }
 
-    public int getType() {
-        return type;
-    }
+  public int getType() {
+    return type;
+  }
 }

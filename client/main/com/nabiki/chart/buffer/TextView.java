@@ -32,65 +32,65 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 public class TextView extends ImageXY {
-    public static final int HORIZONTAL = 0;
-    public static final int VERTICAL = 1;
+  public static final int HORIZONTAL = 0;
+  public static final int VERTICAL = 1;
 
-    private int orientation = VERTICAL;
-    private TextItem[] data = new TextItem[0];
+  private int orientation = VERTICAL;
+  private TextItem[] data = new TextItem[0];
 
-    public TextView(BufferedImage image) {
-        super(image);
+  public TextView(BufferedImage image) {
+    super(image);
+  }
+
+  public void setData(TextItem[] data) {
+    if (data != null)
+      this.data = Arrays.copyOf(data, data.length);
+  }
+
+  public void setOrientation(int orientation) {
+    this.orientation = orientation;
+  }
+
+  @Override
+  public void paint() {
+    for (int i = 0; i < data.length; ++i)
+      paintItem(i, data[i]);
+  }
+
+  private void paintItem(int index, TextItem item) {
+    var oldColor = getColor();
+    var oldFont = getFont();
+    setColor(item.color);
+    setFont(getFont().deriveFont(DefaultStyles.TEXTVIEW_FONT_SIZE));
+    if (orientation == VERTICAL)
+      drawVisibleString(
+          item.value.toString(),
+          0,
+          textY(index));
+    else
+      drawVisibleString(
+          item.value.toString(),
+          textX(index),
+          getFont().getSize());
+    setColor(oldColor);
+    setFont(oldFont);
+  }
+
+  private int textY(int index) {
+    var diffY = (int) (getFont().getSize()
+        * DefaultStyles.TEXTVIEW_FONT_LINESEP);
+    return getOffset()[1] + getMargin()[1] + diffY * index;
+  }
+
+  private int textX(int index) {
+    int w = 0;
+    if (index == 0) {
+      return getStringWidth(data[0].value.toString());
+    } else {
+      for (int i = 0; i < index - 1; ++i)
+        w += getStringWidth(data[i].value.toString())
+            + DefaultStyles.TEXTVIEW_FONT_BLANK_WIDTH;
     }
-
-    public void setData(TextItem[] data) {
-        if (data != null)
-            this.data = Arrays.copyOf(data, data.length);
-    }
-
-    public void setOrientation(int orientation) {
-        this.orientation = orientation;
-    }
-
-    @Override
-    public void paint() {
-        for (int i = 0; i < data.length; ++i)
-            paintItem(i, data[i]);
-    }
-
-    private void paintItem(int index, TextItem item) {
-        var oldColor = getColor();
-        var oldFont = getFont();
-        setColor(item.color);
-        setFont(getFont().deriveFont(DefaultStyles.TEXTVIEW_FONT_SIZE));
-        if (orientation == VERTICAL)
-            drawVisibleString(
-                    item.value.toString(),
-                    0,
-                    textY(index));
-        else
-            drawVisibleString(
-                    item.value.toString(),
-                    textX(index),
-                    getFont().getSize());
-        setColor(oldColor);
-        setFont(oldFont);
-    }
-
-    private int textY(int index) {
-        var diffY = (int) (getFont().getSize()
-                * DefaultStyles.TEXTVIEW_FONT_LINESEP);
-        return getOffset()[1] + getMargin()[1] + diffY * index;
-    }
-
-    private int textX(int index) {
-        int w = 0;
-        if (index == 0) {
-            return getStringWidth(data[0].value.toString());
-        } else {
-            for (int i = 0; i < index - 1; ++i)
-                w += getStringWidth(data[i].value.toString())
-                        + DefaultStyles.TEXTVIEW_FONT_BLANK_WIDTH;
-        }
-        return w;
-    }
+    return w;
+  }
 }

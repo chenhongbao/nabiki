@@ -28,16 +28,16 @@
 
 package com.nabiki.chart.exception;
 
-public class CanvasMarginOverflowException extends RuntimeException{
-    public CanvasMarginOverflowException(String message) {
-        super(message);
-    }
+public class CanvasMarginOverflowException extends RuntimeException {
+  public CanvasMarginOverflowException(String message) {
+    super(message);
+  }
 
-    public CanvasMarginOverflowException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public CanvasMarginOverflowException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public CanvasMarginOverflowException(Throwable cause) {
-        super(cause);
-    }
+  public CanvasMarginOverflowException(Throwable cause) {
+    super(cause);
+  }
 }

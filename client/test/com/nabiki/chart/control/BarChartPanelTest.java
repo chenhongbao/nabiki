@@ -48,10 +48,10 @@ public class BarChartPanelTest {
   @Test
   public void basic() {
 
-    var vars = new double[] {3.1, 5.0, 5.2, -4.2, 4.3, -5.0, 6.5, -8.5, 7.9};
+    var vars = new double[]{3.1, 5.0, 5.2, -4.2, 4.3, -5.0, 6.5, -8.5, 7.9};
 
-    Double[] line = new Double[] {3.1, 3.9, 3.7, 5.7, 3.0, 7.3, null, 5.4, 7.8};
-    Double[] dot = new Double[] {3.0, 4.9, 6.0, 7.7, 5.0, 3.3, 5.1, null, 4.5};
+    Double[] line = new Double[]{3.1, 3.9, 3.7, 5.7, 3.0, 7.3, null, 5.4, 7.8};
+    Double[] dot = new Double[]{3.0, 4.9, 6.0, 7.7, 5.0, 3.3, 5.1, null, 4.5};
 
     var sampleY = sampleGridY(vars);
 

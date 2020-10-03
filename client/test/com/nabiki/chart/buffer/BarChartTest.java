@@ -39,106 +39,106 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BarChartTest {
-    private double[] sampleGridY(double[] begin, double[] end) {
-        var sample = Arrays.copyOf(end, end.length);
-        sample[0] = Charts.max(Charts.max(begin), Charts.max(end));
-        sample[1] = Charts.min(Charts.min(begin), Charts.min(end));
-        return sample;
+  private double[] sampleGridY(double[] begin, double[] end) {
+    var sample = Arrays.copyOf(end, end.length);
+    sample[0] = Charts.max(Charts.max(begin), Charts.max(end));
+    sample[1] = Charts.min(Charts.min(begin), Charts.min(end));
+    return sample;
+  }
+
+  @Test
+  public void basic() {
+    var image = new BufferedImage(
+        500,
+        600,
+        BufferedImage.TYPE_INT_ARGB);
+
+    var begin = new double[]{3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
+    var end = new double[]{5.4, 6.0, 5.8, 4.5, 4.9, 6.5, 8.7, 5.5, 7.9};
+
+    var sampleY = sampleGridY(begin, end);
+
+    var chart = new BarChart(image);
+    chart.setOffset(100, 100);
+    chart.setMargin(20, 20, 20, 20);
+    chart.setSize(300, 400);
+    chart.setData(begin, end);
+    chart.setY(sampleY);
+
+    var x = new XAxis(image);
+    x.bindXY(chart);
+    x.bindCanvas(chart);
+
+    var y = new YAxis(image);
+    y.bindXY(chart);
+    y.bindCanvas(chart);
+
+    chart.paint();
+    x.paint();
+    y.paint();
+
+    try {
+      ImageIO.write(
+          image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\bar_chart_basic.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Test
-    public void basic() {
-        var image = new BufferedImage(
-                500,
-                600,
-                BufferedImage.TYPE_INT_ARGB);
+  private Map<Double, String> getLabels() {
+    var m = new HashMap<Double, String>();
+    m.put(0.0, "00:00");
+    m.put(1.0, "01:00");
+    m.put(2.0, "02:00");
+    m.put(3.0, "03:00");
+    m.put(4.0, "04:00");
+    m.put(5.0, "05:00");
+    m.put(6.0, "06:00");
+    m.put(7.0, "07:00");
+    m.put(8.0, "08:00");
+    return m;
+  }
 
-        var begin = new double[] {3.1, 5.0, 5.2, 4.2, 4.3, 5.0, 6.5, 8.5, 7.9};
-        var end = new double[] {5.4, 6.0, 5.8, 4.5, 4.9, 6.5, 8.7, 5.5, 7.9};
+  @Test
+  public void zero() {
+    var image = new BufferedImage(
+        500,
+        600,
+        BufferedImage.TYPE_INT_ARGB);
 
-        var sampleY = sampleGridY(begin, end);
+    var end = new double[]{5.4, 6.0, -5.8, 4.5, 0, -6.5, 8.7, -5.5, 7.9};
 
-        var chart = new BarChart(image);
-        chart.setOffset(100, 100);
-        chart.setMargin(20, 20, 20, 20);
-        chart.setSize(300, 400);
-        chart.setData(begin, end);
-        chart.setY(sampleY);
+    var sampleY = sampleGridY(end, end);
 
-        var x = new XAxis(image);
-        x.bindXY(chart);
-        x.bindCanvas(chart);
+    var chart = new BarChart(image);
+    chart.setOffset(100, 100);
+    chart.setMargin(20, 20, 20, 20);
+    chart.setSize(300, 400);
+    chart.setData(end);
+    chart.setY(sampleY);
 
-        var y = new YAxis(image);
-        y.bindXY(chart);
-        y.bindCanvas(chart);
+    var x = new XAxis(image);
+    x.bindXY(chart);
+    x.bindCanvas(chart);
+    x.mapLabels(getLabels());
 
-        chart.paint();
-        x.paint();
-        y.paint();
+    var y = new YAxis(image);
+    y.bindXY(chart);
+    y.bindCanvas(chart);
 
-        try {
-            ImageIO.write(
-                    image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\bar_chart_basic.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    chart.paint();
+    x.paint();
+    y.paint();
+
+    try {
+      ImageIO.write(
+          image,
+          "png",
+          new File("C:\\Users\\chenh\\Desktop\\bar_chart_zero.png"));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    private Map<Double, String> getLabels() {
-        var m = new HashMap<Double, String>();
-        m.put(0.0, "00:00");
-        m.put(1.0, "01:00");
-        m.put(2.0, "02:00");
-        m.put(3.0, "03:00");
-        m.put(4.0, "04:00");
-        m.put(5.0, "05:00");
-        m.put(6.0, "06:00");
-        m.put(7.0, "07:00");
-        m.put(8.0, "08:00");
-        return m;
-    }
-
-    @Test
-    public void zero() {
-        var image = new BufferedImage(
-                500,
-                600,
-                BufferedImage.TYPE_INT_ARGB);
-
-        var end = new double[] {5.4, 6.0, -5.8, 4.5, 0, -6.5, 8.7, -5.5, 7.9};
-
-        var sampleY = sampleGridY(end, end);
-
-        var chart = new BarChart(image);
-        chart.setOffset(100, 100);
-        chart.setMargin(20, 20, 20, 20);
-        chart.setSize(300, 400);
-        chart.setData(end);
-        chart.setY(sampleY);
-
-        var x = new XAxis(image);
-        x.bindXY(chart);
-        x.bindCanvas(chart);
-        x.mapLabels(getLabels());
-
-        var y = new YAxis(image);
-        y.bindXY(chart);
-        y.bindCanvas(chart);
-
-        chart.paint();
-        x.paint();
-        y.paint();
-
-        try {
-            ImageIO.write(
-                    image,
-                    "png",
-                    new File("C:\\Users\\chenh\\Desktop\\bar_chart_zero.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

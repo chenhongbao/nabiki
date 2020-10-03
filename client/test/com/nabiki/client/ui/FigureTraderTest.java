@@ -72,7 +72,7 @@ public class FigureTraderTest {
 
   List<CCandle> loadFakeCandles(Path path) {
     var r = new LinkedList<CCandle>();
-    try  {
+    try {
       var br = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile())));
       br.readLine();
       String line;
@@ -84,6 +84,7 @@ public class FigureTraderTest {
     }
     return r;
   }
+
   void sleep(int seconds) {
     try {
       TimeUnit.SECONDS.sleep(seconds);
