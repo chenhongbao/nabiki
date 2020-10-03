@@ -164,7 +164,7 @@ public class TickProvider {
   }
 
   public void init() {
-    if (this.api != null) {
+    if (isInit()) {
       throw new IllegalStateException("md duplicated init");
     }
     this.api = CThostFtdcMdApi.CreateFtdcMdApi(

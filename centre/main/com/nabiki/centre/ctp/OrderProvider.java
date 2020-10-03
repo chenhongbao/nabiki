@@ -196,7 +196,7 @@ public class OrderProvider {
    * Initialize connection to remote counter.
    */
   public void init() {
-    if (api != null) {
+    if (isInit()) {
       throw new IllegalStateException("trader duplicated init");
     }
     this.api = CThostFtdcTraderApi
