@@ -35,6 +35,8 @@ import java.util.Arrays;
 public class BarChart extends GridXY {
     private double[] begin = new double[0], end = new double[0];
 
+    public BarChart() {}
+
     public BarChart(BufferedImage image) {
         super(image);
     }
@@ -46,8 +48,7 @@ public class BarChart extends GridXY {
     }
 
     public void setData(double[] vars) {
-        this.begin = new double[vars.length];
-        this.end = Arrays.copyOf(vars, vars.length);
+        setData(new double[vars.length], Arrays.copyOf(vars, vars.length));
     }
 
     @Override

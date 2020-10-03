@@ -28,23 +28,30 @@
 
 package com.nabiki.chart.control;
 
-import com.nabiki.chart.buffer.StickChart;
+import com.nabiki.chart.buffer.BarChart;
 
-public class StickChartPanel extends ChartPanel {
-    private final StickChart stickChart = new StickChart();
-    public StickChartPanel() {
-        setWorld(stickChart);
-    }
+public class BarChartPanel extends ChartPanel {
+  private final BarChart barChart = new BarChart();
 
-    public void setData(double[] open, double[] high, double[] low, double[] close) {
-        synchronized (stickChart) {
-            stickChart.setData(open, high, low, close);
-        }
-    }
+  public BarChartPanel() {
+    setWorld(barChart);
+  }
 
-    public void setY(double... y) {
-        synchronized (stickChart) {
-            stickChart.setY(y);
-        }
+  public void setData(double[] beg, double[] end) {
+    synchronized (barChart) {
+      barChart.setData(beg, end);
     }
+  }
+
+  public void setData(double[] vars) {
+    synchronized (barChart) {
+      barChart.setData(vars);
+    }
+  }
+
+  public void setY(double... y) {
+    synchronized (barChart) {
+      barChart.setY(y);
+    }
+  }
 }

@@ -28,23 +28,51 @@
 
 package com.nabiki.chart.control;
 
-import com.nabiki.chart.buffer.StickChart;
+import com.nabiki.chart.buffer.Charts;
+import com.nabiki.chart.custom.CustomType;
+import org.junit.Test;
 
-public class StickChartPanel extends ChartPanel {
-    private final StickChart stickChart = new StickChart();
-    public StickChartPanel() {
-        setWorld(stickChart);
-    }
+import javax.swing.*;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 
-    public void setData(double[] open, double[] high, double[] low, double[] close) {
-        synchronized (stickChart) {
-            stickChart.setData(open, high, low, close);
-        }
-    }
+public class BarChartPanelTest {
+  private double[] sampleGridY(double[] vars) {
+    var sample = Arrays.copyOf(vars, vars.length);
+    sample[0] = Charts.max(vars);
+    sample[1] = Math.min(Charts.min(vars), 0.0D);
+    return sample;
+  }
 
-    public void setY(double... y) {
-        synchronized (stickChart) {
-            stickChart.setY(y);
-        }
+  @Test
+  public void basic() {
+
+    var vars = new double[] {3.1, 5.0, 5.2, -4.2, 4.3, -5.0, 6.5, -8.5, 7.9};
+
+    Double[] line = new Double[] {3.1, 3.9, 3.7, 5.7, 3.0, 7.3, null, 5.4, 7.8};
+    Double[] dot = new Double[] {3.0, 4.9, 6.0, 7.7, 5.0, 3.3, 5.1, null, 4.5};
+
+    var sampleY = sampleGridY(vars);
+
+    var chart = new BarChartPanel();
+
+    chart.setData(vars);
+    chart.setY(sampleY);
+
+    chart.setCustomData("line", new CustomType(Color.BLACK, CustomType.LINE), line);
+    chart.setCustomData("dot", new CustomType(Color.MAGENTA, CustomType.DOT), dot);
+
+    var dialog = new JDialog();
+
+    dialog.add(chart);
+    dialog.setSize(new Dimension(500, 600));
+    dialog.setVisible(true);
+
+    try {
+      new CountDownLatch(1).await();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+  }
 }
