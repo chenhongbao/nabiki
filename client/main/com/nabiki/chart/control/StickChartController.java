@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.*;
 
 public class StickChartController implements ViewController {
-    class CustomStick {
+    static class CustomStick {
         double open, high, low, close;
         String label = null;
         Map<String, Double> customs = new HashMap<>();
@@ -61,17 +61,19 @@ public class StickChartController implements ViewController {
         this.chart = chart;
     }
 
+    @Override
     public void createLine(String name, Color color) {
         var type = new CustomType(color, CustomType.LINE);
         this.types.put(name, type);
     }
 
+    @Override
     public void createDot(String name, Color color) {
         var type = new CustomType(color, CustomType.DOT);
         this.types.put(name, type);
     }
 
-    public void append(double open, double high, double low, double close, String xLabel) {
+    public void appendStick(double open, double high, double low, double close, String xLabel) {
         var stick = new CustomStick();
         stick.open = open;
         stick.high = high;
@@ -83,7 +85,8 @@ public class StickChartController implements ViewController {
         setCursor();
     }
 
-    public void append(String name, Double value) {
+    @Override
+    public void appendCustom(String name, Double value) {
         if (this.sticks.size() == 0)
             throw new NoStickException("no stick to append to");
         this.sticks.get(this.sticks.size() - 1).customs.put(name, value);

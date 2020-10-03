@@ -28,11 +28,15 @@
 
 package com.nabiki.client.ui;
 
+import com.nabiki.chart.control.StickChartController;
+
 import java.awt.*;
 import java.util.Set;
 
 public interface Figure {
-  void setFigure(int figureID, String instrumentID, int minute);
+  void setStickFigure(int figureID, String instrumentID, int minute);
+
+  StickChartController getStickController(int figureID);
 
   void setBarFigure(int figureID, String instrumentID, int minute);
 
@@ -50,7 +54,7 @@ public interface Figure {
 
   void setDot(int figureID, String name, Color color);
 
-  void stick(int figureID, double open, double high, double low, double close, String xLabel);
+  void bar(int figureID, double value, String xLabel);
 
   void draw(int figureID, String name, Double value);
 

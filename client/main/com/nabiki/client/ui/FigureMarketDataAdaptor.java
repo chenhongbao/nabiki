@@ -52,9 +52,10 @@ public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
   public void onCandle(CCandle candle) {
     try {
       for (var fid : figure.getStickFigureIDs()) {
-        if (figure.getBoundInstrumentID(fid).compareTo(candle.InstrumentID) == 0
-            && figure.getBoundMinute(fid) == candle.Minute) {
-          figure.stick(fid,
+        var id = figure.getBoundInstrumentID(fid);
+        var m = figure.getBoundMinute(fid);
+        if (id.compareTo(candle.InstrumentID) == 0 && m == candle.Minute) {
+          figure.getStickController(fid).appendStick(
               candle.OpenPrice,
               candle.HighestPrice,
               candle.LowestPrice,

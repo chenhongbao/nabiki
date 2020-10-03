@@ -28,7 +28,15 @@
 
 package com.nabiki.chart.control;
 
+import java.awt.*;
+
 public interface ViewController {
+    void createLine(String name, Color color);
+
+    void createDot(String name, Color color);
+
+    void appendCustom(String name, Double value);
+
     void forward(int count);
 
     void backward(int count);

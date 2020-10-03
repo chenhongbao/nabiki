@@ -123,13 +123,6 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     throw new IllegalArgumentException("figure(" + figureID + ") not found");
   }
 
-  private void checkZeroValue(int figureID, String name, double value) {
-    if (value == 0.0D)
-      System.err.printf(
-          "figure %d, plot %s, append zero value, possibly error%n",
-          figureID, name);
-  }
-
   private void checkFigureID(int id) {
     if (stickFrames.containsKey(id) || barFrames.containsKey(id)) {
       throw new RuntimeException("figure(" + id + ") already exists");
@@ -138,41 +131,25 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public void setLine(int figureID, String name, Color color) {
-    var frame = getStickFrame(figureID);
-    if (frame != null) {
-      ((StickChartController) frame.getChartController()).createLine(name, color);
-      return;
-    }
-    frame = getBarFrame(figureID);
-    if (frame != null) {
-      ((BarChartController) frame.getChartController()).createLine(name, color);
-      return;
-    }
-    throw new IllegalArgumentException("figure(" + figureID + ") not found");
+    getFrame(figureID).getChartController().createLine(name, color);
   }
 
   @Override
   public void setDot(int figureID, String name, Color color) {
-    var frame = getStickFrame(figureID);
-    if (frame != null) {
-      ((StickChartController) frame.getChartController()).createDot(name, color);
-      return;
-    }
-    frame = getBarFrame(figureID);
-    if (frame != null) {
-      ((BarChartController) frame.getChartController()).createDot(name, color);
-      return;
-    }
-    throw new IllegalArgumentException("figure(" + figureID + ") not found");
+    getFrame(figureID).getChartController().createDot(name, color);
   }
 
   @Override
-  public void stick(int figureID, double open, double high, double low, double close, String xLabel) {
-    checkZeroValue(figureID, "stick", open * high * low * close);
+  public StickChartController getStickController(int figureID) {
+    return (StickChartController) getStickFrame(figureID).getChartController();
+  }
+
+  @Override
+  public void bar(int figureID, double value, String xLabel) {
     synchronized (updated) {
-      var frame = getStickFrame(figureID);
+      var frame = getBarFrame(figureID);
       if (frame != null) {
-        ((StickChartController) frame.getChartController()).append(open, high, low, close, xLabel);
+        ((BarChartController) frame.getChartController()).appendBar(value, xLabel);
         updated.set(true);
       }
       throw new IllegalArgumentException("figure(" + figureID + ") not found");
@@ -181,21 +158,8 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public void draw(int figureID, String name, Double value) {
-    checkZeroValue(figureID, name, value);
     synchronized (updated) {
-      var frame = getStickFrame(figureID);
-      if (frame != null) {
-        ((StickChartController) frame.getChartController()).append(name, value);
-        updated.set(true);
-        return;
-      }
-      frame = getBarFrame(figureID);
-      if (frame != null) {
-        ((BarChartController) frame.getChartController()).append(name, value);
-        updated.set(true);
-        return;
-      }
-      throw new IllegalArgumentException("figure(" + figureID + ") not found");
+      getFrame(figureID).getChartController().appendCustom(name, value);
     }
   }
 
@@ -218,7 +182,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   }
 
   @Override
-  public void setFigure(int figureID, String instrumentID, int minute) {
+  public void setStickFigure(int figureID, String instrumentID, int minute) {
     checkFigureID(figureID);
     var frame = new ChartMainFrame(logDlg, new StickChartPanel());
     frame.setInstrumentID(instrumentID);

@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.*;
 
 public class BarChartController implements ViewController {
-  class CustomBar {
+  static class CustomBar {
     double value;
     String label = null;
     Map<String, Double> customs = new HashMap<>();
@@ -61,17 +61,19 @@ public class BarChartController implements ViewController {
     this.chart = chart;
   }
 
+  @Override
   public void createLine(String name, Color color) {
     var type = new CustomType(color, CustomType.LINE);
     this.types.put(name, type);
   }
 
+  @Override
   public void createDot(String name, Color color) {
     var type = new CustomType(color, CustomType.DOT);
     this.types.put(name, type);
   }
 
-  public void append(double value, String xLabel) {
+  public void appendBar(double value, String xLabel) {
     var bar = new CustomBar();
     bar.value = value;
     bar.label = xLabel;
@@ -80,7 +82,8 @@ public class BarChartController implements ViewController {
     setCursor();
   }
 
-  public void append(String name, Double value) {
+  @Override
+  public void appendCustom(String name, Double value) {
     if (this.bars.size() == 0)
       throw new NoStickException("no stick to append to");
     this.bars.get(this.bars.size() - 1).customs.put(name, value);
