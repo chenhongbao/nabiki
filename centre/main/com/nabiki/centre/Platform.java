@@ -117,8 +117,16 @@ public class Platform {
   }
 
   private void server() throws IOException {
-    String host = this.global.getArgument("--host");
-    int port = Integer.parseInt(this.global.getArgument("--port"));
+    String listen = this.global.getArgument(Global.CMD_LISTEN_PREFIX);
+    int idx = listen.indexOf(":");
+    String host = null;
+    int port;
+    if (idx >= 0) {
+      host = listen.substring(0, idx).trim();
+      port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
+    } else {
+      port = Integer.parseInt(listen.trim());
+    }
     // Server.
     var server = IOP.createServer();
     // Install candle writer.
@@ -139,7 +147,7 @@ public class Platform {
     var msgWriter = new MsgInOutWriter(global);
     server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
     server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
-    if (host == null || host.trim().length() == 0)
+    if (host == null || host.length() == 0)
       server.bind(new InetSocketAddress(port));
     else
       server.bind(new InetSocketAddress(host, port));
@@ -179,8 +187,8 @@ public class Platform {
   private void setArguments(String[] args) {
     var prefix = new String[]{
         Global.CMD_ROOT_PREFIX,
-        Global.CMD_HOST_PREFIX,
-        Global.CMD_PORT_PREFIX,
+        Global.CMD_LISTEN_PREFIX,
+        Global.CMD_LOGSVR_PREFIX,
         Global.CMD_START_NOW_PREFIX
     };
     for (var pre : prefix) {
@@ -225,24 +233,19 @@ public class Platform {
   }
 
   private static void printHelp() {
-    System.out.println("javaw[java] -Djava.library.path=<path-to-DLL> -jar <path-to-jar> --port <port> " +
-        "[--root <root-dir>] [--host <address-to-listen>] [--start-now <true-or-false>]");
+    System.out.println("javaw[java] -Djava.library.path=<path-to-DLL> -jar <path-to-jar> <options>");
     System.out.println();
-    System.out.println("<path-to-DLL>    Path to dynamic linked library required by the app.");
-    System.out.println("                 It can be absolute path or relative path. Quoted with");
-    System.out.println("                 (\") if necessary.");
-    System.out.println("<path-to-jar>    Path to this app's jar.");
-    System.out.println("<port>           Port to listen on.");
-    System.out.println("<root-dir>       Path taken as root directory for all configuration");
-    System.out.println("                 and files. Quoted with (\") if necessary. If this option");
-    System.out.println("                 is undefined, it is the CWD of java application.");
-    System.out.println("<address-to-listen>");
-    System.out.println("                 The address that this server is bound to. If this");
-    System.out.println("                 option is undefined, server is bound to any local");
-    System.out.println("                 address, which usually includes both IPv4 and IPv6.");
-    System.out.println("<true-or-false>  true for server to initiate resources right after it ");
-    System.out.println("                 starts, and false for server to wait until market opens.");
-    System.out.println("                 If this option is undefined, it is like false.");
+    System.out.println("Options:");
+    System.out.println();
+    System.out.println("--root          The root directory to keep all files.");
+    System.out.println("--listen        Local inet address to listen on for client inputs. The address");
+    System.out.println("                can be port-only which listen on any inet address, or bind to");
+    System.out.println("                specific local address and port. The addresses are in normal");
+    System.out.println("                text format like 9038 or 127.0.0.1:9038");
+    System.out.println("--log-server    Logging server inet address specified in normal text format like");
+    System.out.println("                9039 or 127.0.0.1:9039");
+    System.out.println("--start-now     true if the system is initiated right after this command, otherwise");
+    System.out.println("                it starts at specified time.");
   }
 
   public static void main(String[] args) {

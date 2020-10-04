@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.logging.SocketHandler;
 
 public class GlobalConfig {
   public static String ROOT_PATH;
@@ -387,24 +388,44 @@ public class GlobalConfig {
     if (Global.logger == null) {
       // Get logging directory.
       String fp;
-      var iter = GLOBAL.getRootDirectory().recursiveGet("dir.log")
-          .iterator();
-      if (!iter.hasNext())
+      var iter = GLOBAL.getRootDirectory().recursiveGet("dir.log").iterator();
+      if (!iter.hasNext()) {
         fp = "system.log";
-      else
+      } else {
         fp = Path.of(iter.next().path().toString(), "system.log")
             .toAbsolutePath().toString();
-
+      }
+      Global.logger = Logger.getLogger("com.nabiki.centre");
+      Global.logger.setUseParentHandlers(false);
       try {
-        // File and format.
+        // File handler and format.
         var fh = new FileHandler(fp, true);
         fh.setFormatter(new SimpleFormatter());
-        // Get logger with GLOBAL's name.
-        Global.logger = Logger.getLogger(Global.class.getCanonicalName());
         Global.logger.addHandler(fh);
-        Global.logger.setUseParentHandlers(false);
-      } catch (IOException e) {
-        Global.logger = Logger.getGlobal();
+      } catch (Throwable th) {
+        System.err.println("fail init file logging, " + th.getMessage());
+      }
+      try {
+        // Socket handler.
+        String listen = GLOBAL.getArgument(Global.CMD_LISTEN_PREFIX);
+        int idx = listen.indexOf(":");
+        String host = null;
+        int port;
+        if (idx >= 0) {
+          host = listen.substring(0, idx).trim();
+          port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
+        } else {
+          port = Integer.parseInt(listen.trim());
+        }
+        SocketHandler sh;
+        if (host.length() > 0) {
+          sh = new SocketHandler(host, port);
+        } else {
+          sh = new SocketHandler("localhost", port);
+        }
+        Global.logger.addHandler(sh);
+      } catch (Throwable th) {
+        System.err.println("fail init socket logging, " + th.getMessage());
       }
     }
   }

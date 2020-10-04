@@ -64,8 +64,8 @@ public class Global {
 
   // Constants
   public static final String CMD_ROOT_PREFIX = "--root";
-  public static final String CMD_HOST_PREFIX = "--host";
-  public static final String CMD_PORT_PREFIX = "--port";
+  public static final String CMD_LISTEN_PREFIX = "--listen";
+  public static final String CMD_LOGSVR_PREFIX = "--log-server";
   public static final String CMD_START_NOW_PREFIX = "--start-now";
 
   static Logger logger;
