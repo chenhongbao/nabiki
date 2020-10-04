@@ -118,6 +118,9 @@ public class Platform {
 
   private void server() throws IOException {
     String listen = this.global.getArgument(Global.CMD_LISTEN_PREFIX);
+    if (listen == null || listen.trim().length() == 0) {
+      throw new IllegalArgumentException("no listen address, need --listen option");
+    }
     int idx = listen.indexOf(":");
     String host = null;
     int port;

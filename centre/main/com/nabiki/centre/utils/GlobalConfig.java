@@ -407,23 +407,25 @@ public class GlobalConfig {
       }
       try {
         // Socket handler.
-        String listen = GLOBAL.getArgument(Global.CMD_LISTEN_PREFIX);
-        int idx = listen.indexOf(":");
-        String host = null;
-        int port;
-        if (idx >= 0) {
-          host = listen.substring(0, idx).trim();
-          port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
-        } else {
-          port = Integer.parseInt(listen.trim());
+        String listen = GLOBAL.getArgument(Global.CMD_LOGSVR_PREFIX);
+        if (listen != null && listen.trim().length() > 0) {
+          int idx = listen.indexOf(":");
+          String host = null;
+          int port;
+          if (idx >= 0) {
+            host = listen.substring(0, idx).trim();
+            port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
+          } else {
+            port = Integer.parseInt(listen.trim());
+          }
+          SocketHandler sh;
+          if (host.length() > 0) {
+            sh = new SocketHandler(host, port);
+          } else {
+            sh = new SocketHandler("localhost", port);
+          }
+          Global.logger.addHandler(sh);
         }
-        SocketHandler sh;
-        if (host.length() > 0) {
-          sh = new SocketHandler(host, port);
-        } else {
-          sh = new SocketHandler("localhost", port);
-        }
-        Global.logger.addHandler(sh);
       } catch (Throwable th) {
         System.err.println("fail init socket logging, " + th.getMessage());
       }
