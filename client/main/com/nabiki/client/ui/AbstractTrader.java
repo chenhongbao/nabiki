@@ -40,6 +40,7 @@ import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.logging.SocketHandler;
 
 public abstract class AbstractTrader implements Trader {
   private TradeClient client;
@@ -76,6 +77,15 @@ public abstract class AbstractTrader implements Trader {
 
   protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
     this.traderAdaptor = adaptor;
+  }
+
+  @Override
+  public void setLoggingServer(String host, int port) {
+    try {
+      logger.addHandler(new SocketHandler(host, port));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   MarketDataTraderAdaptor getDefaultAdaptor() {

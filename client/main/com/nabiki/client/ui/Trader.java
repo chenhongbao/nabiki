@@ -67,6 +67,8 @@ public interface Trader {
 
   Logger getLogger();
 
+  void setLoggingServer(String host, int port);
+
   TradeClient getClient();
 
   void setClient(TradeClient client);
