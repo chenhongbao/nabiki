@@ -84,7 +84,11 @@ public class SAXHandler extends DefaultHandler {
     } else if (element.equals("thread")) {
       record.setThreadID(Integer.parseInt(String.valueOf(ch, start, length)));
     } else if (element.equals("message")) {
-      record.setMessage(String.valueOf(ch, start, length));
+      var prev = record.getMessage();
+      if (prev == null) {
+        prev = "";
+      }
+      record.setMessage(prev + String.valueOf(ch, start, length));
     }
   }
 

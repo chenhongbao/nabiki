@@ -31,13 +31,7 @@ package com.nabiki.log.server;
 import com.nabiki.log.Main;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.time.LocalDateTime;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-import java.util.logging.SocketHandler;
 
 public class ServerTest {
 
@@ -51,6 +45,7 @@ public class ServerTest {
 
   @Test
   public void basic() {
+    /*
     new Thread(() -> {
       try {
         sleep(1, TimeUnit.SECONDS);
@@ -83,6 +78,7 @@ public class ServerTest {
         e.printStackTrace();
       }
     }).start();
+    */
 
     Main.main(new String[]{
         "--portal",
