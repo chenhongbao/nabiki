@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Implementation-Title: Nabiki-Log
+Implementation-Vendor: Nabiki Inc.
+Implementation-Vendor-Id: com.nabiki
+Implementation-Version: 1.2.0-RC
+Main-Class: com.nabiki.log.Main
+
