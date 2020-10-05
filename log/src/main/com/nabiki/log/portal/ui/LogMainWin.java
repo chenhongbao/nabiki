@@ -199,8 +199,9 @@ public class LogMainWin {
 				display.reset();
 				filterBtn.setText("\u505C\u6B62");
 			} else {
-				filter.enable(false);
 				enableFilterUI(true);
+				filter.enable(false);
+				display.reset();
 				filterBtn.setText("\u7B5B\u9009");
 			}
 		});

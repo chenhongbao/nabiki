@@ -58,10 +58,6 @@ public class LogDisplay {
     }
   }
 
-  public void enabled(boolean b) {
-    enabled.set(b);
-  }
-
   public void append(LogRecord record) {
     logs.add(record);
     if (enabled.get() && filter.passed(record)) {
