@@ -30,13 +30,30 @@ package com.nabiki.log;
 
 import com.nabiki.log.portal.ui.LogMainWin;
 import com.nabiki.log.server.Server;
+import com.nabiki.log.x.StdPrintStream;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
   private static final ExecutorService es = Executors.newCachedThreadPool();
+
+  private static void prepareStd() {
+    try {
+      var dir = Path.of(".log");
+      if (!dir.toFile().exists() || !dir.toFile().isDirectory()) {
+        Files.createDirectories(dir);
+      }
+      StdPrintStream.setErr(Path.of(dir.toString(), "log.err.log"));
+      StdPrintStream.setOut(Path.of(dir.toString(), "log.out.log"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   private static String getOption(String prefix, String[] args) {
     if (args.length < 1) {
@@ -106,6 +123,7 @@ public class Main {
       printHelp(null);
       return;
     }
+    prepareStd();
     if (getOption("--portal", args) != null) {
       es.submit(LogMainWin::work);
     }
