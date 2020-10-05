@@ -194,8 +194,14 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     frame.setInstrumentID(instrumentID);
     frame.setMinute(minute);
     frame.setTitle(instrumentID + " - " + minute + "m");
-    frame.setVisible(true);
     stickFrames.put(figureID, frame);
+    EventQueue.invokeLater(() -> {
+      try {
+        frame.setVisible(true);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
   }
 
   @Override
