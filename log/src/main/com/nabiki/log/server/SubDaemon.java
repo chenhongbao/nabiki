@@ -59,14 +59,12 @@ public class SubDaemon implements Runnable {
       var iterator = clients.iterator();
       while (iterator.hasNext()) {
         var c = iterator.next();
-        if (c.isOutputShutdown()) {
-          iterator.remove();
-          continue;
-        }
         try {
           c.getOutputStream().write(m.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-          e.printStackTrace();
+          /* Don't print stack trace here, because it is very common to close
+           * connection, and server catches io exception. */
+          iterator.remove();
         }
       }
     }
@@ -76,7 +74,7 @@ public class SubDaemon implements Runnable {
   public void run() {
     try {
       startRecv();
-      for (;;) {
+      for (; ; ) {
         try {
           send(queue.take());
         } catch (Throwable th) {

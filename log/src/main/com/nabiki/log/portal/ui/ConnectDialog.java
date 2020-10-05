@@ -120,6 +120,7 @@ public class ConnectDialog extends JDialog {
 				setVisible(false);
 			} else {
 				source.close();
+				addressField.setEnabled(true);
 				connBtn.setText("\u8FDE\u63A5");
 				setVisible(true);
 			}
