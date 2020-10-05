@@ -61,7 +61,7 @@ public class AccountPanel extends JPanel {
     JScrollPane accountScrollPane = new JScrollPane(accountTable);
     sl_accountPanel.putConstraint(SpringLayout.NORTH, accountScrollPane, 50, SpringLayout.NORTH, this);
     sl_accountPanel.putConstraint(SpringLayout.WEST, accountScrollPane, 10, SpringLayout.WEST, this);
-    sl_accountPanel.putConstraint(SpringLayout.SOUTH, accountScrollPane, -220, SpringLayout.SOUTH, this);
+    sl_accountPanel.putConstraint(SpringLayout.SOUTH, accountScrollPane, 265, SpringLayout.NORTH, this);
     sl_accountPanel.putConstraint(SpringLayout.EAST, accountScrollPane, -10, SpringLayout.EAST, this);
     accountScrollPane.setViewportBorder(null);
     super.add(accountScrollPane);
@@ -185,7 +185,7 @@ public class AccountPanel extends JPanel {
     sellOpenBtn.setForeground(Color.WHITE);
     sellOpenBtn.setBackground(new Color(0, 128, 0));
     sl_accountPanel.putConstraint(SpringLayout.WEST, sellOpenBtn, 0, SpringLayout.WEST, accountScrollPane);
-    sl_accountPanel.putConstraint(SpringLayout.SOUTH, sellOpenBtn, -10, SpringLayout.SOUTH, this);
+    sl_accountPanel.putConstraint(SpringLayout.SOUTH, sellOpenBtn, 50, SpringLayout.SOUTH, buyOpenBtn);
     sl_accountPanel.putConstraint(SpringLayout.EAST, sellOpenBtn, 100, SpringLayout.WEST, this);
     super.add(sellOpenBtn);
 

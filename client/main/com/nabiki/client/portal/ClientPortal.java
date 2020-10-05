@@ -105,7 +105,7 @@ public class ClientPortal extends JFrame {
   private void setFrameSize() {
     var size = Toolkit.getDefaultToolkit().getScreenSize();
     var w = Math.min(1200, size.width);
-    var h = Math.min(900, size.width);
+    var h = Math.min(590, size.width);
     var x = (size.width - w) / 2;
     var y = (size.height - h) / 2;
     setBounds(x, y, w, h);
