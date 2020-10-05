@@ -39,11 +39,13 @@ import java.util.concurrent.TimeUnit;
 public class OrderActioner extends Updater implements Runnable {
   private final TradeClient client;
   private final OrderUpdater updater;
+  private final JComponent owner;
   private Thread daemon;
   private String orderID;
   private JButton src, rel;
 
-  OrderActioner(TradeClient client, OrderUpdater updater) {
+  OrderActioner(JComponent owner, TradeClient client, OrderUpdater updater) {
+    this.owner = owner;
     this.client = client;
     this.updater = updater;
   }
@@ -95,6 +97,6 @@ public class OrderActioner extends Updater implements Runnable {
   }
 
   private void showMsg(String msg) {
-    MessageDialog.showDefault(msg);
+    JOptionPane.showMessageDialog(owner, msg);
   }
 }

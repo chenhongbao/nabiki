@@ -55,7 +55,7 @@ public class QueryOrderPanel extends JPanel {
     orderUpdater = new OrderUpdater(orderTable, client);
     orderUpdater.start();
 
-    orderActioner = new OrderActioner(client, orderUpdater);
+    orderActioner = new OrderActioner(this, client, orderUpdater);
     orderActioner.start();
 
     orderScrollPane.setViewportView(orderTable);

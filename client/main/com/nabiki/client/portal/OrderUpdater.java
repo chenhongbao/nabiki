@@ -254,6 +254,6 @@ public class OrderUpdater extends Updater implements Runnable {
   }
 
   private void showMsg(String msg) {
-    MessageDialog.showDefault(msg);
+    JOptionPane.showMessageDialog(table, msg);
   }
 }

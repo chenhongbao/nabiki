@@ -139,7 +139,7 @@ public class AccountUpdater extends Updater implements Runnable {
   }
 
   private void showMsg(String msg) {
-    MessageDialog.showDefault(msg);
+    JOptionPane.showMessageDialog(table, msg);
   }
 
   private void setupTable() {
