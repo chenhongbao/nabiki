@@ -32,8 +32,10 @@ import com.nabiki.log.portal.ui.LogMainWin;
 import com.nabiki.log.server.Server;
 import com.nabiki.log.x.StdPrintStream;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +55,8 @@ public class Main {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    // Check default charset.
+    System.out.println("default charset: " + Charset.defaultCharset().name());
   }
 
   private static String getOption(String prefix, String[] args) {
@@ -70,7 +74,12 @@ public class Main {
     } else if (i == args.length - 1) {
       return "";
     } else {
-      return args[i + 1];
+      var next = args[i + 1];
+      if (next.startsWith("--")) {
+        return "";
+      } else {
+        return next;
+      }
     }
   }
 
@@ -124,10 +133,15 @@ public class Main {
       return;
     }
     prepareStd();
+    var serverOpt = getOption("--server", args);
     if (getOption("--portal", args) != null) {
-      es.submit(LogMainWin::work);
+      if (serverOpt != null) {
+        LogMainWin.work(JFrame.DO_NOTHING_ON_CLOSE);
+      } else {
+        LogMainWin.work(JFrame.DISPOSE_ON_CLOSE);
+      }
     }
-    if (getOption("--server", args) != null) {
+    if (serverOpt != null) {
       runServer(args);
     }
   }

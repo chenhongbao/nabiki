@@ -57,10 +57,10 @@ public class LogMainWin {
 	/**
 	 * Launch the application.
 	 */
-	public static void work() {
+	public static void work(int onClose) {
 		EventQueue.invokeLater(() -> {
 			try {
-				LogMainWin window = new LogMainWin();
+				LogMainWin window = new LogMainWin(onClose);
 				window.frame.setVisible(true);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -71,8 +71,8 @@ public class LogMainWin {
 	/**
 	 * Create the application.
 	 */
-	public LogMainWin() {
-		initialize();
+	public LogMainWin(int onClose) {
+		initialize(onClose);
 		core();
 	}
 
@@ -86,11 +86,11 @@ public class LogMainWin {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize(int onClose) {
 		frame = new JFrame();
 		frame.setTitle("\u672A\u8FDE\u63A5");
 		frame.setBounds(100, 100, 900, 600);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(onClose);
 		
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
