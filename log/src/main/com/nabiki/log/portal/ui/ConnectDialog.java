@@ -39,7 +39,7 @@ public class ConnectDialog extends JDialog {
 	private final JPanel contentPanel = new JPanel();
 	private final JTextField addressField;
 	private final JButton connBtn;
-
+	private final JFrame frame;
 	private final LogSource source;
 
 	private void locateSelf() {
@@ -67,13 +67,13 @@ public class ConnectDialog extends JDialog {
 	 */
 	public ConnectDialog(JFrame parent, LogSource source) {
 		super(parent);
-
+		this.frame = parent;
 		this.source = source;
 
 		setModal(true);
 		setTitle("\u8FDE\u63A5\u670D\u52A1\u5668");
 		setBounds(100, 100, 550, 100);
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -118,6 +118,8 @@ public class ConnectDialog extends JDialog {
 				connBtn.setText("\u65Ad\u5F00");
 				addressField.setEnabled(false);
 				setVisible(false);
+				// Set title
+				frame.setTitle(address);
 			} else {
 				source.close();
 				addressField.setEnabled(true);
