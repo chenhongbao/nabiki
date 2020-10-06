@@ -96,6 +96,11 @@ Use commandline option '--help' for detailed information.
     
 	java -jar centre.jar --help
 
+And it is recommended to add default charset definition to JVM:
+
+    -Dfile.encoding=UTF-8
+
+So that all charset issues are aligned to UTF-8.
 
 
 Good luck with trades.

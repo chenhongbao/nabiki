@@ -34,6 +34,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.SocketHandler;
@@ -86,6 +87,7 @@ public class TalkDialog extends JDialog {
       }
       var address = getAddress(str);
       lastHandler = new SocketHandler(address.getHostString(), address.getPort());
+      lastHandler.setEncoding(StandardCharsets.UTF_8.name());
       lastAddress = str;
       return true;
     } catch (Throwable e) {
@@ -109,7 +111,7 @@ public class TalkDialog extends JDialog {
 
     setTitle("\u5BF9\u8BDD");
     setBounds(100, 100, 450, 400);
-    setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
     getContentPane().setLayout(new BorderLayout());
     contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
     getContentPane().add(contentPanel, BorderLayout.CENTER);

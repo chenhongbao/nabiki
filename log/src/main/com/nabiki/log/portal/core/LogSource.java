@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.LogRecord;
@@ -65,7 +66,7 @@ public class LogSource {
         try {
           parser.reset();
           parser.parse(new ByteArrayInputStream(
-              queue.take().getBytes()), xmlHandler);
+              queue.take().getBytes(StandardCharsets.UTF_8)), xmlHandler);
           LogRecord record;
           while ((record = xmlHandler.pop()) != null) {
             display.append(record);

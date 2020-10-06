@@ -1,0 +1,9 @@
+Log Server and UI Portal
+========================
+
+The charset matters because user could speak various languages. Add the following
+option to JVM:
+
+    -Dfile.encoding=UTF-8
+
+And it sets the default encoding to UTF-8.
