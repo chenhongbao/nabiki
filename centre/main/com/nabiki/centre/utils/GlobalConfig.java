@@ -107,16 +107,17 @@ public class GlobalConfig {
 
   public static void setInstrConfig(CInstrument instr) {
     synchronized (GLOBAL.instrInfo) {
-      if (!GLOBAL.instrInfo.containsKey(instr.InstrumentID))
+      if (!GLOBAL.instrInfo.containsKey(instr.InstrumentID)) {
         GLOBAL.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
+      }
       GLOBAL.instrInfo.get(instr.InstrumentID).Instrument = instr;
     }
     // Set the product and its instruments.
-    var pid = Utils.getProductID(instr.InstrumentID);
     synchronized (GLOBAL.products) {
-      if (!GLOBAL.products.containsKey(pid))
-        GLOBAL.products.put(pid, new HashSet<>());
-      GLOBAL.products.get(pid).add(instr.InstrumentID);
+      if (!GLOBAL.products.containsKey(instr.ProductID)) {
+        GLOBAL.products.put(instr.ProductID, new HashSet<>());
+      }
+      GLOBAL.products.get(instr.ProductID).add(instr.InstrumentID);
     }
   }
 
