@@ -311,10 +311,9 @@ public class GlobalConfig {
     // Write sample GLOBAL.
     if (GLOBAL.tradingHour.size() == 0) {
       var cfg = s.iterator().next();
-      cfg.setFile("cfg.hour.sample", "hour.sample.json");
-      Utils.writeText(OP.toJson(new TradingHourConfig()),
-          cfg.get("cfg.hour.sample").file(), StandardCharsets.UTF_8,
-          false);
+      var p = Path.of(cfg.file().getAbsolutePath(), "hour.sample.json");
+      Utils.writeText(
+          OP.toJson(new TradingHourConfig()), p.toFile(), StandardCharsets.UTF_8, false);
     } else {
       // Set hour keepers.
       for (var keeper : GLOBAL.tradingHour.values()) {
@@ -350,10 +349,9 @@ public class GlobalConfig {
     // Write a configuration sample.
     if (GLOBAL.login.size() == 0) {
       var cfg = s.iterator().next();
-      cfg.setFile("cfg.login.sample", "login.sample.json");
-      Utils.writeText(OP.toJson(new LoginConfig()),
-          cfg.get("cfg.login.sample").file(), StandardCharsets.UTF_8,
-          false);
+      var p = Path.of(cfg.file().getAbsolutePath(), "login.sample.json");
+      Utils.writeText(
+          OP.toJson(new LoginConfig()), p.toFile(), StandardCharsets.UTF_8, false);
     }
   }
 
