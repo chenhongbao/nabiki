@@ -179,7 +179,7 @@ public class TickProvider {
     this.api.Init();
   }
 
-  public void disconnect() {
+  public void release() {
     // Set states.
     setLogin(false);
     setConnected(false);

@@ -139,6 +139,7 @@ class PlatformTask extends TimerTask {
         r = main.getOrder().waitConnected(TimeUnit.SECONDS.toMillis(5));
       }
       if (!r) {
+        main.getOrder().release();
         global.getLogger().warning("trader connect failed");
         return;
       }
@@ -171,6 +172,7 @@ class PlatformTask extends TimerTask {
         r = main.getTick().waitConnected(TimeUnit.SECONDS.toMillis(5));
       }
       if (!r) {
+        main.getTick().release();
         global.getLogger().warning("md connect failed");
         return;
       }
