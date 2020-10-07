@@ -1,0 +1,38 @@
+{
+  "ProductID": [
+    "IC",
+    "IH",
+    "IF"
+  ],
+  "TradingHour": [
+    {
+      "From": {
+        "Hour": 9,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 11,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 13,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 15,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      }
+    }
+  ],
+  "Name": "p4"
+}

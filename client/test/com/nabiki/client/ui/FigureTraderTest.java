@@ -106,7 +106,7 @@ public class FigureTraderTest {
       }
     }).start();
     ///////////////////////////////////////////////////////////////////////////
-    client.start(trader, new InetSocketAddress("106.54.254.193", 9038));
+    client.start(trader, new InetSocketAddress("118.25.149.27", 9038));
     client.exitAt(LocalDateTime.now().plusDays(1));
   }
 

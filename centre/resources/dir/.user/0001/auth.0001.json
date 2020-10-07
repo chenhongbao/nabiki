@@ -1,0 +1,11 @@
+{
+  "UserID": "0001",
+  "Password": "1234",
+  "CanLogin": true,
+  "InstrumentAuths": [
+    {
+      "InstrumentID": "c2101",
+      "AllowOffset": "OPEN_CLOSE"
+    }
+  ]
+}

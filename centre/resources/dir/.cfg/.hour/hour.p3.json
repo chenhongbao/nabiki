@@ -1,0 +1,66 @@
+{
+  "ProductID": [
+    "pg",
+    "wr",
+    "jd",
+    "bb",
+    "fb",
+    "WH",
+    "RI",
+    "LR",
+    "JR",
+    "RS",
+    "SF",
+    "SM",
+    "AP",
+    "PM",
+    "CJ",
+    "UR",
+    "lu"
+  ],
+  "TradingHour": [
+    {
+      "From": {
+        "Hour": 9,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 10,
+        "Minute": 15,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 10,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 11,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 13,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 15,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      }
+    }
+  ],
+  "Name": "p3"
+}

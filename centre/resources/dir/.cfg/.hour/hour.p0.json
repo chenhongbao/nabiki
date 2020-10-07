@@ -1,0 +1,97 @@
+{
+  "ProductID": [
+    "eb",
+    "j",
+    "jm",
+    "i",
+    "eg",
+    "l",
+    "v",
+    "pp",
+    "c",
+    "cs",
+    "a",
+    "b",
+    "p",
+    "y",
+    "m",
+    "rb",
+    "hc",
+    "fu",
+    "bu",
+    "ru",
+    "sp",
+    "rr",
+    "nr",
+    "FG",
+    "ZC",
+    "TA",
+    "MA",
+    "SA",
+    "RM",
+    "OI",
+    "CF",
+    "SR",
+    "CY",
+	"PF"
+  ],
+  "TradingHour": [
+    {
+      "From": {
+        "Hour": 21,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 23,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 9,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 10,
+        "Minute": 15,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 10,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 11,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      }
+    },
+    {
+      "From": {
+        "Hour": 13,
+        "Minute": 30,
+        "Second": 0,
+        "Nano": 0
+      },
+      "To": {
+        "Hour": 15,
+        "Minute": 0,
+        "Second": 0,
+        "Nano": 0
+      }
+    }
+  ],
+  "Name": "p0"
+}
