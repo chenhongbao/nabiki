@@ -48,14 +48,6 @@ import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Platform launcher. Start the program with following arguments:
- * <ul>
- * <li>--host {@code <host>}</li>
- * <li>--port {@code <port>}</li>
- * <li>--root {@code <data directory root>}</li>
- * </ul>
- */
 public class Platform {
   private Global global;
   private OrderProvider orderProvider;
@@ -93,7 +85,7 @@ public class Platform {
     try {
       System.loadLibrary("thostmduserapi_se");
       System.loadLibrary("thosttraderapi_se");
-      System.loadLibrary("thostctpapi_se-6.3.19-P1");
+      System.loadLibrary("thost-v6.3.19-P1-ctp4j-1.0.1");
     } catch (Throwable th) {
       th.printStackTrace();
       this.global.getLogger().severe(th.getMessage());
