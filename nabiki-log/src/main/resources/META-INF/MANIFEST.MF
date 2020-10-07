@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Implementation-Title: ${project.artifactId}
+Implementation-Vendor: ${project.groupId}
+Implementation-Version: ${project.version}
+Main-Class: com.nabiki.log.Main
+

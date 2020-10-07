@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Title: Nabiki-Client
-Implementation-Vendor: Nabiki Inc.
-Implementation-Vendor-Id: com.nabiki
-Implementation-Version: 1.2.0
-Main-Class: com.nabiki.client.portal.ClientPortal
-Class-Path: gson-2.8.6.jar mina-core-2.1.3.jar slf4j-jdk14-1.7.30.jar sl
- f4j-api-1.7.30.jar
-
