@@ -32,11 +32,11 @@ import com.nabiki.chart.control.BarChartController;
 import com.nabiki.chart.control.BarChartPanel;
 import com.nabiki.chart.control.StickChartController;
 import com.nabiki.chart.control.StickChartPanel;
+import com.nabiki.commons.iop.x.OP;
 
 import java.awt.*;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -83,8 +83,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   }
 
   private void prepareTimer() {
-    Timer figureTimer = new Timer();
-    figureTimer.schedule(
+    OP.schedule(
         new TimerTask() {
           @Override
           public void run() {
@@ -100,7 +99,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
               }
             }
           }
-        }, 500, 500);
+        }, 500);
   }
 
   private ChartMainFrame getStickFrame(int figureID) {

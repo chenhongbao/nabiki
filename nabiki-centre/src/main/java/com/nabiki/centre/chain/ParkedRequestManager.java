@@ -34,13 +34,13 @@ import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.commons.ctpobj.CInputOrder;
 import com.nabiki.commons.ctpobj.ErrorCodes;
+import com.nabiki.commons.iop.x.OP;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
@@ -58,11 +58,7 @@ public class ParkedRequestManager extends TimerTask {
   }
 
   private void prepareTimer() {
-    var parkedTimer = new Timer();
-    parkedTimer.schedule(
-        this,
-        0,
-        TimeUnit.SECONDS.toMillis(1));
+    OP.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
   private boolean canTrade(String instrID) {

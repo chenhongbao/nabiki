@@ -30,20 +30,22 @@ package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.commons.ctpobj.*;
+import com.nabiki.commons.iop.x.OP;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class TimerPositionSupervisor extends TimerTask implements PositionSupervisor {
-  private final Timer timer;
   private final Trader trader;
   private final Map<String, Suggestion> suggestions = new ConcurrentHashMap<>();
 
   public TimerPositionSupervisor(Trader t) {
     this.trader = t;
-    this.timer = new Timer();
-    this.timer.schedule(this, 0, TimeUnit.SECONDS.toMillis(1));
+    OP.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
   @Override

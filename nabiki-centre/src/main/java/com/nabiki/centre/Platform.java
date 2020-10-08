@@ -40,11 +40,11 @@ import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.GlobalConfig;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.commons.iop.IOP;
+import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.iop.x.SystemStream;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -57,11 +57,9 @@ public class Platform {
   private ParkedRequestManager parkedReqMgr;
 
   private final MarketDataRouter router;
-  private final Timer timerPlat;
   private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
   Platform() {
-    this.timerPlat = new Timer();
     this.router = new MarketDataRouter();
   }
 
@@ -212,10 +210,7 @@ public class Platform {
   }
 
   public void task() {
-    this.timerPlat.scheduleAtFixedRate(
-        new PlatformTask(this, this.global),
-        MILLIS - System.currentTimeMillis() % MILLIS,
-        MILLIS);
+    OP.schedule(new PlatformTask(this, this.global), MILLIS);
   }
 
   private static boolean needHelp(String[] args) {

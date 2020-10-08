@@ -31,6 +31,7 @@ package com.nabiki.client.portal;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.CReqUserLogin;
 import com.nabiki.commons.ctpobj.ErrorCodes;
+import com.nabiki.commons.iop.x.OP;
 
 import javax.swing.*;
 import java.awt.*;
@@ -49,7 +50,7 @@ public class LoginOutWorker implements Runnable {
   private final JTextField addrField, userField, pwdField;
   private final boolean login;
 
-  private java.util.Timer disconnectWatcher;
+  private boolean watcherStated = false;
 
   LoginOutWorker(
       boolean login,
@@ -182,15 +183,15 @@ public class LoginOutWorker implements Runnable {
   }
 
   private void startWatcher() {
-    if (disconnectWatcher != null)
-      return;
-    disconnectWatcher = new java.util.Timer();
-    disconnectWatcher.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        if (client.isClosed())
-          changeComponents(true);
-      }
-    }, 1000, 1000);
+    if (!watcherStated) {
+      watcherStated = true;
+      OP.schedule(new TimerTask() {
+        @Override
+        public void run() {
+          if (client.isClosed())
+            changeComponents(true);
+        }
+      }, TimeUnit.SECONDS.toMillis(1));
+    }
   }
 }

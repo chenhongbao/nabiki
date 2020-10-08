@@ -36,11 +36,15 @@ import com.nabiki.centre.utils.Signal;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.commons.ctpobj.*;
+import com.nabiki.commons.iop.x.OP;
 import com.nabiki.ctp4j.CThostFtdcMdApi;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -75,15 +79,12 @@ public class TickProvider {
   }
 
   private void daemon() {
-    // Schedule action day updater.
-    var m = TimeUnit.DAYS.toMillis(1);
-    Timer dayUpdater = new Timer();
-    dayUpdater.scheduleAtFixedRate(new TimerTask() {
+    OP.schedule(new TimerTask() {
       @Override
       public void run() {
         updateActionDay();
       }
-    }, m - System.currentTimeMillis() % m, m);
+    }, TimeUnit.DAYS.toMillis(1));
   }
 
   public boolean isConnected() {

@@ -65,8 +65,9 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
   public void setSubscribeMinute(String instrument, int... minutes) {
     var set = subscribes.computeIfAbsent(
         instrument, k -> new HashSet<>());
-    for (var i : minutes)
+    for (var i : minutes) {
       set.add(i);
+    }
   }
 
   @Override

@@ -35,7 +35,10 @@ import com.nabiki.commons.ctpobj.ErrorCodes;
 import com.nabiki.commons.ctpobj.ErrorMessages;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OP {
@@ -76,6 +79,24 @@ public class OP {
    */
   public static String toJson(Object obj) {
     return gson.toJson(obj);
+  }
+
+  /**
+   * Schedule task at every specified period from epoch, excluding epoch.
+   * @param task timer task
+   * @param msPeriod period in milliseconds
+   */
+  public static void schedule(TimerTask task, long msPeriod) {
+    long delay = msPeriod - System.currentTimeMillis() % msPeriod;
+    schedule(task, delay, msPeriod);
+  }
+
+  public static void schedule(TimerTask task, Date date, long msPeriod) {
+    new Timer().scheduleAtFixedRate(task, date, msPeriod);
+  }
+
+  public static void schedule(TimerTask task, long msDelay, long msPeriod) {
+    new Timer().scheduleAtFixedRate(task, msDelay, msPeriod);
   }
 
   private static final Map<Integer, String> errorMsg = new ConcurrentHashMap<>();

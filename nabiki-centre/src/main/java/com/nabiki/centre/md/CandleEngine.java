@@ -32,10 +32,14 @@ import com.nabiki.centre.utils.Global;
 import com.nabiki.centre.utils.Utils;
 import com.nabiki.commons.ctpobj.CCandle;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
+import com.nabiki.commons.iop.x.OP;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,7 +48,6 @@ public class CandleEngine extends TimerTask {
   private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
 
   private final Global global;
-  private final Timer timer = new Timer();
   private final Map<String, Product> products = new ConcurrentHashMap<>();
   private final Map<String, Product> instrProducts = new ConcurrentHashMap<>();
   private final MarketDataRouter router;
@@ -58,9 +61,7 @@ public class CandleEngine extends TimerTask {
   }
 
   private void prepare() {
-    // Schedule.
-    this.timer.scheduleAtFixedRate(this,
-        MILLIS - System.currentTimeMillis() % MILLIS, MILLIS);
+    OP.schedule(this, MILLIS);
   }
 
   // Time point is stored as key of a hash map.
