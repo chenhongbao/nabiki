@@ -30,8 +30,8 @@ package com.nabiki.centre.utils;
 
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
-import com.nabiki.commons.iop.x.PerformanceMeasure;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
+import com.nabiki.commons.iop.x.Performance;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -69,7 +69,7 @@ public class Global {
   public static final String CMD_START_NOW_PREFIX = "--start-now";
 
   static Logger logger;
-  PerformanceMeasure performanceMeasure;
+  Performance performance;
   String tradingDay;
   EasyFile rootDirectory;
 
@@ -81,8 +81,8 @@ public class Global {
    *
    * @return global performance measure.
    */
-  public PerformanceMeasure getPerformanceMeasure() {
-    return this.performanceMeasure;
+  public Performance getPerformance() {
+    return this.performance;
   }
 
   /**

@@ -31,12 +31,12 @@ package com.nabiki.centre.utils;
 import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.centre.utils.plain.LoginConfig;
 import com.nabiki.centre.utils.plain.TradingHourConfig;
-import com.nabiki.commons.iop.x.OP;
-import com.nabiki.commons.iop.x.PerformanceMeasure;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
 import com.nabiki.commons.ctpobj.CInstrument;
 import com.nabiki.commons.ctpobj.CInstrumentCommissionRate;
 import com.nabiki.commons.ctpobj.CInstrumentMarginRate;
+import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.iop.x.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -264,7 +264,7 @@ public class GlobalConfig {
   }
 
   private static void setPerformanceMeasure() {
-    GLOBAL.performanceMeasure = new PerformanceMeasure();
+    GLOBAL.performance = new Performance();
   }
 
   private static void setTradingHourConfig() throws IOException {

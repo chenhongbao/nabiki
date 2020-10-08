@@ -141,14 +141,14 @@ public class OrderProvider {
     return loginCfg;
   }
 
-  boolean isQryInstrLast() {
+  boolean isQryLast() {
     return qryInstrLast;
   }
 
   private void setQryLast(boolean last) {
     qryInstrLast = last;
     if (last) {
-      global.getLogger().info("qry last instrument: " + isQryInstrLast());
+      global.getLogger().info("qry last instrument: " + isQryLast());
     }
   }
 
@@ -267,9 +267,9 @@ public class OrderProvider {
   }
 
   public boolean waitLastInstrument(long millis) throws InterruptedException {
-    if (!isQryInstrLast())
+    if (!isQryLast())
       this.qryLastInstrSignal.waitSignal(millis);
-    return isQryInstrLast();
+    return isQryLast();
   }
 
   public boolean waitWorkingState(WorkingState stateToWait, long millis) {
@@ -818,8 +818,8 @@ public class OrderProvider {
 
   public void whenRtnOrder(COrder order) {
     // Measure performance.
-    var max = this.global.getPerformanceMeasure().start("when.order.max");
-    var cur = this.global.getPerformanceMeasure().start("when.order.cur");
+    var max = this.global.getPerformance().start("when.order.max");
+    var cur = this.global.getPerformance().start("when.order.cur");
     // Process order.
     doOrder(order);
     // End measurement.
@@ -829,8 +829,8 @@ public class OrderProvider {
 
   public void whenRtnTrade(CTrade trade) {
     // Measure performance.
-    var max = this.global.getPerformanceMeasure().start("when.trade.max");
-    var cur = this.global.getPerformanceMeasure().start("when.trade.cur");
+    var max = this.global.getPerformance().start("when.trade.max");
+    var cur = this.global.getPerformance().start("when.trade.cur");
     // Process order.
     doTrade(trade);
     // End measurement.

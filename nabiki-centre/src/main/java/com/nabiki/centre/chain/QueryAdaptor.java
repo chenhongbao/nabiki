@@ -37,6 +37,8 @@ import com.nabiki.commons.iop.ServerMessageAdaptor;
 import com.nabiki.commons.iop.ServerSession;
 import com.nabiki.commons.iop.x.OP;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class QueryAdaptor extends ServerMessageAdaptor {
@@ -66,14 +68,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
     } else {
       var activeUser = (ActiveUser) attr;
-      // Performance measurement.
-      var max = this.global.getPerformanceMeasure().start("qry.account.max");
-      var cur = this.global.getPerformanceMeasure().start("qry.account.cur");
       // Qry account.
       rsp.Body = activeUser.getTradingAccount();
-      // End measurement.
-      max.endWithMax();
-      cur.end();
       rsp.RspInfo.ErrorID = ErrorCodes.NONE;
     }
     rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
@@ -103,14 +99,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
-      // Performance measurement.
-      var max = this.global.getPerformanceMeasure().start("qry.rtnorder.max");
-      var cur = this.global.getPerformanceMeasure().start("qry.rtnorder.cur");
       // Qry rtn order.
       var orders = activeUser.getRtnOrder(query.OrderSysID);
-      // End measurement.
-      max.endWithMax();
-      cur.end();
       if (orders == null || orders.size() == 0) {
         // No rtn orders found.
         rsp.CurrentCount = 1;
@@ -163,14 +153,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
-      // Performance measurement.
-      var max = this.global.getPerformanceMeasure().start("qry.position.max");
-      var cur = this.global.getPerformanceMeasure().start("qry.position.cur");
       // Qry position.
       var positions = activeUser.getPosition(query.InstrumentID);
-      // End measurement.
-      max.endWithMax();
-      cur.end();
       if (positions == null || positions.size() == 0) {
         // Try to provide as much information as possible.
         var p = new CInvestorPosition();
@@ -228,14 +212,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
-      // Performance measurement.
-      var max = this.global.getPerformanceMeasure().start("qry.posidetail.max");
-      var cur = this.global.getPerformanceMeasure().start("qry.posidetail.cur");
       // Qry position.
       var details = activeUser.getPositionDetail(query.InstrumentID);
-      // End measurement.
-      max.endWithMax();
-      cur.end();
       if (details == null || details.size() == 0) {
         // Try to provide as much information as possible.
         var p = new CInvestorPositionDetail();
@@ -290,5 +268,102 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     }
     rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
     session.sendResponse(rsp);
+    session.done();
+  }
+
+  @Override
+  public void doQryInstrument(
+      ServerSession session,
+      CQryInstrument query,
+      String requestID,
+      int current,
+      int total) {
+    Set<CInstrument> instruments = new HashSet<>();
+    if (query.InstrumentID == null || query.InstrumentID.length() == 0) {
+      for (var info : global.getAllInstrInfo()) {
+        instruments.add(info.Instrument);
+      }
+    } else {
+      instruments.add(global.getInstrInfo(query.InstrumentID).Instrument);
+    }
+    var rsp = new Message();
+    rsp.Type = MessageType.RSP_QRY_INSTRUMENT;
+    rsp.RequestID = requestID;
+    rsp.RspInfo = new CRspInfo();
+    rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.CurrentCount = 0;
+    rsp.TotalCount = instruments.size();
+    for (var i : instruments) {
+      rsp.Body = i;
+      rsp.ResponseID = UUID.randomUUID().toString();
+      ++rsp.CurrentCount;
+      session.sendResponse(rsp);
+    }
+    session.done();
+  }
+
+  @Override
+  public void doQryCommission(
+      ServerSession session,
+      CQryInstrumentCommissionRate query,
+      String requestID,
+      int current,
+      int total) {
+    Set<CInstrumentCommissionRate> commissions = new HashSet<>();
+    if (query.InstrumentID == null || query.InstrumentID.length() == 0) {
+      for (var info : global.getAllInstrInfo()) {
+        commissions.add(info.Commission);
+      }
+    } else {
+      commissions.add(global.getInstrInfo(query.InstrumentID).Commission);
+    }
+    var rsp = new Message();
+    rsp.Type = MessageType.RSP_QRY_COMMISSION;
+    rsp.RequestID = requestID;
+    rsp.RspInfo = new CRspInfo();
+    rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.CurrentCount = 0;
+    rsp.TotalCount = commissions.size();
+    for (var i : commissions) {
+      rsp.Body = i;
+      rsp.ResponseID = UUID.randomUUID().toString();
+      ++rsp.CurrentCount;
+      session.sendResponse(rsp);
+    }
+    session.done();
+  }
+
+  @Override
+  public void doQryMargin(
+      ServerSession session,
+      CQryInstrumentMarginRate query,
+      String requestID,
+      int current,
+      int total) {
+    Set<CInstrumentMarginRate> margins = new HashSet<>();
+    if (query.InstrumentID == null || query.InstrumentID.length() == 0) {
+      for (var info : global.getAllInstrInfo()) {
+        margins.add(info.Margin);
+      }
+    } else {
+      margins.add(global.getInstrInfo(query.InstrumentID).Margin);
+    }
+    var rsp = new Message();
+    rsp.Type = MessageType.RSP_QRY_MARGIN;
+    rsp.RequestID = requestID;
+    rsp.RspInfo = new CRspInfo();
+    rsp.RspInfo.ErrorID = ErrorCodes.NONE;
+    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.CurrentCount = 0;
+    rsp.TotalCount = margins.size();
+    for (var i : margins) {
+      rsp.Body = i;
+      rsp.ResponseID = UUID.randomUUID().toString();
+      ++rsp.CurrentCount;
+      session.sendResponse(rsp);
+    }
+    session.done();
   }
 }

@@ -141,8 +141,8 @@ public class CandleEngine extends TimerTask {
         (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
     var hours = this.global.getAllTradingHour();
     // Measure performance.
-    var max = global.getPerformanceMeasure().start("candle.run.max");
-    var cur = global.getPerformanceMeasure().start("candle.run.cur");
+    var max = global.getPerformance().start("candle.run.max");
+    var cur = global.getPerformance().start("candle.run.cur");
     // Generate candles.
     for (var e : this.products.entrySet()) {
       var h = hours.get(e.getKey());

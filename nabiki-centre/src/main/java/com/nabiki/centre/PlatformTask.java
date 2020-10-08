@@ -262,7 +262,7 @@ class PlatformTask extends TimerTask {
   }
 
   private void checkPerformance() {
-    var m = this.global.getPerformanceMeasure().getAllMeasures();
+    var m = this.global.getPerformance().getAllMeasures();
     for (var entry : m.entrySet()) {
       var ms = entry.getValue().toMillis();
       global.getLogger().info(

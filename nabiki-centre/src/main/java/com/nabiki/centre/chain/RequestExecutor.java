@@ -70,8 +70,8 @@ public class RequestExecutor extends RequestSuper {
     } else {
       var activeUser = (ActiveUser) attr;
       // Measure performance.
-      var max = this.global.getPerformanceMeasure().start("order.insert.max");
-      var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
+      var max = this.global.getPerformance().start("order.insert.max");
+      var cur = this.global.getPerformance().start("order.insert.cur");
       // Order insert.
       var uuid = activeUser.insertOrder(request);
       // End measurement.
@@ -120,8 +120,8 @@ public class RequestExecutor extends RequestSuper {
     } else {
       var activeUser = (ActiveUser) attr;
       // Measure performance.
-      var max = this.global.getPerformanceMeasure().start("order.insert.max");
-      var cur = this.global.getPerformanceMeasure().start("order.insert.cur");
+      var max = this.global.getPerformance().start("order.insert.max");
+      var cur = this.global.getPerformance().start("order.insert.cur");
       // Order action.
       var uuid = activeUser.orderAction(request);
       // End measurement.
