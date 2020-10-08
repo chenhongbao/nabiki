@@ -255,4 +255,34 @@ class TradeClientImpl implements TradeClient {
         requestID,
         CSpecificInstrument.class);
   }
+
+  @Override
+  public Response<CInstrument> queryInstrument(
+      CQryInstrument query, String requestID) throws Exception {
+    return send(
+        MessageType.QRY_INSTRUMENT,
+        query,
+        requestID,
+        CInstrument.class);
+  }
+
+  @Override
+  public Response<CInstrumentMarginRate> queryMargin(
+      CQryInstrumentMarginRate query, String requestID) throws Exception {
+    return send(
+        MessageType.QRY_MARGIN,
+        query,
+        requestID,
+        CInstrumentMarginRate.class);
+  }
+
+  @Override
+  public Response<CInstrumentCommissionRate> queryCommission(
+      CQryInstrumentCommissionRate query, String requestID) throws Exception {
+    return send(
+        MessageType.QRY_COMMISSION,
+        query,
+        requestID,
+        CInstrumentCommissionRate.class);
+  }
 }

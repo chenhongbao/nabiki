@@ -30,9 +30,7 @@ package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
-import com.nabiki.commons.ctpobj.CInvestorPosition;
-import com.nabiki.commons.ctpobj.COrder;
-import com.nabiki.commons.ctpobj.CTradingAccount;
+import com.nabiki.commons.ctpobj.*;
 
 import java.util.Collection;
 import java.util.logging.Logger;
@@ -64,6 +62,12 @@ public interface Trader {
       String instrumentID, String exchangeID) throws Exception;
 
   Response<CTradingAccount> getAccount() throws Exception;
+
+  CInstrument getInstrument(String instrumentID);
+
+  CInstrumentMarginRate getMargin(String instrumentID);
+
+  CInstrumentCommissionRate getCommission(String instrumentID);
 
   Logger getLogger();
 

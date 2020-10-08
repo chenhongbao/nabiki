@@ -31,12 +31,13 @@ package com.nabiki.client.ui;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
+import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.iop.x.SystemStream;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -45,9 +46,12 @@ import java.util.logging.SocketHandler;
 public abstract class AbstractTrader implements Trader {
   private TradeClient client;
   private String userID, password;
-  private final Collection<String> instruments = new LinkedList<>();
-  protected Logger logger;
+  private final Collection<String> subscribes = new LinkedList<>();
+  private final Map<String, CInstrument> instruments = new ConcurrentHashMap<>();
+  private final Map<String, CInstrumentMarginRate> margins = new ConcurrentHashMap<>();
+  private final Map<String, CInstrumentCommissionRate> commissions = new ConcurrentHashMap<>();
 
+  protected Logger logger;
   private MarketDataTraderAdaptor traderAdaptor;
 
   protected AbstractTrader() {
@@ -56,15 +60,43 @@ public abstract class AbstractTrader implements Trader {
 
   private void prepare() {
     try {
-      logger = Logger.getLogger(getLoggerName());
-      logger.addHandler(new SimpleFileHandler());
-      logger.setUseParentHandlers(false);
-      // Set default err/out.
-      SystemStream.setErr("err.log");
-      SystemStream.setOut("out.log");
+      setLogger();
+      setStream();
+      setReCache();
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private void setLogger() throws IOException {
+    logger = Logger.getLogger(getLoggerName());
+    logger.addHandler(new SimpleFileHandler());
+    logger.setUseParentHandlers(false);
+  }
+
+  private void setStream() throws IOException {
+    SystemStream.setErr("err.log");
+    SystemStream.setOut("out.log");
+  }
+
+  private void setReCache() {
+    var calendar = Calendar.getInstance();
+    calendar.set(Calendar.HOUR_OF_DAY, 20);
+    calendar.set(Calendar.MINUTE, 59);
+    calendar.set(Calendar.SECOND, 0);
+    OP.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        reCacheInfo();
+      }
+    }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
+    calendar.set(Calendar.HOUR_OF_DAY, 8);
+    OP.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        reCacheInfo();
+      }
+    }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
   }
 
   private String getLoggerName() {
@@ -77,6 +109,79 @@ public abstract class AbstractTrader implements Trader {
 
   protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
     this.traderAdaptor = adaptor;
+  }
+
+  // Clear instrument information so they are re-queried.
+  void reCacheInfo() {
+    for (var i : instruments.keySet()) {
+      sendQryInstrument(i);
+    }
+    for (var i : margins.keySet()) {
+      sendQryMargin(i);
+    }
+    for (var i : commissions.keySet()) {
+      sendQryCommission(i);
+    }
+  }
+
+  private void sendQryInstrument(String i) {
+    var qry = new CQryInstrument();
+    qry.InstrumentID = i;
+    try {
+      client.queryInstrument(qry, UUID.randomUUID().toString()).consume(
+          (object, rspInfo, currentCount, totalCount) -> {
+            if (rspInfo.ErrorID == ErrorCodes.NONE) {
+              instruments.put(object.InstrumentID, object);
+            } else {
+              getLogger().warning(String.format(
+                  "query instrument fail[%d]: %s",
+                  rspInfo.ErrorID,
+                  rspInfo.ErrorMsg));
+            }
+          });
+    } catch (Exception e) {
+      getLogger().warning("query instrument fail: " + e.getMessage());
+    }
+  }
+
+  private void sendQryMargin(String i) {
+    var qry = new CQryInstrumentMarginRate();
+    qry.InstrumentID = i;
+    try {
+      client.queryMargin(qry, UUID.randomUUID().toString()).consume(
+          (object, rspInfo, currentCount, totalCount) -> {
+            if (rspInfo.ErrorID == ErrorCodes.NONE) {
+              margins.put(object.InstrumentID, object);
+            } else {
+              getLogger().warning(String.format(
+                  "query margin fail[%d]: %s",
+                  rspInfo.ErrorID,
+                  rspInfo.ErrorMsg));
+            }
+          });
+    } catch (Exception e) {
+      getLogger().warning("query margin fail: " + e.getMessage());
+    }
+  }
+
+  private void sendQryCommission(String i) {
+    var qry = new CQryInstrumentCommissionRate();
+    qry.InstrumentID = i;
+    try {
+      client.queryCommission(qry, UUID.randomUUID().toString()).consume(
+          (object, rspInfo, currentCount, totalCount) -> {
+            if (rspInfo.ErrorID == ErrorCodes.NONE) {
+              commissions.put(object.InstrumentID, object);
+            } else {
+              getLogger().warning(String.format(
+                  "query commission fail[%d]: %s",
+                  rspInfo.ErrorID,
+                  rspInfo.ErrorMsg));
+            }
+          });
+    } catch (Exception e) {
+      getLogger().warning("query commission fail: " + e.getMessage());
+    }
   }
 
   @Override
@@ -110,13 +215,13 @@ public abstract class AbstractTrader implements Trader {
 
   @Override
   public void subscribe(String instrument, int... minutes) {
-    this.instruments.add(instrument);
+    this.subscribes.add(instrument);
     traderAdaptor.setSubscribeMinute(instrument, minutes);
   }
 
   @Override
   public Collection<String> getSubscribe() {
-    return instruments;
+    return subscribes;
   }
 
   @Override
@@ -165,6 +270,36 @@ public abstract class AbstractTrader implements Trader {
   @Override
   public void setClient(TradeClient client) {
     this.client = client;
+  }
+
+  @Override
+  public CInstrument getInstrument(String instrumentID) {
+    if (instruments.containsKey(instrumentID)) {
+      return instruments.get(instrumentID);
+    } else {
+      sendQryInstrument(instrumentID);
+      return null;
+    }
+  }
+
+  @Override
+  public CInstrumentMarginRate getMargin(String instrumentID) {
+    if (margins.containsKey(instrumentID)) {
+      return margins.get(instrumentID);
+    } else {
+      sendQryMargin(instrumentID);
+      return null;
+    }
+  }
+
+  @Override
+  public CInstrumentCommissionRate getCommission(String instrumentID) {
+    if (commissions.containsKey(instrumentID)) {
+      return commissions.get(instrumentID);
+    } else {
+      sendQryCommission(instrumentID);
+      return null;
+    }
   }
 
   static class SimpleFileHandler extends FileHandler {

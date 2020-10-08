@@ -67,4 +67,10 @@ public interface TradeClient {
   Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID) throws Exception;
 
   Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID) throws Exception;
+
+  Response<CInstrument> queryInstrument(CQryInstrument query, String requestID) throws Exception;
+
+  Response<CInstrumentMarginRate> queryMargin(CQryInstrumentMarginRate query, String requestID) throws Exception;
+
+  Response<CInstrumentCommissionRate> queryCommission(CQryInstrumentCommissionRate query, String requestID) throws Exception;
 }

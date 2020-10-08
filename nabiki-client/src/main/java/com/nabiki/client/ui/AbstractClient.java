@@ -91,6 +91,12 @@ public abstract class AbstractClient {
     var reqSub = new CSubMarketData();
     reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
     subRsp = client.subscribeMarketData(reqSub, UUID.randomUUID().toString());
+    // Query instrument information.
+    for (var i : reqSub.InstrumentID) {
+      trader.getMargin(i);
+      trader.getCommission(i);
+      trader.getInstrument(i);
+    }
   }
 
   private void closeConnection() {
@@ -102,10 +108,7 @@ public abstract class AbstractClient {
     }
   }
 
-  protected void init(
-      Trader trader,
-      MarketDataHandler handler,
-      InetSocketAddress address) throws Exception {
+  protected void init(Trader trader, MarketDataHandler handler, InetSocketAddress address) throws Exception {
     openConnection(address);
     trader.setClient(client);
     callStart(handler);
