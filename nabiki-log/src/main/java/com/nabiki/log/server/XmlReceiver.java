@@ -45,16 +45,22 @@ public class XmlReceiver implements Runnable {
   public void run() {
     for (;;) {
       try {
-        parser.parse((byte) socket.getInputStream().read());
+        var r = socket.getInputStream().read();
+        /* read() returns -1 again and again after socket is closed.
+         * Check and return to avoid busy loop.*/
+        if (r != -1) {
+          parser.parse((byte) r);
+        } else {
+          break;
+        }
       } catch (IOException e) {
-        if (socket.isInputShutdown()) {
+        if (socket.isClosed()) {
           break;
         }
       } catch (Throwable th) {
         th.printStackTrace();
       }
     }
-    // Close connection.
     try {
       socket.close();
       socket = null;

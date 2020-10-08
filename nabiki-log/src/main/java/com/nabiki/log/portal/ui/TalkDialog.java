@@ -78,8 +78,12 @@ public class TalkDialog extends JDialog {
     try {
       var str = serverField.getText();
       if (str== null || str.trim().length() == 0) {
-        lastHandler.close();
-        lastHandler = null;
+        if (lastHandler != null) {
+          lastHandler.flush();
+          lastHandler.close();
+          lastHandler = null;
+          lastAddress = null;
+        }
         return false;
       }
       if (lastAddress != null && lastAddress.equals(str)) {
@@ -214,10 +218,17 @@ public class TalkDialog extends JDialog {
     buttonPane.add(sendBtn);
     getRootPane().setDefaultButton(sendBtn);
     sendBtn.addActionListener(e -> {
-      tryConnect();
+      onSend();
+    });
+  }
+
+  private void onSend() {
+    if (tryConnect()) {
       lastHandler.publish(getRecord());
       lastHandler.flush();
-    });
+    } else {
+      JOptionPane.showMessageDialog(this, "\u65e0\u6cd5\u8fde\u63a5" + serverField.getText());
+    }
   }
 
   private LogRecord getRecord() {
