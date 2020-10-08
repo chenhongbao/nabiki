@@ -54,7 +54,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     su.instrumentID = instrumentID;
     su.exchangeID = exchangeID;
     su.direction = direction;
-    su.position = position;
+    su.position = Math.abs(position);
     su.posDiff = 0;
     su.priceHigh = priceHigh;
     su.priceLow = priceLow;
@@ -157,11 +157,17 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   private void queryPosition(Suggestion su) throws Exception {
-    trader.getPosition(su.instrumentID, "").consume(new QryPositionConsumer(su));
+    if (su.investorPos == null) {
+      su.investorPos = new HashSet<>();
+      trader.getPosition(su.instrumentID, "").consume(new QryPositionConsumer(su));
+    }
   }
 
   private void queryAccount(Suggestion su) throws Exception {
-    trader.getAccount().consume(new QryAccountConsumer(su));
+    if (su.account == null) {
+      su.account = new CTradingAccount();
+      trader.getAccount().consume(new QryAccountConsumer(su));
+    }
   }
 
   private int getPosition(Suggestion suggestion) {
@@ -197,8 +203,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     Integer position, posDiff;
     Double priceHigh, priceLow;
     SuggestionState state;
-    CTradingAccount account;
-    Collection<CInvestorPosition> investorPos = new HashSet<>();
+    CTradingAccount account = null; /* init as nil so it knows qry isn't sent yet */
+    Collection<CInvestorPosition> investorPos = null;
   }
 
   class QryAccountConsumer implements ResponseConsumer<CTradingAccount> {
