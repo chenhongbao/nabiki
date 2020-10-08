@@ -38,30 +38,33 @@ import java.util.concurrent.TimeUnit;
 public class PerformanceMeasureTest {
   @Test
   public void basic() {
+    var unit = TimeUnit.MILLISECONDS;
     var measure = new PerformanceMeasure();
     var diff = measure.start("wait.lag");
 
-    long sleep = Math.abs(new Random().nextInt(500));
+    long sleep = Math.abs(new Random().nextInt(1000) + 100);
     try {
-      TimeUnit.MILLISECONDS.sleep(sleep);
+      unit.sleep(sleep);
     } catch (InterruptedException e) {
       e.printStackTrace();
     } finally {
       diff.end();
     }
 
-    Assert.assertEquals(sleep * 1.0D, measure.getMeasure("wait.lag").toMillis(), 15.0D);
+    var duration = measure.getMeasure("wait.lag");
+    Assert.assertEquals(sleep, unit.convert(duration), 15.0D);
 
     LocalTime s = LocalTime.now();
     LocalTime e;
     try {
-      TimeUnit.MILLISECONDS.sleep(sleep);
+      unit.sleep(sleep);
     } catch (InterruptedException ex) {
       ex.printStackTrace();
     } finally {
       e = LocalTime.now();
     }
 
-    Assert.assertEquals(sleep * 1.0D, measure.measure("wait.local", s, e).toMillis(), 15.0D);
+    duration = measure.measure("wait.local", s, e);
+    Assert.assertEquals(sleep, unit.convert(duration), 15.0D);
   }
 }
