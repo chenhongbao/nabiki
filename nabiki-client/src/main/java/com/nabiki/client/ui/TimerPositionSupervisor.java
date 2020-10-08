@@ -34,14 +34,12 @@ import com.nabiki.commons.iop.x.OP;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class TimerPositionSupervisor extends TimerTask implements PositionSupervisor {
   private final Trader trader;
-  private final Map<String, Suggestion> suggestions = new ConcurrentHashMap<>();
+  private Suggestion lastSu;
 
   public TimerPositionSupervisor(Trader t) {
     this.trader = t;
@@ -50,32 +48,33 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   @Override
   public void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double priceHigh, double priceLow) {
-    var su = new Suggestion();
-    su.instrumentID = instrumentID;
-    su.exchangeID = exchangeID;
-    su.direction = direction;
-    su.position = Math.abs(position);
-    su.posDiff = 0;
-    su.priceHigh = priceHigh;
-    su.priceLow = priceLow;
-    su.state = SuggestionState.QryAccount;
-    suggestions.put(instrumentID, su);
+    if (lastSu != null && lastSu.state != SuggestionState.Completed) {
+      throw new RuntimeException("last suggestion not completed");
+    } else {
+      lastSu = new Suggestion();
+      lastSu.instrumentID = instrumentID;
+      lastSu.exchangeID = exchangeID;
+      lastSu.direction = direction;
+      lastSu.position = Math.abs(position);
+      lastSu.posDiff = 0;
+      lastSu.priceHigh = priceHigh;
+      lastSu.priceLow = priceLow;
+      lastSu.state = SuggestionState.QryAccount;
+    }
   }
 
   @Override
   public int getPosition(String instrumentID) {
-    return getPosition(suggestions.get(instrumentID));
+    return getPosition(lastSu);
   }
 
   @Override
   public void run() {
-    for (var s : suggestions.values()) {
-      try {
-        state(s);
-      } catch (Exception e) {
-        e.printStackTrace();
-        trader.getLogger().severe("process suggestion failed: " + e.getMessage());
-      }
+    try {
+      state(lastSu);
+    } catch (Exception e) {
+      e.printStackTrace();
+      trader.getLogger().severe("process suggestion failed: " + e.getMessage());
     }
   }
 
@@ -91,15 +90,19 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       case OpenLong:
       case OpenShort:
         open(su);
+        su.state = SuggestionState.Completed;
         break;
       case CloseLong:
       case CloseShort:
         close(su);
+        su.state = SuggestionState.Completed;
         break;
       case CutCloseLong:
       case CutCloseShort:
         close(su);
         su.state = SuggestionState.ConfirmCut;
+        break;
+      default:
         break;
     }
   }
@@ -194,7 +197,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     CutCloseShort,
     ConfirmCut,
     OpenLong,
-    OpenShort
+    OpenShort,
+    Completed
   }
 
   static class Suggestion {
