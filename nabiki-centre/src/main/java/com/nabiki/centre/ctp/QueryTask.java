@@ -35,7 +35,7 @@ import com.nabiki.commons.ctpobj.CQryInstrumentCommissionRate;
 import com.nabiki.commons.ctpobj.CQryInstrumentMarginRate;
 import com.nabiki.commons.ctpobj.CombHedgeFlagType;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -68,30 +68,23 @@ class QueryTask implements Runnable {
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
       try {
-        if (!provider.isQryInstrLast() || !provider.isConfirmed()) {
+        if (!provider.isQryLast() || !provider.isConfirmed()) {
           continue;
         }
-        var ids = new LinkedList<String>(provider.getInstrumentIDs());
-        for (var id : ids) {
-          var info = global.getInstrInfo(id);
-          // Instrument should be return by default.
-          if (info == null || info.Instrument == null) {
-            continue;
-          }
-          if (info.Margin == null) {
-            queryMargin(id);
-            sleep(1, TimeUnit.SECONDS);
-          } else if (info.Commission == null) {
-            queryCommission(id);
-            sleep(1, TimeUnit.SECONDS);
-          }
+        /* Query takes a long time, create new container to avoid
+         * concurrent access */
+        var instruments = new HashSet<>(provider.getInstrumentIDs());
+        for (var i : instruments) {
+          queryMargin(i);
+          sleep(1, TimeUnit.SECONDS);
+          queryCommission(i);
+          sleep(1, TimeUnit.SECONDS);
         }
-        // Sleep for next round.
       } catch (Throwable th) {
         th.printStackTrace();
         global.getLogger().warning(th.getMessage());
       } finally {
-        sleep(1, TimeUnit.HOURS);
+        sleep(1, TimeUnit.SECONDS);
       }
     }
   }
