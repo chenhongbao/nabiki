@@ -29,9 +29,9 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.frame.Body;
+import com.nabiki.commons.iop.x.OP;
 
 import java.io.IOException;
 
@@ -183,7 +183,7 @@ class MessageImpl extends Message {
     msg.ResponseID = body.ResponseID;
     msg.CurrentCount = body.CurrentCount;
     msg.TotalCount = body.TotalCount;
-    msg.timeStamp = body.timeStamp;
+    msg.TimeStamp = body.TimeStamp;
     return msg;
   }
 }

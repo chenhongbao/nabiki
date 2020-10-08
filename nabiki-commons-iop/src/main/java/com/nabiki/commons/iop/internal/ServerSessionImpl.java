@@ -90,12 +90,14 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
   @Override
   public void sendLogin(Message message) {
     message.Type = MessageType.RSP_REQ_LOGIN;
+    message.TimeStamp = System.currentTimeMillis();
     super.send(toBody(message), FrameType.LOGIN);
   }
 
   @Override
   public void sendResponse(Message message) {
     // Send message and set response state.
+    message.TimeStamp = System.currentTimeMillis();
     super.send(toBody(message), FrameType.RESPONSE);
     setResponseState(SessionResponseState.SENDING);
   }
@@ -105,6 +107,7 @@ class ServerSessionImpl extends SessionImpl implements ServerSession {
     var body = new Body();
     body.RequestID = heartbeatID;
     body.Type = MessageType.HEARTBEAT;
+    body.TimeStamp = System.currentTimeMillis();
     super.send(body, FrameType.HEARTBEAT);
   }
 

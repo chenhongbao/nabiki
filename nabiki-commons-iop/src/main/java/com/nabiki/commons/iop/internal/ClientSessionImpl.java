@@ -80,6 +80,7 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
 
   @Override
   public void sendLogin(Message message) {
+    message.TimeStamp = System.currentTimeMillis();
     message.Type = MessageType.REQ_LOGIN;
     // Need to wait until login request is actually sent.
     try {
@@ -92,6 +93,7 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
   public void sendRequest(Message message) throws InterruptedException {
     // Send message and set response state.
     // Need to ensure the request has been sent before return.
+    message.TimeStamp = System.currentTimeMillis();
     super.send(toBody(message), FrameType.REQUEST).await();
   }
 
@@ -102,6 +104,7 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     var body = new Body();
     body.RequestID = heartbeatID;
     body.Type = MessageType.HEARTBEAT;
+    body.TimeStamp = System.currentTimeMillis();
     // NO NEED to wait heart beat sent.
     super.send(body, FrameType.HEARTBEAT);
   }

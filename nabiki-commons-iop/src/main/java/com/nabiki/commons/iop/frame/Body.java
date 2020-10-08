@@ -74,7 +74,7 @@ public class Body implements java.io.Serializable {
   /**
    * Milliseconds since epoch.
    */
-  public long timeStamp;
+  public long TimeStamp;
 
   public Body() {
   }

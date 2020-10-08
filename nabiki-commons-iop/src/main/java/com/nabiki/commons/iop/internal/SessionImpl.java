@@ -28,10 +28,10 @@
 
 package com.nabiki.commons.iop.internal;
 
-import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.frame.Body;
 import com.nabiki.commons.iop.frame.Frame;
+import com.nabiki.commons.iop.x.OP;
 import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
 
@@ -82,7 +82,7 @@ class SessionImpl {
     body.ResponseID = message.ResponseID;
     body.CurrentCount = message.CurrentCount;
     body.TotalCount = message.TotalCount;
-    body.timeStamp = System.currentTimeMillis();
+    body.TimeStamp = message.TimeStamp;
     if (message.Body != null) {
       body.Body = OP.toJson(message.Body);
     }
@@ -113,20 +113,25 @@ class SessionImpl {
   }
 
   protected void fix() {
-    if (isClosed())
+    if (isClosed()) {
       throw new IllegalStateException("can't fix a closed session");
-    if (this.session.isWriteSuspended())
+    }
+    if (this.session.isWriteSuspended()) {
       this.session.resumeWrite();
-    if (this.session.isReadSuspended())
+    }
+    if (this.session.isReadSuspended()) {
       this.session.resumeRead();
+    }
   }
 
   protected WriteFuture send(Body message, int type) {
-    if (message == null)
+    if (message == null) {
       throw new NullPointerException("message null");
+    }
     synchronized (this) {
-      if (isClosed())
+      if (isClosed()) {
         throw new IllegalStateException("session closed");
+      }
       // Get body bytes.
       var bytes = OP.toJson(message).getBytes(StandardCharsets.UTF_8);
       // Construct frame.

@@ -29,10 +29,10 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.iop.*;
-import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.iop.frame.Body;
 import com.nabiki.commons.iop.frame.Frame;
 import com.nabiki.commons.iop.frame.FrameType;
+import com.nabiki.commons.iop.x.OP;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -136,8 +136,8 @@ class ClientFrameHandler implements IoHandler {
 
   private void checkLag(SessionImpl session, Message msg) {
     if (session != null && msg != null) {
-      if (msg.timeStamp > 0) {
-        session.setLag(System.currentTimeMillis() - msg.timeStamp);
+      if (msg.TimeStamp > 0) {
+        session.setLag(System.currentTimeMillis() - msg.TimeStamp);
       } else {
         // Backward compatible
         session.setLag(0);
