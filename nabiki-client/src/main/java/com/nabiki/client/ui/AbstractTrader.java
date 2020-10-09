@@ -69,7 +69,7 @@ public abstract class AbstractTrader implements Trader {
   }
 
   private void setLogger() throws IOException {
-    logger = Logger.getLogger(getLoggerName());
+    logger = Logger.getLogger(getAlgoName());
     logger.addHandler(new SimpleFileHandler());
     logger.setUseParentHandlers(false);
   }
@@ -97,10 +97,6 @@ public abstract class AbstractTrader implements Trader {
         reCacheInfo();
       }
     }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
-  }
-
-  private String getLoggerName() {
-    return getUserID() + "/" + getAlgoName();
   }
 
   private String getRequestID() {

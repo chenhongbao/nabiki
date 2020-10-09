@@ -61,6 +61,7 @@ public class FigureMarketDataAdaptor extends HeadlessMarketDataAdaptor {
               candle.LowestPrice,
               candle.ClosePrice,
               candle.EndTime);
+          figure.setUpdated(true);
         }
       }
       super.onCandle(candle);

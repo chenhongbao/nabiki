@@ -188,6 +188,39 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
   }
 
   @Override
+  public void doRspQryInstrument(
+      CInstrument rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryCommission(
+      CInstrumentCommissionRate rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
+  public void doRspQryMargin(
+      CInstrumentMarginRate rsp,
+      CRspInfo info,
+      String requestID,
+      String responseID,
+      int current,
+      int total) {
+    doRsp(rsp, info, requestID, current, total);
+  }
+
+  @Override
   public void doRspSubscribeMarketData(
       CSpecificInstrument rsp,
       CRspInfo info,

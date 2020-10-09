@@ -71,7 +71,9 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   @Override
   public void run() {
     try {
-      state(lastSu);
+      if (lastSu != null) {
+        state(lastSu);
+      }
     } catch (Exception e) {
       e.printStackTrace();
       trader.getLogger().severe("process suggestion failed: " + e.getMessage());
@@ -316,7 +318,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
     @Override
     public void accept(CInvestorPosition object, CRspInfo rspInfo, int currentCount, int totalCount) {
-      if (rspInfo.ErrorID == ErrorCodes.NONE) {
+      if (rspInfo.ErrorID != ErrorCodes.NONE) {
         trader.getLogger().severe(String.format(
             "fail qry position[%d]: %s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       } else {

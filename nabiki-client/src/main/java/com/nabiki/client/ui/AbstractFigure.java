@@ -76,6 +76,10 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     prepareTimer();
   }
 
+  void setUpdated(boolean b) {
+    updated.set(b);
+  }
+
   private void prepareStd() {
     logger.addHandler(new UILoggingHandler(logDlg));
     System.setOut(new UIPrintStream(logDlg, true));
@@ -95,7 +99,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
                 for (var fid : getBarFigureIDs()) {
                   update(fid);
                 }
-                updated.set(false);
+                setUpdated(false);
               }
             }
           }
@@ -154,7 +158,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
       var frame = getBarFrame(figureID);
       if (frame != null) {
         ((BarChartController) frame.getChartController()).appendBar(value, xLabel);
-        updated.set(true);
+        setUpdated(true);
       } else {
         throw new IllegalArgumentException("figure(" + figureID + ") not found");
       }
@@ -165,6 +169,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   public void draw(int figureID, String name, Double value) {
     synchronized (updated) {
       getFrame(figureID).getChartController().appendCustom(name, value);
+      setUpdated(true);
     }
   }
 
