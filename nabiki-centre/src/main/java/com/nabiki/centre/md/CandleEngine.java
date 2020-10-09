@@ -130,16 +130,23 @@ public class CandleEngine extends TimerTask {
     product.update(md);
   }
 
+  private boolean checkNowOK(LocalTime now) {
+    return now.getSecond() == 0;
+  }
+
   @Override
   public void run() {
     // Not working, don't generate candles.
     if (!this.working.get()) {
       return;
     }
+    var now = LocalTime.now();
+    // Check now time stamp is precisely at the point of one minute.
+    if (!checkNowOK(now)) {
+      global.getLogger().warning("timer not precise: " + now.toString());
+    }
     // Working now.
-    var now = getRoundTime(
-        LocalTime.now(),
-        (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+    now = getRoundTime(now, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
     var hours = this.global.getAllTradingHour();
     // Measure performance.
     var max = global.getPerformance().start("candle.run.max");
