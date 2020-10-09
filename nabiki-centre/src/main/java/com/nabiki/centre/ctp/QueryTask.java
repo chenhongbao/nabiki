@@ -64,20 +64,30 @@ class QueryTask implements Runnable {
     return this.lastRtn.waitSignal(millis);
   }
 
+  private void tryQueryMargin(String i) {
+    if (provider.isQryLast() && provider.isConfirmed()) {
+      queryMargin(i);
+    }
+  }
+
+  private void tryQueryCommission(String i) {
+    if (provider.isQryLast() && provider.isConfirmed()) {
+      queryCommission(i);
+    }
+  }
+
   @Override
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
       try {
-        if (!provider.isQryLast() || !provider.isConfirmed()) {
-          continue;
-        }
         /* Query takes a long time, create new container to avoid
          * concurrent access */
         var instruments = new HashSet<>(provider.getInstrumentIDs());
         for (var i : instruments) {
-          queryMargin(i);
+          /* Check connection availability before each query */
+          tryQueryMargin(i);
           sleep(1, TimeUnit.SECONDS);
-          queryCommission(i);
+          tryQueryCommission(i);
           sleep(1, TimeUnit.SECONDS);
         }
       } catch (Throwable th) {

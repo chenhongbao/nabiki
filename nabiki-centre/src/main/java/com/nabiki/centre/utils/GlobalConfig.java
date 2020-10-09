@@ -177,8 +177,9 @@ public class GlobalConfig {
   private static void setSingleConfig(
       CInstrumentCommissionRate commission) {
     synchronized (GLOBAL.instrInfo) {
-      if (!GLOBAL.instrInfo.containsKey(commission.InstrumentID))
+      if (!GLOBAL.instrInfo.containsKey(commission.InstrumentID)) {
         GLOBAL.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
+      }
       GLOBAL.instrInfo.get(commission.InstrumentID).Commission = commission;
     }
   }
