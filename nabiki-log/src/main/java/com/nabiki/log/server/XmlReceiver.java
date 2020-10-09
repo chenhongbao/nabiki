@@ -54,9 +54,9 @@ public class XmlReceiver implements Runnable {
           break;
         }
       } catch (IOException e) {
-        if (socket.isClosed()) {
-          break;
-        }
+        /* If peer connection reset, the internal state of Socket is still all right.
+         * but read() throws exception. So here just break the loop. */
+        break;
       } catch (Throwable th) {
         th.printStackTrace();
       }
