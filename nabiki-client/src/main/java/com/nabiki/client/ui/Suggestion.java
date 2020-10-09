@@ -83,13 +83,13 @@ public class Suggestion {
 
   public void setState(SuggestionState state) {
     if (state != this.state) {
+      this.state = state;
       try {
         listener.onStateChange(this);
       } catch (Throwable th) {
         th.printStackTrace();
       }
     }
-    this.state = state;
   }
 
   public CTradingAccount getAccount() {

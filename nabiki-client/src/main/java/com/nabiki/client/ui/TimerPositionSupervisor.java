@@ -298,26 +298,26 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       if (p != 0) {
         return;
       }
-      switch (su.getState()) {
-        case CutCloseShort:
+      switch (su.getDirection()) {
+        case PosiDirectionType.LONG:
           su.setPosDiff(su.getPosition());
           su.setState(SuggestionState.OpenLong);
           break;
-        case CutCloseLong:
+        case PosiDirectionType.SHORT:
           su.setPosDiff(su.getPosition());
           su.setState(SuggestionState.OpenShort);
           break;
         default:
-          trader.getLogger().severe("wrong state: " + su.getState());
+          trader.getLogger().severe("wrong direction: " + su.getState());
           break;
       }
     }
 
     private void judgeCompleted() {
       var p = getPosition(su);
-      if (su.getDirection() == PosiDirectionType.LONG && p == su.getPosDiff()) {
+      if (su.getDirection() == PosiDirectionType.LONG && p == su.getPosition()) {
         su.setState(SuggestionState.Completed);
-      } else if (su.getDirection() == PosiDirectionType.SHORT && -p == su.getPosDiff()) {
+      } else if (su.getDirection() == PosiDirectionType.SHORT && -p == su.getPosition()) {
         su.setState(SuggestionState.Completed);
       }
     }
