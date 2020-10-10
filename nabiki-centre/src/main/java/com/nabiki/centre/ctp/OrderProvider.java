@@ -92,6 +92,13 @@ public class OrderProvider {
     startOrderDaemonOnce();
   }
 
+  public void settle() {
+    getMapper().settle();
+    /* Clear all pending requests because their frozen resources will be freed,
+     * then settled. They become invalid after settlement. */
+    getPendingRequests().clear();
+  }
+
   private void startOrderDaemonOnce() {
     // In case the method is called more than once, throwing exception.
     if (orderDaemon != null && orderDaemon.isAlive())

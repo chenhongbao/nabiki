@@ -123,7 +123,7 @@ class PlatformTask extends TimerTask {
     try {
       main.getAuth().flush();
       main.getUsers().settle();
-      main.getOrder().getMapper().settle();
+      main.getOrder().settle();
       setUserState(UserState.SETTLED);
     } catch (Throwable th) {
       th.printStackTrace();
