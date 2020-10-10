@@ -133,13 +133,14 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
 
   private void sendRsp(
       ServerSession session,
+      MessageType type,
       String instrID,
       String requestID,
       int count,
       int total,
       int errorCode) {
     var r = new Message();
-    r.Type = MessageType.RSP_SUB_MD;
+    r.Type = type;
     r.RequestID = requestID;
     r.ResponseID = UUID.randomUUID().toString();
     r.CurrentCount = count;
@@ -180,6 +181,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     if (instr.size() == 0) {
       sendRsp(
           session,
+          MessageType.RSP_SUB_MD,
           "",
           requestID,
           1,
@@ -197,6 +199,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         } finally {
           sendRsp(
               session,
+              MessageType.RSP_SUB_MD,
               instrID,
               requestID,
               ++count,
@@ -219,6 +222,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     if (request.InstrumentID == null || request.InstrumentID.length == 0) {
       sendRsp(
           session,
+          MessageType.RSP_UNSUB_MD,
           "",
           requestID,
           1,
@@ -235,6 +239,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
         } finally {
           sendRsp(
               session,
+              MessageType.RSP_UNSUB_MD,
               instrID,
               requestID,
               ++count,
