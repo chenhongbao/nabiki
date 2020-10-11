@@ -11,10 +11,10 @@ For common practice, change directory to this directory and execute the followin
 command:
 
     javaw -jar bin/nabiki-centre-[VERSION].jar                                  \
-	      --root "./"                                                           \
-		  --listen 9038                                                         \
-		  --log-server [log-server-ip]:9039                                     \
-		  --start-now false
+      --root "./"                                                               \
+      --listen 9038                                                             \
+      --log-server [log-server-ip]:9039                                         \
+      --start-now false
 
 For details on options, use --help.
 
