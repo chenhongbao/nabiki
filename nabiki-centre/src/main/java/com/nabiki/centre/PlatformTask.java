@@ -273,10 +273,12 @@ class PlatformTask extends TimerTask {
   @Override
   public void run() {
     try {
-      if (needStart())
+      if (needStart()) {
         start();
-      if (needStop())
+      }
+      if (needStop()) {
         stop();
+      }
     } catch (Throwable th) {
       th.printStackTrace();
       global.getLogger().severe(th.getMessage());
