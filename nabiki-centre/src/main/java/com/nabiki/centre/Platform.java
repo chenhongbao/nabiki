@@ -209,7 +209,7 @@ public class Platform {
   }
 
   private static void printHelp() {
-    System.out.println("java[w] -Djava.library.path=<path-to-DLL> -jar <path-to-jar> <options>");
+    System.out.println("java[w] -jar <path-to-jar> <options>");
     System.out.println();
     System.out.println("Options:");
     System.out.println();

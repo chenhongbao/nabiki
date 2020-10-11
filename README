@@ -1,0 +1,30 @@
+Nabiki e-Trade Infrastructure, Release Version 1.2.0
+
+Date: 11:54 am., Oct. 11th, 2020
+
+This software is licensed under GNU AFFERO GENERAL PUBLIC LICENSE Version 3, and
+you can find the copy in the link:
+
+    https://www.gnu.org/licenses/agpl-3.0.en.html
+
+For common practice, change directory to this directory and execute the following
+command:
+
+    javaw -jar bin/nabiki-centre-[VERSION].jar                                  \
+	      --root "./"                                                           \
+		  --listen 9038                                                         \
+		  --log-server [log-server-ip]:9039                                     \
+		  --start-now false
+
+For details on options, use --help.
+
+The host is set to local host so only connection from the same machine is allowed.
+If you want a remote connection available,set that option to a visible hostname
+on network, or just miss that option and it listens for all IPv4 and IPv6 incoming
+connection.
+
+The client can be found in /bin directory with name like client*.jar.
+
+For more details, please refer other READMEs along with source codes.
+
+//-------------------------------------END--------------------------------------//
