@@ -79,17 +79,6 @@ public class Platform {
     return userMgr;
   }
 
-  private void loadDlls() {
-    try {
-      System.loadLibrary("thostmduserapi_se");
-      System.loadLibrary("thosttraderapi_se");
-      System.loadLibrary("thost-v6.3.19-P1-ctp4j-1.0.1");
-    } catch (Throwable th) {
-      th.printStackTrace();
-      this.global.getLogger().severe(th.getMessage());
-    }
-  }
-
   private void providers() {
     // Prepare candle engine.
     var candleEngine = new CandleEngine(
@@ -170,11 +159,8 @@ public class Platform {
         .recursiveGet("dir.log")
         .iterator()
         .next();
-    SystemStream.setErr(dir.setFile(
-        "file.log.err", "system.err.log").file());
-    SystemStream.setOut(dir.setFile
-        ("file.log.out", "system.out.log").file());
-    loadDlls();
+    SystemStream.setErr(dir.setFile("file.log.err", "system.err.log").file());
+    SystemStream.setOut(dir.setFile("file.log.out", "system.out.log").file());
   }
 
   private void setArguments(String[] args) {
