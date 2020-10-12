@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
- *
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ *  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
  * License at
- *
+ *  *
  *                    https://www.gnu.org/licenses/agpl-3.0.txt
- *
+ *  *
  * Permission is hereby  granted, free of charge, to any  person obtaining a copy
  * of this software and associated  documentation files (the "Software"), to deal
  * in the Software  without restriction, including without  limitation the rights
  * to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
  * copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
  * furnished to do so, subject to the following conditions:
- *
+ *  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ *  *
  * THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
  * IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
  * FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
@@ -97,6 +97,45 @@ public class OP {
 
   public static void schedule(TimerTask task, long msDelay, long msPeriod) {
     new Timer().scheduleAtFixedRate(task, msDelay, msPeriod);
+  }
+
+  public static void scheduleOnce(TimerTask task, Date date) {
+    new Timer().schedule(task, date);
+  }
+
+  public static void scheduleOnce(TimerTask task, long delay) {
+    new Timer().schedule(task, delay);
+  }
+
+  /**
+   * Get option values.
+   * @param prefix option prefix
+   * @param args arguments' list
+   * @return {@code null} if the specified option is not defined, {@code ""} if
+   *   option is defined but its value is absent, or return the value.
+   */
+  public static String getOption(String prefix, String[] args) {
+    if (args.length < 1) {
+      return null;
+    }
+    int i = 0;
+    do {
+      if (args[i].equals(prefix)) {
+        break;
+      }
+    } while (++i < args.length);
+    if (i == args.length) {
+      return null;
+    } else if (i == args.length - 1) {
+      return "";
+    } else {
+      var next = args[i + 1];
+      if (next.startsWith("--")) {
+        return "";
+      } else {
+        return next;
+      }
+    }
   }
 
   private static final Map<Integer, String> errorMsg = new ConcurrentHashMap<>();
