@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
- *
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ *  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
  * License at
- *
+ *  *
  *                    https://www.gnu.org/licenses/agpl-3.0.txt
- *
+ *  *
  * Permission is hereby  granted, free of charge, to any  person obtaining a copy
  * of this software and associated  documentation files (the "Software"), to deal
  * in the Software  without restriction, including without  limitation the rights
  * to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
  * copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
  * furnished to do so, subject to the following conditions:
- *
+ *  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ *  *
  * THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
  * IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
  * FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
@@ -732,12 +732,32 @@ public class OrderProvider {
     }
   }
 
+  private void setCommission(CInstrumentCommissionRate commission) {
+    // Commission is set per product, needs to convert to instrument.
+    var pid = Utils.getProductID(commission.InstrumentID);
+    if (pid != null && pid.equals(commission.InstrumentID)) {
+      var instruments = global.getProduct(pid);
+      if (instruments == null) {
+        global.getLogger().warning("no instrument in product: " + pid);
+        return;
+      }
+      for (var i : instruments) {
+        var c = Utils.deepCopy(commission);
+        c.InstrumentID = i;
+        this.msgWriter.writeInfo(c);
+        GlobalConfig.setCommissionConfig(c);
+      }
+    } else {
+      this.msgWriter.writeInfo(commission);
+      GlobalConfig.setCommissionConfig(commission);
+    }
+  }
+
   public void whenRspQryInstrumentCommissionRate(
       CInstrumentCommissionRate instrumentCommissionRate,
       CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
-      this.msgWriter.writeInfo(instrumentCommissionRate);
-      GlobalConfig.setInstrConfig(instrumentCommissionRate);
+      setCommission(instrumentCommissionRate);
     } else {
       this.global.getLogger().severe(
           Utils.formatLog("failed commission query", null,
@@ -753,7 +773,7 @@ public class OrderProvider {
       CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       this.msgWriter.writeInfo(instrumentMarginRate);
-      GlobalConfig.setInstrConfig(instrumentMarginRate);
+      GlobalConfig.setMarginConfig(instrumentMarginRate);
     } else {
       this.global.getLogger().severe(
           Utils.formatLog("failed margin query", null,

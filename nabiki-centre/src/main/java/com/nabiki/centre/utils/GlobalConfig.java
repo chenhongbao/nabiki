@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
- *
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ *  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
  * License at
- *
+ *  *
  *                    https://www.gnu.org/licenses/agpl-3.0.txt
- *
+ *  *
  * Permission is hereby  granted, free of charge, to any  person obtaining a copy
  * of this software and associated  documentation files (the "Software"), to deal
  * in the Software  without restriction, including without  limitation the rights
  * to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
  * copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
  * furnished to do so, subject to the following conditions:
- *
+ *  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ *  *
  * THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
  * IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
  * FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
@@ -90,22 +90,30 @@ public class GlobalConfig {
   public static void resetInstrConfig(Collection<CInstrument> instruments) {
     if (instruments == null || instruments.size() == 0)
       return;
-    var m = new HashMap<String, InstrumentInfo>();
-    for (var i : instruments) {
-      var info = GLOBAL.instrInfo.get(i.InstrumentID);
-      if (info == null) {
-        info = new InstrumentInfo();
-        info.Instrument = i;
+    // If it's first run, just set all instruments.
+    // Otherwise, need to filter obsolete instruments.
+    if (GLOBAL.getAllInstrInfo().size() == 0) {
+      for (var i : instruments) {
+        setInstrumentConfig(i);
       }
-      m.put(i.InstrumentID, info);
-    }
-    synchronized (GLOBAL.instrInfo) {
-      GLOBAL.instrInfo.clear();
-      GLOBAL.instrInfo.putAll(m);
+    } else {
+      var m = new HashMap<String, InstrumentInfo>();
+      for (var i : instruments) {
+        var info = GLOBAL.instrInfo.get(i.InstrumentID);
+        if (info == null) {
+          info = new InstrumentInfo();
+          info.Instrument = i;
+        }
+        m.put(i.InstrumentID, info);
+      }
+      synchronized (GLOBAL.instrInfo) {
+        GLOBAL.instrInfo.clear();
+        GLOBAL.instrInfo.putAll(m);
+      }
     }
   }
 
-  public static void setInstrConfig(CInstrument instr) {
+  public static void setInstrumentConfig(CInstrument instr) {
     synchronized (GLOBAL.instrInfo) {
       if (!GLOBAL.instrInfo.containsKey(instr.InstrumentID)) {
         GLOBAL.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
@@ -121,22 +129,7 @@ public class GlobalConfig {
     }
   }
 
-  private static void setProductConfig(
-      CInstrumentMarginRate margin,
-      String productID) {
-    var instruments = GLOBAL.getProduct(productID);
-    if (instruments == null)
-      return;
-    for (var instrument : instruments) {
-      var m = Utils.deepCopy(margin);
-      if (m != null) {
-        m.InstrumentID = instrument;
-        setSingleConfig(m);
-      }
-    }
-  }
-
-  public static void setSingleConfig(
+  public static void setMarginConfig(
       CInstrumentMarginRate margin) {
     synchronized (GLOBAL.instrInfo) {
       if (!GLOBAL.instrInfo.containsKey(margin.InstrumentID))
@@ -145,36 +138,7 @@ public class GlobalConfig {
     }
   }
 
-  public static void setInstrConfig(
-      CInstrumentMarginRate margin) {
-    var pid = Utils.getProductID(margin.InstrumentID);
-    if (pid != null) {
-      if (pid.compareTo(margin.InstrumentID) == 0)
-        setProductConfig(margin, pid);
-      else
-        setSingleConfig(margin);
-    }
-  }
-
-  private static void setProductConfig(
-      CInstrumentCommissionRate commission,
-      String productID) {
-    var instruments = GLOBAL.getProduct(productID);
-    if (instruments == null)
-      return;
-    for (var instrument : instruments) {
-      // The commission has product ID as instrument, so I need to get all
-      // instruments under the product, and set one by one.
-      // They must not share the same commission instance.
-      var c = Utils.deepCopy(commission);
-      if (c != null) {
-        c.InstrumentID = instrument;
-        setSingleConfig(c);
-      }
-    }
-  }
-
-  private static void setSingleConfig(
+  public static void setCommissionConfig(
       CInstrumentCommissionRate commission) {
     synchronized (GLOBAL.instrInfo) {
       if (!GLOBAL.instrInfo.containsKey(commission.InstrumentID)) {
@@ -184,18 +148,7 @@ public class GlobalConfig {
     }
   }
 
-  public static void setInstrConfig(
-      CInstrumentCommissionRate commission) {
-    var pid = Utils.getProductID(commission.InstrumentID);
-    if (pid != null) {
-      if (pid.compareTo(commission.InstrumentID) == 0)
-        setProductConfig(commission, pid);
-      else
-        setSingleConfig(commission);
-    }
-  }
-
-  private static void setInstrConfig() {
+  private static void setInstrInfoConfig() {
     var dirs = GLOBAL.getRootDirectory()
         .recursiveGet("dir.flow.info");
     if (dirs.size() == 0)
@@ -205,7 +158,7 @@ public class GlobalConfig {
       d.path().toFile().listFiles(file -> {
         try {
           if (file.getName().startsWith("Instrument.")) {
-            setInstrConfig(OP.fromJson(
+            setInstrumentConfig(OP.fromJson(
                 Utils.readText(file, StandardCharsets.UTF_8),
                 CInstrument.class));
           }
@@ -224,11 +177,11 @@ public class GlobalConfig {
       d.path().toFile().listFiles(file -> {
         try {
           if (file.getName().startsWith("Commission.")) {
-            setInstrConfig(OP.fromJson(
+            setCommissionConfig(OP.fromJson(
                 Utils.readText(file, StandardCharsets.UTF_8),
                 CInstrumentCommissionRate.class));
           } else if (file.getName().startsWith("Margin.")) {
-            setInstrConfig(OP.fromJson(
+            setMarginConfig(OP.fromJson(
                 Utils.readText(file, StandardCharsets.UTF_8),
                 CInstrumentMarginRate.class));
           }
@@ -259,7 +212,7 @@ public class GlobalConfig {
     // Global below uses logger to keep error info.
     setLoginConfig();
     setTradingHourConfig();
-    setInstrConfig();
+    setInstrInfoConfig();
     // Set mark.
     configLoaded.set(true);
   }
