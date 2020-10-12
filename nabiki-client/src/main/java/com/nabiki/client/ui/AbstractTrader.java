@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -127,7 +127,11 @@ public abstract class AbstractTrader implements Trader {
       client.queryInstrument(qry, UUID.randomUUID().toString()).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
-              instruments.put(object.InstrumentID, object);
+              if (object != null && object.InstrumentID != null) {
+                instruments.put(object.InstrumentID, object);
+              } else {
+                getLogger().warning("null instrument");
+              }
             } else {
               getLogger().warning(String.format(
                   "query instrument fail[%d]: %s",
@@ -147,7 +151,11 @@ public abstract class AbstractTrader implements Trader {
       client.queryMargin(qry, UUID.randomUUID().toString()).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
-              margins.put(object.InstrumentID, object);
+              if (object != null && object.InstrumentID != null) {
+                margins.put(object.InstrumentID, object);
+              } else {
+                getLogger().warning("null margin");
+              }
             } else {
               getLogger().warning(String.format(
                   "query margin fail[%d]: %s",
@@ -167,7 +175,11 @@ public abstract class AbstractTrader implements Trader {
       client.queryCommission(qry, UUID.randomUUID().toString()).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
-              commissions.put(object.InstrumentID, object);
+              if (object != null && object.InstrumentID != null) {
+                commissions.put(object.InstrumentID, object);
+              } else {
+                getLogger().warning("null commission");
+              }
             } else {
               getLogger().warning(String.format(
                   "query commission fail[%d]: %s",
