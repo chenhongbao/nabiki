@@ -34,7 +34,7 @@
 
   <groupId>com.nabiki.log</groupId>
   <artifactId>nabiki-log</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 
   <name>nabiki-log</name>
   <url>https://github.com/chenhongbao/nabiki</url>
