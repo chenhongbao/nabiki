@@ -705,7 +705,7 @@ public class IopTest {
       // Test session adaptor.
       server.setSessionAdaptor(new TestServerSessionAdaptor());
       // Bind to address.
-      server.bind(new InetSocketAddress(24501));
+      server.bind(new InetSocketAddress("localhost", 24501));
       //......... Client.........
       var client = IOP.createClient();
       // Test message adaptor.
@@ -713,7 +713,7 @@ public class IopTest {
       // Test session adaptor.
       client.setSessionAdaptor(new TestClientSessionAdaptor());
       // Connect to server.
-      client.connect(new InetSocketAddress(24501));
+      client.connect(new InetSocketAddress("localhost", 24501));
 
       // Test client's session.
       var session = client.getSession();

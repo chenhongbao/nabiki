@@ -28,11 +28,25 @@
 
 package com.nabiki.commons.utils.frame;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 public class Frame implements java.io.Serializable {
   public int Type;
   public int Length;
   public byte[] Body;
 
   public Frame() {
+  }
+
+  public byte[] getBytes() {
+    var r = new byte[8 + Length];
+    var buffer = ByteBuffer.wrap(r);
+    buffer.order(ByteOrder.BIG_ENDIAN);
+    buffer.putInt(Type);
+    buffer.putInt(Length);
+    buffer.put(Body);
+    buffer.flip();
+    return r;
   }
 }

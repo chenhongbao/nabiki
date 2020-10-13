@@ -84,7 +84,7 @@ class ClientSessionImpl extends SessionImpl implements ClientSession {
     // Need to wait until login request is actually sent.
     try {
       super.send(toBody(message), FrameType.LOGIN).await();
-    } catch (InterruptedException ignored) {
+    } catch (Throwable ignored) {
     }
   }
 
