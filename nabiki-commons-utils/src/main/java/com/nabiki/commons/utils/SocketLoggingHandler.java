@@ -97,7 +97,7 @@ public class SocketLoggingHandler extends Handler {
     return super.isLoggable(record);
   }
 
-  private void write(String s) throws IOException {
+  private void write(String s) throws Exception {
     Charset cs = null;
     var encoding = getEncoding();
     if (encoding == null) {
@@ -145,7 +145,7 @@ public class SocketLoggingHandler extends Handler {
     }
     try {
       write(msg);
-    } catch (IOException ex) {
+    } catch (Exception ex) {
       reportError(ex.getMessage(), ex, ErrorManager.WRITE_FAILURE);
     }
   }
