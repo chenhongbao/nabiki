@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,56 +26,36 @@
  * SOFTWARE.
  */
 
-package com.nabiki.commons.iop.frame;
+package com.nabiki.centre.config.plain;
 
-import com.nabiki.commons.iop.MessageType;
+import java.time.LocalTime;
+import java.util.List;
 
-public class Body implements java.io.Serializable {
+/**
+ * Trading hour of products. All instruments of the same product trade in the same
+ * hours, so those instruments' trading hours are kept in name of their products.
+ */
+public class TradingHourConfig {
   /**
-   * If the message is a request, the request ID identifies this request. If the
-   * message is a response, the request ID identifies that the request that
-   * it responds to.
+   * Single trading hour, (from, to].
    */
-  public String RequestID;
-
-  /**
-   * If the message is a response, the response ID identifies this response. Else
-   * the field is set to null.
-   */
-  public String ResponseID;
-
-  /**
-   * Message type {@link MessageType}.
-   */
-  public MessageType Type;
-
-  /**
-   * The counter counts how many messages have ben sent for this request or
-   * response. It starts from 1, to total count. It can't be larger than total
-   * count.
-   */
-  public int CurrentCount;
-
-  /**
-   * How many messages to be sent in total. Must be at least 1.
-   */
-  public int TotalCount;
-
-  /**
-   * JSON string representation of the data in this message.
-   */
-  public String Body;
-
-  /**
-   * JSON string representation of rsp info in this message.
-   */
-  public String RspInfo;
-
-  /**
-   * Milliseconds since epoch.
-   */
-  public long TimeStamp;
-
-  public Body() {
+  public static class SingleTradingHour {
+    public LocalTime From, To;
   }
+
+  /**
+   * Products that share the same trading hour.
+   */
+  public List<String> ProductID;
+
+  /**
+   * Ordered trading hours in a trading day. The first trading hour has the index
+   * of 0, then index of 1 and so forth.
+   */
+  public List<SingleTradingHour> TradingHour;
+
+  /**
+   * Name of this configuration.
+   */
+  public String Name;
 }

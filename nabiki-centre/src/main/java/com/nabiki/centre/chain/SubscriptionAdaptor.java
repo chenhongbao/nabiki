@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,16 +28,16 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.config.Global;
 import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
-import com.nabiki.centre.utils.Global;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.MessageType;
 import com.nabiki.commons.iop.ServerMessageAdaptor;
 import com.nabiki.commons.iop.ServerSession;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -152,7 +152,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     // Set rsp info.
     r.RspInfo = new CRspInfo();
     r.RspInfo.ErrorID = errorCode;
-    r.RspInfo.ErrorMsg = OP.getErrorMsg(r.RspInfo.ErrorID);
+    r.RspInfo.ErrorMsg = Utils.getErrorMsg(r.RspInfo.ErrorID);
     session.sendResponse(r);
   }
 

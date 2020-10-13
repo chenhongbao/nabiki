@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,10 +28,9 @@
 
 package com.nabiki.centre.ctp;
 
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.Utils;
+import com.nabiki.centre.config.Global;
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,76 +108,76 @@ public class ReqRspWriter {
   }
 
   public void writeRtn(COrder rtn) {
-    write(OP.toJson(rtn), ensureFile(
+    write(Utils.toJson(rtn), ensureFile(
         getClientDir(this.rtnDir, rtn.OrderRef),
         "Order." + getTimeStamp() + ".json"));
   }
 
   public void writeRtn(CTrade rtn) {
-    write(OP.toJson(rtn), ensureFile(
+    write(Utils.toJson(rtn), ensureFile(
         getClientDir(this.rtnDir, rtn.OrderRef),
         "Trade." + getTimeStamp() + ".json"));
   }
 
   public void writeReq(CInputOrder req) {
-    write(OP.toJson(req), ensureFile(
+    write(Utils.toJson(req), ensureFile(
         getClientDir(this.reqDir, req.OrderRef),
         "InputOrder." + getTimeStamp() + ".json"));
   }
 
   public void writeReq(CInputOrderAction req) {
-    write(OP.toJson(req), ensureFile(
+    write(Utils.toJson(req), ensureFile(
         getClientDir(this.reqDir, req.OrderRef),
         "InputOrderAction." + getTimeStamp() + ".json"));
   }
 
   public void writeInfo(CInstrumentMarginRate rsp) {
-    write(OP.toJson(rsp),
+    write(Utils.toJson(rsp),
         ensureFile(this.infoDir,
             "Margin." + rsp.InstrumentID + ".json"));
   }
 
   public void writeInfo(CInstrumentCommissionRate rsp) {
-    write(OP.toJson(rsp),
+    write(Utils.toJson(rsp),
         ensureFile(this.infoDir,
             "Commission." + rsp.InstrumentID + ".json"));
   }
 
   public void writeInfo(CInstrument rsp) {
-    write(OP.toJson(rsp),
+    write(Utils.toJson(rsp),
         ensureFile(this.infoDir,
             "Instrument." + rsp.InstrumentID + ".json"));
   }
 
   public void writeErr(COrderAction err, CRspInfo info) {
-    write(OP.toJson(err), ensureFile(
+    write(Utils.toJson(err), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "OrderAction." + getTimeStamp() + ".json"));
-    write(OP.toJson(info), ensureFile(
+    write(Utils.toJson(info), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "RspInfo." + getTimeStamp() + ".json"));
   }
 
   public void writeErr(CInputOrderAction err, CRspInfo info) {
-    write(OP.toJson(err), ensureFile(
+    write(Utils.toJson(err), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "InputOrderAction." + getTimeStamp() + ".json"));
-    write(OP.toJson(info), ensureFile(
+    write(Utils.toJson(info), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "RspInfo." + getTimeStamp() + ".json"));
   }
 
   public void writeErr(CInputOrder err, CRspInfo info) {
-    write(OP.toJson(err), ensureFile(
+    write(Utils.toJson(err), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "InputOrder." + getTimeStamp() + ".json"));
-    write(OP.toJson(info), ensureFile(
+    write(Utils.toJson(info), ensureFile(
         getClientDir(this.errDir, err.OrderRef),
         "RspInfo." + getTimeStamp() + ".json"));
   }
 
   public void writeErr(CRspInfo err) {
-    write(OP.toJson(err),
+    write(Utils.toJson(err),
         ensureFile(getClientDir(this.errDir, ""),
             "RspInfo." + getTimeStamp() + ".json"));
   }

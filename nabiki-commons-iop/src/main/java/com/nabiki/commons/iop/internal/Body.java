@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,33 +26,56 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.sdk.internal;
+package com.nabiki.commons.iop.internal;
 
-import com.nabiki.client.sdk.DataPersistence;
+import com.nabiki.commons.iop.MessageType;
 
-import java.io.Serializable;
-import java.util.Objects;
+public class Body implements java.io.Serializable {
+  /**
+   * If the message is a request, the request ID identifies this request. If the
+   * message is a response, the request ID identifies that the request that
+   * it responds to.
+   */
+  public String RequestID;
 
-class DataPersistenceImpl implements DataPersistence {
-  private final DataPersistenceAccess access;
+  /**
+   * If the message is a response, the response ID identifies this response. Else
+   * the field is set to null.
+   */
+  public String ResponseID;
 
-  DataPersistenceImpl(DataPersistenceAccess access) {
-    Objects.requireNonNull(access, "data persistence writer null");
-    this.access = access;
-  }
+  /**
+   * Message type {@link MessageType}.
+   */
+  public MessageType Type;
 
-  @Override
-  public boolean put(String key, Serializable data) {
-    return this.access.write(key, data);
-  }
+  /**
+   * The counter counts how many messages have ben sent for this request or
+   * response. It starts from 1, to total count. It can't be larger than total
+   * count.
+   */
+  public int CurrentCount;
 
-  @Override
-  public boolean remove(String key) {
-    return this.access.remove(key);
-  }
+  /**
+   * How many messages to be sent in total. Must be at least 1.
+   */
+  public int TotalCount;
 
-  @Override
-  public Object get(String key) {
-    return this.access.read(key);
+  /**
+   * JSON string representation of the data in this message.
+   */
+  public String Body;
+
+  /**
+   * JSON string representation of rsp info in this message.
+   */
+  public String RspInfo;
+
+  /**
+   * Milliseconds since epoch.
+   */
+  public long TimeStamp;
+
+  public Body() {
   }
 }

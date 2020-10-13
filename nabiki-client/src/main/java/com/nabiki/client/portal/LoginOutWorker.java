@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -31,7 +31,7 @@ package com.nabiki.client.portal;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.CReqUserLogin;
 import com.nabiki.commons.ctpobj.ErrorCodes;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -185,7 +185,7 @@ public class LoginOutWorker implements Runnable {
   private void startWatcher() {
     if (!watcherStated) {
       watcherStated = true;
-      OP.schedule(new TimerTask() {
+      Utils.schedule(new TimerTask() {
         @Override
         public void run() {
           if (client.isClosed())

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -30,7 +30,7 @@ package com.nabiki.client.ui;
 
 import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.util.HashSet;
 import java.util.TimerTask;
@@ -43,14 +43,15 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   public TimerPositionSupervisor(Trader t) {
     trader = t;
-    listener = s -> {};
-    OP.schedule(this, TimeUnit.SECONDS.toMillis(1));
+    listener = s -> {
+    };
+    Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
   public TimerPositionSupervisor(Trader t, SuggestionListener sl) {
     trader = t;
     listener = sl;
-    OP.schedule(this, TimeUnit.SECONDS.toMillis(1));
+    Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
   @Override

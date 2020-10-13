@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -29,9 +29,9 @@
 package com.nabiki.commons.iop;
 
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
-import com.nabiki.commons.iop.x.SystemStream;
-import com.nabiki.commons.iop.frame.Body;
+import com.nabiki.commons.iop.internal.Body;
+import com.nabiki.commons.utils.SystemStream;
+import com.nabiki.commons.utils.Utils;
 import org.apache.mina.core.session.IdleStatus;
 import org.junit.Test;
 
@@ -41,7 +41,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -72,11 +71,11 @@ public class IopTest {
       case MESSAGE_NOT_DONE:
       case STRANGE_MESSAGE:
         assertTrue(eventObject instanceof Message);
-        System.out.println(OP.toJson(eventObject));
+        System.out.println(Utils.toJson(eventObject));
         break;
       case BROKEN_BODY:
         assertTrue(eventObject instanceof Body);
-        System.out.println(OP.toJson(eventObject));
+        System.out.println(Utils.toJson(eventObject));
         break;
       default:
         assertNull(eventObject);
@@ -674,10 +673,10 @@ public class IopTest {
     public int doLogin(ServerSession session, Message message) {
       if (message.Body != null) {
         assertTrue(message.Body instanceof CReqUserLogin);
-        System.out.println(OP.toJson(message.Body));
+        System.out.println(Utils.toJson(message.Body));
       }
       if (message.RspInfo != null)
-        System.out.println(OP.toJson(message.RspInfo));
+        System.out.println(Utils.toJson(message.RspInfo));
       assertEquals(message.Type, MessageType.REQ_LOGIN);
       // Send login rsp.
       send(session, new CRspUserLogin(),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -29,9 +29,8 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.frame.Body;
-import com.nabiki.commons.iop.frame.Frame;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
+import com.nabiki.commons.utils.frame.Frame;
 import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.session.IoSession;
 
@@ -84,10 +83,10 @@ class SessionImpl {
     body.TotalCount = message.TotalCount;
     body.TimeStamp = message.TimeStamp;
     if (message.Body != null) {
-      body.Body = OP.toJson(message.Body);
+      body.Body = Utils.toJson(message.Body);
     }
     if (message.RspInfo != null) {
-      body.RspInfo = OP.toJson(message.RspInfo);
+      body.RspInfo = Utils.toJson(message.RspInfo);
     }
     return body;
   }
@@ -133,7 +132,7 @@ class SessionImpl {
         throw new IllegalStateException("session closed");
       }
       // Get body bytes.
-      var bytes = OP.toJson(message).getBytes(StandardCharsets.UTF_8);
+      var bytes = Utils.toJson(message).getBytes(StandardCharsets.UTF_8);
       // Construct frame.
       var req = new Frame();
       req.Type = type;

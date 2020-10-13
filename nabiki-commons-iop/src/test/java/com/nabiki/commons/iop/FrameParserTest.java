@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -29,8 +29,12 @@
 package com.nabiki.commons.iop;
 
 import com.google.gson.Gson;
-import com.nabiki.commons.iop.frame.*;
 import com.nabiki.commons.ctpobj.CRspInfo;
+import com.nabiki.commons.iop.internal.Body;
+import com.nabiki.commons.utils.frame.Frame;
+import com.nabiki.commons.utils.frame.FrameParser;
+import com.nabiki.commons.utils.frame.FrameType;
+import com.nabiki.commons.utils.frame.ParsingState;
 import org.junit.Assert;
 import org.junit.Test;
 

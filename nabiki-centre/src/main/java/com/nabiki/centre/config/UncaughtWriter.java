@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,10 +26,27 @@
  * SOFTWARE.
  */
 
-package com.nabiki.client.sdk;
+package com.nabiki.centre.config;
 
-public interface DataPersistenceFactory {
-  DataPersistence get();
+public class UncaughtWriter implements Thread.UncaughtExceptionHandler {
+  private final Global global;
+  private final static UncaughtWriter def = new UncaughtWriter(GlobalConfig.GLOBAL);
 
-  void unget(DataPersistence object);
+  public static UncaughtWriter getDefault() {
+    return def;
+  }
+
+  private UncaughtWriter(Global global) {
+    this.global = global;
+  }
+
+  @Override
+  public void uncaughtException(Thread t, Throwable e) {
+    global.getLogger().severe(String.format(
+        "Uncaught exception in thread[%s-%d]: %s",
+        t.getName(),
+        t.getId(),
+        e.getMessage()));
+    e.printStackTrace();
+  }
 }

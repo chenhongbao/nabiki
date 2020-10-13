@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -32,7 +32,7 @@ import com.nabiki.chart.control.BarChartController;
 import com.nabiki.chart.control.BarChartPanel;
 import com.nabiki.chart.control.StickChartController;
 import com.nabiki.chart.control.StickChartPanel;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.awt.*;
 import java.util.Map;
@@ -87,7 +87,7 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
   }
 
   private void prepareTimer() {
-    OP.schedule(
+    Utils.schedule(
         new TimerTask() {
           @Override
           public void run() {

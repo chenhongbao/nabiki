@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,8 +28,7 @@
 
 package com.nabiki.centre.user.auth;
 
-import com.nabiki.centre.utils.Utils;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -68,7 +67,7 @@ public class UserAuthManager {
       var name = file.getName();
       if (name.startsWith("auth.") && name.endsWith(".json")) {
         try {
-          var profile = OP.fromJson(
+          var profile = Utils.fromJson(
               Utils.readText(file, StandardCharsets.UTF_8),
               UserAuthProfile.class);
           if (profile != null && profile.UserID != null)
@@ -108,7 +107,7 @@ public class UserAuthManager {
     var path = Path.of(userDir.toString(),
         "auth." + profile.UserID + ".json");
     Utils.createFile(userDir, true);
-    var json = OP.toJson(profile);
+    var json = Utils.toJson(profile);
     Utils.writeText(
         json,
         path.toFile(),

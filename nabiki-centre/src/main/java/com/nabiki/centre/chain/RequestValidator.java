@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,15 +28,14 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.auth.OrderOffset;
 import com.nabiki.centre.user.auth.UserAuthProfile;
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.Utils;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.MessageType;
 import com.nabiki.commons.iop.ServerSession;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -123,7 +122,7 @@ public class RequestValidator extends RequestSuper {
           requestID,
           MessageType.RSP_REQ_ORDER_INSERT,
           ErrorCodes.NOT_AUTHENT,
-          OP.getErrorMsg(ErrorCodes.NOT_AUTHENT));
+          Utils.getErrorMsg(ErrorCodes.NOT_AUTHENT));
     } else {
       var auth = (UserAuthProfile) attr;
       if (request.UserID == null
@@ -133,7 +132,7 @@ public class RequestValidator extends RequestSuper {
             requestID,
             MessageType.RSP_REQ_ORDER_INSERT,
             ErrorCodes.USER_NOT_ACTIVE,
-            OP.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
+            Utils.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
       } else {
         for (var instrAuth : auth.InstrumentAuths) {
           var instrumentID = request.InstrumentID;
@@ -151,7 +150,7 @@ public class RequestValidator extends RequestSuper {
                   requestID,
                   MessageType.RSP_REQ_ORDER_INSERT,
                   ErrorCodes.NONE,
-                  OP.getErrorMsg(ErrorCodes.NONE));
+                  Utils.getErrorMsg(ErrorCodes.NONE));
             } else {
               // Allow the request goes to next handler on the chain.
               return;
@@ -163,7 +162,7 @@ public class RequestValidator extends RequestSuper {
             requestID,
             MessageType.RSP_REQ_ORDER_INSERT,
             ErrorCodes.NO_TRADING_RIGHT,
-            OP.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
+            Utils.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
       }
     }
     session.done();

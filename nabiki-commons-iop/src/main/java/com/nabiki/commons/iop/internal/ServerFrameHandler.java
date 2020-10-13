@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -30,10 +30,9 @@ package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.ctpobj.ErrorCodes;
 import com.nabiki.commons.iop.*;
-import com.nabiki.commons.iop.frame.Body;
-import com.nabiki.commons.iop.frame.Frame;
-import com.nabiki.commons.iop.frame.FrameType;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
+import com.nabiki.commons.utils.frame.Frame;
+import com.nabiki.commons.utils.frame.FrameType;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -169,7 +168,7 @@ class ServerFrameHandler implements IoHandler {
     ServerSessionImpl iopSession = ServerSessionImpl.from(session);
     var frame = (Frame) message;
     try {
-      body = OP.fromJson(new String(
+      body = Utils.fromJson(new String(
           frame.Body, StandardCharsets.UTF_8), Body.class);
       iopMessage = toMessage(body);
       // Taken down lag from client to server.
@@ -211,7 +210,7 @@ class ServerFrameHandler implements IoHandler {
     ServerSessionImpl iopSession = ServerSessionImpl.from(session);
     var frame = (Frame) message;
     try {
-      body = OP.fromJson(new String(
+      body = Utils.fromJson(new String(
           frame.Body, StandardCharsets.UTF_8), Body.class);
       iopMessage = toMessage(body);
       try {

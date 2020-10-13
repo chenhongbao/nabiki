@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.utils;
+package com.nabiki.commons.utils;
 
 import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
@@ -167,7 +167,7 @@ public class EasyFile {
    * that associates {@code key} with object.
    *
    * <p>The object created with the {@code key} can be retrieved with
-   * {@link com.nabiki.centre.utils.EasyFile#get(String)}.
+   * {@link EasyFile#get(String)}.
    * </p>
    *
    * @param key     key of the object
@@ -229,7 +229,7 @@ public class EasyFile {
    * Search for object with the specified key recursively.
    *
    * @param key key of the object
-   * @return {@link Collection} of {@link com.nabiki.centre.utils.EasyFile}
+   * @return {@link Collection} of {@link EasyFile}
    * objects with the specified key
    */
   public Collection<EasyFile> recursiveGet(String key) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,13 +28,12 @@
 
 package com.nabiki.centre.user.core;
 
+import com.nabiki.centre.config.Global;
+import com.nabiki.centre.config.plain.InstrumentInfo;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.user.core.plain.UserState;
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.Utils;
-import com.nabiki.centre.utils.plain.InstrumentInfo;
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -212,14 +211,14 @@ public class ActiveRequest {
   private int send(CInputOrder order, ActiveRequest active) {
     int r = this.orderProvider.inputOrder(order, active);
     this.execRsp.ErrorID = r;
-    this.execRsp.ErrorMsg = OP.getErrorMsg(r);
+    this.execRsp.ErrorMsg = Utils.getErrorMsg(r);
     return r;
   }
 
   private int send(CInputOrderAction action, ActiveRequest active) {
     int r = this.orderProvider.actionOrder(action, active);
     this.execRsp.ErrorID = r;
-    this.execRsp.ErrorMsg = OP.getErrorMsg(r);
+    this.execRsp.ErrorMsg = Utils.getErrorMsg(r);
     return r;
   }
 

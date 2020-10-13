@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,10 +28,9 @@
 
 package com.nabiki.centre.user.core;
 
-import com.nabiki.centre.utils.Utils;
-import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.ctpobj.CInvestorPositionDetail;
 import com.nabiki.commons.ctpobj.CTradingAccount;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,14 +97,14 @@ public class UserManager {
         if (name.startsWith("account.") && name.endsWith(".json")) {
           if (account[0] != null)
             throw new IOException("ambiguous account");
-          account[0] = OP.fromJson(
+          account[0] = Utils.fromJson(
               Utils.readText(file, StandardCharsets.UTF_8),
               CTradingAccount.class);
           // Get account ready for today's trading.
           renewAccount(account[0]);
         }
         if (name.startsWith("position.") && name.endsWith(".json")) {
-          var pos = OP.fromJson(Utils.readText(
+          var pos = Utils.fromJson(Utils.readText(
               file, StandardCharsets.UTF_8),
               CInvestorPositionDetail.class);
           // Filter out position that is completely closed.
@@ -173,7 +172,7 @@ public class UserManager {
     var path = Path.of(todayDir.toString(),
         "account." + account.AccountID + ".json");
     Utils.createFile(path, false);
-    Utils.writeText(OP.toJson(account),
+    Utils.writeText(Utils.toJson(account),
         Utils.createFile(path, false),
         StandardCharsets.UTF_8, false);
     // Write positions.
@@ -185,7 +184,7 @@ public class UserManager {
         // check the volume and filter out all-closed position.
         path = Path.of(todayDir.toString(),
             "position." + (++count) + ".json");
-        Utils.writeText(OP.toJson(pos.copyRawPosition()),
+        Utils.writeText(Utils.toJson(pos.copyRawPosition()),
             Utils.createFile(path, false),
             StandardCharsets.UTF_8,
             false);

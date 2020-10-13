@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,13 +28,13 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.config.Global;
 import com.nabiki.centre.md.MarketDataReceiver;
 import com.nabiki.centre.md.MarketDataRouter;
-import com.nabiki.centre.utils.Global;
 import com.nabiki.commons.iop.ServerSession;
 import com.nabiki.commons.iop.ServerSessionAdaptor;
 import com.nabiki.commons.iop.SessionEvent;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 public class SessionAdaptor extends ServerSessionAdaptor {
   private final MarketDataRouter router;
@@ -66,13 +66,13 @@ public class SessionAdaptor extends ServerSessionAdaptor {
         break;
       case MESSAGE_NOT_DONE:
         global.getLogger().warning("message not processed");
-        global.getLogger().warning(OP.toJson(eventObject));
+        global.getLogger().warning(Utils.toJson(eventObject));
         break;
       case STRANGE_MESSAGE:
       case BROKEN_BODY:
         global.getLogger().warning("fail parsing message: "
             + event);
-        global.getLogger().warning(OP.toJson(eventObject));
+        global.getLogger().warning(Utils.toJson(eventObject));
         break;
       case INPUT_CLOSED:
         global.getLogger().info(

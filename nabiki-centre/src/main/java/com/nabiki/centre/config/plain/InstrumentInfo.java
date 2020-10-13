@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,36 +26,28 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.utils.plain;
+package com.nabiki.centre.config.plain;
 
-import java.time.LocalTime;
-import java.util.List;
+import com.nabiki.commons.ctpobj.CInstrument;
+import com.nabiki.commons.ctpobj.CInstrumentCommissionRate;
+import com.nabiki.commons.ctpobj.CInstrumentMarginRate;
 
-/**
- * Trading hour of products. All instruments of the same product trade in the same
- * hours, so those instruments' trading hours are kept in name of their products.
- */
-public class TradingHourConfig {
+public class InstrumentInfo {
   /**
-   * Single trading hour, (from, to].
+   * Instrument.
    */
-  public static class SingleTradingHour {
-    public LocalTime From, To;
+  public CInstrument Instrument;
+
+  /**
+   * Commission.
+   */
+  public CInstrumentCommissionRate Commission;
+
+  /**
+   * Margin.
+   */
+  public CInstrumentMarginRate Margin;
+
+  public InstrumentInfo() {
   }
-
-  /**
-   * Products that share the same trading hour.
-   */
-  public List<String> ProductID;
-
-  /**
-   * Ordered trading hours in a trading day. The first trading hour has the index
-   * of 0, then index of 1 and so forth.
-   */
-  public List<SingleTradingHour> TradingHour;
-
-  /**
-   * Name of this configuration.
-   */
-  public String Name;
 }

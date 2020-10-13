@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,18 +28,18 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
-import com.nabiki.centre.utils.Global;
-import com.nabiki.commons.iop.LoginManager;
-import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.MessageType;
-import com.nabiki.commons.iop.ServerSession;
-import com.nabiki.commons.iop.x.OP;
 import com.nabiki.commons.ctpobj.CReqUserLogin;
 import com.nabiki.commons.ctpobj.CRspInfo;
 import com.nabiki.commons.ctpobj.CRspUserLogin;
 import com.nabiki.commons.ctpobj.ErrorCodes;
+import com.nabiki.commons.iop.LoginManager;
+import com.nabiki.commons.iop.Message;
+import com.nabiki.commons.iop.MessageType;
+import com.nabiki.commons.iop.ServerSession;
+import com.nabiki.commons.utils.Utils;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -114,7 +114,7 @@ public class UserLoginManager extends LoginManager {
     rsp.Body = r;
     rsp.RspInfo = new CRspInfo();
     rsp.RspInfo.ErrorID = code;
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(code);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(code);
     session.sendLogin(rsp);
   }
 }

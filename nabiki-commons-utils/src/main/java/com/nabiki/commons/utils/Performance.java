@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-package com.nabiki.commons.iop.x;
+package com.nabiki.commons.utils;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -36,8 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Performance {
 
-  private final Map<String, Duration> measures = new ConcurrentHashMap<>();
   private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+  private final Map<String, Duration> measures = new ConcurrentHashMap<>();
 
   public Performance() {
   }

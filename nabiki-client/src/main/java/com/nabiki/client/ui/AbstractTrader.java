@@ -31,8 +31,8 @@ package com.nabiki.client.ui;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.iop.x.OP;
-import com.nabiki.commons.iop.x.SystemStream;
+import com.nabiki.commons.utils.SystemStream;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
 import java.util.*;
@@ -84,14 +84,14 @@ public abstract class AbstractTrader implements Trader {
     calendar.set(Calendar.HOUR_OF_DAY, 20);
     calendar.set(Calendar.MINUTE, 59);
     calendar.set(Calendar.SECOND, 0);
-    OP.schedule(new TimerTask() {
+    Utils.schedule(new TimerTask() {
       @Override
       public void run() {
         reCacheInfo();
       }
     }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
     calendar.set(Calendar.HOUR_OF_DAY, 8);
-    OP.schedule(new TimerTask() {
+    Utils.schedule(new TimerTask() {
       @Override
       public void run() {
         reCacheInfo();

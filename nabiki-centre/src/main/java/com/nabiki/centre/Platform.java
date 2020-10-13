@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -29,6 +29,8 @@
 package com.nabiki.centre;
 
 import com.nabiki.centre.chain.*;
+import com.nabiki.centre.config.Global;
+import com.nabiki.centre.config.GlobalConfig;
 import com.nabiki.centre.ctp.OrderProvider;
 import com.nabiki.centre.ctp.TickProvider;
 import com.nabiki.centre.md.CandleEngine;
@@ -36,12 +38,9 @@ import com.nabiki.centre.md.CandleRW;
 import com.nabiki.centre.md.MarketDataRouter;
 import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.core.ActiveUserManager;
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.GlobalConfig;
-import com.nabiki.centre.utils.Utils;
 import com.nabiki.commons.iop.IOP;
-import com.nabiki.commons.iop.x.OP;
-import com.nabiki.commons.iop.x.SystemStream;
+import com.nabiki.commons.utils.SystemStream;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -196,7 +195,7 @@ public class Platform {
   }
 
   public void task() {
-    OP.schedule(new PlatformTask(this, this.global), MILLIS);
+    Utils.schedule(new PlatformTask(this, this.global), MILLIS);
   }
 
   private static boolean needHelp(String[] args) {

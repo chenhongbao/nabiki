@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,15 +26,13 @@
  * SOFTWARE.
  */
 
-package com.nabiki.commons.iop.frame;
+package com.nabiki.commons.utils.frame;
 
-/**
- * The first byte(left most) can't be zero because the parser uses zeros to clear
- * the wrong frame and sync-up with peer.
- */
-public class FrameType {
-  public static final int HEARTBEAT = 0x10000000;
-  public static final int REQUEST = 0x10000001;
-  public static final int RESPONSE = 0x10000002;
-  public static final int LOGIN = 0x10000003;
+public class Frame implements java.io.Serializable {
+  public int Type;
+  public int Length;
+  public byte[] Body;
+
+  public Frame() {
+  }
 }

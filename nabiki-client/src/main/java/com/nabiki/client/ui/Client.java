@@ -30,7 +30,7 @@ package com.nabiki.client.ui;
 
 import com.nabiki.commons.ctpobj.CSpecificInstrument;
 import com.nabiki.commons.ctpobj.ErrorCodes;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
@@ -48,11 +48,11 @@ public class Client extends AbstractClient {
   private final Date startDate;
 
   public Client(String[] args) {
-    if (OP.getOption("--help", args) != null) {
+    if (Utils.getOption("--help", args) != null) {
       printHelp();
       System.exit(1);
     }
-    startDate = parseDate(OP.getOption("--start-at", args));
+    startDate = parseDate(Utils.getOption("--start-at", args));
   }
 
   private void printHelp() {
@@ -124,7 +124,7 @@ public class Client extends AbstractClient {
   public void run(HeadlessTrader trader, InetSocketAddress serverAddress) {
     this.trader = trader;
     this.handler = trader;
-    OP.scheduleOnce(new TimerTask() {
+    Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {
@@ -141,7 +141,7 @@ public class Client extends AbstractClient {
   public void run(FigureTrader trader, InetSocketAddress serverAddress) {
     this.trader = trader;
     this.handler = trader;
-    OP.scheduleOnce(new TimerTask() {
+    Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {

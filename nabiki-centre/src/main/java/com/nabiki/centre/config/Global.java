@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -26,12 +26,14 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.utils;
+package com.nabiki.centre.config;
 
-import com.nabiki.centre.utils.plain.InstrumentInfo;
-import com.nabiki.centre.utils.plain.LoginConfig;
+import com.nabiki.centre.config.plain.InstrumentInfo;
+import com.nabiki.centre.config.plain.LoginConfig;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
-import com.nabiki.commons.iop.x.Performance;
+import com.nabiki.commons.utils.EasyFile;
+import com.nabiki.commons.utils.Performance;
+import com.nabiki.commons.utils.Utils;
 
 import java.time.Duration;
 import java.util.Collection;

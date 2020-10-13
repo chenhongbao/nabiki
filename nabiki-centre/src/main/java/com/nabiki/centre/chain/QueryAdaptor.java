@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,14 +28,14 @@
 
 package com.nabiki.centre.chain;
 
+import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.core.ActiveUser;
-import com.nabiki.centre.utils.Global;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.MessageType;
 import com.nabiki.commons.iop.ServerMessageAdaptor;
 import com.nabiki.commons.iop.ServerSession;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -72,7 +72,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.Body = activeUser.getTradingAccount();
       rsp.RspInfo.ErrorID = ErrorCodes.NONE;
     }
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
     session.sendResponse(rsp);
     session.done();
   }
@@ -95,7 +95,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.TotalCount = 1;
       rsp.Body = new COrder();
       rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-      rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+      rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
@@ -107,14 +107,14 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         rsp.TotalCount = 1;
         rsp.Body = new COrder();
         rsp.RspInfo.ErrorID = ErrorCodes.ORDER_NOT_FOUND;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         session.sendResponse(rsp);
       } else {
         // Send rtn orders.
         rsp.CurrentCount = 0;
         rsp.TotalCount = orders.size();
         rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         // Send rtn orders.
         for (COrder order : orders) {
           ++rsp.CurrentCount;
@@ -149,7 +149,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.TotalCount = 1;
       rsp.Body = p;
       rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-      rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+      rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
@@ -167,13 +167,13 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         // It's very common that there is no position of spec instrument.
         // Don't report error.
         rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         session.sendResponse(rsp);
       } else {
         rsp.CurrentCount = 0;
         rsp.TotalCount = positions.size();
         rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         // Send positions.
         for (CInvestorPosition position : positions) {
           ++rsp.CurrentCount;
@@ -208,7 +208,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.TotalCount = 1;
       rsp.Body = p;
       rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-      rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+      rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
       var activeUser = (ActiveUser) attr;
@@ -226,13 +226,13 @@ public class QueryAdaptor extends ServerMessageAdaptor {
         // It's very common that there is no position of spec instrument.
         // Don't report error.
         rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         session.sendResponse(rsp);
       } else {
         rsp.CurrentCount = 0;
         rsp.TotalCount = details.size();
         rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-        rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+        rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
         // Send positions.
         for (var detail : details) {
           ++rsp.CurrentCount;
@@ -266,7 +266,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.Body = depth;
       rsp.RspInfo.ErrorID = ErrorCodes.NONE;
     }
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
     session.sendResponse(rsp);
     session.done();
   }
@@ -291,7 +291,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.RequestID = requestID;
     rsp.RspInfo = new CRspInfo();
     rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
     rsp.CurrentCount = 0;
     rsp.TotalCount = instruments.size();
     for (var i : instruments) {
@@ -323,7 +323,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.RequestID = requestID;
     rsp.RspInfo = new CRspInfo();
     rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
     rsp.CurrentCount = 0;
     rsp.TotalCount = commissions.size();
     for (var i : commissions) {
@@ -355,7 +355,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.RequestID = requestID;
     rsp.RspInfo = new CRspInfo();
     rsp.RspInfo.ErrorID = ErrorCodes.NONE;
-    rsp.RspInfo.ErrorMsg = OP.getErrorMsg(rsp.RspInfo.ErrorID);
+    rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
     rsp.CurrentCount = 0;
     rsp.TotalCount = margins.size();
     for (var i : margins) {

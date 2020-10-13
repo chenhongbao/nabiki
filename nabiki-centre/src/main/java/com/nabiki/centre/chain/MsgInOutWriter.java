@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,11 +28,10 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.centre.utils.Global;
-import com.nabiki.centre.utils.Utils;
+import com.nabiki.centre.config.Global;
 import com.nabiki.commons.iop.IOPSession;
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.x.OP;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,12 +91,12 @@ public class MsgInOutWriter {
   }
 
   void writeOut(Message out, IOPSession session) {
-    write(OP.toJson(out), ensureFile(getClientDir(this.outDir, session),
+    write(Utils.toJson(out), ensureFile(getClientDir(this.outDir, session),
         out.Type + "." + LocalDateTime.now().format(this.formatter) + "." + out.RequestID + ".json"));
   }
 
   void writeIn(Message in, IOPSession session) {
-    write(OP.toJson(in), ensureFile(getClientDir(this.inDir, session),
+    write(Utils.toJson(in), ensureFile(getClientDir(this.inDir, session),
         in.Type + "." + LocalDateTime.now().format(this.formatter) + "." + in.RequestID + ".json"));
   }
 }
