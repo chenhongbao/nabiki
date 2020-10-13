@@ -31,6 +31,7 @@ package com.nabiki.client.ui;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
+import com.nabiki.commons.utils.SocketLoggingHandler;
 import com.nabiki.commons.utils.SystemStream;
 import com.nabiki.commons.utils.Utils;
 
@@ -41,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import java.util.logging.SocketHandler;
 
 public abstract class AbstractTrader implements Trader {
   private TradeClient client;
@@ -195,7 +195,7 @@ public abstract class AbstractTrader implements Trader {
   @Override
   public void setLoggingServer(String host, int port) {
     try {
-      logger.addHandler(new SocketHandler(host, port));
+      logger.addHandler(new SocketLoggingHandler(host, port));
     } catch (IOException e) {
       e.printStackTrace();
     }

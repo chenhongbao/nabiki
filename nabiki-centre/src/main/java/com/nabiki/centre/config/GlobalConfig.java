@@ -37,6 +37,7 @@ import com.nabiki.commons.ctpobj.CInstrumentCommissionRate;
 import com.nabiki.commons.ctpobj.CInstrumentMarginRate;
 import com.nabiki.commons.utils.EasyFile;
 import com.nabiki.commons.utils.Performance;
+import com.nabiki.commons.utils.SocketLoggingHandler;
 import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
@@ -47,10 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.SocketHandler;
+import java.util.logging.*;
 
 public class GlobalConfig {
   public static String ROOT_PATH;
@@ -372,9 +370,9 @@ public class GlobalConfig {
           } else {
             port = Integer.parseInt(listen.trim());
           }
-          SocketHandler sh;
+          Handler sh;
           if (host.length() > 0) {
-            sh = new SocketHandler(host, port);
+            sh = new SocketLoggingHandler(host, port);
           } else {
             sh = new SocketHandler("localhost", port);
           }

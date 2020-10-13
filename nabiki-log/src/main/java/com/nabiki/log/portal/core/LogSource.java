@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,6 +28,7 @@
 
 package com.nabiki.log.portal.core;
 
+import com.nabiki.commons.utils.frame.Frame;
 import com.nabiki.log.server.XmlReceiver;
 import org.xml.sax.SAXException;
 
@@ -35,16 +36,19 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.LogRecord;
 
 public class LogSource {
-  private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+  private final BlockingQueue<Frame> queue = new LinkedBlockingQueue<>();
   private final LogDisplay display;
   private final SAXHandler xmlHandler = new SAXHandler();
 
@@ -57,6 +61,7 @@ public class LogSource {
     this.updater = new Thread(() -> {
       SAXParser parser;
       try {
+        extractDtd("logger.dtd");
         parser = SAXParserFactory.newInstance().newSAXParser();
       } catch (SAXException | ParserConfigurationException e) {
         e.printStackTrace();
@@ -65,8 +70,7 @@ public class LogSource {
       for(;;) {
         try {
           parser.reset();
-          parser.parse(new ByteArrayInputStream(
-              queue.take().getBytes(StandardCharsets.UTF_8)), xmlHandler);
+          parser.parse(new ByteArrayInputStream(queue.take().Body), xmlHandler);
           LogRecord record;
           while ((record = xmlHandler.pop()) != null) {
             display.append(record);
@@ -78,6 +82,18 @@ public class LogSource {
     });
     this.updater.setDaemon(true);
     this.updater.start();
+  }
+
+  private void extractDtd(String res) {
+    Path p = Path.of(new File("").getAbsolutePath(), "/" + res);
+    if (!Files.exists(p) || !Files.isRegularFile(p)) {
+      try (FileOutputStream fos = new FileOutputStream(p.toFile())) {
+        fos.write(this.getClass().getResourceAsStream("/" + res).readAllBytes());
+        fos.flush();
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    }
   }
 
   private InetSocketAddress getAddress(String address) {

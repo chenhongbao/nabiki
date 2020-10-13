@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,6 +28,8 @@
 
 package com.nabiki.log.server;
 
+import com.nabiki.commons.utils.frame.Frame;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -36,13 +38,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class RecvDaemon implements Runnable {
-  private final Queue<String> queue;
+  private final Queue<Frame> queue;
   private final InetSocketAddress address;
   private final ExecutorService es = Executors.newCachedThreadPool();
 
   private ServerSocket server;
 
-  public RecvDaemon(InetSocketAddress a, Queue<String> q) {
+  public RecvDaemon(InetSocketAddress a, Queue<Frame> q) {
     address = a;
     queue = q;
   }

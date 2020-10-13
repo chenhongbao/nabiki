@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,6 +28,7 @@
 
 package com.nabiki.log.portal.ui;
 
+import com.nabiki.commons.utils.SocketLoggingHandler;
 import com.nabiki.log.portal.core.LogLevelType;
 
 import javax.swing.*;
@@ -35,9 +36,9 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.logging.SocketHandler;
 
 public class TalkDialog extends JDialog {
   private final JPanel contentPanel = new JPanel();
@@ -52,7 +53,7 @@ public class TalkDialog extends JDialog {
   private final JButton sendBtn;
 
   private String lastAddress;
-  private SocketHandler lastHandler;
+  private Handler lastHandler;
 
   private void locateSelf() {
     var pp = getParent().getLocation();
@@ -90,7 +91,7 @@ public class TalkDialog extends JDialog {
         return true;
       }
       var address = getAddress(str);
-      lastHandler = new SocketHandler(address.getHostString(), address.getPort());
+      lastHandler = new SocketLoggingHandler(address.getHostString(), address.getPort());
       lastHandler.setEncoding(StandardCharsets.UTF_8.name());
       lastAddress = str;
       return true;
@@ -233,7 +234,8 @@ public class TalkDialog extends JDialog {
 
   private LogRecord getRecord() {
     var record = new LogRecord(Level.ALL, "");
-    record.setLevel(getLevel((LogLevelType) levelComb.getSelectedItem()));
+    var level = levelComb.getSelectedItem();
+    record.setLevel(getLevel(level == null ? LogLevelType.ALL : (LogLevelType) level));
     record.setMessage(msgArea.getText());
     record.setLoggerName(loggerField.getText());
     record.setSourceClassName(classField.getText());

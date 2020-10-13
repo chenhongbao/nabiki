@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,16 +28,21 @@
 
 package com.nabiki.log.server;
 
+import com.nabiki.commons.utils.Utils;
+import com.nabiki.commons.utils.frame.Frame;
+import com.nabiki.commons.utils.frame.FrameType;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class SubDaemon implements Runnable {
-  private final BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+  private final BlockingQueue<Frame> queue = new LinkedBlockingQueue<>();
   private final Set<Socket> clients;
   private final InetSocketAddress address;
 
@@ -54,13 +59,29 @@ public class SubDaemon implements Runnable {
     recvDaemon.start();
   }
 
-  private void send(String m) {
+  private void scheduleHeartbeat() {
+    var f = new Frame();
+    f.Type = FrameType.HEARTBEAT;
+    f.Length = 1;
+    f.Body = new byte[]{0};
+    Utils.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        try {
+          send(f);
+        } catch (Throwable ignored) {
+        }
+      }
+    }, TimeUnit.MINUTES.toMillis(1));
+  }
+
+  private void send(Frame m) {
     synchronized (clients) {
       var iterator = clients.iterator();
       while (iterator.hasNext()) {
         var c = iterator.next();
         try {
-          c.getOutputStream().write(m.getBytes(StandardCharsets.UTF_8));
+          c.getOutputStream().write(m.getBytes());
         } catch (IOException e) {
           /* Don't print stack trace here, because it is very common to close
            * connection, and server catches io exception. */
@@ -74,6 +95,7 @@ public class SubDaemon implements Runnable {
   public void run() {
     try {
       startRecv();
+      scheduleHeartbeat();
       for (; ; ) {
         try {
           send(queue.take());

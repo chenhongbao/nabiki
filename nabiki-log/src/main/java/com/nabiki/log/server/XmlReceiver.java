@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,28 +28,43 @@
 
 package com.nabiki.log.server;
 
+import com.nabiki.commons.utils.frame.Frame;
+import com.nabiki.commons.utils.frame.FrameParser;
+import com.nabiki.commons.utils.frame.FrameType;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Queue;
 
 public class XmlReceiver implements Runnable {
-  private SimpleParser parser;
+  private final Queue<Frame> queue;
+
+  private FrameParser parser = new FrameParser();
   private Socket socket;
 
-  public XmlReceiver(Queue<String> q, Socket s) {
-    parser = new SimpleParser(q);
+  public XmlReceiver(Queue<Frame> q, Socket s) {
+    queue = q;
     socket = s;
   }
 
   @Override
   public void run() {
-    for (;;) {
+    byte[] buffer = new byte[1];
+    for (; ; ) {
       try {
         var r = socket.getInputStream().read();
         /* read() returns -1 again and again after socket is closed.
          * Check and return to avoid busy loop.*/
         if (r != -1) {
-          parser.parse((byte) r);
+          buffer[0] = (byte) r;
+          if (parser.parse(buffer)) {
+            while (parser.size() > 0) {
+              var f = parser.poll();
+              if (f.Type != FrameType.HEARTBEAT) {
+                queue.offer(f);
+              }
+            }
+          }
         } else {
           break;
         }
