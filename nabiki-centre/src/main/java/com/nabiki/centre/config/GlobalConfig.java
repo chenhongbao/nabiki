@@ -48,7 +48,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class GlobalConfig {
   public static String ROOT_PATH;
@@ -374,7 +377,7 @@ public class GlobalConfig {
           if (host.length() > 0) {
             sh = new SocketLoggingHandler(host, port);
           } else {
-            sh = new SocketHandler("localhost", port);
+            sh = new SocketLoggingHandler("localhost", port);
           }
           Global.logger.addHandler(sh);
         }

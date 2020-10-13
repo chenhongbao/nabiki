@@ -118,6 +118,7 @@ public class SocketLoggingHandler extends Handler {
       f.Body = bytes;
       synchronized (this) {
         bout.write(f.getBytes());
+        bout.flush();
       }
     } catch (IOException ex) {
       reportError("Fail writing bytes in " + encoding, ex,
