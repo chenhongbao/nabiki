@@ -97,6 +97,13 @@ public class SocketLoggingHandler extends Handler {
     return super.isLoggable(record);
   }
 
+  private void write(byte[] bytes) throws IOException {
+    synchronized (this) {
+      bout.write(bytes);
+      bout.flush();
+    }
+  }
+
   private void write(String s) throws Exception {
     Charset cs = null;
     var encoding = getEncoding();
@@ -110,21 +117,21 @@ public class SocketLoggingHandler extends Handler {
         cs = java.nio.charset.Charset.defaultCharset();
       }
     }
+    byte[] bytes = null;
     try {
-      var bytes = s.getBytes(cs);
+      var b = s.getBytes(cs);
       Frame f = new Frame();
       f.Type = FrameType.REQUEST;
-      f.Length = bytes.length;
-      f.Body = bytes;
-      synchronized (this) {
-        bout.write(f.getBytes());
-        bout.flush();
-      }
+      f.Length = b.length;
+      f.Body = b;
+      bytes = f.getBytes();
+      write(bytes);
     } catch (IOException ex) {
       reportError("Fail writing bytes in " + encoding, ex,
           ErrorManager.WRITE_FAILURE);
-      // Try reconnect.
+      // Try reconnect and rewrite.
       connect();
+      write(bytes);
     } catch (Exception ex) {
       reportError(ex.getMessage(), ex, ErrorManager.GENERIC_FAILURE);
     }
