@@ -65,11 +65,7 @@ public class SocketLoggingHandler extends Handler {
       @Override
       public void run() {
         try {
-          synchronized (this) {
-            if (bout != null) {
-              bout.write(f.getBytes());
-            }
-          }
+          write(f);
         } catch (Throwable ignored) {
         }
       }
@@ -104,6 +100,21 @@ public class SocketLoggingHandler extends Handler {
     }
   }
 
+  private void write(Frame f) throws IOException {
+    byte[] bytes = null;
+    try {
+      bytes = f.getBytes();
+      write(bytes);
+    } catch (IOException ex) {
+      reportError("Fail writing bytes.", ex, ErrorManager.WRITE_FAILURE);
+      // Try reconnect and rewrite.
+      connect();
+      write(bytes);
+    } catch (Exception ex) {
+      reportError(ex.getMessage(), ex, ErrorManager.GENERIC_FAILURE);
+    }
+  }
+
   private void write(String s) throws Exception {
     Charset cs = null;
     var encoding = getEncoding();
@@ -117,23 +128,15 @@ public class SocketLoggingHandler extends Handler {
         cs = java.nio.charset.Charset.defaultCharset();
       }
     }
-    byte[] bytes = null;
+    Frame f = new Frame();
+    f.Type = FrameType.REQUEST;
+    f.Body = s.getBytes(cs);
+    f.Length = f.Body.length;
     try {
-      var b = s.getBytes(cs);
-      Frame f = new Frame();
-      f.Type = FrameType.REQUEST;
-      f.Length = b.length;
-      f.Body = b;
-      bytes = f.getBytes();
-      write(bytes);
-    } catch (IOException ex) {
+      write(f);
+    } catch (Exception ex) {
       reportError("Fail writing bytes in " + encoding, ex,
           ErrorManager.WRITE_FAILURE);
-      // Try reconnect and rewrite.
-      connect();
-      write(bytes);
-    } catch (Exception ex) {
-      reportError(ex.getMessage(), ex, ErrorManager.GENERIC_FAILURE);
     }
   }
 
