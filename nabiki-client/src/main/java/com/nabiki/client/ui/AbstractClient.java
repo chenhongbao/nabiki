@@ -78,11 +78,11 @@ public abstract class AbstractClient {
     }
   }
 
-  private void reqLogin(Trader trader) throws Exception {
+  private void reqLogin(String userID, String password) throws Exception {
     // Send login rsp.
     var login = new CReqUserLogin();
-    login.UserID = trader.getUserID();
-    login.Password = trader.getPassword();
+    login.UserID = userID;
+    login.Password = password;
     loginRsp = client.login(
         login, UUID.randomUUID().toString());
   }
@@ -111,11 +111,13 @@ public abstract class AbstractClient {
 
   protected void init(Trader trader,
                       MarketDataHandler handler,
+                      String userID,
+                      String password,
                       InetSocketAddress address) throws Exception {
     openConnection(address);
     trader.setClient(client);
     callStart(handler);
-    reqLogin(trader);
+    reqLogin(userID, password);
     reqSubscription(trader);
   }
 
@@ -131,19 +133,23 @@ public abstract class AbstractClient {
   }
 
   protected void initTrader(HeadlessTrader trader,
+                            String userID,
+                            String password,
                             InetSocketAddress etrade,
-                            InetSocketAddress log) throws Exception {
+                            InetSocketAddress logging) throws Exception {
     setListener(trader.getDefaultAdaptor());
-    init(trader, trader, etrade);
-    addLoggingHandler(trader, log);
+    init(trader, trader, userID, password, etrade);
+    addLoggingHandler(trader, logging);
   }
 
   protected void initTrader(FigureTrader trader,
+                            String userID,
+                            String password,
                             InetSocketAddress etrade,
-                            InetSocketAddress log) throws Exception {
+                            InetSocketAddress logging) throws Exception {
     setListener(trader.getDefaultAdaptor());
-    init(trader, trader, etrade);
-    addLoggingHandler(trader, log);
+    init(trader, trader, userID, password, etrade);
+    addLoggingHandler(trader, logging);
   }
 
   protected void stop() {

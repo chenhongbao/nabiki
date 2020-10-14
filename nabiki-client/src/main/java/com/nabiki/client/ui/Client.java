@@ -48,6 +48,8 @@ public class Client extends AbstractClient {
   private final Date startDate;
   private final InetSocketAddress etrade;
   private final InetSocketAddress logging;
+  private final String userID;
+  private final String password;
 
   public Client(String[] args) {
     if (Utils.getOption("--help", args) != null) {
@@ -56,9 +58,17 @@ public class Client extends AbstractClient {
     }
     startDate = parseDate(Utils.getOption("--start-at", args));
     etrade = Utils.parseInetAddress(Utils.getOption("--etrade-server", args));
-    logging = Utils.parseInetAddress(Utils.getOption("--log-server", args));
     if (etrade == null) {
-      printHelp("Need e-Trade server address, type --help for details.");
+      printHelp("Need e-Trade server address, use --help for details.");
+      System.exit(1);
+    }
+    // Logging server.
+    logging = Utils.parseInetAddress(Utils.getOption("--log-server", args));
+    // User and pwd for e-Trade server.
+    userID = Utils.getOption("--user", args);
+    password = Utils.getOption("--password", args);
+    if (userID == null || password == null) {
+      printHelp("Need user ID and password, use --help for details.");
       System.exit(1);
     }
   }
@@ -77,6 +87,8 @@ public class Client extends AbstractClient {
     System.out.println("                  or 9038 to local address via outside link");
     System.out.println("--log-server      Logging server address like 127.0.0.1:9039,");
     System.out.println("                  or 9039 to local address via outside link");
+    System.out.println("--user            User ID.");
+    System.out.println("--password        Password.");
     System.out.println("--help            Print help message.");
   }
 
@@ -143,7 +155,7 @@ public class Client extends AbstractClient {
       @Override
       public void run() {
         try {
-          initTrader(trader, etrade, logging);
+          initTrader(trader, userID, password, etrade, logging);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();
@@ -161,7 +173,7 @@ public class Client extends AbstractClient {
       @Override
       public void run() {
         try {
-          initTrader(trader, etrade, logging);
+          initTrader(trader, userID, password, etrade, logging);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();

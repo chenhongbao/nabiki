@@ -36,12 +36,6 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 public interface Trader {
-  void setUser(String userID, String password);
-
-  String getUserID();
-
-  String getPassword();
-
   String getAlgoName();
 
   String getAlgoVersion();

@@ -44,14 +44,13 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public abstract class AbstractTrader implements Trader {
-  private TradeClient client;
-  private String userID, password;
   private final Collection<String> subscribes = new LinkedList<>();
   private final Map<String, CInstrument> instruments = new ConcurrentHashMap<>();
   private final Map<String, CInstrumentMarginRate> margins = new ConcurrentHashMap<>();
   private final Map<String, CInstrumentCommissionRate> commissions = new ConcurrentHashMap<>();
-
   protected Logger logger;
+  private TradeClient client;
+  private String userID, password;
   private MarketDataTraderAdaptor traderAdaptor;
 
   protected AbstractTrader() {
@@ -101,10 +100,6 @@ public abstract class AbstractTrader implements Trader {
 
   private String getRequestID() {
     return UUID.randomUUID().toString();
-  }
-
-  protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
-    this.traderAdaptor = adaptor;
   }
 
   void addLoggingHandler(Handler h) {
@@ -200,20 +195,8 @@ public abstract class AbstractTrader implements Trader {
     return traderAdaptor;
   }
 
-  @Override
-  public void setUser(String userID, String password) {
-    this.userID = userID;
-    this.password = password;
-  }
-
-  @Override
-  public String getUserID() {
-    return userID;
-  }
-
-  @Override
-  public String getPassword() {
-    return password;
+  protected void setDefaultAdaptor(MarketDataTraderAdaptor adaptor) {
+    this.traderAdaptor = adaptor;
   }
 
   @Override
