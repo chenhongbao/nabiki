@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -39,7 +39,7 @@ public class PositionPanel extends JPanel {
   final JTextField instrumentField;
   final JCheckBox positionCatCheck;
   final JTable positionTable;
-  final JComboBox positionTypeComb;
+  final JComboBox<String> positionTypeComb;
 
   PositionPanel(TradeClient client) {
 
@@ -102,13 +102,13 @@ public class PositionPanel extends JPanel {
 
     positionScrollPane.setViewportView(positionTable);
 
-    positionTypeComb = new JComboBox();
+    positionTypeComb = new JComboBox<>();
     sl_positionPanel.putConstraint(SpringLayout.WEST, qryPositionBtn, 10, SpringLayout.EAST, positionTypeComb);
     sl_positionPanel.putConstraint(SpringLayout.NORTH, positionTypeComb, 0, SpringLayout.NORTH, instrumentField);
     sl_positionPanel.putConstraint(SpringLayout.WEST, positionTypeComb, 110, SpringLayout.WEST, instrumentField);
     sl_positionPanel.putConstraint(SpringLayout.SOUTH, positionTypeComb, 0, SpringLayout.SOUTH, instrumentLabel);
     sl_positionPanel.putConstraint(SpringLayout.EAST, positionTypeComb, 80, SpringLayout.EAST, instrumentField);
-    positionTypeComb.setModel(new DefaultComboBoxModel(new String[]{"\u6C47\u603B", "\u660E\u7EC6"}));
+    positionTypeComb.setModel(new DefaultComboBoxModel<>(new String[]{"\u6C47\u603B", "\u660E\u7EC6"}));
     this.add(positionTypeComb);
   }
 }

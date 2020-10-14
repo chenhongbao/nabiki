@@ -48,7 +48,7 @@ public class TalkDialog extends JDialog {
   private final JTextField classField;
   private final JTextField methodField;
   private final JTextField serverField;
-  private final JComboBox levelComb;
+  private final JComboBox<LogLevelType> levelComb;
   private final JTextArea msgArea;
   private final JButton sendBtn;
 
@@ -199,9 +199,9 @@ public class TalkDialog extends JDialog {
     sl_contentPanel.putConstraint(SpringLayout.WEST, levelLabel, 10, SpringLayout.WEST, contentPanel);
     contentPanel.add(levelLabel);
 
-    levelComb = new JComboBox();
+    levelComb = new JComboBox<>();
     levelComb.setAutoscrolls(true);
-    levelComb.setModel(new DefaultComboBoxModel(LogLevelType.values()));
+    levelComb.setModel(new DefaultComboBoxModel<>(LogLevelType.values()));
     sl_contentPanel.putConstraint(SpringLayout.NORTH, levelComb, -2, SpringLayout.NORTH, levelLabel);
     sl_contentPanel.putConstraint(SpringLayout.WEST, levelComb, 10, SpringLayout.EAST, levelLabel);
     sl_contentPanel.putConstraint(SpringLayout.SOUTH, levelComb, 2, SpringLayout.SOUTH, levelLabel);

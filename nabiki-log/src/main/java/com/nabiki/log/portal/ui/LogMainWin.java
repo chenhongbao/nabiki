@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -46,9 +46,9 @@ public class LogMainWin {
 	private JTextField levelField;
 	private JTextField msgField;
 	private JTextArea logArea;
-	private JComboBox loggerComb;
-	private JComboBox levelComb;
-	private JComboBox msgComb;
+	private JComboBox<FilterConditionType> loggerComb;
+	private JComboBox<FilterConditionType> levelComb;
+	private JComboBox<FilterConditionType> msgComb;
 
 	private final LogFilter filter = new LogFilter();
 	private LogDisplay display;
@@ -123,41 +123,41 @@ public class LogMainWin {
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, loggerLabel, 15, SpringLayout.NORTH, mainPanel);
 		sl_mainPanel.putConstraint(SpringLayout.WEST, loggerLabel, 10, SpringLayout.WEST, mainPanel);
 		mainPanel.add(loggerLabel);
-		
+
 		JLabel levelLabel = new JLabel("\u7EA7\u522B");
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, levelLabel, 10, SpringLayout.SOUTH, loggerLabel);
 		sl_mainPanel.putConstraint(SpringLayout.WEST, levelLabel, 0, SpringLayout.WEST, loggerLabel);
 		mainPanel.add(levelLabel);
-		
+
 		JLabel msgLabel = new JLabel("\u6D88\u606F");
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, msgLabel, 10, SpringLayout.SOUTH, levelLabel);
 		sl_mainPanel.putConstraint(SpringLayout.WEST, msgLabel, 0, SpringLayout.WEST, loggerLabel);
 		mainPanel.add(msgLabel);
-		
-		loggerComb = new JComboBox();
+
+		loggerComb = new JComboBox<>();
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, loggerComb, -2, SpringLayout.NORTH, loggerLabel);
 		sl_mainPanel.putConstraint(SpringLayout.SOUTH, loggerComb, 2, SpringLayout.SOUTH, loggerLabel);
 		sl_mainPanel.putConstraint(SpringLayout.EAST, loggerComb, 120, SpringLayout.EAST, loggerLabel);
-		loggerComb.setModel(new DefaultComboBoxModel(FilterConditionType.values()));
+		loggerComb.setModel(new DefaultComboBoxModel<>(FilterConditionType.values()));
 		sl_mainPanel.putConstraint(SpringLayout.WEST, loggerComb, 20, SpringLayout.EAST, loggerLabel);
 		mainPanel.add(loggerComb);
-		
-		levelComb = new JComboBox();
-		levelComb.setModel(new DefaultComboBoxModel(FilterConditionType.values()));
+
+		levelComb = new JComboBox<>();
+		levelComb.setModel(new DefaultComboBoxModel<>(FilterConditionType.values()));
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, levelComb, -2, SpringLayout.NORTH, levelLabel);
 		sl_mainPanel.putConstraint(SpringLayout.WEST, levelComb, 20, SpringLayout.EAST, levelLabel);
 		sl_mainPanel.putConstraint(SpringLayout.SOUTH, levelComb, 2, SpringLayout.SOUTH, levelLabel);
 		sl_mainPanel.putConstraint(SpringLayout.EAST, levelComb, 120, SpringLayout.EAST, levelLabel);
 		mainPanel.add(levelComb);
-		
-		msgComb = new JComboBox();
-		msgComb.setModel(new DefaultComboBoxModel(FilterConditionType.values()));
+
+		msgComb = new JComboBox<>();
+		msgComb.setModel(new DefaultComboBoxModel<>(FilterConditionType.values()));
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, msgComb, -2, SpringLayout.NORTH, msgLabel);
 		sl_mainPanel.putConstraint(SpringLayout.WEST, msgComb, 20, SpringLayout.EAST, msgLabel);
 		sl_mainPanel.putConstraint(SpringLayout.SOUTH, msgComb, 2, SpringLayout.SOUTH, msgLabel);
 		sl_mainPanel.putConstraint(SpringLayout.EAST, msgComb, 120, SpringLayout.EAST, msgLabel);
 		mainPanel.add(msgComb);
-		
+
 		loggerField = new JTextField();
 		loggerField.setHorizontalAlignment(SwingConstants.CENTER);
 		sl_mainPanel.putConstraint(SpringLayout.NORTH, loggerField, 0, SpringLayout.NORTH, loggerComb);
