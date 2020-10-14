@@ -31,7 +31,6 @@ package com.nabiki.client.ui;
 import com.nabiki.client.sdk.Response;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
-import com.nabiki.commons.utils.SocketLoggingHandler;
 import com.nabiki.commons.utils.SystemStream;
 import com.nabiki.commons.utils.Utils;
 
@@ -40,6 +39,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -107,8 +107,12 @@ public abstract class AbstractTrader implements Trader {
     this.traderAdaptor = adaptor;
   }
 
+  void addLoggingHandler(Handler h) {
+    getLogger().addHandler(h);
+  }
+
   // Clear instrument information so they are re-queried.
-  void reCacheInfo() {
+  private void reCacheInfo() {
     for (var i : instruments.keySet()) {
       sendQryInstrument(i);
     }
@@ -189,15 +193,6 @@ public abstract class AbstractTrader implements Trader {
           });
     } catch (Exception e) {
       getLogger().warning("query commission fail: " + e.getMessage());
-    }
-  }
-
-  @Override
-  public void setLoggingServer(String host, int port) {
-    try {
-      logger.addHandler(new SocketLoggingHandler(host, port));
-    } catch (IOException e) {
-      e.printStackTrace();
     }
   }
 

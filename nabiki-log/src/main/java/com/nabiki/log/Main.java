@@ -28,76 +28,31 @@
 
 package com.nabiki.log;
 
+import com.nabiki.commons.utils.SystemStream;
+import com.nabiki.commons.utils.Utils;
 import com.nabiki.log.portal.ui.LogMainWin;
 import com.nabiki.log.server.Server;
-import com.nabiki.log.x.StdPrintStream;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Main {
-  private static final ExecutorService es = Executors.newCachedThreadPool();
-
   private static void prepareStd() {
     try {
       var dir = Path.of(".log");
       if (!dir.toFile().exists() || !dir.toFile().isDirectory()) {
         Files.createDirectories(dir);
       }
-      StdPrintStream.setErr(Path.of(dir.toString(), "log.err.log"));
-      StdPrintStream.setOut(Path.of(dir.toString(), "log.out.log"));
+      SystemStream.setErr(Path.of(dir.toString(), "log.err.log"));
+      SystemStream.setOut(Path.of(dir.toString(), "log.out.log"));
     } catch (IOException e) {
       e.printStackTrace();
     }
     // Check default charset.
     System.out.println("default charset: " + Charset.defaultCharset().name());
-  }
-
-  private static String getOption(String prefix, String[] args) {
-    if (args.length < 1) {
-      return null;
-    }
-    int i = 0;
-    do {
-      if (args[i].equals(prefix)) {
-        break;
-      }
-    } while (++i < args.length);
-    if (i == args.length) {
-      return null;
-    } else if (i == args.length - 1) {
-      return "";
-    } else {
-      var next = args[i + 1];
-      if (next.startsWith("--")) {
-        return "";
-      } else {
-        return next;
-      }
-    }
-  }
-
-  private static InetSocketAddress parseInetAddress(String address) {
-    if (address == null) {
-      return null;
-    }
-    int idx = address.indexOf(":");
-    if (idx < 0) {
-      return new InetSocketAddress(Integer.parseInt(address.trim()));
-    } else if (idx < address.length() - 1) {
-      return new InetSocketAddress(
-          address.substring(0, idx),
-          Integer.parseInt(address.substring(idx + 1)));
-    } else {
-      printHelp("invalid address");
-      return null;
-    }
   }
 
   private static void printHelp(String hint) {
@@ -119,8 +74,8 @@ public class Main {
 
   private static void runServer(String[] args) {
     try {
-      var src = parseInetAddress(getOption("--src-listen", args));
-      var sub = parseInetAddress(getOption("--sub-listen", args));
+      var src = Utils.parseInetAddress(Utils.getOption("--src-listen", args));
+      var sub = Utils.parseInetAddress(Utils.getOption("--sub-listen", args));
       if (src == null || sub == null) {
         printHelp("Wrong parameters.");
         System.exit(1);
@@ -132,13 +87,13 @@ public class Main {
   }
 
   public static void main(String[] args) {
-    if (getOption("--help", args) != null || args.length == 0) {
+    if (Utils.getOption("--help", args) != null || args.length == 0) {
       printHelp(null);
       return;
     }
     prepareStd();
-    var serverOpt = getOption("--server", args);
-    if (getOption("--portal", args) != null) {
+    var serverOpt = Utils.getOption("--server", args);
+    if (Utils.getOption("--portal", args) != null) {
       if (serverOpt != null) {
         LogMainWin.work(JFrame.DO_NOTHING_ON_CLOSE);
       } else {

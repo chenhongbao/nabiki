@@ -46,23 +46,38 @@ public class Client extends AbstractClient {
   private Trader trader;
   private MarketDataHandler handler;
   private final Date startDate;
+  private final InetSocketAddress etrade;
+  private final InetSocketAddress logging;
 
   public Client(String[] args) {
     if (Utils.getOption("--help", args) != null) {
-      printHelp();
+      printHelp(null);
       System.exit(1);
     }
     startDate = parseDate(Utils.getOption("--start-at", args));
+    etrade = Utils.parseInetAddress(Utils.getOption("--etrade-server", args));
+    logging = Utils.parseInetAddress(Utils.getOption("--log-server", args));
+    if (etrade == null) {
+      printHelp("Need e-Trade server address, type --help for details.");
+      System.exit(1);
+    }
   }
 
-  private void printHelp() {
+  private void printHelp(String m) {
+    if (m != null) {
+      System.out.println(m);
+    }
     System.out.println("java[w] -jar your-app.jar <option>");
     System.out.println();
     System.out.println("Options:");
     System.out.println();
-    System.out.println("--start-at      Set the time when the trader is started:");
-    System.out.println("                HH:mm:ss or yyyy-MM-dd HH:mm:ss");
-    System.out.println("--help          Print help message.");
+    System.out.println("--start-at        Set the time when the trader is started:");
+    System.out.println("                  HH:mm:ss or yyyy-MM-dd HH:mm:ss");
+    System.out.println("--etrade-server   e-Trade server address like 127.0.0.1:9038,");
+    System.out.println("                  or 9038 to local address via outside link");
+    System.out.println("--log-server      Logging server address like 127.0.0.1:9039,");
+    System.out.println("                  or 9039 to local address via outside link");
+    System.out.println("--help            Print help message.");
   }
 
   private Date parseDate(String str) {
@@ -121,14 +136,14 @@ public class Client extends AbstractClient {
     checkSubMd();
   }
 
-  public void run(HeadlessTrader trader, InetSocketAddress serverAddress) {
+  public Client run(HeadlessTrader trader) {
     this.trader = trader;
     this.handler = trader;
     Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {
-          initTrader(trader, serverAddress);
+          initTrader(trader, etrade, logging);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();
@@ -136,16 +151,17 @@ public class Client extends AbstractClient {
         }
       }
     }, startDate);
+    return this;
   }
 
-  public void run(FigureTrader trader, InetSocketAddress serverAddress) {
+  public Client run(FigureTrader trader) {
     this.trader = trader;
     this.handler = trader;
     Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {
-          initTrader(trader, serverAddress);
+          initTrader(trader, etrade, logging);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();
@@ -153,6 +169,7 @@ public class Client extends AbstractClient {
         }
       }
     }, startDate);
+    return this;
   }
 
   public void noExit() {

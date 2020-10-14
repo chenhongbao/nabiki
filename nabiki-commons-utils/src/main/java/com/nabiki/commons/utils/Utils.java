@@ -35,6 +35,7 @@ import com.nabiki.commons.ctpobj.ErrorCodes;
 import com.nabiki.commons.ctpobj.ErrorMessages;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -255,6 +256,28 @@ public class Utils {
       } else {
         return next;
       }
+    }
+  }
+
+  /**
+   * Parse ip:port address into socket address.
+   *
+   * @param address inet address like 127.0.0.1:8080
+   * @return {@link InetSocketAddress}
+   */
+  public static InetSocketAddress parseInetAddress(String address) {
+    if (address == null) {
+      return null;
+    }
+    int idx = address.indexOf(":");
+    if (idx < 0) {
+      return new InetSocketAddress(Integer.parseInt(address.trim()));
+    } else if (idx < address.length() - 1) {
+      return new InetSocketAddress(
+          address.substring(0, idx),
+          Integer.parseInt(address.substring(idx + 1)));
+    } else {
+      return null;
     }
   }
 

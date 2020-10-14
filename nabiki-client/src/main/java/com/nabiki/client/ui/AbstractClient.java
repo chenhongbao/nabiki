@@ -37,6 +37,7 @@ import com.nabiki.commons.ctpobj.CReqUserLogin;
 import com.nabiki.commons.ctpobj.CRspUserLogin;
 import com.nabiki.commons.ctpobj.CSpecificInstrument;
 import com.nabiki.commons.ctpobj.CSubMarketData;
+import com.nabiki.commons.utils.SocketLoggingHandler;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
@@ -108,7 +109,9 @@ public abstract class AbstractClient {
     }
   }
 
-  protected void init(Trader trader, MarketDataHandler handler, InetSocketAddress address) throws Exception {
+  protected void init(Trader trader,
+                      MarketDataHandler handler,
+                      InetSocketAddress address) throws Exception {
     openConnection(address);
     trader.setClient(client);
     callStart(handler);
@@ -116,14 +119,31 @@ public abstract class AbstractClient {
     reqSubscription(trader);
   }
 
-  protected void initTrader(HeadlessTrader trader, InetSocketAddress address) throws Exception {
-    setListener(trader.getDefaultAdaptor());
-    init(trader, trader, address);
+  private void addLoggingHandler(AbstractTrader trader, InetSocketAddress log) {
+    if (log != null) {
+      try {
+        trader.addLoggingHandler(
+            new SocketLoggingHandler(log.getHostString(), log.getPort()));
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    }
   }
 
-  protected void initTrader(FigureTrader trader, InetSocketAddress address) throws Exception {
+  protected void initTrader(HeadlessTrader trader,
+                            InetSocketAddress etrade,
+                            InetSocketAddress log) throws Exception {
     setListener(trader.getDefaultAdaptor());
-    init(trader, trader, address);
+    init(trader, trader, etrade);
+    addLoggingHandler(trader, log);
+  }
+
+  protected void initTrader(FigureTrader trader,
+                            InetSocketAddress etrade,
+                            InetSocketAddress log) throws Exception {
+    setListener(trader.getDefaultAdaptor());
+    init(trader, trader, etrade);
+    addLoggingHandler(trader, log);
   }
 
   protected void stop() {
