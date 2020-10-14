@@ -170,7 +170,7 @@ public class Platform {
         Global.CMD_START_NOW_PREFIX
     };
     for (var pre : prefix) {
-      String arg = Utils.getArgument(args, pre);
+      String arg = Utils.getOption(pre, args);
       if (arg == null)
         arg = "";
       GlobalConfig.setArgument(pre, arg);
@@ -187,7 +187,7 @@ public class Platform {
 
   public void start(String[] args) throws IOException {
     setArguments(args);
-    initConfig(Utils.getArgument(args, Global.CMD_ROOT_PREFIX));
+    initConfig(Utils.getOption(Global.CMD_ROOT_PREFIX, args));
     system();
     providers();
     managers();

@@ -241,7 +241,7 @@ public class Utils {
     }
     int i = 0;
     do {
-      if (args[i].equals(prefix)) {
+      if (args[i].equals(prefix.trim())) {
         break;
       }
     } while (++i < args.length);
@@ -374,19 +374,6 @@ public class Utils {
         return true;
     }
     return false;
-  }
-
-  public static String getArgument(String[] args, String prefix) {
-    String value = null;
-    for (var arg : args) {
-      if (arg.trim().compareTo(prefix.trim()) == 0) {
-        value = "";
-        continue;
-      }
-      if (value != null)
-        return arg.trim();
-    }
-    return value;
   }
 
   /**
