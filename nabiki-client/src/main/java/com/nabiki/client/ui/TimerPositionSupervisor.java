@@ -39,7 +39,12 @@ import java.util.concurrent.TimeUnit;
 public class TimerPositionSupervisor extends TimerTask implements PositionSupervisor {
   private final Trader trader;
   private final SuggestionListener listener;
+
+  private final int DEFAULT_TO = 3;
+  private final TimeUnit DEFAULT_TO_UNIT = TimeUnit.SECONDS;
+
   private Suggestion su;
+  private long lastQryTimeStamp = 0;
 
   public TimerPositionSupervisor(Trader t) {
     trader = t;
@@ -173,15 +178,21 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         CombOffsetFlagType.OFFSET_CLOSE);
   }
 
+  private boolean checkRspTimeout() {
+    return System.currentTimeMillis() - lastQryTimeStamp >= DEFAULT_TO_UNIT.toMillis(DEFAULT_TO);
+  }
+
   private void queryPosition(Suggestion su) throws Exception {
-    if (su.getInvestorPos() == null) {
+    if (su.getInvestorPos() == null || checkRspTimeout()) {
+      lastQryTimeStamp = System.currentTimeMillis();
       su.setInvestorPos(new HashSet<>());
       trader.getPosition(su.getInstrumentID(), "").consume(new QryPositionConsumer(su));
     }
   }
 
   private void queryAccount(Suggestion su) throws Exception {
-    if (su.getAccount() == null) {
+    if (su.getAccount() == null || checkRspTimeout()) {
+      lastQryTimeStamp = System.currentTimeMillis();
       su.setAccount(new CTradingAccount());
       trader.getAccount().consume(new QryAccountConsumer(su));
     }
