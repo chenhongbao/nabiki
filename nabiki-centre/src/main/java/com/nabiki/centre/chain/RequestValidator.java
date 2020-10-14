@@ -160,6 +160,8 @@ public class RequestValidator extends RequestSuper {
               var rsp = toRtnOrder(request);
               rsp.OrderSubmitStatus = OrderSubmitStatusType.INSERT_SUBMITTED;
               rsp.OrderStatus = OrderStatusType.NOT_TOUCHED;
+              // This field used as hint.
+              rsp.OrderLocalID = "<parked-order-no-id>";
               reply(session,
                   rsp,
                   requestID,
