@@ -63,7 +63,7 @@ public class RequestValidator extends RequestSuper {
 
   private void reply(
       ServerSession session,
-      Object request,
+      COrder rsp,
       String requestID,
       MessageType type,
       int errorCode,
@@ -73,11 +73,26 @@ public class RequestValidator extends RequestSuper {
     m.ResponseID = UUID.randomUUID().toString();
     m.CurrentCount = m.TotalCount = 1;
     m.Type = type;
-    m.Body = request;
+    m.Body = rsp;
     m.RspInfo = new CRspInfo();
     m.RspInfo.ErrorID = errorCode;
     m.RspInfo.ErrorMsg = errorMsg;
     session.sendResponse(m);
+    // Logging.
+    if (errorCode == ErrorCodes.NONE) {
+      global.getLogger().info(String.format(
+          "Validate parked order from %s on %s at %.1f.",
+          rsp.UserID,
+          rsp.InstrumentID,
+          rsp.LimitPrice));
+    } else {
+      global.getLogger().warning(String.format(
+          "Reject order from %s on %s because %s[%d].",
+          rsp.UserID,
+          rsp.InstrumentID,
+          errorMsg,
+          errorCode));
+    }
   }
 
   protected boolean isOver(String instrID) {

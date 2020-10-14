@@ -230,9 +230,16 @@ class RequestDaemon implements Runnable {
     input.StopPrice = 0;
     input.TimeCondition = TimeConditionType.GFD;
     input.VolumeCondition = VolumeConditionType.ANY_VOLUME;
-    return provider.getApi().ReqOrderInsert(
+    var r = provider.getApi().ReqOrderInsert(
         JNI.toJni(input),
         Utils.getIncrementID());
+    global.getLogger().info(String.format(
+        "Send order to %s on %s at %.1f, [%d].",
+        input.BrokerID,
+        input.InstrumentID,
+        input.LimitPrice,
+        r));
+    return r;
   }
 
   private int fillAndSendAction(CInputOrderAction action) {
@@ -259,9 +266,15 @@ class RequestDaemon implements Runnable {
       action.ExchangeID = (instrInfo.Instrument != null)
           ? instrInfo.Instrument.ExchangeID : null;
     }
-    return provider.getApi().ReqOrderAction(
+    var r = provider.getApi().ReqOrderAction(
         JNI.toJni(action),
         Utils.getIncrementID());
+    global.getLogger().info(String.format(
+        "Send action to %s on %s, [%d].",
+        action.BrokerID,
+        action.InstrumentID,
+        r));
+    return r;
   }
 
   private boolean canTrade(String instrID) {

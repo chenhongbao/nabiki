@@ -47,6 +47,66 @@ public class RequestExecutor extends RequestSuper {
     this.global = global;
   }
 
+  private void reply(
+      ServerSession session,
+      Object rsp,
+      String requestID,
+      MessageType type,
+      CRspInfo info) {
+    Message m = new Message();
+    m.RequestID = requestID;
+    m.ResponseID = UUID.randomUUID().toString();
+    m.CurrentCount = m.TotalCount = 1;
+    m.Type = type;
+    m.Body = rsp;
+    m.RspInfo = info;
+    session.sendResponse(m);
+    if (rsp instanceof COrderAction) {
+      var action = (COrderAction) rsp;
+      if (info.ErrorID == ErrorCodes.NONE) {
+        global.getLogger().info(String.format(
+            "Accept action from %s on %s.",
+            action.UserID,
+            action.InstrumentID));
+      } else {
+        global.getLogger().warning(String.format(
+            "Reject action from %s on %s because %s[%d].",
+            action.UserID,
+            action.InstrumentID,
+            info.ErrorMsg,
+            info.ErrorID));
+      }
+    }
+  }
+
+  private void reply(
+      ServerSession session,
+      COrder rsp,
+      String requestID,
+      MessageType type,
+      int errorCode,
+      String errorMsg) {
+    var info = new CRspInfo();
+    info.ErrorID = errorCode;
+    info.ErrorMsg = errorMsg;
+    reply(session, rsp, requestID, type, info);
+    // Logging.
+    if (errorCode == ErrorCodes.NONE) {
+      global.getLogger().info(String.format(
+          "Accept order from %s on %s at %.1f.",
+          rsp.UserID,
+          rsp.InstrumentID,
+          rsp.LimitPrice));
+    } else {
+      global.getLogger().warning(String.format(
+          "Reject order from %s on %s because %s[%d].",
+          rsp.UserID,
+          rsp.InstrumentID,
+          errorMsg,
+          errorCode));
+    }
+  }
+
   @Override
   public void doReqOrderInsert(
       ServerSession session,
@@ -55,17 +115,14 @@ public class RequestExecutor extends RequestSuper {
       int current,
       int total) {
     var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-    Message rsp = new Message();
-    rsp.Type = MessageType.RSP_REQ_ORDER_INSERT;
-    rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
-    rsp.CurrentCount = 1;
-    rsp.TotalCount = 1;
     if (attr == null) {
-      rsp.Body = new COrder();
-      rsp.RspInfo = new CRspInfo();
-      rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-      rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
+      reply(
+          session,
+          new COrder(),
+          requestID,
+          MessageType.RSP_REQ_ORDER_INSERT,
+          ErrorCodes.USER_NOT_ACTIVE,
+          Utils.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
     } else {
       var activeUser = (ActiveUser) attr;
       // Measure performance.
@@ -77,23 +134,27 @@ public class RequestExecutor extends RequestSuper {
       max.endWithMax();
       cur.end();
       // Build response.
-      var o = toRtnOrder(request);
+      var order = toRtnOrder(request);
       var info = activeUser.getExecRsp(uuid);
       if (info.ErrorID == ErrorCodes.NONE) {
-        o.OrderLocalID = uuid;
-        o.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
-        o.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
+        order.OrderLocalID = uuid;
+        order.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
+        order.OrderStatus = OrderStatusType.NO_TRADE_QUEUEING;
       } else {
-        o.OrderLocalID = null;
-        o.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
-        o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
+        order.OrderLocalID = null;
+        order.OrderSubmitStatus = OrderSubmitStatusType.INSERT_REJECTED;
+        order.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
       }
-      o.InsertDate = Utils.getDay(LocalDate.now(), null);
-      o.InsertTime = Utils.getTime(LocalTime.now(), null);
-      rsp.Body = o;
-      rsp.RspInfo = info;
+      order.InsertDate = Utils.getDay(LocalDate.now(), null);
+      order.InsertTime = Utils.getTime(LocalTime.now(), null);
+      reply(
+          session,
+          order,
+          requestID,
+          MessageType.RSP_REQ_ORDER_INSERT,
+          info.ErrorID,
+          info.ErrorMsg);
     }
-    session.sendResponse(rsp);
     session.done();
   }
 
@@ -105,17 +166,16 @@ public class RequestExecutor extends RequestSuper {
       int current,
       int total) {
     var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-    Message rsp = new Message();
-    rsp.Type = MessageType.RSP_REQ_ORDER_ACTION;
-    rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
-    rsp.CurrentCount = 1;
-    rsp.TotalCount = 1;
     if (attr == null) {
-      rsp.Body = new COrderAction();
-      rsp.RspInfo = new CRspInfo();
-      rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
-      rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
+      var info = new CRspInfo();
+      info.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
+      info.ErrorMsg = Utils.getErrorMsg(info.ErrorID);
+      reply(
+          session,
+          new COrderAction(),
+          requestID,
+          MessageType.RSP_REQ_ORDER_ACTION,
+          info);
     } else {
       var activeUser = (ActiveUser) attr;
       // Measure performance.
@@ -127,13 +187,16 @@ public class RequestExecutor extends RequestSuper {
       max.endWithMax();
       cur.end();
       // Build response.
-      var o = toOrderAction(request);
-      o.OrderLocalID = request.OrderSysID;
-      o.OrderSysID = null;
-      rsp.Body = o;
-      rsp.RspInfo = activeUser.getExecRsp(uuid);
+      var action = toOrderAction(request);
+      action.OrderLocalID = request.OrderSysID;
+      action.OrderSysID = null;
+      reply(
+          session,
+          action,
+          requestID,
+          MessageType.RSP_REQ_ORDER_ACTION,
+          activeUser.getExecRsp(uuid));
     }
-    session.sendResponse(rsp);
     session.done();
   }
 }
