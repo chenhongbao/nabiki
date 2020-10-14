@@ -54,8 +54,8 @@ public class IOPClientImpl implements IOPClient {
   }
 
   private IoSession io(InetSocketAddress connectAddress) throws IOException {
-    this.connector = new NioSocketConnector();
-    this.connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
+    connector = new NioSocketConnector();
+    connector.setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS);
     // Set filters.
     var chain = this.connector.getFilterChain();
     // Too many logs, don't use the logging filter.
@@ -63,7 +63,7 @@ public class IOPClientImpl implements IOPClient {
     chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
         new FrameCodecFactory()));
     // Set handler.
-    this.connector.setHandler(this.frameHandler);
+    connector.setHandler(frameHandler);
     // Configure the session.
     var config = this.connector.getSessionConfig();
     config.setReadBufferSize(FrameParser.DEFAULT_BUFFER_SIZE * 2);
@@ -83,13 +83,13 @@ public class IOPClientImpl implements IOPClient {
   @Override
   public void connect(InetSocketAddress address) throws IOException {
     // Construct session.
-    this.session = ClientSessionImpl.from(io(address));
+    session = ClientSessionImpl.from(io(address));
   }
 
   @Override
   public void disconnect() {
-    this.session.close();
-    this.connector.dispose();
+    session.close();
+    connector.dispose();
   }
 
   @Override
@@ -99,17 +99,22 @@ public class IOPClientImpl implements IOPClient {
 
   @Override
   public void setSessionAdaptor(ClientSessionAdaptor adaptor) {
-    this.frameHandler.setSessionAdaptor(adaptor);
+    frameHandler.setSessionAdaptor(adaptor);
   }
 
   @Override
   public void setMessageAdaptor(ClientMessageAdaptor adaptor) {
-    this.frameHandler.setMessageAdaptor(adaptor);
+    frameHandler.setMessageAdaptor(adaptor);
   }
 
   @Override
-  public void setMessageHandler(ClientMessageHandler handler) {
-    this.frameHandler.setMessageHandler(handler);
+  public void setMessageHandlerIn(ClientMessageHandler handler) {
+    frameHandler.setMessageHandlerIn(handler);
+  }
+
+  @Override
+  public void setMessageHandlerOut(ClientMessageHandler handler) {
+    frameHandler.setMessageHandlerOut(handler);
   }
 
   @Override

@@ -26,24 +26,54 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.chain;
+package com.nabiki.client.ui;
 
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.MessageType;
-import com.nabiki.commons.iop.ServerMessageHandler;
-import com.nabiki.commons.iop.ServerSession;
+import com.nabiki.commons.utils.Utils;
 
-public class InputFromClientLogger implements ServerMessageHandler {
-  private final MsgInOutWriter writer;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-  public InputFromClientLogger(MsgInOutWriter writer) {
-    this.writer = writer;
+public class ClientMsgInOutWriter {
+  private final Path inDir, outDir;
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+  public ClientMsgInOutWriter() {
+    this.inDir = Path.of(".in");
+    this.outDir = Path.of(".out");
   }
 
-  @Override
-  public void onMessage(ServerSession session, Message message) {
-    if (message.Type != MessageType.HEARTBEAT) {
-      this.writer.writeIn(message, session);
+  private void write(String text, File file) {
+    try {
+      Utils.writeText(text, file, StandardCharsets.UTF_8, false);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
+
+  private File ensureFile(Path root, String fn) {
+    try {
+      var r = Path.of(root.toAbsolutePath().toString(), fn);
+      Utils.createFile(root, true);
+      Utils.createFile(r, false);
+      return r.toFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return new File(".failover");
+    }
+  }
+
+  void writeOut(Message out) {
+    write(Utils.toJson(out), ensureFile(this.outDir,
+        out.Type + "." + LocalDateTime.now().format(this.formatter) + "." + out.RequestID + ".json"));
+  }
+
+  void writeIn(Message in) {
+    write(Utils.toJson(in), ensureFile(this.inDir,
+        in.Type + "." + LocalDateTime.now().format(this.formatter) + "." + in.RequestID + ".json"));
   }
 }

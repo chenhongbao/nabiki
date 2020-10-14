@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -42,7 +42,9 @@ public interface IOPClient {
 
   void setMessageAdaptor(ClientMessageAdaptor adaptor);
 
-  void setMessageHandler(ClientMessageHandler handler);
+  void setMessageHandlerIn(ClientMessageHandler handler);
+
+  void setMessageHandlerOut(ClientMessageHandler handler);
 
   ClientSession getSession();
 }

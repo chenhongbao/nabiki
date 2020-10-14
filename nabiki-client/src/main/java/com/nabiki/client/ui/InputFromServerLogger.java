@@ -26,24 +26,25 @@
  * SOFTWARE.
  */
 
-package com.nabiki.centre.chain;
+package com.nabiki.client.ui;
 
+import com.nabiki.commons.iop.ClientMessageHandler;
+import com.nabiki.commons.iop.ClientSession;
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.MessageType;
-import com.nabiki.commons.iop.ServerMessageHandler;
-import com.nabiki.commons.iop.ServerSession;
 
-public class InputFromClientLogger implements ServerMessageHandler {
-  private final MsgInOutWriter writer;
-
-  public InputFromClientLogger(MsgInOutWriter writer) {
-    this.writer = writer;
-  }
+public class InputFromServerLogger implements ClientMessageHandler {
+  private final ClientMsgInOutWriter writer = new ClientMsgInOutWriter();
 
   @Override
-  public void onMessage(ServerSession session, Message message) {
-    if (message.Type != MessageType.HEARTBEAT) {
-      this.writer.writeIn(message, session);
+  public void onMessage(ClientSession session, Message message) {
+    switch (message.Type) {
+      case HEARTBEAT:
+      case FLOW_DEPTH:
+      case FLOW_CANDLE:
+        break;
+      default:
+        writer.writeIn(message);
+        break;
     }
   }
 }

@@ -59,6 +59,11 @@ public abstract class AbstractClient {
     client.setListener(eventAdaptor);
   }
 
+  private void setInOutLogger() {
+    client.getIOP().setMessageHandlerIn(new InputFromServerLogger());
+    client.getIOP().setMessageHandlerOut(new OutputToServerLogger());
+  }
+
   private void openConnection(InetSocketAddress address) {
     // Open connection to server.
     try {
@@ -114,6 +119,7 @@ public abstract class AbstractClient {
                       String userID,
                       String password,
                       InetSocketAddress address) throws Exception {
+    setInOutLogger();
     openConnection(address);
     trader.setClient(client);
     callStart(handler);

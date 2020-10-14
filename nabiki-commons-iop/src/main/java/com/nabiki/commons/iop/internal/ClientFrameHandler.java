@@ -73,7 +73,8 @@ class ClientFrameHandler implements IoHandler {
       = new DefaultClientMessageHandler();
 
   private ClientSessionAdaptor sessionAdaptor = new EmptyClientSessionAdaptor();
-  private ClientMessageHandler msgHandler = new EmptyClientMessageHandler();
+  private ClientMessageHandler msgHandlerIn = new EmptyClientMessageHandler(),
+      msgHandlerOut = new EmptyClientMessageHandler();
 
   private Thread daemon;
   private final BlockingQueue<ResponseBag> responses = new LinkedBlockingQueue<>();
@@ -107,8 +108,12 @@ class ClientFrameHandler implements IoHandler {
     this.sessionAdaptor = adaptor;
   }
 
-  void setMessageHandler(ClientMessageHandler handler) {
-    this.msgHandler = handler;
+  void setMessageHandlerIn(ClientMessageHandler handler) {
+    this.msgHandlerIn = handler;
+  }
+
+  void setMessageHandlerOut(ClientMessageHandler handler) {
+    this.msgHandlerOut = handler;
   }
 
   private void handleLogin(ClientSession session, Message message) {
@@ -159,7 +164,7 @@ class ClientFrameHandler implements IoHandler {
       checkLag(iopSession, message);
       // First call message handler.
       try {
-        this.msgHandler.onMessage(iopSession, message);
+        this.msgHandlerIn.onMessage(iopSession, message);
       } catch (Throwable th) {
         th.printStackTrace();
       }
@@ -251,7 +256,25 @@ class ClientFrameHandler implements IoHandler {
 
   @Override
   public void messageSent(IoSession session, Object message) throws Exception {
-    // nothing.
+    if (!(message instanceof Frame))
+      throw new IllegalStateException("message is not frame");
+    Body body = null;
+    Message iopMessage;
+    ClientSessionImpl iopSession = ClientSessionImpl.from(session);
+    var frame = (Frame) message;
+    try {
+      body = Utils.fromJson(new String(
+          frame.Body, StandardCharsets.UTF_8), Body.class);
+      iopMessage = toMessage(body);
+      try {
+        this.msgHandlerOut.onMessage(iopSession, iopMessage);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    } catch (IOException e) {
+      this.sessionAdaptor.doEvent(
+          iopSession, SessionEvent.BROKEN_BODY, body);
+    }
   }
 
   @Override
