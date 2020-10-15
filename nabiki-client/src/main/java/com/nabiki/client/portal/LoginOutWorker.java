@@ -55,6 +55,8 @@ public class LoginOutWorker implements Runnable {
 
   private boolean watcherStated = false;
 
+  public final static String USER_PRODUCT_INFO = "PORTAL";
+
   LoginOutWorker(
       boolean login,
       JDialog srcDlg,
@@ -128,6 +130,7 @@ public class LoginOutWorker implements Runnable {
     var req = new CReqUserLogin();
     req.UserID = userField.getText().trim();
     req.Password = pwdField.getText().trim();
+    req.UserProductInfo = USER_PRODUCT_INFO;
     try {
       var rsp = client.login(
           req, UUID.randomUUID().toString());

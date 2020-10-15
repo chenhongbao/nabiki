@@ -50,6 +50,8 @@ public abstract class AbstractClient {
   protected Response<CRspUserLogin> loginRsp;
   protected Response<CSpecificInstrument> subRsp;
 
+  public final static String USER_PRODUCT_INFO = "TRADER";
+
   AbstractClient() {
     client = new TradeClientFactoryImpl().get();
   }
@@ -88,6 +90,7 @@ public abstract class AbstractClient {
     var login = new CReqUserLogin();
     login.UserID = userID;
     login.Password = password;
+    login.UserProductInfo = USER_PRODUCT_INFO;
     loginRsp = client.login(
         login, UUID.randomUUID().toString());
   }

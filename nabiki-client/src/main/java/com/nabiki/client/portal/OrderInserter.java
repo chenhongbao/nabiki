@@ -166,7 +166,8 @@ public class OrderInserter extends Updater implements Runnable {
     enable(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     enable(true);
-    clearFields();
+    // Don't clear fields here because fields may be cleared twice. Just leave
+    // field as they are when rsp timeout.
     if (!rsp.hasResponse()) {
       showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
     }

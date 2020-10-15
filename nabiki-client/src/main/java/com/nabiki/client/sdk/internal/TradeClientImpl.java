@@ -45,6 +45,8 @@ class TradeClientImpl implements TradeClient {
   private final TradeClientSessionAdaptor sessionAdaptor
       = new TradeClientSessionAdaptor();
 
+  public final static String USER_PRODUCT_INFO = "SDK";
+
   private CReqUserLogin lastLoginReq;
 
   public TradeClientImpl() {
@@ -91,6 +93,11 @@ class TradeClientImpl implements TradeClient {
       CReqUserLogin request, String requestID) {
     var rsp = new ResponseImpl<CRspUserLogin>();
     this.clientAdaptor.setResponse(rsp, requestID);
+    // Set user product info.
+    if (request.UserProductInfo == null ||
+        request.UserProductInfo.trim().length() == 0) {
+      request.UserProductInfo = USER_PRODUCT_INFO;
+    }
     getSession().sendLogin(
         toMessage(MessageType.REQ_LOGIN, request, requestID));
     // Preserve login request.
