@@ -32,10 +32,7 @@ import com.nabiki.centre.config.Global;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.utils.Utils;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,6 +55,8 @@ class RequestDaemon implements Runnable {
   private final AtomicReference<String> lastOrderRef = new AtomicReference<>();
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition cond = lock.newCondition();
+
+  private final Map<String, Object> refs = new ConcurrentHashMap<>();
 
   public RequestDaemon(OrderProvider provider, Global global) {
     this.provider = provider;
@@ -87,13 +86,12 @@ class RequestDaemon implements Runnable {
   }
 
   void signalOrderRef(String ref) {
-    if (lastOrderRef.get() != null && ref.equals(lastOrderRef.get())) {
-      lock.lock();
-      try {
-        cond.signal();
-      } finally {
-        lock.unlock();
-      }
+    refs.put(ref, new Object());
+    lock.lock();
+    try {
+      cond.signal();
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -101,21 +99,23 @@ class RequestDaemon implements Runnable {
     if (lastOrderRef.get() == null || lastOrderRef.get().isEmpty()) {
       return true;
     }
-    lock.lock();
-    try {
-      if (cond.await(value, unit)) {
-        // Reset last order ref after getting signaled.
-        lastOrderRef.set(null);
-        return true;
+    var target = LocalDateTime.now().plus(value, unit.toChronoUnit());
+    while (!refs.containsKey(lastOrderRef.get())) {
+      var d = Duration.between(LocalDateTime.now(), target);
+      if (d.isNegative() || d.isZero()) {
+        break;
       } else {
-        return false;
+        lock.lock();
+        try {
+          cond.await(d.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } finally {
+          lock.unlock();
+        }
       }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      return false;
-    } finally {
-      lock.unlock();
     }
+    return refs.containsKey(lastOrderRef.get());
   }
 
   @Override
