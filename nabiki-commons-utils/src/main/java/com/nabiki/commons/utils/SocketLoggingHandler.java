@@ -94,6 +94,9 @@ public class SocketLoggingHandler extends Handler {
   }
 
   private void write(byte[] bytes) throws IOException {
+    if (bout == null) {
+      throw new IOException("null out buffer");
+    }
     synchronized (this) {
       bout.write(bytes);
       bout.flush();
@@ -106,7 +109,6 @@ public class SocketLoggingHandler extends Handler {
       bytes = f.getBytes();
       write(bytes);
     } catch (IOException ex) {
-      reportError("Fail writing bytes.", ex, ErrorManager.WRITE_FAILURE);
       // Try reconnect and rewrite.
       connect();
       write(bytes);
@@ -115,7 +117,7 @@ public class SocketLoggingHandler extends Handler {
     }
   }
 
-  private void write(String s) throws Exception {
+  private void write(String s) {
     Charset cs = null;
     var encoding = getEncoding();
     if (encoding == null) {
@@ -135,7 +137,9 @@ public class SocketLoggingHandler extends Handler {
     try {
       write(f);
     } catch (Exception ex) {
-      reportError("Fail writing bytes in " + encoding, ex,
+      reportError(
+          "Fail writing bytes in " + encoding,
+          ex,
           ErrorManager.WRITE_FAILURE);
     }
   }
