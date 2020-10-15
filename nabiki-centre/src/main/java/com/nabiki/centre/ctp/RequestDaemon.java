@@ -87,7 +87,7 @@ class RequestDaemon implements Runnable {
   }
 
   void signalOrderRef(String ref) {
-    if (lastOrderRef.get() != null && ref.compareTo(lastOrderRef.get()) == 0) {
+    if (lastOrderRef.get() != null && ref.equals(lastOrderRef.get())) {
       lock.lock();
       try {
         cond.signal();
@@ -98,19 +98,23 @@ class RequestDaemon implements Runnable {
   }
 
   private boolean waitOrderRsp(int value, TimeUnit unit) {
-    if (lastOrderRef.get() == null || lastOrderRef.get().length() == 0) {
+    if (lastOrderRef.get() == null || lastOrderRef.get().isEmpty()) {
       return true;
     }
     lock.lock();
     try {
-      return cond.await(value, unit);
+      if (cond.await(value, unit)) {
+        // Reset last order ref after getting signaled.
+        lastOrderRef.set(null);
+        return true;
+      } else {
+        return false;
+      }
     } catch (InterruptedException e) {
       e.printStackTrace();
       return false;
     } finally {
       lock.unlock();
-      // Reset last order ref after getting signaled.
-      lastOrderRef.set(null);
     }
   }
 
@@ -130,8 +134,11 @@ class RequestDaemon implements Runnable {
           // Wait order rsp because async inserting order causes refs no auto-inc.
           // For example, ref(14) arrives, and then ref(13) arrives.
           if (!waitOrderRsp(WAIT_RSP_SEC, TimeUnit.SECONDS)) {
-            global.getLogger().warning(
-                "order rsp timeout[" + lastOrderRef.get() + "]");
+            global.getLogger().warning(String.format(
+                "Order[%s] rsp timeout.",
+                lastOrderRef.get()));
+            // Didn't get signaled, need to clear old ref.
+            lastOrderRef.set(null);
           }
           // Control max number of requests sent per second.
           trafficControl();
