@@ -87,7 +87,7 @@ public class RequestValidator extends RequestSuper {
           rsp.LimitPrice));
     } else {
       global.getLogger().warning(String.format(
-          "Reject order from %s on %s because %s[%d].",
+          "Reject order from %s on %s because of %s[%d].",
           rsp.UserID,
           rsp.InstrumentID,
           errorMsg,

@@ -75,28 +75,25 @@ public class SessionAdaptor extends ServerSessionAdaptor {
         global.getLogger().warning(Utils.toJson(eventObject));
         break;
       case INPUT_CLOSED:
-        global.getLogger().info(
-            "input closed(" + session.getRemoteAddress() + ")");
         session.close();
         break;
       case CLOSED:
         var recv = session.getAttribute(
             SubscriptionAdaptor.FRONT_MDRECEIVER_KEY);
-        if (recv != null)
+        if (recv != null) {
           this.router.removeReceiver((MarketDataReceiver) recv);
-        this.global.getLogger().info(
-            "session closed(" + session.getRemoteAddress() + ")");
-        if (!session.isClosed())
+        }
+        if (!session.isClosed()) {
           session.close();
+        }
+        var user = (String) session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
+        global.getLogger().info(String.format(
+            "User %s logout from %s.",
+            user,
+            session.getRemoteAddress()));
         break;
       case CREATED:
-        global.getLogger().info(
-            "session created(" + session.getRemoteAddress() + ")");
-        break;
       case OPENED:
-        global.getLogger().info(
-            "session opened(" + session.getRemoteAddress() + ")");
-        break;
       case IDLE:
       default:
         break;

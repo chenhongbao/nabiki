@@ -70,7 +70,7 @@ public class RequestExecutor extends RequestSuper {
             action.OrderLocalID));
       } else {
         global.getLogger().warning(String.format(
-            "Reject action from %s for %s because %s[%d].",
+            "Reject action from %s for %s because of %s[%d].",
             action.UserID,
             action.OrderLocalID,
             info.ErrorMsg,
@@ -99,7 +99,7 @@ public class RequestExecutor extends RequestSuper {
           rsp.LimitPrice));
     } else {
       global.getLogger().warning(String.format(
-          "Reject order from %s on %s because %s[%d].",
+          "Reject order from %s on %s because of %s[%d].",
           rsp.UserID,
           rsp.InstrumentID,
           errorMsg,

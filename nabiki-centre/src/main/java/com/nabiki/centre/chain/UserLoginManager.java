@@ -69,17 +69,35 @@ public class UserLoginManager extends LoginManager {
 
   @Override
   public int doLogin(ServerSession session, Message message) {
-    var code = checkLoginOK(session, message);
+    var req = (CReqUserLogin) message.Body;
+    var code = checkLoginOK(session, req);
     sendLoginRsp(code, session, message);
+    checkLoginCode(code, session, req);
     return code;
   }
 
-  private int checkLoginOK(ServerSession session, Message message) {
+  private void checkLoginCode(int code, ServerSession session, CReqUserLogin req) {
+    if (code == ErrorCodes.NONE) {
+      global.getLogger().info(String.format(
+          "User %s login with %s from %s succeeds.",
+          req.UserID,
+          req.UserProductInfo,
+          session.getRemoteAddress()));
+    } else {
+      global.getLogger().info(String.format(
+          "User %s login with %s from %s fails because of %s[%d].",
+          req.UserID,
+          req.UserProductInfo,
+          session.getRemoteAddress(),
+          Utils.getErrorMsg(code),
+          code));
+    }
+  }
+
+  private int checkLoginOK(ServerSession session, CReqUserLogin req) {
     if (isLogin(session))
       return ErrorCodes.DUPLICATE_LOGIN;
-    Objects.requireNonNull(message, "message null");
-    Objects.requireNonNull(message.Body, "login request null");
-    var req = (CReqUserLogin) message.Body;
+    Objects.requireNonNull(req, "login request null");
     Objects.requireNonNull(req.UserID, "user ID null");
     var auth = this.authMgr.getAuthProfile(req.UserID);
     if (auth == null)
