@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,11 +28,11 @@
 
 package com.nabiki.centre.chain;
 
-import com.nabiki.commons.iop.ServerMessageAdaptor;
 import com.nabiki.commons.ctpobj.CInputOrder;
 import com.nabiki.commons.ctpobj.CInputOrderAction;
 import com.nabiki.commons.ctpobj.COrder;
 import com.nabiki.commons.ctpobj.COrderAction;
+import com.nabiki.commons.iop.ServerMessageAdaptor;
 
 public class RequestSuper extends ServerMessageAdaptor {
   COrder toRtnOrder(CInputOrder rtn) {
@@ -83,7 +83,7 @@ public class RequestSuper extends ServerMessageAdaptor {
     r.InvestUnitID = action.InvestUnitID;
     r.LimitPrice = action.LimitPrice;
     r.OrderActionRef = action.OrderActionRef;
-    r.OrderSysID = action.OrderSysID;
+    r.OrderLocalID = action.OrderSysID;
     r.OrderRef = action.OrderRef;
     r.RequestID = action.RequestID;
     r.SessionID = action.SessionID;

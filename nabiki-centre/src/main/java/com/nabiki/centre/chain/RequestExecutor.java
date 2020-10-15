@@ -65,14 +65,14 @@ public class RequestExecutor extends RequestSuper {
       var action = (COrderAction) rsp;
       if (info.ErrorID == ErrorCodes.NONE) {
         global.getLogger().info(String.format(
-            "Accept action from %s on %s.",
+            "Accept action from %s for %s.",
             action.UserID,
-            action.InstrumentID));
+            action.OrderLocalID));
       } else {
         global.getLogger().warning(String.format(
-            "Reject action from %s on %s because %s[%d].",
+            "Reject action from %s for %s because %s[%d].",
             action.UserID,
-            action.InstrumentID,
+            action.OrderLocalID,
             info.ErrorMsg,
             info.ErrorID));
       }
