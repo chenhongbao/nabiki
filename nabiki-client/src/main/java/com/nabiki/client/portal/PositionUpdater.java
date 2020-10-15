@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,13 +28,16 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -107,27 +110,33 @@ public class PositionUpdater extends Updater implements Runnable {
     req.InstrumentID = instrument;
     var rsp = client.queryPosition(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<CInvestorPosition>() {
+      private final Set<CInvestorPosition> positions = new HashSet<>();
+
+      @Override
+      public void accept(CInvestorPosition object, CRspInfo rspInfo,
+                         int currentCount, int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else {
+          positions.add(object);
+        }
+        if (positions.size() == totalCount) {
+          src.setEnabled(true);
+          EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              updatePositionTable(positions);
+            }
+          });
+        }
+      }
+    });
     src.setEnabled(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
-    if (!rsp.hasResponse())
+    if (!rsp.hasResponse()) {
       showMsg("\u65E0\u6301\u4ED3");
-    else {
-      CRspInfo error = null;
-      CInvestorPosition p = null;
-      var positions = new HashSet<CInvestorPosition>();
-      while ((p = rsp.poll()) != null) {
-        positions.add(p);
-        var info = rsp.getRspInfo(p);
-        if (info.ErrorID != ErrorCodes.NONE) {
-          error = info;
-          break;
-        }
-      }
-      if (error != null)
-        showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
-      else
-        updatePositionTable(positions);
     }
   }
 
@@ -136,27 +145,33 @@ public class PositionUpdater extends Updater implements Runnable {
     req.InstrumentID = instrument;
     var rsp = client.queryPositionDetail(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<CInvestorPositionDetail>() {
+      private final Set<CInvestorPositionDetail> positions = new HashSet<>();
+
+      @Override
+      public void accept(CInvestorPositionDetail object, CRspInfo rspInfo,
+                         int currentCount, int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else {
+          positions.add(object);
+        }
+        if (positions.size() == totalCount) {
+          src.setEnabled(true);
+          EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              updateDetailTable(positions);
+            }
+          });
+        }
+      }
+    });
     src.setEnabled(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
-    if (!rsp.hasResponse())
+    if (!rsp.hasResponse()) {
       showMsg("\u65E0\u6301\u4ED3");
-    else {
-      CRspInfo error = null;
-      CInvestorPositionDetail p;
-      var positions = new HashSet<CInvestorPositionDetail>();
-      while ((p = rsp.poll()) != null) {
-        positions.add(p);
-        var info = rsp.getRspInfo(p);
-        if (info.ErrorID != ErrorCodes.NONE) {
-          error = info;
-          break;
-        }
-      }
-      if (error != null)
-        showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
-      else
-        updateDetailTable(positions);
     }
   }
 

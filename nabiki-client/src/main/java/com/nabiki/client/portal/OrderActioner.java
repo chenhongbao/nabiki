@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,8 +28,11 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.CInputOrderAction;
+import com.nabiki.commons.ctpobj.COrderAction;
+import com.nabiki.commons.ctpobj.CRspInfo;
 import com.nabiki.commons.ctpobj.ErrorCodes;
 
 import javax.swing.*;
@@ -80,19 +83,23 @@ public class OrderActioner extends Updater implements Runnable {
     req.OrderSysID = orderID;
     var rsp = client.orderAction(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<COrderAction>() {
+      @Override
+      public void accept(COrderAction object, CRspInfo rspInfo, int currentCount,
+                         int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else {
+          updater.query(orderID, rel);
+          src.setEnabled(true);
+        }
+      }
+    });
     src.setEnabled(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
-    if (!rsp.hasResponse())
+    if (!rsp.hasResponse()) {
       showMsg("\u65E0\u6301\u4ED3");
-    else {
-      var rspInfo = rsp.getRspInfo(rsp.poll());
-      if (rspInfo == null)
-        showMsg("\u65E0\u6301\u4ED3");
-      else if (rspInfo.ErrorID != ErrorCodes.NONE)
-        showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
-      else
-        updater.query(orderID, rel);
     }
   }
 

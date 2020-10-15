@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,13 +28,16 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -100,27 +103,30 @@ public class OrderUpdater extends Updater implements Runnable {
     req.OrderSysID = orderID;
     var rsp = client.queryOrder(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<COrder>() {
+      private final Set<COrder> orders = new HashSet<>();
+
+      @Override
+      public void accept(COrder object, CRspInfo rspInfo, int currentCount,
+                         int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else {
+          orders.add(object);
+        }
+        if (orders.size() == totalCount) {
+          src.setEnabled(true);
+          EventQueue.invokeLater(() -> {
+            updateTable(orders);
+          });
+        }
+      }
+    });
     src.setEnabled(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
-    if (!rsp.hasResponse())
+    if (!rsp.hasResponse()) {
       showMsg("\u67E5\u8BE2\u4E0D\u5230\u62A5\u5355\u4FE1\u606F");
-    else {
-      CRspInfo error = null;
-      COrder o = null;
-      var orders = new HashSet<COrder>();
-      while ((o = rsp.poll()) != null) {
-        orders.add(o);
-        var info = rsp.getRspInfo(o);
-        if (info.ErrorID != ErrorCodes.NONE) {
-          error = info;
-          break;
-        }
-      }
-      if (error != null)
-        showMsg(String.format("[%d]%s", error.ErrorID, error.ErrorMsg));
-      else
-        updateTable(orders);
     }
   }
 

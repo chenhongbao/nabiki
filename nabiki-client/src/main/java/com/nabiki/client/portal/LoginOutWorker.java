@@ -28,8 +28,11 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.CReqUserLogin;
+import com.nabiki.commons.ctpobj.CRspInfo;
+import com.nabiki.commons.ctpobj.CRspUserLogin;
 import com.nabiki.commons.ctpobj.ErrorCodes;
 import com.nabiki.commons.utils.Utils;
 
@@ -128,22 +131,34 @@ public class LoginOutWorker implements Runnable {
     try {
       var rsp = client.login(
           req, UUID.randomUUID().toString());
+      rsp.consume(new ResponseConsumer<CRspUserLogin>() {
+        @Override
+        public void accept(CRspUserLogin object, CRspInfo rspInfo, int currentCount,
+                           int totalCount) {
+          if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+            JOptionPane.showMessageDialog(
+                srcDialog,
+                String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+            changeComponents(true);
+          } else {
+            changeComponents(false);
+            srcDialog.setVisible(false);
+            startWatcher();
+          }
+        }
+      });
       sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
-      if (!rsp.hasResponse())
-        throw new RuntimeException("\u65E0\u767B\u5F55\u54CD\u5E94");
-      var r = rsp.getRspInfo(rsp.poll());
-      if (r != null && r.ErrorID != ErrorCodes.NONE)
-        throw new RuntimeException(r.ErrorMsg);
-      else {
-        changeComponents(false);
-        // Hide dialog.
-        srcDialog.setVisible(false);
+      if (!rsp.hasResponse()) {
+        showMsg("\u65E0\u767B\u5F55\u54CD\u5E94");
       }
-      startWatcher();
     } catch (Throwable th) {
-      showLoginResult("\u767B\u5F55\u5931\u8D25" + th.getMessage(), Color.RED);
-      loginBtn.setEnabled(true);
+      showMsg("\u767B\u5F55\u5931\u8D25" + th.getMessage());
+      changeComponents(true);
     }
+  }
+
+  private void showMsg(String msg) {
+    JOptionPane.showMessageDialog(srcDialog, msg);
   }
 
   private void logoutProcess() {
@@ -152,7 +167,7 @@ public class LoginOutWorker implements Runnable {
       changeComponents(true);
       srcDialog.setVisible(false);
     } catch (Throwable th) {
-      showLoginResult("\u9000\u51FA\u5931\u8D25, " + th.getMessage(), Color.RED);
+      showMsg("\u9000\u51FA\u5931\u8D25, " + th.getMessage());
     }
   }
 

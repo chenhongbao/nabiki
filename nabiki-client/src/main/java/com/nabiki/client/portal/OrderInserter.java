@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,11 +28,13 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -141,22 +143,33 @@ public class OrderInserter extends Updater implements Runnable {
     }
     var rsp = client.orderInsert(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<COrder>() {
+      @Override
+      public void accept(COrder object, CRspInfo rspInfo, int currentCount,
+                         int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else if (object == null) {
+          showMsg("\u62A5\u5355\u54CD\u5E94\u8FD4\u56DE\u7A7A\u5F15\u7528");
+        } else {
+          enable(true);
+          EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              updateInsertedTable(object);
+              clearFields();
+            }
+          });
+        }
+      }
+    });
     enable(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     enable(true);
-    if (!rsp.hasResponse())
-      showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
-    else {
-      var order = rsp.poll();
-      var rspInfo = rsp.getRspInfo(order);
-      if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE)
-        showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
-      else if (order == null)
-        showMsg("\u62A5\u5355\u54CD\u5E94\u8FD4\u56DE\u7A7A\u5F15\u7528");
-      else
-        updateInsertedTable(order);
-    }
     clearFields();
+    if (!rsp.hasResponse()) {
+      showMsg("\u65E0\u62A5\u5355\u5E94\u7B54");
+    }
   }
 
   private void setupTable() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,9 +28,12 @@
 
 package com.nabiki.client.portal;
 
+import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.commons.ctpobj.CQryTradingAccount;
+import com.nabiki.commons.ctpobj.CRspInfo;
 import com.nabiki.commons.ctpobj.CTradingAccount;
+import com.nabiki.commons.ctpobj.ErrorCodes;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -101,13 +104,29 @@ public class AccountUpdater extends Updater implements Runnable {
     req.AccountID = req.InvestorID = user;
     var rsp = client.queryAccount(
         req, UUID.randomUUID().toString());
+    rsp.consume(new ResponseConsumer<CTradingAccount>() {
+      @Override
+      public void accept(CTradingAccount object, CRspInfo rspInfo, int currentCount,
+                         int totalCount) {
+        if (rspInfo != null && rspInfo.ErrorID != ErrorCodes.NONE) {
+          showMsg(String.format("[%d]%s", rspInfo.ErrorID, rspInfo.ErrorMsg));
+        } else {
+          src.setEnabled(true);
+          EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              updateTable(object);
+            }
+          });
+        }
+      }
+    });
     src.setEnabled(false);
     sleep(Constants.GLOBAL_WAIT_SECONDS, TimeUnit.SECONDS);
     src.setEnabled(true);
-    if (!rsp.hasResponse())
+    if (!rsp.hasResponse()) {
       showMsg("\u67E5\u8BE2\u4E0D\u5230\u8D26\u6237\u4fE1\u606F");
-    else
-      updateTable(rsp.poll());
+    }
   }
 
   private String format(double value) {
