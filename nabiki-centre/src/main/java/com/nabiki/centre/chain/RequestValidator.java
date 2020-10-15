@@ -149,6 +149,7 @@ public class RequestValidator extends RequestSuper {
             ErrorCodes.USER_NOT_ACTIVE,
             Utils.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
       } else {
+        boolean validated = false;
         for (var instrAuth : auth.InstrumentAuths) {
           var instrumentID = request.InstrumentID;
           var offset = request.CombOffsetFlag;
@@ -168,18 +169,21 @@ public class RequestValidator extends RequestSuper {
                   MessageType.RSP_REQ_ORDER_INSERT,
                   ErrorCodes.NONE,
                   Utils.getErrorMsg(ErrorCodes.NONE));
+              validated = true;
             } else {
               // Allow the request goes to next handler on the chain.
               return;
             }
           }
         }
-        reply(session,
-            toRtnOrder(request),
-            requestID,
-            MessageType.RSP_REQ_ORDER_INSERT,
-            ErrorCodes.NO_TRADING_RIGHT,
-            Utils.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
+        if (!validated) {
+          reply(session,
+              toRtnOrder(request),
+              requestID,
+              MessageType.RSP_REQ_ORDER_INSERT,
+              ErrorCodes.NO_TRADING_RIGHT,
+              Utils.getErrorMsg(ErrorCodes.NO_TRADING_RIGHT));
+        }
       }
     }
     session.done();
