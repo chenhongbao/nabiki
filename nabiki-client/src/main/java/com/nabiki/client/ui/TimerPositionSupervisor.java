@@ -32,7 +32,8 @@ import com.nabiki.client.sdk.ResponseConsumer;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.utils.Utils;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +79,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   @Override
   public int getPosition(String instrumentID) {
-    return getPosition(su);
+    return getPosition(su.getPositions());
   }
 
   @Override
@@ -107,19 +108,16 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       case OpenShort:
         open(su);
         su.setState(SuggestionState.Confirm);
-        su.setInvestorPos(null);
         break;
       case CloseLong:
       case CloseShort:
         close(su);
         su.setState(SuggestionState.Confirm);
-        su.setInvestorPos(null);
         break;
       case CutCloseLong:
       case CutCloseShort:
         close(su);
         su.setState(SuggestionState.ConfirmCut);
-        su.setInvestorPos(null);
         break;
       default:
         break;
@@ -183,27 +181,27 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   private void queryPosition(Suggestion su) throws Exception {
-    if (su.getInvestorPos() == null || checkRspTimeout()) {
+    if (!su.isQueryingPosition() || checkRspTimeout()) {
       lastQryTimeStamp = System.currentTimeMillis();
-      su.setInvestorPos(new HashSet<>());
+      su.setQueryingPosition(true);
       trader.getPosition(su.getInstrumentID(), "").consume(new QryPositionConsumer(su));
     }
   }
 
   private void queryAccount(Suggestion su) throws Exception {
-    if (su.getAccount() == null || checkRspTimeout()) {
+    if (!su.isQueryingAccount() || checkRspTimeout()) {
       lastQryTimeStamp = System.currentTimeMillis();
-      su.setAccount(new CTradingAccount());
+      su.setQueryingAccount(true);
       trader.getAccount().consume(new QryAccountConsumer(su));
     }
   }
 
-  private int getPosition(Suggestion suggestion) {
-    if (suggestion == null || suggestion.getInvestorPos() == null) {
+  private int getPosition(Collection<CInvestorPosition> positions) {
+    if (positions == null || positions.isEmpty()) {
       return 0;
     }
     int l = 0, s = 0;
-    for (var p : suggestion.getInvestorPos()) {
+    for (var p : positions) {
       if (p.PosiDirection == PosiDirectionType.LONG) {
         l = p.Position;
       } else if (p.PosiDirection == PosiDirectionType.SHORT) {
@@ -214,10 +212,10 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   class QryAccountConsumer implements ResponseConsumer<CTradingAccount> {
-    private final Suggestion suggestion;
+    private final Suggestion su;
 
     QryAccountConsumer(Suggestion s) {
-      this.suggestion = s;
+      this.su = s;
     }
 
     @Override
@@ -226,21 +224,24 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         trader.getLogger().severe(String.format(
             "fail qry account[%d]: %s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       } else {
-        suggestion.setAccount(object);
-        suggestion.setState(SuggestionState.QryPosition);
+        su.setAccount(object);
+        // Complete query, reset.
+        su.setQueryingAccount(false);
+        su.setState(SuggestionState.QryPosition);
       }
     }
   }
 
   class QryPositionConsumer implements ResponseConsumer<CInvestorPosition> {
     private final Suggestion su;
+    private final Collection<CInvestorPosition> positions = new LinkedList<>();
 
     QryPositionConsumer(Suggestion s) {
       this.su = s;
     }
 
     private void judgePosition() {
-      var p = getPosition(su);
+      var p = getPosition(positions);
       // Clear all position.
       if (su.getPosition() == 0) {
         if (p > 0) {
@@ -303,34 +304,37 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
           }
         }
       }
+      if (su.getState() == SuggestionState.Completed) {
+        su.setPositions(positions);
+      }
     }
 
     private void judgeCut() {
-      var p = getPosition(su);
-      if (p != 0) {
-        return;
-      }
-      switch (su.getDirection()) {
-        case PosiDirectionType.LONG:
-          su.setPosDiff(su.getPosition());
-          su.setState(SuggestionState.OpenLong);
-          break;
-        case PosiDirectionType.SHORT:
-          su.setPosDiff(su.getPosition());
-          su.setState(SuggestionState.OpenShort);
-          break;
-        default:
-          trader.getLogger().severe("wrong direction: " + su.getState());
-          break;
+      if (0 == getPosition(positions)) {
+        switch (su.getDirection()) {
+          case PosiDirectionType.LONG:
+            su.setPosDiff(su.getPosition());
+            su.setState(SuggestionState.OpenLong);
+            break;
+          case PosiDirectionType.SHORT:
+            su.setPosDiff(su.getPosition());
+            su.setState(SuggestionState.OpenShort);
+            break;
+          default:
+            trader.getLogger().severe("wrong direction: " + su.getState());
+            break;
+        }
+        // No need set position in suggestion because it is ZERO position.
       }
     }
 
     private void judgeCompleted() {
-      var p = getPosition(su);
-      if (su.getDirection() == PosiDirectionType.LONG && p == su.getPosition()) {
+      var p = getPosition(positions);
+      var c0 = su.getDirection() == PosiDirectionType.LONG && p == su.getPosition();
+      var c1 = su.getDirection() == PosiDirectionType.SHORT && -p == su.getPosition();
+      if (c0 || c1) {
         su.setState(SuggestionState.Completed);
-      } else if (su.getDirection() == PosiDirectionType.SHORT && -p == su.getPosition()) {
-        su.setState(SuggestionState.Completed);
+        su.setPositions(positions);
       }
     }
 
@@ -340,9 +344,9 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         trader.getLogger().severe(String.format(
             "fail qry position[%d]: %s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       } else {
-        su.getInvestorPos().add(object);
+        positions.add(object);
       }
-      if (su.getInvestorPos().size() == totalCount) {
+      if (positions.size() == totalCount) {
         if (su.getState() == SuggestionState.Confirm) {
           judgeCompleted();
         } else if (su.getState() == SuggestionState.ConfirmCut) {
@@ -350,6 +354,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         } else if (su.getState() == SuggestionState.QryPosition) {
           judgePosition();
         }
+        // Complete query, reset.
+        su.setQueryingPosition(false);
       }
     }
   }
