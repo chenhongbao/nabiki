@@ -224,15 +224,6 @@ public class CandleEngine extends TimerTask {
         for (var c : this.candles.values()) {
           var candle = c.pop(du, global.getTradingDay());
           r.add(candle);
-          // TODO DEBUG logging, remove this line after verify the fix.
-          if (candle.Volume < 0) {
-            global.getLogger().warning(String.format(
-                "candle volume < 0(%d), %s, %s %s",
-                candle.Volume,
-                candle.InstrumentID,
-                candle.ActionDay,
-                candle.UpdateTime));
-          }
         }
       }
       return r;
