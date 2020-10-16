@@ -61,16 +61,22 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   @Override
-  public void suggestPosition(String instrumentID, String exchangeID, char direction, int position, double priceHigh, double priceLow) {
+  public void suggestPosition(
+      String instrumentID,
+      String exchangeID,
+      char posiDirection,
+      int position,
+      double priceHigh,
+      double priceLow) {
     if (su != null && su.getState() != SuggestionState.Completed) {
       throw new RuntimeException("last suggestion not completed");
     } else {
       su = new Suggestion(listener);
       su.setInstrumentID(instrumentID);
       su.setExchangeID(exchangeID);
-      su.setDirection(direction);
+      su.setPosiDirection(posiDirection);
       su.setPosition(Math.abs(position));
-      su.setPosDiff(0);
+      su.setPosiDiff(0);
       su.setPriceHigh(priceHigh);
       su.setPriceLow(priceLow);
       su.setState(SuggestionState.QryAccount);
@@ -78,7 +84,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   @Override
-  public int getPosition(String instrumentID) {
+  public int getPosition() {
     return getPosition(su.getPositions());
   }
 
@@ -144,7 +150,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         su.getInstrumentID(),
         su.getExchangeID(),
         price,
-        su.getPosDiff(),
+        su.getPosiDiff(),
         direction,
         CombOffsetFlagType.OFFSET_OPEN);
   }
@@ -171,7 +177,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         su.getInstrumentID(),
         su.getExchangeID(),
         price,
-        su.getPosDiff(),
+        su.getPosiDiff(),
         direction,
         CombOffsetFlagType.OFFSET_CLOSE);
   }
@@ -245,61 +251,61 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       // Clear all position.
       if (su.getPosition() == 0) {
         if (p > 0) {
-          su.setPosDiff(p);
+          su.setPosiDiff(p);
           su.setState(SuggestionState.CloseLong);
         } else if (p < 0) {
-          su.setPosDiff(-p);
+          su.setPosiDiff(-p);
           su.setState(SuggestionState.CloseShort);
         } else {
-          su.setPosDiff(0);
+          su.setPosiDiff(0);
           su.setState(SuggestionState.Completed);
         }
       } else {
         // No position, so just open it.
         if (p == 0) {
-          su.setPosDiff(su.getPosition());
-          if (su.getDirection() == PosiDirectionType.LONG) {
+          su.setPosiDiff(su.getPosition());
+          if (su.getPosiDirection() == PosiDirectionType.LONG) {
             su.setState(SuggestionState.OpenLong);
-          } else if (su.getDirection() == PosiDirectionType.SHORT) {
+          } else if (su.getPosiDirection() == PosiDirectionType.SHORT) {
             su.setState(SuggestionState.OpenShort);
           }
         } else if (p > 0) {
-          if (su.getDirection() == PosiDirectionType.LONG) {
+          if (su.getPosiDirection() == PosiDirectionType.LONG) {
             // Current position is less than required, open more.
             if (p < su.getPosition()) {
-              su.setPosDiff(su.getPosition() - p);
+              su.setPosiDiff(su.getPosition() - p);
               su.setState(SuggestionState.OpenLong);
             } else if (p > su.getPosition()) {
               // Current position is more than required, close some.
-              su.setPosDiff(p - su.getPosition());
+              su.setPosiDiff(p - su.getPosition());
               su.setState(SuggestionState.CloseLong);
             } else {
-              su.setPosDiff(0);
+              su.setPosiDiff(0);
               su.setState(SuggestionState.Completed);
             }
-          } else if (su.getDirection() == PosiDirectionType.SHORT) {
+          } else if (su.getPosiDirection() == PosiDirectionType.SHORT) {
             // Current position is not required, close all.
-            su.setPosDiff(p);
+            su.setPosiDiff(p);
             su.setState(SuggestionState.CutCloseLong);
           }
         } else {
           var xp = -p;
-          if (su.getDirection() == PosiDirectionType.SHORT) {
+          if (su.getPosiDirection() == PosiDirectionType.SHORT) {
             // Current position is less than required, open more.
             if (xp < su.getPosition()) {
-              su.setPosDiff(su.getPosition() - xp);
+              su.setPosiDiff(su.getPosition() - xp);
               su.setState(SuggestionState.OpenShort);
             } else if (xp > su.getPosition()) {
               // Current position is more than required, close some.
-              su.setPosDiff(xp - su.getPosition());
+              su.setPosiDiff(xp - su.getPosition());
               su.setState(SuggestionState.CloseShort);
             } else {
-              su.setPosDiff(0);
+              su.setPosiDiff(0);
               su.setState(SuggestionState.Completed);
             }
-          } else if (su.getDirection() == PosiDirectionType.LONG) {
+          } else if (su.getPosiDirection() == PosiDirectionType.LONG) {
             // Current position is not required, close all.
-            su.setPosDiff(xp);
+            su.setPosiDiff(xp);
             su.setState(SuggestionState.CutCloseShort);
           }
         }
@@ -311,13 +317,13 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
     private void judgeCut() {
       if (0 == getPosition(positions)) {
-        switch (su.getDirection()) {
+        switch (su.getPosiDirection()) {
           case PosiDirectionType.LONG:
-            su.setPosDiff(su.getPosition());
+            su.setPosiDiff(su.getPosition());
             su.setState(SuggestionState.OpenLong);
             break;
           case PosiDirectionType.SHORT:
-            su.setPosDiff(su.getPosition());
+            su.setPosiDiff(su.getPosition());
             su.setState(SuggestionState.OpenShort);
             break;
           default:
@@ -330,8 +336,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
     private void judgeCompleted() {
       var p = getPosition(positions);
-      var c0 = su.getDirection() == PosiDirectionType.LONG && p == su.getPosition();
-      var c1 = su.getDirection() == PosiDirectionType.SHORT && -p == su.getPosition();
+      var c0 = su.getPosiDirection() == PosiDirectionType.LONG && p == su.getPosition();
+      var c1 = su.getPosiDirection() == PosiDirectionType.SHORT && -p == su.getPosition();
       if (c0 || c1) {
         su.setState(SuggestionState.Completed);
         su.setPositions(positions);

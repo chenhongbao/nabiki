@@ -36,8 +36,8 @@ import java.util.Collection;
 public class Suggestion {
   private String instrumentID;
   private String exchangeID;
-  private Character direction;
-  private Integer pos, posDiff;
+  private Character posiDirection;
+  private Integer posi, posiDiff;
   private Double priceHigh, priceLow;
   private SuggestionState state;
   private CTradingAccount account = null; /* init as nil so it knows qry isn't sent yet */
@@ -83,28 +83,28 @@ public class Suggestion {
     this.exchangeID = exchangeID;
   }
 
-  public Character getDirection() {
-    return direction;
+  public Character getPosiDirection() {
+    return posiDirection;
   }
 
-  public void setDirection(Character direction) {
-    this.direction = direction;
+  public void setPosiDirection(Character posiDirection) {
+    this.posiDirection = posiDirection;
   }
 
   public Integer getPosition() {
-    return pos;
+    return posi;
   }
 
   public void setPosition(Integer pos) {
-    this.pos = pos;
+    this.posi = pos;
   }
 
-  public Integer getPosDiff() {
-    return posDiff;
+  public Integer getPosiDiff() {
+    return posiDiff;
   }
 
-  public void setPosDiff(Integer posDiff) {
-    this.posDiff = posDiff;
+  public void setPosiDiff(Integer posiDiff) {
+    this.posiDiff = posiDiff;
   }
 
   public Double getPriceHigh() {
