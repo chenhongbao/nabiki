@@ -38,7 +38,6 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class PositionUpdater extends Updater implements Runnable {
@@ -108,8 +107,7 @@ public class PositionUpdater extends Updater implements Runnable {
   private void queryInvestorPosition() throws Exception {
     var req = new CQryInvestorPosition();
     req.InstrumentID = instrument;
-    var rsp = client.queryPosition(
-        req, UUID.randomUUID().toString());
+    var rsp = client.queryPosition(req);
     rsp.consume(new ResponseConsumer<CInvestorPosition>() {
       private final Set<CInvestorPosition> positions = new HashSet<>();
 
@@ -143,8 +141,7 @@ public class PositionUpdater extends Updater implements Runnable {
   private void queryDetail() throws Exception {
     var req = new CQryInvestorPositionDetail();
     req.InstrumentID = instrument;
-    var rsp = client.queryPositionDetail(
-        req, UUID.randomUUID().toString());
+    var rsp = client.queryPositionDetail(req);
     rsp.consume(new ResponseConsumer<CInvestorPositionDetail>() {
       private final Set<CInvestorPositionDetail> positions = new HashSet<>();
 

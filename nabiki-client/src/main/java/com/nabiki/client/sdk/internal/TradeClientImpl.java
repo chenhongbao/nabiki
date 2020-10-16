@@ -38,6 +38,7 @@ import com.nabiki.commons.iop.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Objects;
+import java.util.UUID;
 
 class TradeClientImpl implements TradeClient {
   private final IOPClient client = IOP.createClient();
@@ -89,8 +90,8 @@ class TradeClientImpl implements TradeClient {
   }
 
   @Override
-  public Response<CRspUserLogin> login(
-      CReqUserLogin request, String requestID) {
+  public Response<CRspUserLogin> login(CReqUserLogin request) {
+    var requestID = UUID.randomUUID().toString();
     var rsp = new ResponseImpl<CRspUserLogin>();
     this.clientAdaptor.setResponse(rsp, requestID);
     // Set user product info.
@@ -150,8 +151,7 @@ class TradeClientImpl implements TradeClient {
   }
 
   @Override
-  public Response<COrder> orderInsert(
-      CInputOrder order, String requestID) throws Exception {
+  public Response<COrder> orderInsert(CInputOrder order) throws Exception {
     requireLogin();
     order.InvestorID
         = order.UserID
@@ -161,13 +161,13 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.REQ_ORDER_INSERT,
         order,
-        requestID,
+        UUID.randomUUID().toString(),
         COrder.class);
   }
 
   @Override
   public Response<COrderAction> orderAction(
-      CInputOrderAction action, String requestID) throws Exception {
+      CInputOrderAction action) throws Exception {
     requireLogin();
     action.InvestorID
         = action.UserID
@@ -176,27 +176,32 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.REQ_ORDER_ACTION,
         action,
-        requestID,
+        UUID.randomUUID().toString(),
         COrderAction.class);
   }
 
   @Override
   public Response<CDepthMarketData> queryDepthMarketData(
-      CQryDepthMarketData query, String requestID) throws Exception {
+      CQryDepthMarketData query) throws Exception {
     requireLogin();
     return send(
         MessageType.QRY_MD,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         CDepthMarketData.class);
   }
 
   @Override
   public Response<CInvestorPosition> queryPosition(
-      CQryInvestorPosition query, String requestID) throws Exception {
+      CQryInvestorPosition query) throws Exception {
     requireLogin();
     query.InvestorID = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
+
+    // TODO DEBUG
+    var requestID = UUID.randomUUID().toString();
+    System.out.println(String.format("[%s] QryPosition.", requestID));
+
     return send(
         MessageType.QRY_POSITION,
         query,
@@ -206,26 +211,31 @@ class TradeClientImpl implements TradeClient {
 
   @Override
   public Response<CInvestorPositionDetail> queryPositionDetail(
-      CQryInvestorPositionDetail query, String requestID) throws Exception {
+      CQryInvestorPositionDetail query) throws Exception {
     requireLogin();
     query.InvestorID = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
     return send(
         MessageType.QRY_POSI_DETAIL,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         CInvestorPositionDetail.class);
   }
 
   @Override
   public Response<CTradingAccount> queryAccount(
-      CQryTradingAccount query, String requestID) throws Exception {
+      CQryTradingAccount query) throws Exception {
     requireLogin();
     query.InvestorID
         = query.AccountID
         = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
     query.CurrencyID = "CNY";
+
+    // TODO DEBUG
+    var requestID = UUID.randomUUID().toString();
+    System.out.println(String.format("[%s] QryAccount.", requestID));
+
     return send(
         MessageType.QRY_ACCOUNT,
         query,
@@ -234,67 +244,65 @@ class TradeClientImpl implements TradeClient {
   }
 
   @Override
-  public Response<COrder> queryOrder(
-      CQryOrder query, String requestID) throws Exception {
+  public Response<COrder> queryOrder(CQryOrder query) throws Exception {
     requireLogin();
     query.InvestorID = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
     return send(
         MessageType.QRY_ORDER,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         COrder.class);
   }
 
   @Override
   public Response<CSpecificInstrument> subscribeMarketData(
-      CSubMarketData subscription, String requestID) throws Exception {
+      CSubMarketData subscription) throws Exception {
     requireLogin();
     return send(
         MessageType.SUB_MD,
         subscription,
-        requestID,
+        UUID.randomUUID().toString(),
         CSpecificInstrument.class);
   }
 
   @Override
   public Response<CSpecificInstrument> unSubscribeMarketData(
-      CUnsubMarketData subscription, String requestID) throws Exception {
+      CUnsubMarketData subscription) throws Exception {
     requireLogin();
     return send(
         MessageType.UNSUB_MD,
         subscription,
-        requestID,
+        UUID.randomUUID().toString(),
         CSpecificInstrument.class);
   }
 
   @Override
-  public Response<CInstrument> queryInstrument(
-      CQryInstrument query, String requestID) throws Exception {
+  public Response<CInstrument> queryInstrument(CQryInstrument query) throws Exception {
     return send(
         MessageType.QRY_INSTRUMENT,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         CInstrument.class);
   }
 
   @Override
   public Response<CInstrumentMarginRate> queryMargin(
-      CQryInstrumentMarginRate query, String requestID) throws Exception {
+      CQryInstrumentMarginRate query) throws Exception {
     return send(
         MessageType.QRY_MARGIN,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         CInstrumentMarginRate.class);
   }
 
   @Override
   public Response<CInstrumentCommissionRate> queryCommission(
-      CQryInstrumentCommissionRate query, String requestID) throws Exception {
+      CQryInstrumentCommissionRate query) throws Exception {
     return send(
         MessageType.QRY_COMMISSION,
         query,
-        requestID,
+        UUID.randomUUID().toString(),
         CInstrumentCommissionRate.class);
   }
 }

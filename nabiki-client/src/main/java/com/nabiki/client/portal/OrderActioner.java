@@ -36,7 +36,6 @@ import com.nabiki.commons.ctpobj.CRspInfo;
 import com.nabiki.commons.ctpobj.ErrorCodes;
 
 import javax.swing.*;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrderActioner extends Updater implements Runnable {
@@ -81,8 +80,7 @@ public class OrderActioner extends Updater implements Runnable {
   private void actionOrder() throws Exception {
     var req = new CInputOrderAction();
     req.OrderSysID = orderID;
-    var rsp = client.orderAction(
-        req, UUID.randomUUID().toString());
+    var rsp = client.orderAction(req);
     rsp.consume(new ResponseConsumer<COrderAction>() {
       @Override
       public void accept(COrderAction object, CRspInfo rspInfo, int currentCount,

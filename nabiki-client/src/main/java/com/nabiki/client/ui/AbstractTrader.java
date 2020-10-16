@@ -98,10 +98,6 @@ public abstract class AbstractTrader implements Trader {
     }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
   }
 
-  private String getRequestID() {
-    return UUID.randomUUID().toString();
-  }
-
   void addLoggingHandler(Handler h) {
     getLogger().addHandler(h);
   }
@@ -123,7 +119,7 @@ public abstract class AbstractTrader implements Trader {
     var qry = new CQryInstrument();
     qry.InstrumentID = i;
     try {
-      client.queryInstrument(qry, UUID.randomUUID().toString()).consume(
+      client.queryInstrument(qry).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
               if (object != null && object.InstrumentID != null) {
@@ -147,7 +143,7 @@ public abstract class AbstractTrader implements Trader {
     var qry = new CQryInstrumentMarginRate();
     qry.InstrumentID = i;
     try {
-      client.queryMargin(qry, UUID.randomUUID().toString()).consume(
+      client.queryMargin(qry).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
               if (object != null && object.InstrumentID != null) {
@@ -171,7 +167,7 @@ public abstract class AbstractTrader implements Trader {
     var qry = new CQryInstrumentCommissionRate();
     qry.InstrumentID = i;
     try {
-      client.queryCommission(qry, UUID.randomUUID().toString()).consume(
+      client.queryCommission(qry).consume(
           (object, rspInfo, currentCount, totalCount) -> {
             if (rspInfo.ErrorID == ErrorCodes.NONE) {
               if (object != null && object.InstrumentID != null) {
@@ -221,7 +217,7 @@ public abstract class AbstractTrader implements Trader {
     req.VolumeTotalOriginal = volume;
     req.Direction = (byte) direction;
     req.CombOffsetFlag = (byte) offset;
-    return this.client.orderInsert(req, getRequestID());
+    return client.orderInsert(req);
   }
 
   @Override
@@ -235,22 +231,22 @@ public abstract class AbstractTrader implements Trader {
     var qry = new CQryInvestorPosition();
     qry.ExchangeID = exchangeID;
     qry.InstrumentID = instrumentID;
-    return this.client.queryPosition(qry, getRequestID());
+    return client.queryPosition(qry);
   }
 
   @Override
   public Response<CTradingAccount> getAccount() throws Exception {
-    return this.client.queryAccount(new CQryTradingAccount(), getRequestID());
+    return client.queryAccount(new CQryTradingAccount());
   }
 
   @Override
   public Logger getLogger() {
-    return this.logger;
+    return logger;
   }
 
   @Override
   public TradeClient getClient() {
-    return this.client;
+    return client;
   }
 
   @Override

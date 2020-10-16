@@ -38,7 +38,6 @@ import com.nabiki.commons.ctpobj.ErrorCodes;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class AccountUpdater extends Updater implements Runnable {
@@ -102,8 +101,7 @@ public class AccountUpdater extends Updater implements Runnable {
     var req = new CQryTradingAccount();
     req.CurrencyID = "CNY";
     req.AccountID = req.InvestorID = user;
-    var rsp = client.queryAccount(
-        req, UUID.randomUUID().toString());
+    var rsp = client.queryAccount(req);
     rsp.consume(new ResponseConsumer<CTradingAccount>() {
       @Override
       public void accept(CTradingAccount object, CRspInfo rspInfo, int currentCount,

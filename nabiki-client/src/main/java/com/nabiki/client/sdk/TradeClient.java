@@ -51,29 +51,29 @@ public interface TradeClient {
 
   IOPClient getIOP();
 
-  Response<CRspUserLogin> login(CReqUserLogin request, String requestID) throws Exception;
+  Response<CRspUserLogin> login(CReqUserLogin request) throws Exception;
 
-  Response<COrder> orderInsert(CInputOrder order, String requestID) throws Exception;
+  Response<COrder> orderInsert(CInputOrder order) throws Exception;
 
-  Response<COrderAction> orderAction(CInputOrderAction action, String requestID) throws Exception;
+  Response<COrderAction> orderAction(CInputOrderAction action) throws Exception;
 
-  Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query, String requestID) throws Exception;
+  Response<CDepthMarketData> queryDepthMarketData(CQryDepthMarketData query) throws Exception;
 
-  Response<CInvestorPosition> queryPosition(CQryInvestorPosition query, String requestID) throws Exception;
+  Response<CInvestorPosition> queryPosition(CQryInvestorPosition query) throws Exception;
 
-  Response<CInvestorPositionDetail> queryPositionDetail(CQryInvestorPositionDetail query, String requestID) throws Exception;
+  Response<CInvestorPositionDetail> queryPositionDetail(CQryInvestorPositionDetail query) throws Exception;
 
-  Response<CTradingAccount> queryAccount(CQryTradingAccount query, String requestID) throws Exception;
+  Response<CTradingAccount> queryAccount(CQryTradingAccount query) throws Exception;
 
-  Response<COrder> queryOrder(CQryOrder query, String requestID) throws Exception;
+  Response<COrder> queryOrder(CQryOrder query) throws Exception;
 
-  Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription, String requestID) throws Exception;
+  Response<CSpecificInstrument> subscribeMarketData(CSubMarketData subscription) throws Exception;
 
-  Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription, String requestID) throws Exception;
+  Response<CSpecificInstrument> unSubscribeMarketData(CUnsubMarketData subscription) throws Exception;
 
-  Response<CInstrument> queryInstrument(CQryInstrument query, String requestID) throws Exception;
+  Response<CInstrument> queryInstrument(CQryInstrument query) throws Exception;
 
-  Response<CInstrumentMarginRate> queryMargin(CQryInstrumentMarginRate query, String requestID) throws Exception;
+  Response<CInstrumentMarginRate> queryMargin(CQryInstrumentMarginRate query) throws Exception;
 
-  Response<CInstrumentCommissionRate> queryCommission(CQryInstrumentCommissionRate query, String requestID) throws Exception;
+  Response<CInstrumentCommissionRate> queryCommission(CQryInstrumentCommissionRate query) throws Exception;
 }

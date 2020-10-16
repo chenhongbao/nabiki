@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrderInserter extends Updater implements Runnable {
@@ -113,7 +112,6 @@ public class OrderInserter extends Updater implements Runnable {
 
   private void insertOrder() throws Exception {
     var req = new CInputOrder();
-
     try {
       req.InstrumentID = instrumentField.getText().trim();
       req.LimitPrice = Double.parseDouble(priceField.getText().trim());
@@ -141,8 +139,7 @@ public class OrderInserter extends Updater implements Runnable {
       default:
         break;
     }
-    var rsp = client.orderInsert(
-        req, UUID.randomUUID().toString());
+    var rsp = client.orderInsert(req);
     rsp.consume(new ResponseConsumer<COrder>() {
       @Override
       public void accept(COrder object, CRspInfo rspInfo, int currentCount,

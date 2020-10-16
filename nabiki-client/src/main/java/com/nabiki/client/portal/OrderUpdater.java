@@ -38,7 +38,6 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class OrderUpdater extends Updater implements Runnable {
@@ -101,8 +100,7 @@ public class OrderUpdater extends Updater implements Runnable {
   private void queryOrder() throws Exception {
     var req = new CQryOrder();
     req.OrderSysID = orderID;
-    var rsp = client.queryOrder(
-        req, UUID.randomUUID().toString());
+    var rsp = client.queryOrder(req);
     rsp.consume(new ResponseConsumer<COrder>() {
       private final Set<COrder> orders = new HashSet<>();
 

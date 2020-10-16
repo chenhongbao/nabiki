@@ -40,7 +40,6 @@ import com.nabiki.commons.ctpobj.CSubMarketData;
 import com.nabiki.commons.utils.SocketLoggingHandler;
 
 import java.net.InetSocketAddress;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractClient {
@@ -91,15 +90,14 @@ public abstract class AbstractClient {
     login.UserID = userID;
     login.Password = password;
     login.UserProductInfo = USER_PRODUCT_INFO;
-    loginRsp = client.login(
-        login, UUID.randomUUID().toString());
+    loginRsp = client.login(login);
   }
 
   private void reqSubscription(Trader trader) throws Exception {
     // Request subscription.
     var reqSub = new CSubMarketData();
     reqSub.InstrumentID = trader.getSubscribe().toArray(new String[0]);
-    subRsp = client.subscribeMarketData(reqSub, UUID.randomUUID().toString());
+    subRsp = client.subscribeMarketData(reqSub);
     // Query instrument information.
     for (var i : reqSub.InstrumentID) {
       trader.getMargin(i);

@@ -40,7 +40,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.InetSocketAddress;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class LoginOutWorker implements Runnable {
@@ -132,8 +131,7 @@ public class LoginOutWorker implements Runnable {
     req.Password = pwdField.getText().trim();
     req.UserProductInfo = USER_PRODUCT_INFO;
     try {
-      var rsp = client.login(
-          req, UUID.randomUUID().toString());
+      var rsp = client.login(req);
       rsp.consume(new ResponseConsumer<CRspUserLogin>() {
         @Override
         public void accept(CRspUserLogin object, CRspInfo rspInfo, int currentCount,
