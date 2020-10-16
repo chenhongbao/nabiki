@@ -32,7 +32,6 @@ import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.commons.ctpobj.CInputOrder;
 import com.nabiki.commons.ctpobj.COrder;
 import com.nabiki.commons.ctpobj.OrderStatusType;
-import com.nabiki.commons.utils.Utils;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -114,7 +113,7 @@ public class OrderMapper {
    * @return {@link Set} of detail order refs
    */
   public Set<String> getOrderRef(String uuid) {
-    return Utils.deepCopy(this.uid2ref.get(uuid));
+    return this.uid2ref.get(uuid);
   }
 
   /**

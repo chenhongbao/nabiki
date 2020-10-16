@@ -101,7 +101,7 @@ public class CandleProgress {
       }
       if (this.candle.EndTime == null)
         this.candle.EndTime = "";
-      return Utils.deepCopy(this.candle);
+      return copyCandle(this.candle);
     }
   }
 
@@ -112,6 +112,24 @@ public class CandleProgress {
     this.lastVolumeUpdated = 0;
     this.popped = true;
     return r;
+  }
+
+  private CCandle copyCandle(CCandle origin) {
+    var c = new CCandle();
+    c.InstrumentID = origin.InstrumentID;
+    c.OpenPrice = origin.OpenPrice;
+    c.HighestPrice = origin.HighestPrice;
+    c.LowestPrice = origin.LowestPrice;
+    c.ClosePrice = origin.ClosePrice;
+    c.AveragePrice = origin.AveragePrice;
+    c.OpenInterest = origin.OpenInterest;
+    c.Volume = origin.Volume;
+    c.Minute = origin.Minute;
+    c.TradingDay = origin.TradingDay;
+    c.ActionDay = origin.ActionDay;
+    c.UpdateTime = origin.UpdateTime;
+    c.EndTime = origin.EndTime;
+    return c;
   }
 
   private String getEndTime() {

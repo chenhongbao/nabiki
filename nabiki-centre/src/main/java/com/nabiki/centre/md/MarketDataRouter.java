@@ -31,7 +31,6 @@ package com.nabiki.centre.md;
 import com.nabiki.centre.config.UncaughtWriter;
 import com.nabiki.commons.ctpobj.CCandle;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
-import com.nabiki.commons.utils.Utils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -152,7 +151,7 @@ public class MarketDataRouter implements Runnable {
           synchronized (this.receivers) {
             for (var recv : this.receivers) {
               try {
-                recv.depthReceived(Utils.deepCopy(md));
+                recv.depthReceived(md);
               } catch (Throwable th) {
                 th.printStackTrace();
               }
@@ -163,7 +162,7 @@ public class MarketDataRouter implements Runnable {
           synchronized (this.receivers) {
             for (var recv : this.receivers) {
               try {
-                recv.candleReceived(Utils.deepCopy(candle));
+                recv.candleReceived(candle);
               } catch (Throwable th) {
                 th.printStackTrace();
               }
