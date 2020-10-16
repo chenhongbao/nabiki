@@ -54,7 +54,8 @@
   <repositories>
     <repository>
       <id>SelfHostRepository</id>
-      <url>http://106.54.254.193:8080/maven2</url>
+      <url>https://raw.githubusercontent.com/chenhongbao/ctp4j/master/mvnrepository
+      </url>
     </repository>
   </repositories>
 
