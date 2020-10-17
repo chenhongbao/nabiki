@@ -57,16 +57,10 @@ public class OrderMapper {
   public void settle() {
     // Change unfilled orders' states.
     for (var o : detRef2Rtn.values()) {
-      switch (o.OrderStatus) {
-        case OrderStatusType.PART_TRADED_QUEUEING:
-          o.OrderStatus = OrderStatusType.PART_TRADED_NOT_QUEUEING;
-          break;
-        case OrderStatusType.NO_TRADE_QUEUEING:
-        case OrderStatusType.NOT_TOUCHED:
-        case OrderStatusType.TOUCHED:
-        case OrderStatusType.UNKNOWN:
-          o.OrderStatus = OrderStatusType.NO_TRADE_NOT_QUEUEING;
-          break;
+      if (o.OrderStatus != OrderStatusType.ALL_TRADED) {
+        // Following return order won't update again.
+        // Those orders may be sent from other clients with the same order ref.
+        o.OrderStatus = OrderStatusType.CANCELED;
       }
     }
   }

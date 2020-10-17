@@ -42,10 +42,7 @@ import com.nabiki.ctp4j.THOST_TE_RESUME_TYPE;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -66,6 +63,9 @@ public class OrderProvider {
   private final Map<String, CInstrument> activeInstruments = new ConcurrentHashMap<>();
   private final BlockingDeque<PendingRequest> pendingReqs;
   private final TimeAligner timeAligner = new TimeAligner();
+
+  // Offset for order ref, try to avoid duplication.
+  private final Integer orderRefOffset;
 
   private boolean isConfirmed = false, isConnected = false, qryInstrLast = false;
   private CRspUserLogin rspLogin;
@@ -93,7 +93,21 @@ public class OrderProvider {
     loginCfg = global.getLoginConfigs().get("trader");
     msgWriter = new ReqRspWriter(mapper, global);
     pendingReqs = new LinkedBlockingDeque<>();
+    orderRefOffset = getOrderRefOffset();
     startOrderDaemonOnce();
+  }
+
+  private int getOrderRefOffset() {
+    if (orderRefOffset != null) {
+      return orderRefOffset;
+    } else {
+      var i = new Random().nextInt(100000) << 16;
+      if (i < 0) {
+        return -i;
+      } else {
+        return i;
+      }
+    }
   }
 
   public void settle() {
@@ -413,7 +427,7 @@ public class OrderProvider {
       orderRef.set(0);
       reqTask.clearOrderRef();
     }
-    return String.valueOf(orderRef.incrementAndGet());
+    return String.valueOf(orderRef.incrementAndGet() + orderRefOffset);
   }
 
   protected void doLogin() {
