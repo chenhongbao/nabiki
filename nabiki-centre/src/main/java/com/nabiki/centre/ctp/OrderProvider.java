@@ -87,12 +87,12 @@ public class OrderProvider {
   private CThostFtdcTraderApi api;
   private JniTraderSpi spi;
 
-  public OrderProvider(CandleEngine cdl, Global global) {
-    this.global = global;
-    this.candleEngine = cdl;
-    this.loginCfg = this.global.getLoginConfigs().get("trader");
-    this.msgWriter = new ReqRspWriter(this.mapper, this.global);
-    this.pendingReqs = new LinkedBlockingDeque<>();
+  public OrderProvider(CandleEngine cdl, Global glb) {
+    global = glb;
+    candleEngine = cdl;
+    loginCfg = global.getLoginConfigs().get("trader");
+    msgWriter = new ReqRspWriter(mapper, global);
+    pendingReqs = new LinkedBlockingDeque<>();
     startOrderDaemonOnce();
   }
 
@@ -168,8 +168,10 @@ public class OrderProvider {
   }
 
   private void setConfirmed(boolean confirmed) {
+    if (isConfirmed != confirmed) {
+      global.getLogger().info("trader confirmed: " + isConfirmed());
+    }
     isConfirmed = confirmed;
-    global.getLogger().info("trader confirmed: " + isConfirmed());
   }
 
   public boolean isConnected() {
@@ -177,8 +179,10 @@ public class OrderProvider {
   }
 
   private void setConnected(boolean connected) {
+    if (isConnected != connected) {
+      global.getLogger().info("trader connected: " + isConnected());
+    }
     isConnected = connected;
-    global.getLogger().info("trader connected: " + isConnected());
   }
 
   public boolean waitConnected(long millis) {
