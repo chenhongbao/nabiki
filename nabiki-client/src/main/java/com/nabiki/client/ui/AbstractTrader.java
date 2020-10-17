@@ -107,6 +107,8 @@ public abstract class AbstractTrader implements Trader {
   private void reCacheInfoWorkDay() {
     var weekDay = LocalDate.now().getDayOfWeek();
     if (weekDay != DayOfWeek.SATURDAY && weekDay != DayOfWeek.SUNDAY) {
+      // GC before each market open.
+      System.gc();
       reCacheInfo();
     }
   }

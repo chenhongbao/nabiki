@@ -196,6 +196,8 @@ class PlatformTask extends TimerTask {
   // especially on login/out failure.
   private void start() {
     setWorkingState(WorkingState.STARTING);
+    // GC memory before start.
+    System.gc();
     // Re-load config before starting platform for a new day.
     try {
       GlobalConfig.config();
