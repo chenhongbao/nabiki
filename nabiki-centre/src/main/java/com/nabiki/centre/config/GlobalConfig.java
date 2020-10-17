@@ -54,10 +54,9 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class GlobalConfig {
-  public static String ROOT_PATH;
-
-  static AtomicBoolean configLoaded = new AtomicBoolean(false);
   final static Global GLOBAL = new Global();
+  public static String ROOT_PATH;
+  static AtomicBoolean configLoaded = new AtomicBoolean(false);
 
   /**
    * Get single {@link Global} instance. If the instance
@@ -108,41 +107,31 @@ public class GlobalConfig {
         }
         m.put(i.InstrumentID, info);
       }
-      synchronized (GLOBAL.instrInfo) {
-        GLOBAL.instrInfo.clear();
-        GLOBAL.instrInfo.putAll(m);
-      }
+      GLOBAL.instrInfo.clear();
+      GLOBAL.instrInfo.putAll(m);
     }
   }
 
   public static void setInstrumentConfig(CInstrument instr) {
-    synchronized (GLOBAL.instrInfo) {
-      GLOBAL.instrInfo
-          .computeIfAbsent(instr.InstrumentID, i -> new InstrumentInfo())
-          .Instrument = instr;
-    }
+    GLOBAL.instrInfo
+        .computeIfAbsent(instr.InstrumentID, i -> new InstrumentInfo())
+        .Instrument = instr;
     // Set the product and its instruments.
-    synchronized (GLOBAL.products) {
-      GLOBAL.products
-          .computeIfAbsent(instr.ProductID, p -> new HashSet<>())
-          .add(instr.InstrumentID);
-    }
+    GLOBAL.products
+        .computeIfAbsent(instr.ProductID, p -> new HashSet<>())
+        .add(instr.InstrumentID);
   }
 
   public static void setMarginConfig(CInstrumentMarginRate margin) {
-    synchronized (GLOBAL.instrInfo) {
-      GLOBAL.instrInfo
-          .computeIfAbsent(margin.InstrumentID, k -> new InstrumentInfo())
-          .Margin = margin;
-    }
+    GLOBAL.instrInfo
+        .computeIfAbsent(margin.InstrumentID, k -> new InstrumentInfo())
+        .Margin = margin;
   }
 
   public static void setCommissionConfig(CInstrumentCommissionRate commission) {
-    synchronized (GLOBAL.instrInfo) {
-      GLOBAL.instrInfo
-          .computeIfAbsent(commission.InstrumentID, c -> new InstrumentInfo())
-          .Commission = commission;
-    }
+    GLOBAL.instrInfo
+        .computeIfAbsent(commission.InstrumentID, c -> new InstrumentInfo())
+        .Commission = commission;
   }
 
   private static void setInstrInfoConfig() {
