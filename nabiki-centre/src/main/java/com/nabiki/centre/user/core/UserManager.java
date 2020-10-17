@@ -111,9 +111,9 @@ public class UserManager {
           if (pos.Volume > 0) {
             // Get position ready for today's trading.
             renewPosition(pos);
-            var instrPos = positions.computeIfAbsent(
-                pos.InstrumentID, k -> new LinkedList<>());
-            instrPos.add(new UserPositionDetail((pos)));
+            positions
+                .computeIfAbsent(pos.InstrumentID, k -> new LinkedList<>())
+                .add(new UserPositionDetail((pos)));
           }
         }
       } catch (IOException e) {

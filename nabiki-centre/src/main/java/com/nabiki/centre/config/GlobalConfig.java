@@ -117,36 +117,31 @@ public class GlobalConfig {
 
   public static void setInstrumentConfig(CInstrument instr) {
     synchronized (GLOBAL.instrInfo) {
-      if (!GLOBAL.instrInfo.containsKey(instr.InstrumentID)) {
-        GLOBAL.instrInfo.put(instr.InstrumentID, new InstrumentInfo());
-      }
-      GLOBAL.instrInfo.get(instr.InstrumentID).Instrument = instr;
+      GLOBAL.instrInfo
+          .computeIfAbsent(instr.InstrumentID, i -> new InstrumentInfo())
+          .Instrument = instr;
     }
     // Set the product and its instruments.
     synchronized (GLOBAL.products) {
-      if (!GLOBAL.products.containsKey(instr.ProductID)) {
-        GLOBAL.products.put(instr.ProductID, new HashSet<>());
-      }
-      GLOBAL.products.get(instr.ProductID).add(instr.InstrumentID);
+      GLOBAL.products
+          .computeIfAbsent(instr.ProductID, p -> new HashSet<>())
+          .add(instr.InstrumentID);
     }
   }
 
-  public static void setMarginConfig(
-      CInstrumentMarginRate margin) {
+  public static void setMarginConfig(CInstrumentMarginRate margin) {
     synchronized (GLOBAL.instrInfo) {
-      if (!GLOBAL.instrInfo.containsKey(margin.InstrumentID))
-        GLOBAL.instrInfo.put(margin.InstrumentID, new InstrumentInfo());
-      GLOBAL.instrInfo.get(margin.InstrumentID).Margin = margin;
+      GLOBAL.instrInfo
+          .computeIfAbsent(margin.InstrumentID, k -> new InstrumentInfo())
+          .Margin = margin;
     }
   }
 
-  public static void setCommissionConfig(
-      CInstrumentCommissionRate commission) {
+  public static void setCommissionConfig(CInstrumentCommissionRate commission) {
     synchronized (GLOBAL.instrInfo) {
-      if (!GLOBAL.instrInfo.containsKey(commission.InstrumentID)) {
-        GLOBAL.instrInfo.put(commission.InstrumentID, new InstrumentInfo());
-      }
-      GLOBAL.instrInfo.get(commission.InstrumentID).Commission = commission;
+      GLOBAL.instrInfo
+          .computeIfAbsent(commission.InstrumentID, c -> new InstrumentInfo())
+          .Commission = commission;
     }
   }
 
