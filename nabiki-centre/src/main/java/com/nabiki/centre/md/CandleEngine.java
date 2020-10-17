@@ -79,25 +79,10 @@ public class CandleEngine extends TimerTask {
    * Create facilities before market is open. This can save much time of
    * construction a large set of objects.
    *
-   * @param instrID instrument ID
+   * @param instrumentID instrument ID
    */
-  public void addInstrument(String instrID) {
-    if (instrID == null || instrID.length() == 0) {
-      throw new IllegalArgumentException("illegal instr ID");
-    }
-    var product = ensureProduct(Utils.getProductID(instrID));
-    product.registerInstr(instrID);
-    instrProducts.put(instrID, product);
-  }
-
-  public void removeInstrument(String instrID) {
-    if (instrID == null || instrID.length() == 0) {
-      throw new IllegalArgumentException("illegal instr ID");
-    }
-    var productID = Utils.getProductID(instrID);
-    if (this.products.containsKey(productID)) {
-      products.get(productID).unregisterInstr(instrID);
-    }
+  public void addInstrument(String instrumentID) {
+    acquireMapProduct(instrumentID).acquireInstrument(instrumentID);
   }
 
   public void setupDurations() {
@@ -108,25 +93,17 @@ public class CandleEngine extends TimerTask {
     }
   }
 
-  private Product ensureProduct(String product) {
-    Product p;
-    synchronized (this.products) {
-      if (this.products.containsKey(product)) {
-        return this.products.get(product);
-      } else {
-        this.products.put(product, new Product());
-        p = this.products.get(product);
-      }
+  private Product acquireMapProduct(String instrumentID) {
+    if (instrumentID == null || instrumentID.length() == 0) {
+      throw new IllegalArgumentException("illegal instrument ID");
     }
-    return p;
+    return instrProducts.computeIfAbsent(
+        instrumentID,
+        i -> products.computeIfAbsent(Utils.getProductID(i), p -> new Product()));
   }
 
   public void update(CDepthMarketData md) {
-    var product = this.instrProducts.get(md.InstrumentID);
-    if (product == null) {
-      product = ensureProduct(Utils.getProductID(md.InstrumentID));
-    }
-    product.update(md);
+    acquireMapProduct(md.InstrumentID).update(md);
   }
 
   private boolean checkNowOK(LocalTime now) {
@@ -152,7 +129,7 @@ public class CandleEngine extends TimerTask {
     var max = global.getPerformance().start("candle.run.max");
     var cur = global.getPerformance().start("candle.run.cur");
     // Generate candles.
-    for (var e : this.products.entrySet()) {
+    for (var e : products.entrySet()) {
       var h = hours.get(e.getKey());
       if (h == null) {
         this.global.getLogger().warning(
@@ -160,7 +137,7 @@ public class CandleEngine extends TimerTask {
                 null, null));
         continue;
       }
-      for (var du : this.global.getDurations()) {
+      for (var du : global.getDurations()) {
         if (h.contains(du, now))
           try {
             router.route(e.getValue().pop(du));
@@ -181,13 +158,11 @@ public class CandleEngine extends TimerTask {
     Product() {
     }
 
-    public void registerInstr(String instrID) {
-      if (!this.candles.containsKey(instrID)) {
-        this.candles.put(instrID, new SingleCandle(instrID));
-      }
+    public SingleCandle acquireInstrument(String instrID) {
+      return candles.computeIfAbsent(instrID, SingleCandle::new);
     }
 
-    public void unregisterInstr(String instrID) {
+    public void removeInstrument(String instrID) {
       this.candles.remove(instrID);
     }
 
@@ -230,14 +205,7 @@ public class CandleEngine extends TimerTask {
     }
 
     public void update(CDepthMarketData md) {
-      synchronized (this.candles) {
-        var c = this.candles.get(md.InstrumentID);
-        if (c == null) {
-          c = new SingleCandle(md.InstrumentID);
-          this.candles.put(md.InstrumentID, c);
-        }
-        c.update(md);
-      }
+      acquireInstrument(md.InstrumentID).update(md);
     }
   }
 }

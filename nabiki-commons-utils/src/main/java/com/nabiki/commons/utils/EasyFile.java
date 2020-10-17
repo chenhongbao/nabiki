@@ -178,16 +178,7 @@ public class EasyFile {
    */
   public EasyFile setDirectory(String key, String... relPath) throws IOException {
     checkDir();
-    if (this.files.containsKey(key))
-      return this.files.get(key);
-    else {
-      var r = new EasyFile(
-          Path.of(this.path, relPath).toAbsolutePath().toString(),
-          false);
-      this.files.put(key, r);
-      writeIndex(key, concatPath(relPath));
-      return r;
-    }
+    return files.computeIfAbsent(key, s -> setDirAndFile(false, s, relPath));
   }
 
   /**
@@ -202,15 +193,18 @@ public class EasyFile {
    */
   public EasyFile setFile(String key, String... relPath) throws IOException {
     checkDir();
-    if (this.files.containsKey(key))
-      return this.files.get(key);
-    else {
-      var r = new EasyFile(
-          Path.of(this.path, relPath).toAbsolutePath().toString(),
-          true);
-      this.files.put(key, r);
+    return files.computeIfAbsent(key, s -> setDirAndFile(true, s, relPath));
+  }
+
+  private EasyFile setDirAndFile(boolean isFile, String key, String... relPath) {
+    try {
       writeIndex(key, concatPath(relPath));
-      return r;
+      return new EasyFile(
+          Path.of(path, relPath).toAbsolutePath().toString(),
+          isFile);
+    } catch (Throwable th) {
+      th.printStackTrace();
+      return null;
     }
   }
 

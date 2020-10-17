@@ -105,37 +105,36 @@ public class TradingHourKeeper {
    * @param du duration between sampled time points
    */
   public void sample(Duration du) {
-    if (this.durationSplits.containsKey(du))
-      return;
-    else
-      this.durationSplits.put(du, new HashSet<>());
+    durationSplits.computeIfAbsent(du, this::computePoints);
+  }
 
-    final Set<LocalTime> times = durationSplits.get(du);
-    synchronized (times) {
-      // Calculate splits.
-      final LocalTime[] next = {null}, to = {null};
-      final Duration[] nextDu = {du};
-      this.tradingHours.forEach(hour -> {
-        if (next[0] == null)
-          next[0] = hour.from;
-        while (true) {
-          next[0] = next[0].plus(nextDu[0]);
-          if (hour.contains(next[0])) {
-            times.add(next[0]);
-            nextDu[0] = du;
-          } else {
-            nextDu[0] = Utils.between(hour.to, next[0]);
-            break;
-          }
+  private Set<LocalTime> computePoints(Duration du) {
+    final var times = new HashSet<LocalTime>();
+    // Calculate splits.
+    final LocalTime[] next = {null}, to = {null};
+    final Duration[] nextDu = {du};
+    this.tradingHours.forEach(hour -> {
+      if (next[0] == null)
+        next[0] = hour.from;
+      while (true) {
+        next[0] = next[0].plus(nextDu[0]);
+        if (hour.contains(next[0])) {
+          times.add(next[0]);
+          nextDu[0] = du;
+        } else {
+          nextDu[0] = Utils.between(hour.to, next[0]);
+          break;
         }
-        to[0] = hour.to;
-        next[0] = null;
-      });
-      // Finalize the calculation by adding the end of trading hour if next
-      // possible local time exceeds the last trading hour.
-      if (!nextDu[0].equals(du))
-        times.add(to[0]);
+      }
+      to[0] = hour.to;
+      next[0] = null;
+    });
+    // Finalize the calculation by adding the end of trading hour if next
+    // possible local time exceeds the last trading hour.
+    if (!nextDu[0].equals(du)) {
+      times.add(to[0]);
     }
+    return times;
   }
 
   /**

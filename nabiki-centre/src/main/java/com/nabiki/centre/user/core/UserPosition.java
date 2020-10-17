@@ -53,13 +53,11 @@ public class UserPosition {
    * Get the specified position details of an instrument. If user doesn't have
    * position of the instrument, return {@code null}.
    *
-   * @param instrID instrument ID
+   * @param instrumentID instrument ID
    * @return position details of the instrument
    */
-  List<UserPositionDetail> getSpecificPosition(String instrID) {
-    if (!this.positionMap.containsKey(instrID))
-      this.positionMap.put(instrID, new LinkedList<>());
-    return this.positionMap.get(instrID);
+  List<UserPositionDetail> getSpecificPosition(String instrumentID) {
+    return positionMap.computeIfAbsent(instrumentID, i -> new LinkedList<>());
   }
 
   Map<String, List<UserPositionDetail>> getPositionMap() {

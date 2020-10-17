@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -32,49 +32,45 @@ import com.nabiki.commons.ctpobj.CCandle;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SingleCandle {
   private final Duration minuteDuration = Duration.ofMinutes(1);
-  private final String instrID;
-  private final Map<Duration, CandleProgress> progress = new HashMap<>();
+  private final String instrumentID;
+  private final Map<Duration, CandleProgress> progress = new ConcurrentHashMap<>();
 
-  SingleCandle(String instrID) {
-    this.instrID = instrID;
+  SingleCandle(String instrumentID) {
+    this.instrumentID = instrumentID;
   }
 
   void update(CDepthMarketData md) {
-    if (md.InstrumentID.compareTo(this.instrID) != 0)
+    if (md.InstrumentID.compareTo(instrumentID) != 0)
       throw new IllegalArgumentException("wrong instrument");
-    synchronized (this.progress) {
-      for (var c : this.progress.values())
-        c.update(md);
+    for (var c : progress.values()) {
+      c.update(md);
     }
   }
 
   void register(Duration du) {
-    synchronized (this.progress) {
-      if (!this.progress.containsKey(du))
-        this.progress.put(du, new CandleProgress(
-            this.instrID,
-            (int) du.dividedBy(minuteDuration)));
-    }
+    progress.computeIfAbsent(
+        du,
+        d -> new CandleProgress(instrumentID, (int) d.dividedBy(minuteDuration)));
   }
 
   CCandle peak(Duration du, String tradingDay) {
-    synchronized (this.progress) {
-      if (this.progress.containsKey(du))
-        return this.progress.get(du).peak(tradingDay);
+    synchronized (progress) {
+      if (progress.containsKey(du))
+        return progress.get(du).peak(tradingDay);
       else
         throw new IllegalArgumentException("duration not found");
     }
   }
 
   CCandle pop(Duration du, String tradingDay) {
-    synchronized (this.progress) {
-      if (this.progress.containsKey(du))
-        return this.progress.get(du).pop(tradingDay);
+    synchronized (progress) {
+      if (progress.containsKey(du))
+        return progress.get(du).pop(tradingDay);
       else
         throw new IllegalArgumentException("duration not found");
     }
