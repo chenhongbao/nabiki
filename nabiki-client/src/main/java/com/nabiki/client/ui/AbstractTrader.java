@@ -35,6 +35,8 @@ import com.nabiki.commons.utils.SystemStream;
 import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -86,20 +88,27 @@ public abstract class AbstractTrader implements Trader {
     Utils.schedule(new TimerTask() {
       @Override
       public void run() {
-        reCacheInfo();
+        reCacheInfoWorkDay();
       }
     }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
     calendar.set(Calendar.HOUR_OF_DAY, 8);
     Utils.schedule(new TimerTask() {
       @Override
       public void run() {
-        reCacheInfo();
+        reCacheInfoWorkDay();
       }
     }, calendar.getTime(), TimeUnit.DAYS.toMillis(1));
   }
 
   void addLoggingHandler(Handler h) {
     getLogger().addHandler(h);
+  }
+
+  private void reCacheInfoWorkDay() {
+    var weekDay = LocalDate.now().getDayOfWeek();
+    if (weekDay != DayOfWeek.SATURDAY && weekDay != DayOfWeek.SUNDAY) {
+      reCacheInfo();
+    }
   }
 
   // Clear instrument information so they are re-queried.
