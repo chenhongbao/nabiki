@@ -43,7 +43,6 @@ import com.nabiki.commons.utils.SystemStream;
 import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -99,15 +98,6 @@ public class Platform {
     if (listen == null || listen.trim().length() == 0) {
       throw new IllegalArgumentException("no listen address, need --listen option");
     }
-    int idx = listen.indexOf(":");
-    String host = null;
-    int port;
-    if (idx >= 0) {
-      host = listen.substring(0, idx).trim();
-      port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
-    } else {
-      port = Integer.parseInt(listen.trim());
-    }
     // Server.
     var server = IOP.createServer();
     // Install candle writer.
@@ -128,10 +118,7 @@ public class Platform {
     var msgWriter = new MsgInOutWriter(global);
     server.setMessageHandlerIn(new InputFromClientLogger(msgWriter));
     server.setMessageHandlerOut(new OutputToClientLogger(msgWriter));
-    if (host == null || host.length() == 0)
-      server.bind(new InetSocketAddress(port));
-    else
-      server.bind(new InetSocketAddress(host, port));
+    server.bind(Utils.parseInetAddress(listen));
   }
 
   private void managers() {
