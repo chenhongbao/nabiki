@@ -46,10 +46,9 @@ class PlatformTask extends TimerTask {
   private WorkingState workingState = WorkingState.STOPPED;
   private UserState userState = UserState.SETTLED;
 
-  // Try several times when starting.
   public static final LocalTime[] whenStart = new LocalTime[]{
-      LocalTime.of(8, 45),
-      LocalTime.of(20, 45)
+      LocalTime.of(8, 30),
+      LocalTime.of(20, 30)
   };
   public static final LocalTime[] whenStop = new LocalTime[]{
       // Remote server disconnects at around 2:33 am., so logout before
