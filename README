@@ -1,6 +1,6 @@
 Nabiki e-Trade Infrastructure, Release Version 1.2.0
 
-Date:   11:54 am., Oct. 11th, 2020
+Date:   5:38 pm., Oct. 19th, 2020
 Author: Hongbao Chen <chenhongbao@outlook.com>
 
 This software is licensed under GNU AFFERO GENERAL PUBLIC LICENSE Version 3, and
@@ -8,22 +8,19 @@ you can find the copy in the link:
 
     https://www.gnu.org/licenses/agpl-3.0.en.html
 
-Directory layout looks like:
+It is all-in-one trading platform for China's derivative market based on CTP. The
+software depends on ctp4j library at the link below:
 
-- root/
-  - <other dirs and files>
-  - dependency/
-    - nabiki-ctp4j-1.0.2.jar(for example)
-    - others
-  - nabiki-centre-1.2.0.jar
+https://github.com/chenhongbao/ctp4j
 
-For common practice, change directory to root directory and execute the following
-command:
+If you are maven user, just run the pom.xml. The dependency above has been setup and
+run goal dependency:copy-dependencies to extract it into your folder. If you need to
+add library manually, you can download it from the link above under mvnrepository/
+and then all the way to the file.
 
-    javaw -jar nabiki-centre-[VERSION].jar                                      \
-      --root "./"                                                               \
-      --listen 9038                                                             \
-      --log-server [log-server-ip]:9039                                         \
-      --start-now false
+Run the nabiki-centre-[VERSION].jar and then connect with nabiki-client-[VERSION].jar.
+The client contains raw SDK, UI portal and trading API and all the three methods can
+do your trade on the platform.
 
-For option details, use --help.
+There's no tutorial currently. But if you need indeed, please contact the author via
+e-mail chenhongbao@outlook.com .
