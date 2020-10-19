@@ -181,7 +181,7 @@ class ClientFrameHandler implements IoHandler {
           handleHeartbeat(iopSession, message);
           break;
         default:
-          throw new IllegalStateException("unknown frame type");
+          throw new IllegalStateException(String.format("unknown frame type %X", type));
       }
     } catch (Throwable th) {
       try {

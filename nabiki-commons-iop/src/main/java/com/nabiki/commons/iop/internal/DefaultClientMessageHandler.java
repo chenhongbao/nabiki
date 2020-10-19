@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -29,9 +29,9 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.ctpobj.*;
+import com.nabiki.commons.iop.ClientMessageAdaptor;
 import com.nabiki.commons.iop.ClientMessageHandler;
 import com.nabiki.commons.iop.ClientSession;
-import com.nabiki.commons.iop.ClientMessageAdaptor;
 import com.nabiki.commons.iop.Message;
 
 public class DefaultClientMessageHandler implements ClientMessageHandler {
@@ -298,8 +298,7 @@ public class DefaultClientMessageHandler implements ClientMessageHandler {
             message.TotalCount);
         break;
       default:
-        throw new IllegalStateException(
-            "unknown message type " + message.Type);
+        throw new IllegalStateException(String.format("unknown frame type %s", message.Type));
     }
   }
 }

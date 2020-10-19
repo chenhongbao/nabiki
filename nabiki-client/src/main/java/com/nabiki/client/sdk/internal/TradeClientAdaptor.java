@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -84,9 +84,9 @@ class TradeClientAdaptor extends ClientMessageAdaptor {
       String requestID,
       int current,
       int total) {
-    if (!this.responses.containsKey(requestID))
-      throw new IllegalStateException(
-          "no such request ID and response mapping");
+    if (!this.responses.containsKey(requestID)) {
+      throw new IllegalStateException("no request-response map for " + requestID);
+    }
     // Call response.
     var response = (ResponseImpl<T>) this.responses.get(requestID);
     response.put(object, info, current, total);

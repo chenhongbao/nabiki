@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -63,28 +63,29 @@ public class ResponseImpl<T> implements Response<T> {
   private final AtomicBoolean hasRsp = new AtomicBoolean(false);
 
   public ResponseImpl() {
-    this.consumer = new AtomicReference<>(null);
-    this.infos = new ConcurrentHashMap<>();
-    this.responses = new ConcurrentLinkedQueue<>();
+    consumer = new AtomicReference<>(null);
+    infos = new ConcurrentHashMap<>();
+    responses = new ConcurrentLinkedQueue<>();
   }
 
   void put(T response, CRspInfo rspInfo, int count, int total) {
-    if (this.consumer.get() != null) {
+    if (consumer.get() != null) {
       try {
-        this.consumer.get().accept(response, rspInfo, count, total);
+        consumer.get().accept(response, rspInfo, count, total);
       } catch (Throwable th) {
         th.printStackTrace();
       }
     } else {
-      this.responses.add(
+      responses.add(
           new ArriveResponse<>(response, rspInfo, count, total));
-      this.infos.put(response.hashCode(), rspInfo);
+      infos.put(response.hashCode(), rspInfo);
     }
-    this.hasRsp.set(true);
+    hasRsp.set(true);
     // Set count.
-    this.arriveCount.incrementAndGet();
-    if (this.totalCount.get() == 0)
-      this.totalCount.set(total);
+    arriveCount.incrementAndGet();
+    if (totalCount.get() == 0) {
+      totalCount.set(total);
+    }
   }
 
   @Override
