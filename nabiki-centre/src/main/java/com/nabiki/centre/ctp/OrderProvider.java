@@ -183,7 +183,7 @@ public class OrderProvider {
 
   private void setConfirmed(boolean confirmed) {
     if (isConfirmed != confirmed) {
-      global.getLogger().info("trader confirmed: " + isConfirmed());
+      global.getLogger().info("trader confirmed: " + confirmed);
     }
     isConfirmed = confirmed;
   }
@@ -194,7 +194,7 @@ public class OrderProvider {
 
   private void setConnected(boolean connected) {
     if (isConnected != connected) {
-      global.getLogger().info("trader connected: " + isConnected());
+      global.getLogger().info("trader connected: " + connected);
     }
     isConnected = connected;
   }

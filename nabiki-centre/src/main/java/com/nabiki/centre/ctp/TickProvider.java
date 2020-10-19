@@ -120,14 +120,14 @@ public class TickProvider {
 
   private void setLogin(boolean login) {
     if (isLogin != login) {
-      global.getLogger().info("md login: " + isLogin());
+      global.getLogger().info("md login: " + login);
     }
     isLogin = login;
   }
 
   private void setConnected(boolean connected) {
     if (isConnected != connected) {
-      global.getLogger().info("md connected: " + isConnected());
+      global.getLogger().info("md connected: " + connected);
     }
     isConnected = connected;
   }
