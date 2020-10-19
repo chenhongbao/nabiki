@@ -11,7 +11,7 @@ you can find the copy in the link:
 It is all-in-one trading platform for China's derivative market based on CTP. The
 software depends on ctp4j library at the link below:
 
-https://github.com/chenhongbao/ctp4j
+    https://github.com/chenhongbao/ctp4j
 
 If you are maven user, just run the pom.xml. The dependency above has been setup and
 run goal dependency:copy-dependencies to extract it into your folder. If you need to
@@ -23,4 +23,4 @@ The client contains raw SDK, UI portal and trading API and all the three methods
 do your trade on the platform.
 
 There's no tutorial currently. But if you need indeed, please contact the author via
-e-mail chenhongbao@outlook.com .
+e-mail.
