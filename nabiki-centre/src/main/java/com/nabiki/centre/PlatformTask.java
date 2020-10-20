@@ -248,6 +248,9 @@ class PlatformTask extends TimerTask {
       if (!r) {
         global.getLogger().severe("trader logout timeout");
       }
+    } catch (Throwable th) {
+      th.printStackTrace();
+    } finally {
       //Settle user information at the end of a trading day.
       // Settlement is a must no matter whether trader logout successfully.
       var hour = LocalTime.now().getHour();
@@ -257,8 +260,6 @@ class PlatformTask extends TimerTask {
           checkPerformance();
         }
       }
-    } catch (Throwable th) {
-      th.printStackTrace();
     }
   }
 
