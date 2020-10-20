@@ -48,7 +48,17 @@ class PlatformTask extends TimerTask {
 
   public static final LocalTime[] whenStart = new LocalTime[]{
       LocalTime.of(8, 30),
-      LocalTime.of(20, 30)
+      LocalTime.of(8, 35),
+      LocalTime.of(8, 40),
+      LocalTime.of(8, 45),
+      LocalTime.of(8, 50),
+      LocalTime.of(8, 55),
+      LocalTime.of(20, 30),
+      LocalTime.of(20, 35),
+      LocalTime.of(20, 40),
+      LocalTime.of(20, 45),
+      LocalTime.of(20, 50),
+      LocalTime.of(20, 55)
   };
   public static final LocalTime[] whenStop = new LocalTime[]{
       // Remote server disconnects at around 2:33 am., so logout before
@@ -70,8 +80,10 @@ class PlatformTask extends TimerTask {
   }
 
   private void setUserState(UserState state) {
+    if (userState != state) {
+      global.getLogger().info("user state: " + state);
+    }
     userState = state;
-    global.getLogger().info("user state: " + getUserState());
   }
 
   private WorkingState getWorkingState() {
@@ -79,8 +91,10 @@ class PlatformTask extends TimerTask {
   }
 
   private void setWorkingState(WorkingState state) {
+    if (workingState != state) {
+      global.getLogger().info("platform state: " + state);
+    }
     workingState = state;
-    global.getLogger().info("platform state: " + getWorkingState());
   }
 
   private LocalTime now() {
@@ -89,15 +103,17 @@ class PlatformTask extends TimerTask {
   }
 
   private boolean needStart() {
-    if (getWorkingState() == WorkingState.STARTED)
+    if (getWorkingState() == WorkingState.STARTED) {
       return false;
+    }
     var startNow = global.getArgument(Global.CMD_START_NOW_PREFIX);
     if (startNow != null && startNow.compareToIgnoreCase("true") == 0) {
       // So it won't start again right after stopped.
       GlobalConfig.setArgument(Global.CMD_START_NOW_PREFIX, "false");
       return true;
-    } else
+    } else {
       return Utils.isWorkday() && Utils.equalsAny(now(), whenStart);
+    }
   }
 
   private boolean needStop() {
