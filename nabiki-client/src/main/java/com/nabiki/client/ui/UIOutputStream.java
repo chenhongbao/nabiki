@@ -28,12 +28,9 @@
 
 package com.nabiki.client.ui;
 
-import java.util.logging.LogRecord;
+import java.io.File;
+import java.io.OutputStream;
 
-public interface UIPrinter {
-  UIOutputStream getErr();
-
-  UIOutputStream getOut();
-
-  void writeLog(LogRecord log);
+public abstract class UIOutputStream extends OutputStream {
+  public abstract void setFile(File f);
 }

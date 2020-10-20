@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -43,6 +43,9 @@ public class LogDialog extends JDialog implements UIPrinter {
   private final JScrollPane outScrollPane;
   private final JScrollPane errScrollPane;
   private final JCheckBox atuoScrollCheck;
+
+  private final UIOutputStream out;
+  private final UIOutputStream err;
 
   private static final SimpleFormatter formatter = new SimpleFormatter();
 
@@ -107,21 +110,25 @@ public class LogDialog extends JDialog implements UIPrinter {
     atuoScrollCheck.setSelected(true);
     ctrlPane.add(atuoScrollCheck);
 
+    // Create output streams.
+    out = new UITextOutputStream(outArea);
+    err = new UITextOutputStream(errArea);
+
     setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
   }
 
   @Override
-  public void appendOut(String msg) {
-    appendSystem(msg, outArea);
+  public UIOutputStream getErr() {
+    return err;
   }
 
   @Override
-  public void appendErr(String msg) {
-    appendSystem(msg, errArea);
+  public UIOutputStream getOut() {
+    return out;
   }
 
   @Override
-  public void appendLog(LogRecord log) {
+  public void writeLog(LogRecord log) {
     logArea.append(formatter.format(log));
     if (atuoScrollCheck.isSelected())
       scrollBottom(logArea);

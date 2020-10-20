@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -28,20 +28,32 @@
 
 package com.nabiki.client.ui;
 
-import java.io.*;
+import javax.swing.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 
-public class UIMessageOutputStream extends OutputStream {
-  private final UIPrinter printer;
-  private final boolean isOut;
+public class UITextOutputStream extends UIOutputStream {
+  private final JTextArea tout;
   private final byte[] bytes = new byte[1024 * 16];
   private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
-  private final File outFile = new File("out.log"),
-      errFile = new File("err.log");
 
-  public UIMessageOutputStream(UIPrinter printer, boolean isOut) {
-    this.isOut = isOut;
-    this.printer = printer;
+  private File fout;
+
+  public UITextOutputStream(JTextArea area) {
+    this.tout = area;
+  }
+
+  public UITextOutputStream(JTextArea area, File file) {
+    this.tout = area;
+    this.fout = file;
+  }
+
+  @Override
+  public void setFile(File f) {
+    fout = f;
   }
 
   @Override
@@ -54,16 +66,14 @@ public class UIMessageOutputStream extends OutputStream {
     buffer.flip();
     var str = new String(bytes, buffer.position(), buffer.remaining());
     buffer.clear();
-    if (isOut) {
-      printer.appendOut(str);
-      writeFile(str, outFile);
-    } else {
-      printer.appendErr(str);
-      writeFile(str, errFile);
-    }
+    tout.append(str);
+    writeFile(str, fout);
   }
 
   private void writeFile(String msg, File file) {
+    if (file == null) {
+      return;
+    }
     try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))) {
       pw.print(msg);
       pw.flush();

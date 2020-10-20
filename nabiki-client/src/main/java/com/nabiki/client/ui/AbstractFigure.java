@@ -35,6 +35,7 @@ import com.nabiki.chart.control.StickChartPanel;
 import com.nabiki.commons.utils.Utils;
 
 import java.awt.*;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
@@ -45,25 +46,14 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public abstract class AbstractFigure extends AbstractTrader implements Figure {
-  static class UILoggingHandler extends Handler {
-    private final UIPrinter printer;
-
-    UILoggingHandler(UIPrinter printer) {
-      this.printer = printer;
-    }
-
-    @Override
-    public void publish(LogRecord record) {
-      printer.appendLog(record);
-    }
-
-    @Override
-    public void flush() {
-    }
-
-    @Override
-    public void close() throws SecurityException {
-    }
+  private void prepareStd() {
+    logger.addHandler(new UILoggingHandler(logDlg));
+    var out = logDlg.getOut();
+    out.setFile(new File("out.log"));
+    var err = logDlg.getErr();
+    err.setFile(new File("err.log"));
+    System.setOut(new UIPrintStream(out));
+    System.setErr(new UIPrintStream(err));
   }
 
   private final Map<Integer, ChartMainFrame> stickFrames = new ConcurrentHashMap<>();
@@ -80,10 +70,25 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     updated.set(b);
   }
 
-  private void prepareStd() {
-    logger.addHandler(new UILoggingHandler(logDlg));
-    System.setOut(new UIPrintStream(logDlg, true));
-    System.setErr(new UIPrintStream(logDlg, false));
+  static class UILoggingHandler extends Handler {
+    private final UIPrinter printer;
+
+    UILoggingHandler(UIPrinter printer) {
+      this.printer = printer;
+    }
+
+    @Override
+    public void publish(LogRecord record) {
+      printer.writeLog(record);
+    }
+
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void close() throws SecurityException {
+    }
   }
 
   private void prepareTimer() {
