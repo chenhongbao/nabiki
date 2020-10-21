@@ -656,12 +656,14 @@ public class OrderProvider {
   public void whenFrontDisconnected(int reason) {
     setConnected(false);
     setConfirmed(false);
-    // If the state is starting, it doesn't start up successfully.
-    // Then it is disconnected, so remote server is not available.
-    if (getWorkingState() == WorkingState.STARTING) {
+    // If the state is starting or stopping, remote disconnects, it is service not
+    // not available or auto-disconnect after sending logout.
+    if (getWorkingState() == WorkingState.STARTING
+        || getWorkingState() == WorkingState.STOPPING) {
       setWorkingState(WorkingState.STOPPED);
     }
-    // Don't change working state here because it may disconnect in half way.
+    // Don't change working state when it is started here
+    // because it may disconnect in half way.
   }
 
   public void whenErrRtnOrderAction(COrderAction orderAction,
