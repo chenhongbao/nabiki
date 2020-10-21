@@ -37,7 +37,6 @@ import com.nabiki.commons.ctpobj.CReqUserLogin;
 import com.nabiki.commons.ctpobj.CRspUserLogin;
 import com.nabiki.commons.ctpobj.CSpecificInstrument;
 import com.nabiki.commons.ctpobj.CSubMarketData;
-import com.nabiki.commons.utils.SocketLoggingHandler;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
@@ -128,35 +127,20 @@ public abstract class AbstractClient {
     reqSubscription(trader);
   }
 
-  private void addLoggingHandler(AbstractTrader trader, InetSocketAddress log) {
-    if (log != null) {
-      try {
-        trader.addLoggingHandler(
-            new SocketLoggingHandler(log.getHostString(), log.getPort()));
-      } catch (Throwable th) {
-        th.printStackTrace();
-      }
-    }
-  }
-
   protected void initTrader(HeadlessTrader trader,
                             String userID,
                             String password,
-                            InetSocketAddress etrade,
-                            InetSocketAddress logging) throws Exception {
+                            InetSocketAddress etrade) throws Exception {
     setListener(trader.getDefaultAdaptor());
     init(trader, trader, userID, password, etrade);
-    addLoggingHandler(trader, logging);
   }
 
   protected void initTrader(FigureTrader trader,
                             String userID,
                             String password,
-                            InetSocketAddress etrade,
-                            InetSocketAddress logging) throws Exception {
+                            InetSocketAddress etrade) throws Exception {
     setListener(trader.getDefaultAdaptor());
     init(trader, trader, userID, password, etrade);
-    addLoggingHandler(trader, logging);
   }
 
   protected void stop() {

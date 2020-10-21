@@ -30,6 +30,7 @@ package com.nabiki.client.ui;
 
 import com.nabiki.commons.ctpobj.CSpecificInstrument;
 import com.nabiki.commons.ctpobj.ErrorCodes;
+import com.nabiki.commons.utils.SocketLoggingHandler;
 import com.nabiki.commons.utils.Utils;
 
 import java.net.InetSocketAddress;
@@ -148,14 +149,28 @@ public class Client extends AbstractClient {
     checkSubMd();
   }
 
+  private void addLoggingHandler(AbstractTrader trader, InetSocketAddress log) {
+    if (log != null) {
+      try {
+        trader.addLoggingHandler(
+            new SocketLoggingHandler(log.getHostString(), log.getPort()));
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
+    }
+  }
+
   public Client run(HeadlessTrader trader) {
     this.trader = trader;
     this.handler = trader;
+    addLoggingHandler(trader, logging);
+    trader.getLogger().info(
+        String.format("%s is scheduled at %s.", trader.getAlgoName(), startDate));
     Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {
-          initTrader(trader, userID, password, etrade, logging);
+          initTrader(trader, userID, password, etrade);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();
@@ -169,11 +184,14 @@ public class Client extends AbstractClient {
   public Client run(FigureTrader trader) {
     this.trader = trader;
     this.handler = trader;
+    addLoggingHandler(trader, logging);
+    trader.getLogger().info(
+        String.format("%s is scheduled at %s.", trader.getAlgoName(), startDate));
     Utils.scheduleOnce(new TimerTask() {
       @Override
       public void run() {
         try {
-          initTrader(trader, userID, password, etrade, logging);
+          initTrader(trader, userID, password, etrade);
           checkAll();
         } catch (Throwable th) {
           th.printStackTrace();
@@ -185,7 +203,7 @@ public class Client extends AbstractClient {
   }
 
   public void noExit() {
-    while (true) {
+    for (; ; ) {
       try {
         new CountDownLatch(1).await();
       } catch (InterruptedException e) {
