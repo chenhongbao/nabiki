@@ -49,7 +49,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -348,22 +347,9 @@ public class GlobalConfig {
         // Socket handler.
         String listen = GLOBAL.getArgument(Global.CMD_LOGSVR_PREFIX);
         if (listen != null && listen.trim().length() > 0) {
-          int idx = listen.indexOf(":");
-          String host = null;
-          int port;
-          if (idx >= 0) {
-            host = listen.substring(0, idx).trim();
-            port = Integer.parseInt(listen.substring(listen.indexOf(":") + 1).trim());
-          } else {
-            port = Integer.parseInt(listen.trim());
-          }
-          Handler sh;
-          if (host.length() > 0) {
-            sh = new SocketLoggingHandler(host, port);
-          } else {
-            sh = new SocketLoggingHandler("localhost", port);
-          }
-          Global.logger.addHandler(sh);
+          var addr = Utils.parseInetAddress(listen);
+          Global.logger.addHandler(
+              new SocketLoggingHandler(addr.getHostString(), addr.getPort()));
         }
       } catch (Throwable th) {
         System.err.println("fail init socket logging, " + th.getMessage());
