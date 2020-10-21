@@ -113,7 +113,10 @@ public class SocketLoggingHandler extends Handler {
       connect();
       write(bytes);
     } catch (Exception ex) {
-      reportError(ex.getMessage(), ex, ErrorManager.GENERIC_FAILURE);
+      reportError(
+          String.format("%s, %s:%d", ex.getMessage(), host, port),
+          ex,
+          ErrorManager.GENERIC_FAILURE);
     }
   }
 
