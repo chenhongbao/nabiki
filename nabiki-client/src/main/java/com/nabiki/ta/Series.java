@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class Series<T> extends ArrayList<T> {
+  private final int fixedCap;
+
   private SeriesPoint<T> getEastValue(List<T> a, Comparator<T> c, int token) {
     int idx = a.size();
     int revIdx = 0;
@@ -61,6 +63,29 @@ public class Series<T> extends ArrayList<T> {
       return new SeriesPoint<>(get(0), 0);
     else
       return getEastValue(subList(size() - n, size()), c, token);
+  }
+
+  public Series() {
+    this(0);
+  }
+
+  public Series(int fixedCapacity) {
+    fixedCap = (fixedCapacity <= 0) ? Integer.MAX_VALUE : fixedCapacity;
+  }
+
+  /**
+   * Check current size and remove head until size is below fixed capacity, and then
+   * element to the tail.
+   *
+   * @param t element
+   * @return return {@link ArrayList#add(Object)}
+   */
+  @Override
+  public boolean add(T t) {
+    while (size() >= fixedCap) {
+      remove(0);
+    }
+    return super.add(t);
   }
 
   /**
