@@ -44,15 +44,36 @@ public interface PositionSupervisor {
    * @param priceLow      lower bound price if it sells
    * @throws Exception throws exception if previous execution is not completed.
    */
-  void suggestPosition(String instrumentID, String exchangeID, char posiDirection,
+  void executePosition(String instrumentID, String exchangeID, char posiDirection,
                        int position, double priceHigh, double priceLow)
       throws Exception;
 
   /**
-   * Get position from last execution. If a new execution is run, this method will
-   * return new position of the new instrument specified by new execution.
+   * Get <b>NET</b> position from last execution. If a new execution is run, this
+   * method will return position of the last instrument specified by new execution.
+   * <br/>
+   * For long net position, return non-negative value, and for short net position,
+   * return non-positive value.
    *
    * @return position
    */
   int getPosition();
+
+  /**
+   * Get position of the specified posi-direction. The method always returns non
+   * negative value.
+   *
+   * @param posiDirection position direction
+   * @return position, non-negative value
+   * @throws IllegalStateException if last execution is not completed or no exec yet.
+   *                               Use {@link PositionSupervisor#isCompleted()} to check the state.
+   */
+  int getPosition(char posiDirection);
+
+  /**
+   * Check if last execution completes.
+   *
+   * @return {@code true} if last execution completes, {@code false} otherwise.
+   */
+  boolean isCompleted();
 }

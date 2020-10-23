@@ -31,23 +31,23 @@ package com.nabiki.client.ui;
 import com.nabiki.commons.ctpobj.CInvestorPosition;
 import com.nabiki.commons.ctpobj.CTradingAccount;
 
+import java.io.Serializable;
 import java.util.Collection;
 
-public class Suggestion {
+public class PositionExecution implements Serializable {
   private String instrumentID;
   private String exchangeID;
   private Character posiDirection;
   private Integer posi, posiDiff;
   private Double priceHigh, priceLow;
-  private SuggestionState state;
+  private final PositionListener listener;
   private CTradingAccount account = null; /* init as nil so it knows qry isn't sent yet */
   private Collection<CInvestorPosition> positions = null;
   private boolean queryingAccount = false;
   private boolean queryingPosition = false;
+  private PositionExecState state;
 
-  private final SuggestionListener listener;
-
-  public Suggestion(SuggestionListener listener) {
+  public PositionExecution(PositionListener listener) {
     this.listener = listener;
   }
 
@@ -123,11 +123,11 @@ public class Suggestion {
     this.priceLow = priceLow;
   }
 
-  public SuggestionState getState() {
+  public PositionExecState getState() {
     return state;
   }
 
-  public void setState(SuggestionState state) {
+  public void setState(PositionExecState state) {
     if (state != this.state) {
       this.state = state;
       try {

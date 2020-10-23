@@ -39,12 +39,12 @@ import java.util.concurrent.TimeUnit;
 
 public class TimerPositionSupervisor extends TimerTask implements PositionSupervisor {
   private final Trader trader;
-  private final SuggestionListener listener;
+  private final PositionListener listener;
 
   private final int DEFAULT_TO = 3;
   private final TimeUnit DEFAULT_TO_UNIT = TimeUnit.SECONDS;
 
-  private Suggestion su;
+  private PositionExecution su;
   private long lastQryTimeStamp = 0;
 
   public TimerPositionSupervisor(Trader t) {
@@ -54,24 +54,24 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
-  public TimerPositionSupervisor(Trader t, SuggestionListener sl) {
+  public TimerPositionSupervisor(Trader t, PositionListener sl) {
     trader = t;
     listener = sl;
     Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
   @Override
-  public void suggestPosition(
+  public void executePosition(
       String instrumentID,
       String exchangeID,
       char posiDirection,
       int position,
       double priceHigh,
       double priceLow) {
-    if (su != null && su.getState() != SuggestionState.Completed) {
-      throw new RuntimeException("last suggestion not completed");
+    if (su != null && su.getState() != PositionExecState.Completed) {
+      throw new RuntimeException("last execution not completed");
     } else {
-      su = new Suggestion(listener);
+      su = new PositionExecution(listener);
       su.setInstrumentID(instrumentID);
       su.setExchangeID(exchangeID);
       su.setPosiDirection(posiDirection);
@@ -79,13 +79,26 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       su.setPosiDiff(0);
       su.setPriceHigh(priceHigh);
       su.setPriceLow(priceLow);
-      su.setState(SuggestionState.QryAccount);
+      su.setState(PositionExecState.QryAccount);
     }
   }
 
   @Override
   public int getPosition() {
     return getPosition(su.getPositions());
+  }
+
+  @Override
+  public int getPosition(char posiDirection) {
+    if (su == null || su.getState() != PositionExecState.Completed) {
+      throw new IllegalStateException("position not ready");
+    }
+    return getPosition(posiDirection, su.getPositions());
+  }
+
+  @Override
+  public boolean isCompleted() {
+    return su == null || su.getState() == PositionExecState.Completed;
   }
 
   @Override
@@ -100,7 +113,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     }
   }
 
-  private void state(Suggestion su) throws Exception {
+  private void state(PositionExecution su) throws Exception {
     switch (su.getState()) {
       case QryAccount:
         queryAccount(su);
@@ -113,24 +126,24 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       case OpenLong:
       case OpenShort:
         open(su);
-        su.setState(SuggestionState.Confirm);
+        su.setState(PositionExecState.Confirm);
         break;
       case CloseLong:
       case CloseShort:
         close(su);
-        su.setState(SuggestionState.Confirm);
+        su.setState(PositionExecState.Confirm);
         break;
       case CutCloseLong:
       case CutCloseShort:
         close(su);
-        su.setState(SuggestionState.ConfirmCut);
+        su.setState(PositionExecState.ConfirmCut);
         break;
       default:
         break;
     }
   }
 
-  private void open(Suggestion su) throws Exception {
+  private void open(PositionExecution su) throws Exception {
     char direction;
     double price;
     switch (su.getState()) {
@@ -155,7 +168,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         CombOffsetFlagType.OFFSET_OPEN);
   }
 
-  private void close(Suggestion su) throws Exception {
+  private void close(PositionExecution su) throws Exception {
     char direction;
     double price;
     switch (su.getState()) {
@@ -186,7 +199,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     return System.currentTimeMillis() - lastQryTimeStamp >= DEFAULT_TO_UNIT.toMillis(DEFAULT_TO);
   }
 
-  private void queryPosition(Suggestion su) throws Exception {
+  private void queryPosition(PositionExecution su) throws Exception {
     if (!su.isQueryingPosition() || checkRspTimeout()) {
       lastQryTimeStamp = System.currentTimeMillis();
       su.setQueryingPosition(true);
@@ -194,7 +207,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     }
   }
 
-  private void queryAccount(Suggestion su) throws Exception {
+  private void queryAccount(PositionExecution su) throws Exception {
     if (!su.isQueryingAccount() || checkRspTimeout()) {
       lastQryTimeStamp = System.currentTimeMillis();
       su.setQueryingAccount(true);
@@ -202,25 +215,37 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     }
   }
 
-  private int getPosition(Collection<CInvestorPosition> positions) {
+  private int getPosition(char posiDirection, Collection<CInvestorPosition> positions) {
     if (positions == null || positions.isEmpty()) {
       return 0;
     }
     int l = 0, s = 0;
     for (var p : positions) {
       if (p.PosiDirection == PosiDirectionType.LONG) {
-        l = p.Position;
+        l += p.Position;
       } else if (p.PosiDirection == PosiDirectionType.SHORT) {
-        s = p.Position;
+        s += p.Position;
       }
     }
-    return (l - s);
+    if (PosiDirectionType.NET == (byte) posiDirection) {
+      return (l - s);
+    } else if (PosiDirectionType.LONG == (byte) posiDirection) {
+      return l;
+    } else if (PosiDirectionType.SHORT == (byte) posiDirection) {
+      return s;
+    } else {
+      throw new IllegalArgumentException("unknown posi-direction: " + posiDirection);
+    }
+  }
+
+  private int getPosition(Collection<CInvestorPosition> positions) {
+    return getPosition(PosiDirectionType.NET, positions);
   }
 
   class QryAccountConsumer implements ResponseConsumer<CTradingAccount> {
-    private final Suggestion su;
+    private final PositionExecution su;
 
-    QryAccountConsumer(Suggestion s) {
+    QryAccountConsumer(PositionExecution s) {
       this.su = s;
     }
 
@@ -233,16 +258,16 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         su.setAccount(object);
         // Complete query, reset.
         su.setQueryingAccount(false);
-        su.setState(SuggestionState.QryPosition);
+        su.setState(PositionExecState.QryPosition);
       }
     }
   }
 
   class QryPositionConsumer implements ResponseConsumer<CInvestorPosition> {
-    private final Suggestion su;
+    private final PositionExecution su;
     private final Collection<CInvestorPosition> positions = new LinkedList<>();
 
-    QryPositionConsumer(Suggestion s) {
+    QryPositionConsumer(PositionExecution s) {
       this.su = s;
     }
 
@@ -252,41 +277,41 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       if (su.getPosition() == 0) {
         if (p > 0) {
           su.setPosiDiff(p);
-          su.setState(SuggestionState.CloseLong);
+          su.setState(PositionExecState.CloseLong);
         } else if (p < 0) {
           su.setPosiDiff(-p);
-          su.setState(SuggestionState.CloseShort);
+          su.setState(PositionExecState.CloseShort);
         } else {
           su.setPosiDiff(0);
-          su.setState(SuggestionState.Completed);
+          su.setState(PositionExecState.Completed);
         }
       } else {
         // No position, so just open it.
         if (p == 0) {
           su.setPosiDiff(su.getPosition());
           if (su.getPosiDirection() == PosiDirectionType.LONG) {
-            su.setState(SuggestionState.OpenLong);
+            su.setState(PositionExecState.OpenLong);
           } else if (su.getPosiDirection() == PosiDirectionType.SHORT) {
-            su.setState(SuggestionState.OpenShort);
+            su.setState(PositionExecState.OpenShort);
           }
         } else if (p > 0) {
           if (su.getPosiDirection() == PosiDirectionType.LONG) {
             // Current position is less than required, open more.
             if (p < su.getPosition()) {
               su.setPosiDiff(su.getPosition() - p);
-              su.setState(SuggestionState.OpenLong);
+              su.setState(PositionExecState.OpenLong);
             } else if (p > su.getPosition()) {
               // Current position is more than required, close some.
               su.setPosiDiff(p - su.getPosition());
-              su.setState(SuggestionState.CloseLong);
+              su.setState(PositionExecState.CloseLong);
             } else {
               su.setPosiDiff(0);
-              su.setState(SuggestionState.Completed);
+              su.setState(PositionExecState.Completed);
             }
           } else if (su.getPosiDirection() == PosiDirectionType.SHORT) {
             // Current position is not required, close all.
             su.setPosiDiff(p);
-            su.setState(SuggestionState.CutCloseLong);
+            su.setState(PositionExecState.CutCloseLong);
           }
         } else {
           var xp = -p;
@@ -294,23 +319,23 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
             // Current position is less than required, open more.
             if (xp < su.getPosition()) {
               su.setPosiDiff(su.getPosition() - xp);
-              su.setState(SuggestionState.OpenShort);
+              su.setState(PositionExecState.OpenShort);
             } else if (xp > su.getPosition()) {
               // Current position is more than required, close some.
               su.setPosiDiff(xp - su.getPosition());
-              su.setState(SuggestionState.CloseShort);
+              su.setState(PositionExecState.CloseShort);
             } else {
               su.setPosiDiff(0);
-              su.setState(SuggestionState.Completed);
+              su.setState(PositionExecState.Completed);
             }
           } else if (su.getPosiDirection() == PosiDirectionType.LONG) {
             // Current position is not required, close all.
             su.setPosiDiff(xp);
-            su.setState(SuggestionState.CutCloseShort);
+            su.setState(PositionExecState.CutCloseShort);
           }
         }
       }
-      if (su.getState() == SuggestionState.Completed) {
+      if (su.getState() == PositionExecState.Completed) {
         su.setPositions(positions);
       }
     }
@@ -320,11 +345,11 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         switch (su.getPosiDirection()) {
           case PosiDirectionType.LONG:
             su.setPosiDiff(su.getPosition());
-            su.setState(SuggestionState.OpenLong);
+            su.setState(PositionExecState.OpenLong);
             break;
           case PosiDirectionType.SHORT:
             su.setPosiDiff(su.getPosition());
-            su.setState(SuggestionState.OpenShort);
+            su.setState(PositionExecState.OpenShort);
             break;
           default:
             trader.getLogger().severe("wrong direction: " + su.getState());
@@ -339,7 +364,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       var c0 = su.getPosiDirection() == PosiDirectionType.LONG && p == su.getPosition();
       var c1 = su.getPosiDirection() == PosiDirectionType.SHORT && -p == su.getPosition();
       if (c0 || c1) {
-        su.setState(SuggestionState.Completed);
+        su.setState(PositionExecState.Completed);
         su.setPositions(positions);
       }
     }
@@ -353,11 +378,11 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         positions.add(object);
       }
       if (positions.size() == totalCount) {
-        if (su.getState() == SuggestionState.Confirm) {
+        if (su.getState() == PositionExecState.Confirm) {
           judgeCompleted();
-        } else if (su.getState() == SuggestionState.ConfirmCut) {
+        } else if (su.getState() == PositionExecState.ConfirmCut) {
           judgeCut();
-        } else if (su.getState() == SuggestionState.QryPosition) {
+        } else if (su.getState() == PositionExecState.QryPosition) {
           judgePosition();
         }
         // Complete query, reset.
