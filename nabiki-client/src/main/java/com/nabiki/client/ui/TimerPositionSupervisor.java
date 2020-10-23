@@ -195,6 +195,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
         CombOffsetFlagType.OFFSET_CLOSE);
   }
 
+  // If error occurs during a qry. the data won't be all ready, so qry won't be
+  // completed. Then rsp timeout, and re-send qry.
   private boolean checkRspTimeout() {
     return System.currentTimeMillis() - lastQryTimeStamp >= DEFAULT_TO_UNIT.toMillis(DEFAULT_TO);
   }
@@ -252,6 +254,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     @Override
     public void accept(CTradingAccount object, CRspInfo rspInfo, int currentCount, int totalCount) {
       if (rspInfo.ErrorID != ErrorCodes.NONE) {
+        // Error, the qry won't be completed any more, trigger timeout and re-qry.
         trader.getLogger().severe(String.format(
             "fail qry account[%d]: %s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       } else {
@@ -372,6 +375,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
     @Override
     public void accept(CInvestorPosition object, CRspInfo rspInfo, int currentCount, int totalCount) {
       if (rspInfo.ErrorID != ErrorCodes.NONE) {
+        // Error, the qry won't be completed any more, trigger timeout and re-qry.
         trader.getLogger().severe(String.format(
             "fail qry position[%d]: %s", rspInfo.ErrorID, rspInfo.ErrorMsg));
       } else {
