@@ -37,8 +37,6 @@ import com.nabiki.commons.ctpobj.CTrade;
 import com.nabiki.commons.ctpobj.DirectionType;
 import com.nabiki.commons.utils.Utils;
 
-import java.util.Objects;
-
 public class FrozenPositionDetail {
   // The original position that own this frozen position.
   private final UserPositionDetail parent;
@@ -69,10 +67,11 @@ public class FrozenPositionDetail {
    * @return frozen volume
    */
   long getFrozenVolume() {
-    if (this.stage == ProcessStage.CANCELED)
+    if (this.stage == ProcessStage.CANCELED) {
       return 0;
-    else
+    } else {
       return this.totalFrozenCount - tradedCount;
+    }
   }
 
   /**
@@ -86,10 +85,12 @@ public class FrozenPositionDetail {
    * @param instr instrument
    */
   void applyCloseTrade(CTrade trade, CInstrument instr) {
-    if (trade.Volume < 0)
+    if (trade.Volume < 0) {
       throw new IllegalArgumentException("negative traded share count");
-    if (getFrozenVolume() < trade.Volume)
+    }
+    if (getFrozenVolume() < trade.Volume) {
       throw new IllegalStateException("not enough frozen shares");
+    }
     this.tradedCount += trade.Volume;
     // Update parent.
     var single = toSingleTradedCash(this.frozenSinglePosition, trade, instr);
@@ -131,24 +132,24 @@ public class FrozenPositionDetail {
       CTrade trade,
       CInstrument instr) {
     var r = new PositionTradedCash();
-    Objects.requireNonNull(r, "failed deep copy");
     // Calculate position detail.
     r.CloseAmount = trade.Price * instr.VolumeMultiple;
     r.CloseVolume = 1;
     double token;
-    if (p.Direction == DirectionType.DIRECTION_BUY)
+    if (p.Direction == DirectionType.DIRECTION_BUY) {
       token = 1.0D;   // Long position.
-    else
+    } else {
       token = -1.0D;  // Short position.
-    r.CloseProfitByTrade = token * (trade.Price - p.OpenPrice)
-        * instr.VolumeMultiple;
-    if (p.TradingDay.compareTo(trade.TradingDay) == 0)
+    }
+    r.CloseProfitByTrade = token * (trade.Price - p.OpenPrice) * instr.VolumeMultiple;
+    if (p.TradingDay.compareTo(trade.TradingDay) == 0) {
       // Today's position.
       r.CloseProfitByDate = r.CloseProfitByTrade;
-    else
+    } else {
       // History position.
       r.CloseProfitByDate = token * (trade.Price - p.LastSettlementPrice)
           * instr.VolumeMultiple;
+    }
     return r;
   }
 }

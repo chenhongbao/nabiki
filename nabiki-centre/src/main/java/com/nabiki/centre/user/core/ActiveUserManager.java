@@ -50,11 +50,11 @@ public class ActiveUserManager {
   private void createActive() {
     for (var userID : this.userMgr.getAllUserID()) {
       var usr = this.userMgr.getUser(userID);
-      if (usr != null)
-        this.users.put(userID,
-            new ActiveUser(usr, this.provider, this.global));
-      else
+      if (usr != null) {
+        this.users.put(userID, new ActiveUser(usr, this.provider, this.global));
+      } else {
         this.global.getLogger().warning("null user");
+      }
     }
   }
 
@@ -69,8 +69,9 @@ public class ActiveUserManager {
   }
 
   public void settle() throws Exception {
-    for (var active : this.users.values())
+    for (var active : this.users.values()) {
       active.settle();
+    }
     this.userMgr.flush();
   }
 }
