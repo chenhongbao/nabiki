@@ -31,6 +31,7 @@ package com.nabiki.commons.iop;
 import com.google.gson.Gson;
 import com.nabiki.commons.ctpobj.CRspInfo;
 import com.nabiki.commons.iop.internal.Body;
+import com.nabiki.commons.utils.Utils;
 import com.nabiki.commons.utils.frame.Frame;
 import com.nabiki.commons.utils.frame.FrameParser;
 import com.nabiki.commons.utils.frame.FrameType;
@@ -43,7 +44,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -66,8 +66,8 @@ public class FrameParserTest {
   static CRspInfo rspInfo;
 
   static {
-    body.RequestID = UUID.randomUUID().toString();
-    body.ResponseID = UUID.randomUUID().toString();
+    body.RequestID = Utils.getUID();
+    body.ResponseID = Utils.getUID();
     body.Type = MessageType.QRY_POSITION;
 
     msg = new TestMessage();

@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 public class ReqRspWriter {
   private final Global global;
@@ -104,7 +103,7 @@ public class ReqRspWriter {
     // Add random string suffix to avoid sending requests between a very short
     // time then files are over written.
     return LocalDateTime.now().format(this.formatter) + "."
-        + UUID.randomUUID().toString().substring(0, 8);
+        + Utils.getUID().substring(0, 8);
   }
 
   public void writeRtn(COrder rtn) {

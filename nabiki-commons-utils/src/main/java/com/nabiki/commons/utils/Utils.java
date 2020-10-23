@@ -173,6 +173,10 @@ public class Utils {
     errorMsg.put(ErrorCodes.CANCELLATION_OF_OTC_DERIVED_ORDER_NOT_ALLOWED, ErrorMessages.CANCELLATION_OF_OTC_DERIVED_ORDER_NOT_ALLOWED);
   }
 
+  public static String getUID() {
+    return UUID.randomUUID().toString();
+  }
+
   /**
    * Parse the specified JSON string to object of the specified {@link Class}.
    *

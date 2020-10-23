@@ -40,7 +40,6 @@ import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -718,7 +717,7 @@ public class IopTest {
       // Test client's session.
       var session = client.getSession();
       // Test heart beat.
-      session.sendHeartbeat(UUID.randomUUID().toString());
+      session.sendHeartbeat(Utils.getUID());
       // Test login.
       login(session, new CReqUserLogin(), 1, 1);
       // Test logout.

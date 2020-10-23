@@ -38,14 +38,13 @@ import com.nabiki.commons.utils.Utils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ActiveRequest {
   private final Map<String, FrozenAccount> frozenAccount = new HashMap<>();
   private final Map<String, FrozenPositionDetail> frozenPosition = new HashMap<>();
-  private final String uuid = UUID.randomUUID().toString();
+  private final String uuid = Utils.getUID();
   private final User user;
   private final OrderProvider orderProvider;
   private final Global global;

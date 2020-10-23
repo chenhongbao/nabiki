@@ -39,7 +39,6 @@ import com.nabiki.commons.utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.UUID;
 
 public class RequestExecutor extends RequestSuper {
   private final ActiveUserManager userMgr;
@@ -58,7 +57,7 @@ public class RequestExecutor extends RequestSuper {
       CRspInfo info) {
     Message m = new Message();
     m.RequestID = requestID;
-    m.ResponseID = UUID.randomUUID().toString();
+    m.ResponseID = Utils.getUID();
     m.CurrentCount = m.TotalCount = 1;
     m.Type = type;
     m.Body = rsp;

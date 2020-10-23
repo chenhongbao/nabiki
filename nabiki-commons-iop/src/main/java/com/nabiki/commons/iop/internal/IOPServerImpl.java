@@ -29,6 +29,7 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.iop.*;
+import com.nabiki.commons.utils.Utils;
 import com.nabiki.commons.utils.frame.FrameParser;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
@@ -37,7 +38,6 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.UUID;
 
 public class IOPServerImpl implements IOPServer {
   private static final int DEFAULT_IDLE_SEC = 60;
@@ -52,8 +52,7 @@ public class IOPServerImpl implements IOPServer {
     var chain = this.acceptor.getFilterChain();
     // Too many logs, don't use the logging filter.
     // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
-    chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
-        new FrameCodecFactory()));
+    chain.addLast(Utils.getUID(), new ProtocolCodecFilter(new FrameCodecFactory()));
     // Frame handler.
     this.acceptor.setHandler(frameHandler);
     // Configure the session.

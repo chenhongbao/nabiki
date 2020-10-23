@@ -39,7 +39,6 @@ import org.apache.mina.filter.FilterEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -230,7 +229,7 @@ class ClientFrameHandler implements IoHandler {
     this.sessionAdaptor.doEvent(clientSession, SessionEvent.IDLE, status);
     try {
       // If client detects idle, send heartbeat.
-      clientSession.sendHeartbeat(UUID.randomUUID().toString());
+      clientSession.sendHeartbeat(Utils.getUID());
     } catch (Throwable th) {
       exceptionCaught(session, th);
     }

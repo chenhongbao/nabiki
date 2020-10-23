@@ -44,7 +44,6 @@ import com.nabiki.commons.utils.Utils;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import java.util.UUID;
 
 public class UserLoginManager extends LoginManager {
   final static String FRONT_USERID_KEY = "front.userid";
@@ -122,7 +121,7 @@ public class UserLoginManager extends LoginManager {
     rsp.CurrentCount = 1;
     rsp.TotalCount = 1;
     rsp.RequestID = message.RequestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.Body = r;
     rsp.RspInfo = new CRspInfo();
     rsp.RspInfo.ErrorID = code;

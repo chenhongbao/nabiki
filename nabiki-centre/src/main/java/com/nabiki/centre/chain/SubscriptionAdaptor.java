@@ -42,7 +42,6 @@ import com.nabiki.commons.utils.Utils;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SubscriptionAdaptor extends ServerMessageAdaptor {
@@ -142,7 +141,7 @@ public class SubscriptionAdaptor extends ServerMessageAdaptor {
     var r = new Message();
     r.Type = type;
     r.RequestID = requestID;
-    r.ResponseID = UUID.randomUUID().toString();
+    r.ResponseID = Utils.getUID();
     r.CurrentCount = count;
     r.TotalCount = total;
     // Set response body.

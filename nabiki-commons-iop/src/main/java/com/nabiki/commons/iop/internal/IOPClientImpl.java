@@ -29,6 +29,7 @@
 package com.nabiki.commons.iop.internal;
 
 import com.nabiki.commons.iop.*;
+import com.nabiki.commons.utils.Utils;
 import com.nabiki.commons.utils.frame.FrameParser;
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.session.IdleStatus;
@@ -38,7 +39,6 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class IOPClientImpl implements IOPClient {
@@ -60,8 +60,7 @@ public class IOPClientImpl implements IOPClient {
     var chain = this.connector.getFilterChain();
     // Too many logs, don't use the logging filter.
     // chain.addLast(UUID.randomUUID().toString(), new LoggingFilter());
-    chain.addLast(UUID.randomUUID().toString(), new ProtocolCodecFilter(
-        new FrameCodecFactory()));
+    chain.addLast(Utils.getUID(), new ProtocolCodecFilter(new FrameCodecFactory()));
     // Set handler.
     connector.setHandler(frameHandler);
     // Configure the session.

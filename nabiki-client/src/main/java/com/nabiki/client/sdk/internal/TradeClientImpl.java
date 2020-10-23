@@ -34,11 +34,11 @@ import com.nabiki.client.sdk.TradeClient;
 import com.nabiki.client.sdk.TradeClientListener;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.*;
+import com.nabiki.commons.utils.Utils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Objects;
-import java.util.UUID;
 
 class TradeClientImpl implements TradeClient {
   private final IOPClient client = IOP.createClient();
@@ -91,7 +91,7 @@ class TradeClientImpl implements TradeClient {
 
   @Override
   public Response<CRspUserLogin> login(CReqUserLogin request) {
-    var requestID = UUID.randomUUID().toString();
+    var requestID = Utils.getUID();
     var rsp = new ResponseImpl<CRspUserLogin>();
     this.clientAdaptor.setResponse(rsp, requestID);
     // Set user product info.
@@ -161,7 +161,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.REQ_ORDER_INSERT,
         order,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         COrder.class);
   }
 
@@ -176,7 +176,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.REQ_ORDER_ACTION,
         action,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         COrderAction.class);
   }
 
@@ -187,7 +187,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_MD,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CDepthMarketData.class);
   }
 
@@ -197,15 +197,10 @@ class TradeClientImpl implements TradeClient {
     requireLogin();
     query.InvestorID = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
-
-    // TODO DEBUG
-    var requestID = UUID.randomUUID().toString();
-    System.out.println(String.format("[%s] QryPosition.", requestID));
-
     return send(
         MessageType.QRY_POSITION,
         query,
-        requestID,
+        Utils.getUID(),
         CInvestorPosition.class);
   }
 
@@ -218,7 +213,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_POSI_DETAIL,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CInvestorPositionDetail.class);
   }
 
@@ -231,15 +226,10 @@ class TradeClientImpl implements TradeClient {
         = this.lastLoginReq.UserID;
     query.BrokerID = this.lastLoginReq.BrokerID;
     query.CurrencyID = "CNY";
-
-    // TODO DEBUG
-    var requestID = UUID.randomUUID().toString();
-    System.out.println(String.format("[%s] QryAccount.", requestID));
-
     return send(
         MessageType.QRY_ACCOUNT,
         query,
-        requestID,
+        Utils.getUID(),
         CTradingAccount.class);
   }
 
@@ -251,7 +241,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_ORDER,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         COrder.class);
   }
 
@@ -262,7 +252,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.SUB_MD,
         subscription,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CSpecificInstrument.class);
   }
 
@@ -273,7 +263,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.UNSUB_MD,
         subscription,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CSpecificInstrument.class);
   }
 
@@ -282,7 +272,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_INSTRUMENT,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CInstrument.class);
   }
 
@@ -292,7 +282,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_MARGIN,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CInstrumentMarginRate.class);
   }
 
@@ -302,7 +292,7 @@ class TradeClientImpl implements TradeClient {
     return send(
         MessageType.QRY_COMMISSION,
         query,
-        UUID.randomUUID().toString(),
+        Utils.getUID(),
         CInstrumentCommissionRate.class);
   }
 }

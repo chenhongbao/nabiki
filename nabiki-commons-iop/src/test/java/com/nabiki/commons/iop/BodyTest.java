@@ -31,18 +31,17 @@ package com.nabiki.commons.iop;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.nabiki.commons.iop.internal.Body;
+import com.nabiki.commons.utils.Utils;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.UUID;
 
 public class BodyTest {
   @Test
   public void basic() {
     var body = new Body();
 
-    body.RequestID = UUID.randomUUID().toString();
-    body.ResponseID = UUID.randomUUID().toString();
+    body.RequestID = Utils.getUID();
+    body.ResponseID = Utils.getUID();
     body.Type = MessageType.QRY_POSITION;
     body.Body = "xxx";
     body.RspInfo = "yyy";

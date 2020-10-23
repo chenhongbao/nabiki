@@ -40,7 +40,6 @@ import com.nabiki.commons.utils.Utils;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class QueryAdaptor extends ServerMessageAdaptor {
   private final ActiveUserManager userMgr;
@@ -69,7 +68,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.CurrentCount = 1;
     rsp.TotalCount = 1;
     rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.RspInfo = new CRspInfo();
     if (user == null) {
       rsp.Body = new CTradingAccount();
@@ -95,7 +94,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_ORDER;
     rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.RspInfo = new CRspInfo();
     if (user == null) {
       rsp.CurrentCount = 1;
@@ -143,7 +142,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_POSITION;
     rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.RspInfo = new CRspInfo();
     if (user == null) {
       // Try to provide as much information as possible.
@@ -201,7 +200,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_POSI_DETAIL;
     rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.RspInfo = new CRspInfo();
     if (user == null) {
       // Try to provide as much information as possible.
@@ -259,7 +258,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     var rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_MD;
     rsp.RequestID = requestID;
-    rsp.ResponseID = UUID.randomUUID().toString();
+    rsp.ResponseID = Utils.getUID();
     rsp.RspInfo = new CRspInfo();
     rsp.CurrentCount = 1;
     rsp.TotalCount = 1;
@@ -300,7 +299,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.TotalCount = instruments.size();
     for (var i : instruments) {
       rsp.Body = i;
-      rsp.ResponseID = UUID.randomUUID().toString();
+      rsp.ResponseID = Utils.getUID();
       ++rsp.CurrentCount;
       session.sendResponse(rsp);
     }
@@ -332,7 +331,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.TotalCount = commissions.size();
     for (var i : commissions) {
       rsp.Body = i;
-      rsp.ResponseID = UUID.randomUUID().toString();
+      rsp.ResponseID = Utils.getUID();
       ++rsp.CurrentCount;
       session.sendResponse(rsp);
     }
@@ -364,7 +363,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.TotalCount = margins.size();
     for (var i : margins) {
       rsp.Body = i;
-      rsp.ResponseID = UUID.randomUUID().toString();
+      rsp.ResponseID = Utils.getUID();
       ++rsp.CurrentCount;
       session.sendResponse(rsp);
     }
