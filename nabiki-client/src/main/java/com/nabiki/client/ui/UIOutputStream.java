@@ -33,4 +33,6 @@ import java.io.OutputStream;
 
 public abstract class UIOutputStream extends OutputStream {
   public abstract void setFile(File f);
+
+  public abstract void setAutoScroll(boolean b);
 }

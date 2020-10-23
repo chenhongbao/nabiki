@@ -41,6 +41,7 @@ public class UITextOutputStream extends UIOutputStream {
   private final ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
   private File fout;
+  private boolean autoScroll = true;
 
   public UITextOutputStream(JTextArea area) {
     this.tout = area;
@@ -57,6 +58,11 @@ public class UITextOutputStream extends UIOutputStream {
   }
 
   @Override
+  public void setAutoScroll(boolean b) {
+    autoScroll = b;
+  }
+
+  @Override
   public void write(int b) throws IOException {
     buffer.put((byte) b);
   }
@@ -67,6 +73,9 @@ public class UITextOutputStream extends UIOutputStream {
     var str = new String(bytes, buffer.position(), buffer.remaining());
     buffer.clear();
     tout.append(str);
+    if (autoScroll) {
+      scrollBottom(tout);
+    }
     writeFile(str, fout);
   }
 
@@ -79,5 +88,9 @@ public class UITextOutputStream extends UIOutputStream {
       pw.flush();
     } catch (IOException ignored) {
     }
+  }
+
+  private void scrollBottom(JTextArea area) {
+    area.setCaretPosition(area.getDocument().getLength());
   }
 }

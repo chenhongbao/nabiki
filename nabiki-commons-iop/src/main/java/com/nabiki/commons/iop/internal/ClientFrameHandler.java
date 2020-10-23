@@ -91,7 +91,9 @@ class ClientFrameHandler implements IoHandler {
           try {
             var bag = responses.take();
             messageProc(bag.session, bag.message, bag.frameType);
-          } catch (Throwable ignored) {
+          } catch (Throwable th) {
+            // Print error information so it can be fixed.
+            th.printStackTrace();
           }
         }
       }
@@ -166,7 +168,7 @@ class ClientFrameHandler implements IoHandler {
       try {
         this.msgHandlerIn.onMessage(iopSession, message);
       } catch (Throwable th) {
-        th.printStackTrace();
+        exceptionCaught(session, th);
       }
       // Then call default message handler that wraps adaptor.
       switch (type) {

@@ -100,11 +100,15 @@ public class LogDialog extends JDialog implements UIPrinter {
     atuoScrollCheck.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         AbstractButton abstractButton = (AbstractButton) e.getSource();
-        if (abstractButton.getModel().isSelected()) {
+        var b = abstractButton.getModel().isSelected();
+        if (b) {
           scrollBottom(logArea);
           scrollBottom(outArea);
           scrollBottom(errArea);
         }
+        // Set output stream.
+        err.setAutoScroll(b);
+        out.setAutoScroll(b);
       }
     });
     atuoScrollCheck.setSelected(true);
