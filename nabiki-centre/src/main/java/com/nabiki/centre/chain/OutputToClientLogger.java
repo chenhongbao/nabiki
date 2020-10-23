@@ -42,8 +42,8 @@ public class OutputToClientLogger implements ServerMessageHandler {
   @Override
   public void onMessage(ServerSession session, Message message) {
     switch (message.Type) {
-      case RSP_ORDER_ACTION:
-      case RSP_ORDER_INSERT:
+      case RSP_REQ_ORDER_ACTION:
+      case RSP_REQ_ORDER_INSERT:
       case RSP_ERROR:
         writer.writeOut(message, session);
         break;
