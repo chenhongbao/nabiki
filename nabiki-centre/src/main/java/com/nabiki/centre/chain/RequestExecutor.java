@@ -30,6 +30,7 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.core.ActiveUser;
+import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.MessageType;
@@ -41,10 +42,12 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 public class RequestExecutor extends RequestSuper {
+  private final ActiveUserManager userMgr;
   private final Global global;
 
-  public RequestExecutor(Global global) {
-    this.global = global;
+  public RequestExecutor(ActiveUserManager user, Global g) {
+    userMgr = user;
+    global = g;
   }
 
   private void reply(
@@ -107,6 +110,11 @@ public class RequestExecutor extends RequestSuper {
     }
   }
 
+  public ActiveUser getUser(ServerSession session) {
+    var user = session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
+    return user == null ? null : userMgr.getActiveUser((String) user);
+  }
+
   @Override
   public void doReqOrderInsert(
       ServerSession session,
@@ -114,8 +122,8 @@ public class RequestExecutor extends RequestSuper {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-    if (attr == null) {
+    var user = getUser(session);
+    if (user == null) {
       reply(
           session,
           new COrder(),
@@ -124,18 +132,17 @@ public class RequestExecutor extends RequestSuper {
           ErrorCodes.USER_NOT_ACTIVE,
           Utils.getErrorMsg(ErrorCodes.USER_NOT_ACTIVE));
     } else {
-      var activeUser = (ActiveUser) attr;
       // Measure performance.
       var max = this.global.getPerformance().start("order.insert.max");
       var cur = this.global.getPerformance().start("order.insert.cur");
       // Order insert.
-      var uuid = activeUser.insertOrder(request);
+      var uuid = user.insertOrder(request);
       // End measurement.
       max.endWithMax();
       cur.end();
       // Build response.
       var order = toRtnOrder(request);
-      var info = activeUser.getExecRsp(uuid);
+      var info = user.getExecRsp(uuid);
       if (info.ErrorID == ErrorCodes.NONE) {
         order.OrderLocalID = uuid;
         order.OrderSubmitStatus = OrderSubmitStatusType.ACCEPTED;
@@ -165,8 +172,8 @@ public class RequestExecutor extends RequestSuper {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
-    if (attr == null) {
+    var user = getUser(session);
+    if (user == null) {
       var info = new CRspInfo();
       info.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
       info.ErrorMsg = Utils.getErrorMsg(info.ErrorID);
@@ -177,12 +184,11 @@ public class RequestExecutor extends RequestSuper {
           MessageType.RSP_REQ_ORDER_ACTION,
           info);
     } else {
-      var activeUser = (ActiveUser) attr;
       // Measure performance.
       var max = this.global.getPerformance().start("order.insert.max");
       var cur = this.global.getPerformance().start("order.insert.cur");
       // Order action.
-      var uuid = activeUser.orderAction(request);
+      var uuid = user.orderAction(request);
       // End measurement.
       max.endWithMax();
       cur.end();
@@ -195,7 +201,7 @@ public class RequestExecutor extends RequestSuper {
           action,
           requestID,
           MessageType.RSP_REQ_ORDER_ACTION,
-          activeUser.getExecRsp(uuid));
+          user.getExecRsp(uuid));
     }
     session.done();
   }

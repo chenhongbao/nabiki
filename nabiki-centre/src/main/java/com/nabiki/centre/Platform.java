@@ -109,10 +109,10 @@ public class Platform {
     server.setSessionAdaptor(new SessionAdaptor(router, global));
     // Install adaptors.
     var chain = server.getAdaptorChain();
-    chain.addAdaptor(new RequestValidator(parkedReqMgr, global));
-    chain.addAdaptor(new RequestExecutor(global));
+    chain.addAdaptor(new RequestValidator(authMgr, parkedReqMgr, global));
+    chain.addAdaptor(new RequestExecutor(userMgr, global));
     chain.addAdaptor(new SubscriptionAdaptor(router, rw, global));
-    chain.addAdaptor(new QueryAdaptor(global));
+    chain.addAdaptor(new QueryAdaptor(userMgr, global));
     // Install msg writer.
     // Create msg in/out writer.
     var msgWriter = new MsgInOutWriter(global);

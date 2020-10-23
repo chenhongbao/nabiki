@@ -30,6 +30,7 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.auth.OrderOffset;
+import com.nabiki.centre.user.auth.UserAuthManager;
 import com.nabiki.centre.user.auth.UserAuthProfile;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
@@ -43,12 +44,14 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 public class RequestValidator extends RequestSuper {
-  private final Global global;
   private final ParkedRequestManager parked;
+  private final UserAuthManager authMgr;
+  private final Global global;
 
-  public RequestValidator(ParkedRequestManager parked, Global global) {
-    this.parked = parked;
-    this.global = global;
+  public RequestValidator(UserAuthManager auth, ParkedRequestManager p, Global g) {
+    parked = p;
+    global = g;
+    authMgr = auth;
   }
 
   private boolean isAllowed(
@@ -123,6 +126,12 @@ public class RequestValidator extends RequestSuper {
         hour.isEndOfDay(time);
   }
 
+  public UserAuthProfile getUser(ServerSession session) {
+    var user = session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
+    return user == null ? null : authMgr.getAuthProfile((String) user);
+  }
+
+
   @Override
   public void doReqOrderInsert(
       ServerSession session,
@@ -130,8 +139,8 @@ public class RequestValidator extends RequestSuper {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_AUTH_KEY);
-    if (attr == null) {
+    var auth = getUser(session);
+    if (auth == null) {
       reply(session,
           toRtnOrder(request),
           requestID,
@@ -139,7 +148,6 @@ public class RequestValidator extends RequestSuper {
           ErrorCodes.NOT_AUTHENT,
           Utils.getErrorMsg(ErrorCodes.NOT_AUTHENT));
     } else {
-      var auth = (UserAuthProfile) attr;
       if (request.UserID == null
           || auth.UserID.compareTo(request.UserID) != 0) {
         reply(session,

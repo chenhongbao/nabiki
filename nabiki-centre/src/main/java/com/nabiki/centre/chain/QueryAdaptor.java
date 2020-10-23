@@ -30,6 +30,7 @@ package com.nabiki.centre.chain;
 
 import com.nabiki.centre.config.Global;
 import com.nabiki.centre.user.core.ActiveUser;
+import com.nabiki.centre.user.core.ActiveUserManager;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.iop.Message;
 import com.nabiki.commons.iop.MessageType;
@@ -42,10 +43,17 @@ import java.util.Set;
 import java.util.UUID;
 
 public class QueryAdaptor extends ServerMessageAdaptor {
+  private final ActiveUserManager userMgr;
   private final Global global;
 
-  public QueryAdaptor(Global global) {
-    this.global = global;
+  public QueryAdaptor(ActiveUserManager user, Global g) {
+    userMgr = user;
+    global = g;
+  }
+
+  public ActiveUser getUser(ServerSession session) {
+    var user = session.getAttribute(UserLoginManager.FRONT_USERID_KEY);
+    return user == null ? null : userMgr.getActiveUser((String) user);
   }
 
   @Override
@@ -55,7 +63,7 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    var user = getUser(session);
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_ACCOUNT;
     rsp.CurrentCount = 1;
@@ -63,13 +71,12 @@ public class QueryAdaptor extends ServerMessageAdaptor {
     rsp.RequestID = requestID;
     rsp.ResponseID = UUID.randomUUID().toString();
     rsp.RspInfo = new CRspInfo();
-    if (attr == null) {
+    if (user == null) {
       rsp.Body = new CTradingAccount();
       rsp.RspInfo.ErrorID = ErrorCodes.USER_NOT_ACTIVE;
     } else {
-      var activeUser = (ActiveUser) attr;
       // Qry account.
-      rsp.Body = activeUser.getTradingAccount();
+      rsp.Body = user.getTradingAccount();
       rsp.RspInfo.ErrorID = ErrorCodes.NONE;
     }
     rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
@@ -84,13 +91,13 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    var user = getUser(session);
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_ORDER;
     rsp.RequestID = requestID;
     rsp.ResponseID = UUID.randomUUID().toString();
     rsp.RspInfo = new CRspInfo();
-    if (attr == null) {
+    if (user == null) {
       rsp.CurrentCount = 1;
       rsp.TotalCount = 1;
       rsp.Body = new COrder();
@@ -98,9 +105,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
-      var activeUser = (ActiveUser) attr;
       // Qry rtn order.
-      var orders = activeUser.getRtnOrder(query.OrderSysID);
+      var orders = user.getRtnOrder(query.OrderSysID);
       if (orders == null || orders.size() == 0) {
         // No rtn orders found.
         rsp.CurrentCount = 1;
@@ -133,13 +139,13 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    var user = getUser(session);
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_POSITION;
     rsp.RequestID = requestID;
     rsp.ResponseID = UUID.randomUUID().toString();
     rsp.RspInfo = new CRspInfo();
-    if (attr == null) {
+    if (user == null) {
       // Try to provide as much information as possible.
       var p = new CInvestorPosition();
       p.InstrumentID = query.InstrumentID;
@@ -152,9 +158,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
-      var activeUser = (ActiveUser) attr;
       // Qry position.
-      var positions = activeUser.getPosition(query.InstrumentID);
+      var positions = user.getPosition(query.InstrumentID);
       if (positions == null || positions.size() == 0) {
         // Try to provide as much information as possible.
         var p = new CInvestorPosition();
@@ -192,13 +197,13 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       String requestID,
       int current,
       int total) {
-    var attr = session.getAttribute(UserLoginManager.FRONT_ACTIVEUSR_KEY);
+    var user = getUser(session);
     Message rsp = new Message();
     rsp.Type = MessageType.RSP_QRY_POSI_DETAIL;
     rsp.RequestID = requestID;
     rsp.ResponseID = UUID.randomUUID().toString();
     rsp.RspInfo = new CRspInfo();
-    if (attr == null) {
+    if (user == null) {
       // Try to provide as much information as possible.
       var p = new CInvestorPositionDetail();
       p.InstrumentID = query.InstrumentID;
@@ -211,9 +216,8 @@ public class QueryAdaptor extends ServerMessageAdaptor {
       rsp.RspInfo.ErrorMsg = Utils.getErrorMsg(rsp.RspInfo.ErrorID);
       session.sendResponse(rsp);
     } else {
-      var activeUser = (ActiveUser) attr;
       // Qry position.
-      var details = activeUser.getPositionDetail(query.InstrumentID);
+      var details = user.getPositionDetail(query.InstrumentID);
       if (details == null || details.size() == 0) {
         // Try to provide as much information as possible.
         var p = new CInvestorPositionDetail();
