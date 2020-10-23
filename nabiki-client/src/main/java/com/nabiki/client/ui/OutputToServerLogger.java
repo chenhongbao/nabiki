@@ -31,15 +31,19 @@ package com.nabiki.client.ui;
 import com.nabiki.commons.iop.ClientMessageHandler;
 import com.nabiki.commons.iop.ClientSession;
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.MessageType;
 
 public class OutputToServerLogger implements ClientMessageHandler {
   private final ClientMsgInOutWriter writer = new ClientMsgInOutWriter();
 
   @Override
   public void onMessage(ClientSession session, Message message) {
-    if (message.Type != MessageType.HEARTBEAT) {
-      writer.writeOut(message);
+    switch (message.Type) {
+      case REQ_ORDER_ACTION:
+      case REQ_ORDER_INSERT:
+        writer.writeIn(message);
+        break;
+      default:
+        break;
     }
   }
 }

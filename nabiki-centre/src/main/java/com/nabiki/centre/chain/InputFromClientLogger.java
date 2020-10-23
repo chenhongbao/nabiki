@@ -29,7 +29,6 @@
 package com.nabiki.centre.chain;
 
 import com.nabiki.commons.iop.Message;
-import com.nabiki.commons.iop.MessageType;
 import com.nabiki.commons.iop.ServerMessageHandler;
 import com.nabiki.commons.iop.ServerSession;
 
@@ -42,8 +41,13 @@ public class InputFromClientLogger implements ServerMessageHandler {
 
   @Override
   public void onMessage(ServerSession session, Message message) {
-    if (message.Type != MessageType.HEARTBEAT) {
-      this.writer.writeIn(message, session);
+    switch (message.Type) {
+      case REQ_ORDER_ACTION:
+      case REQ_ORDER_INSERT:
+        writer.writeIn(message, session);
+        break;
+      default:
+        break;
     }
   }
 }

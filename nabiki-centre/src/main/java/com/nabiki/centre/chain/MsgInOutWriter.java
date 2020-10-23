@@ -91,39 +91,24 @@ public class MsgInOutWriter {
   }
 
   void writeOut(Message out, IOPSession session) {
-    switch (out.Type) {
-      case RSP_ORDER_ACTION:
-      case RSP_ORDER_INSERT:
-      case RSP_ERROR:
-        var file = ensureFile(
-            getClientDir(this.outDir, session),
-            String.format(
-                "%s.%s.%s.json",
-                out.Type,
-                LocalDateTime.now().format(this.formatter),
-                out.RequestID));
-        write(Utils.toJson(out), file);
-        break;
-      default:
-        break;
-    }
+    var file = ensureFile(
+        getClientDir(this.outDir, session),
+        String.format(
+            "%s.%s.%s.json",
+            out.Type,
+            LocalDateTime.now().format(this.formatter),
+            out.RequestID));
+    write(Utils.toJson(out), file);
   }
 
   void writeIn(Message in, IOPSession session) {
-    switch (in.Type) {
-      case REQ_ORDER_ACTION:
-      case REQ_ORDER_INSERT:
-        var file = ensureFile(
-            getClientDir(this.outDir, session),
-            String.format(
-                "%s.%s.%s.json",
-                in.Type,
-                LocalDateTime.now().format(this.formatter),
-                in.RequestID));
-        write(Utils.toJson(in), file);
-        break;
-      default:
-        break;
-    }
+    var file = ensureFile(
+        getClientDir(this.inDir, session),
+        String.format(
+            "%s.%s.%s.json",
+            in.Type,
+            LocalDateTime.now().format(this.formatter),
+            in.RequestID));
+    write(Utils.toJson(in), file);
   }
 }

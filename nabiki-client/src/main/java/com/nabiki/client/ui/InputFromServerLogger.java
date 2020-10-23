@@ -38,12 +38,12 @@ public class InputFromServerLogger implements ClientMessageHandler {
   @Override
   public void onMessage(ClientSession session, Message message) {
     switch (message.Type) {
-      case HEARTBEAT:
-      case FLOW_DEPTH:
-      case FLOW_CANDLE:
+      case RSP_ORDER_ACTION:
+      case RSP_ORDER_INSERT:
+      case RSP_ERROR:
+        writer.writeOut(message);
         break;
       default:
-        writer.writeIn(message);
         break;
     }
   }
