@@ -163,11 +163,13 @@ class PlatformTask extends TimerTask {
       if (!main.getOrder()
           .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
         global.getLogger().info("query instrument timeout");
+      } else {
+        // Update subscription so at next reconnect it will subscribe the
+        // new instruments.
+        // Don't update when it fails completing qry instruments and just use those
+        // from previous day. Except is the init day when no instruments qry yet.
+        main.getTick().setSubscription(main.getOrder().getInstrumentIDs());
       }
-      // Update subscription so at next reconnect it will subscribe the
-      // new instruments, no matter whether it's completed or timeout. This approach
-      // makes the sub md robust.
-      main.getTick().setSubscription(main.getOrder().getInstrumentIDs());
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
