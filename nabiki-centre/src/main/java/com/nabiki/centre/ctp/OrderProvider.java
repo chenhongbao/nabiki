@@ -267,9 +267,6 @@ public class OrderProvider {
     // Reset qry last instrument to false so it will wait for the completion
     // of qry instruments.
     setQryLast(false);
-    // Clear old data.
-    this.instrumentIDs.clear();
-    this.activeInstruments.clear();
     doAuthentication();
   }
 
@@ -296,8 +293,9 @@ public class OrderProvider {
   }
 
   public boolean waitLastInstrument(long millis) throws InterruptedException {
-    if (!isQryLast())
+    if (!isQryLast()) {
       this.qryLastInstrSignal.waitSignal(millis);
+    }
     return isQryLast();
   }
 
@@ -626,6 +624,12 @@ public class OrderProvider {
   }
 
   protected void doQueryInstr() {
+    // Clear old data only after settlement confirm and right before sending qry.
+    // If it fails login to trader, the instruments kept from previous day will not
+    // be clear so it still has instruments to subscribe.
+    this.instrumentIDs.clear();
+    this.activeInstruments.clear();
+    // Send qry.
     var req = new CQryInstrument();
     var r = this.api.ReqQryInstrument(
         JNI.toJni(req),
