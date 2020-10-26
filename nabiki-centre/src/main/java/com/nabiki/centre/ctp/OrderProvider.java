@@ -62,7 +62,6 @@ public class OrderProvider {
   private final Set<String> instrumentIDs = new HashSet<>();
   private final Map<String, CInstrument> activeInstruments = new ConcurrentHashMap<>();
   private final BlockingDeque<PendingRequest> pendingReqs;
-  private final TimeAligner timeAligner = new TimeAligner();
 
   // Offset for order ref, try to avoid duplication.
   private final Integer orderRefOffset;
@@ -140,10 +139,6 @@ public class OrderProvider {
     qryDaemon.setDaemon(true);
     qryDaemon.setUncaughtExceptionHandler(UncaughtWriter.getDefault());
     qryDaemon.start();
-  }
-
-  public TimeAligner getTimeAligner() {
-    return timeAligner;
   }
 
   BlockingDeque<PendingRequest> getPendingRequests() {
@@ -840,12 +835,6 @@ public class OrderProvider {
       doRspLogin(rspUserLogin);
       // Set trading day.
       GlobalConfig.setTradingDay(rspUserLogin.TradingDay);
-      // Align time.
-      this.timeAligner.align("SHFE", LocalTime.now(), rspLogin.SHFETime);
-      this.timeAligner.align("CZCE", LocalTime.now(), rspLogin.CZCETime);
-      this.timeAligner.align("DCE", LocalTime.now(), rspLogin.DCETime);
-      this.timeAligner.align("FFEX", LocalTime.now(), rspLogin.FFEXTime);
-      this.timeAligner.align("INE", LocalTime.now(), rspLogin.INETime);
     } else {
       this.global.getLogger().severe(
           Utils.formatLog("trader failed login", null,

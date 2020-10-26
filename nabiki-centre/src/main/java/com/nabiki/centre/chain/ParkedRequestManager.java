@@ -71,15 +71,7 @@ public class ParkedRequestManager extends TimerTask {
               null));
       return false;
     }
-    LocalTime now;
-    var ins = global.getInstrInfo(instrID);
-    if (ins != null && ins.Instrument != null) {
-      now = provider.getTimeAligner().getAlignTime(
-          ins.Instrument.ExchangeID,
-          LocalTime.now());
-    } else {
-      now = LocalTime.now();
-    }
+    LocalTime now = LocalTime.now();
     // If remote counter opens for some while during weekend.
     var dayOfWeek = LocalDate.now().getDayOfWeek();
     if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {

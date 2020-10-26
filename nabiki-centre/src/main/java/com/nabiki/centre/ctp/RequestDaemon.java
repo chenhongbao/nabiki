@@ -292,15 +292,7 @@ class RequestDaemon implements Runnable {
               null, null));
       return false;
     }
-    LocalTime now;
-    var ins = global.getInstrInfo(instrID);
-    if (ins != null && ins.Instrument != null) {
-      now = provider.getTimeAligner().getAlignTime(
-          ins.Instrument.ExchangeID,
-          LocalTime.now());
-    } else {
-      now = LocalTime.now();
-    }
+    LocalTime now = LocalTime.now();
     // If remote counter opens for some while during weekend.
     // Yes, some hosts do open for some time and the if-clause stops wrong sending.
     var dayOfWeek = LocalDate.now().getDayOfWeek();
