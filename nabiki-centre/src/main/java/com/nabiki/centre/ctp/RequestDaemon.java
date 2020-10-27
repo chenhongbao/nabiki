@@ -292,14 +292,18 @@ class RequestDaemon implements Runnable {
               null, null));
       return false;
     }
-    LocalTime now = LocalTime.now();
     // If remote counter opens for some while during weekend.
     // Yes, some hosts do open for some time and the if-clause stops wrong sending.
     var dayOfWeek = LocalDate.now().getDayOfWeek();
     if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
       return false;
     }
-    return provider.isConfirmed() && hour.contains(now.minusSeconds(1));
+    // Test both market open and close with a margin.
+    LocalTime now = LocalTime.now();
+    var left = now.minusSeconds(5 /* 5 seconds for timing error */);
+    var right = now.plusSeconds(5);
+    return provider.isConfirmed() &&
+        (hour.contains(now) && hour.contains(left) && hour.contains(right));
   }
 
   private String getInstrID(PendingRequest pend) {
