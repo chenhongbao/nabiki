@@ -107,9 +107,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   @Override
   public boolean isCompleted() {
-    var state = su.getState();
     return su == null ||
-        state == PositionExecState.Completed || state == PositionExecState.Canceled;
+        su.getState() == PositionExecState.Completed || su.getState() == PositionExecState.Canceled;
   }
 
   @Override
