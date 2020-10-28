@@ -62,6 +62,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   void tellMarketClose() {
     if (!isCompleted()) {
+      su.setState(PositionExecState.Canceled);
       // If market closes but previous execution not completed, set null to force it
       // complete. Its order state in server will be cleared in settlement.
       su = null;
@@ -98,7 +99,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   @Override
   public int getPosition(char posiDirection) {
-    if (su == null || su.getState() != PositionExecState.Completed) {
+    if (!isCompleted()) {
       throw new IllegalStateException("position not ready");
     }
     return getPosition(posiDirection, su.getPositions());
@@ -106,7 +107,9 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
 
   @Override
   public boolean isCompleted() {
-    return su == null || su.getState() == PositionExecState.Completed;
+    var state = su.getState();
+    return su == null ||
+        state == PositionExecState.Completed || state == PositionExecState.Canceled;
   }
 
   @Override

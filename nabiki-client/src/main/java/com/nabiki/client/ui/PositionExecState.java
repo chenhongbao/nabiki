@@ -39,5 +39,6 @@ public enum PositionExecState {
   OpenLong,
   OpenShort,
   Confirm,
-  Completed
+  Completed,
+  Canceled
 }
