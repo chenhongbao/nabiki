@@ -42,12 +42,14 @@ import java.util.concurrent.TimeUnit;
 
 public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
   protected final MarketDataHandler handler;
+  protected final AbstractTrader trader;
   protected final DateTimeFormatter formatter
       = DateTimeFormatter.ofPattern("yyyyMMddHH:mm");
   protected final Map<String, Set<Integer>> subscribes = new ConcurrentHashMap<>();
 
-  HeadlessMarketDataAdaptor(MarketDataHandler h) {
+  HeadlessMarketDataAdaptor(MarketDataHandler h, AbstractTrader absTrader) {
     handler = h;
+    trader = absTrader;
   }
 
   private boolean isCandleTrading(String actionDay, String endTime, int minute) {
@@ -85,8 +87,16 @@ public class HeadlessMarketDataAdaptor implements MarketDataTraderAdaptor {
 
   @Override
   public void onCandle(CCandle candle) {
-    if (candle == null || candle.InstrumentID == null ||
-        !subscribes.containsKey(candle.InstrumentID)) {
+    if (candle == null) {
+      return;
+    }
+    if (candle.Minute == 1440 /* Magic number for day candle. */) {
+      var sup = trader.justGetPositionSupervisor();
+      if (sup != null) {
+        sup.tellMarketClose();
+      }
+    }
+    if (candle.InstrumentID == null || !subscribes.containsKey(candle.InstrumentID)) {
       return;
     } else {
       var set = subscribes.get(candle.InstrumentID);

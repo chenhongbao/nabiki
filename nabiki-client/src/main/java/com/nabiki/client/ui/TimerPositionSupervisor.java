@@ -47,17 +47,25 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   private PositionExecution su;
   private long lastQryTimeStamp = 0;
 
-  public TimerPositionSupervisor(Trader t) {
+  TimerPositionSupervisor(Trader t) {
     trader = t;
     listener = s -> {
     };
     Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
   }
 
-  public TimerPositionSupervisor(Trader t, PositionListener sl) {
+  TimerPositionSupervisor(Trader t, PositionListener sl) {
     trader = t;
     listener = sl;
     Utils.schedule(this, TimeUnit.SECONDS.toMillis(1));
+  }
+
+  void tellMarketClose() {
+    if (!isCompleted()) {
+      // If market closes but previous execution not completed, set null to force it
+      // complete. Its order state in server will be cleared in settlement.
+      su = null;
+    }
   }
 
   @Override
@@ -68,7 +76,7 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       int position,
       double priceHigh,
       double priceLow) {
-    if (su != null && su.getState() != PositionExecState.Completed) {
+    if (!isCompleted()) {
       throw new RuntimeException("last execution not completed");
     } else {
       su = new PositionExecution(listener);

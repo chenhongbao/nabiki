@@ -65,6 +65,10 @@ public interface Trader {
 
   Logger getLogger();
 
+  PositionSupervisor getPositionSupervisor();
+
+  PositionSupervisor getPositionSupervisor(PositionListener listener);
+
   TradeClient getClient();
 
   void setClient(TradeClient client);

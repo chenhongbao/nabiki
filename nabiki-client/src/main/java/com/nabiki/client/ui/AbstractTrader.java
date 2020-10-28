@@ -54,6 +54,7 @@ public abstract class AbstractTrader implements Trader {
   private TradeClient client;
   private String userID, password;
   private MarketDataTraderAdaptor traderAdaptor;
+  private TimerPositionSupervisor poSuper;
 
   protected AbstractTrader() {
     prepare();
@@ -206,6 +207,10 @@ public abstract class AbstractTrader implements Trader {
     this.traderAdaptor = adaptor;
   }
 
+  TimerPositionSupervisor justGetPositionSupervisor() {
+    return poSuper;
+  }
+
   @Override
   public void subscribe(String instrument, int... minutes) {
     this.subscribes.add(instrument);
@@ -248,6 +253,22 @@ public abstract class AbstractTrader implements Trader {
   @Override
   public Response<CTradingAccount> getAccount() throws Exception {
     return client.queryAccount(new CQryTradingAccount());
+  }
+
+  @Override
+  public PositionSupervisor getPositionSupervisor() {
+    if (poSuper == null) {
+      poSuper = new TimerPositionSupervisor(this);
+    }
+    return poSuper;
+  }
+
+  @Override
+  public PositionSupervisor getPositionSupervisor(PositionListener listener) {
+    if (poSuper == null) {
+      poSuper = new TimerPositionSupervisor(this, listener);
+    }
+    return poSuper;
   }
 
   @Override
