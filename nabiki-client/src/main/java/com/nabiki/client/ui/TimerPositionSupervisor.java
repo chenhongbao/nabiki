@@ -75,9 +75,9 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
       char posiDirection,
       int position,
       double priceHigh,
-      double priceLow) {
+      double priceLow) throws Exception {
     if (!isCompleted()) {
-      throw new RuntimeException("last execution not completed");
+      throw new Exception("last execution not completed");
     } else {
       su = new PositionExecution(listener);
       su.setInstrumentID(instrumentID);
