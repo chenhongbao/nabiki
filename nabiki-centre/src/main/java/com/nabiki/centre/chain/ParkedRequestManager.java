@@ -79,8 +79,7 @@ public class ParkedRequestManager extends TimerTask {
     LocalTime now = LocalTime.now();
     var left = now.minusSeconds(5 /* 5 seconds for timing error */);
     var right = now.plusSeconds(5);
-    return provider.isConfirmed() &&
-        (hour.contains(now) && hour.contains(left) && hour.contains(right));
+    return provider.isConfirmed() && (hour.contains(left) && hour.contains(right));
   }
 
   void offer(CInputOrder input) {
