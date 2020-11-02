@@ -64,20 +64,25 @@ class QueryTask implements Runnable {
     return this.lastRtn.waitSignal(millis);
   }
 
-  private void tryQueryMargin(String i) {
+  private boolean tryQueryMargin(String i) {
     if (provider.isQryLast() && provider.isConfirmed()) {
-      queryMargin(i);
+      return queryMargin(i);
+    } else {
+      return false;
     }
   }
 
-  private void tryQueryCommission(String i) {
+  private boolean tryQueryCommission(String i) {
     if (provider.isQryLast() && provider.isConfirmed()) {
-      queryCommission(i);
+      return queryCommission(i);
+    } else {
+      return false;
     }
   }
 
   @Override
   public void run() {
+    int currentWait = 1;
     while (!Thread.currentThread().isInterrupted()) {
       try {
         /* Query takes a long time, create new container to avoid
@@ -85,16 +90,30 @@ class QueryTask implements Runnable {
         var instruments = new HashSet<>(provider.getInstrumentIDs());
         for (var i : instruments) {
           /* Check connection availability before each query */
-          tryQueryMargin(i);
-          sleep(1, TimeUnit.SECONDS);
-          tryQueryCommission(i);
-          sleep(1, TimeUnit.SECONDS);
+          if (tryQueryMargin(i)) {
+            // Reset wait sec when qry succeeds.
+            currentWait = 1;
+          } else {
+            // Wait longer as it fails qry.
+            currentWait += 10;
+          }
+          sleep(currentWait, TimeUnit.SECONDS);
+          if (tryQueryCommission(i)) {
+            currentWait = 1;
+          } else {
+            currentWait += 10;
+          }
+          sleep(currentWait, TimeUnit.SECONDS);
         }
       } catch (Throwable th) {
         th.printStackTrace();
         global.getLogger().warning(th.getMessage());
       } finally {
-        sleep(1, TimeUnit.SECONDS);
+        sleep(currentWait, TimeUnit.SECONDS);
+        // If wait becomes too long, reset it so the qry can go on.
+        if (currentWait >= 60 * 5) {
+          currentWait = 1;
+        }
       }
     }
   }
@@ -107,7 +126,7 @@ class QueryTask implements Runnable {
     }
   }
 
-  private void queryMargin(String ins) {
+  private boolean queryMargin(String ins) {
     var req = new CQryInstrumentMarginRate();
     req.BrokerID = provider.getLoginCfg().BrokerID;
     req.InvestorID = provider.getLoginCfg().UserID;
@@ -120,18 +139,24 @@ class QueryTask implements Runnable {
     if (r != 0) {
       global.getLogger().warning(Utils.formatLog(
           "failed query margin", null, ins, r));
+      return false;
     } else {
       // Sleep up tp some seconds.
       try {
-        if (!waitRequestRsp(qryWaitMillis, reqID))
+        if (!waitRequestRsp(qryWaitMillis, reqID)) {
           global.getLogger().warning("query margin timeout: " + ins);
+          return false;
+        } else {
+          return true;
+        }
       } catch (InterruptedException e) {
         e.printStackTrace();
+        return false;
       }
     }
   }
 
-  private void queryCommission(String ins) {
+  private boolean queryCommission(String ins) {
     var req0 = new CQryInstrumentCommissionRate();
     req0.BrokerID = provider.getLoginCfg().BrokerID;
     req0.InvestorID = provider.getLoginCfg().UserID;
@@ -143,13 +168,19 @@ class QueryTask implements Runnable {
     if (r != 0) {
       global.getLogger().warning(Utils.formatLog(
           "failed query commission", null, ins, r));
+      return false;
     } else {
       // Sleep up tp some seconds.
       try {
-        if (!waitRequestRsp(qryWaitMillis, reqID))
+        if (!waitRequestRsp(qryWaitMillis, reqID)) {
           global.getLogger().warning("query margin timeout: " + ins);
+          return false;
+        } else {
+          return true;
+        }
       } catch (InterruptedException e) {
         e.printStackTrace();
+        return false;
       }
     }
   }
