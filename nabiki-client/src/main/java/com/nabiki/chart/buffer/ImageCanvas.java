@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -32,6 +32,7 @@ import com.nabiki.chart.exception.CanvasSizeOverflowException;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 public abstract class ImageCanvas implements Canvas {
   private BufferedImage image;
@@ -50,10 +51,16 @@ public abstract class ImageCanvas implements Canvas {
 
   public void setImage(BufferedImage image) {
     this.image = image;
-    this.g2d = image.createGraphics();
+    g2d = image.createGraphics();
+    Objects.requireNonNull(g2d, "Graphics2D null pointer.");
     size[0] = image.getWidth();
     size[1] = image.getHeight();
     setBackground(DefaultStyles.CANVAS_BG_COLOR);
+  }
+
+  private Graphics2D getG2d() {
+    Objects.requireNonNull(g2d, "Graphics2D null pointer.");
+    return g2d;
   }
 
   @Override
@@ -108,62 +115,62 @@ public abstract class ImageCanvas implements Canvas {
 
   @Override
   public void drawLine(int x1, int y1, int x2, int y2) {
-    g2d.drawLine(getCanvasX(x1), getCanvasY(y1), getCanvasX(x2), getCanvasY(y2));
+    getG2d().drawLine(getCanvasX(x1), getCanvasY(y1), getCanvasX(x2), getCanvasY(y2));
   }
 
   @Override
   public void drawString(String text, int x, int y) {
-    g2d.drawString(text, getCanvasX(x), getCanvasY(y));
+    getG2d().drawString(text, getCanvasX(x), getCanvasY(y));
   }
 
   @Override
   public void drawRect(int x, int y, int width, int height) {
-    g2d.drawRect(getCanvasX(x), getCanvasY(y), width, height);
+    getG2d().drawRect(getCanvasX(x), getCanvasY(y), width, height);
   }
 
   @Override
   public void fillRect(int x, int y, int width, int height) {
-    g2d.fillRect(getCanvasX(x), getCanvasY(y), width, height);
+    getG2d().fillRect(getCanvasX(x), getCanvasY(y), width, height);
   }
 
   @Override
   public void drawVisibleLine(int x1, int y1, int x2, int y2) {
-    g2d.drawLine(getVisibleX(x1), getVisibleY(y1), getVisibleX(x2), getVisibleY(y2));
+    getG2d().drawLine(getVisibleX(x1), getVisibleY(y1), getVisibleX(x2), getVisibleY(y2));
   }
 
   @Override
   public void drawVisibleString(String text, int x, int y) {
-    g2d.drawString(text, getVisibleX(x), getVisibleY(y));
+    getG2d().drawString(text, getVisibleX(x), getVisibleY(y));
   }
 
   @Override
   public void drawVisibleRect(int x, int y, int width, int height) {
-    g2d.drawRect(getVisibleX(x), getVisibleY(y), width, height);
+    getG2d().drawRect(getVisibleX(x), getVisibleY(y), width, height);
   }
 
   @Override
   public void fillVisibleRect(int x, int y, int width, int height) {
-    g2d.fillRect(getVisibleX(x), getVisibleY(y), width, height);
-  }
-
-  @Override
-  public void setStroke(Stroke stroke) {
-    g2d.setStroke(stroke);
+    getG2d().fillRect(getVisibleX(x), getVisibleY(y), width, height);
   }
 
   @Override
   public Stroke getStroke() {
-    return g2d.getStroke();
+    return getG2d().getStroke();
   }
 
   @Override
-  public void setColor(Color color) {
-    g2d.setColor(color);
+  public void setStroke(Stroke stroke) {
+    getG2d().setStroke(stroke);
   }
 
   @Override
   public Color getColor() {
-    return g2d.getColor();
+    return getG2d().getColor();
+  }
+
+  @Override
+  public void setColor(Color color) {
+    getG2d().setColor(color);
   }
 
   @Override
@@ -179,39 +186,39 @@ public abstract class ImageCanvas implements Canvas {
 
   @Override
   public void clear() {
-    g2d.clearRect(getCanvasX(0), getCanvasY(0), getSize()[0], getSize()[1]);
+    getG2d().clearRect(getCanvasX(0), getCanvasY(0), getSize()[0], getSize()[1]);
   }
 
   @Override
   public void dispose() {
-    g2d.dispose();
+    getG2d().dispose();
     image = null;
     g2d = null;
   }
 
   @Override
-  public void setBackground(Color c) {
-    g2d.setBackground(c);
-  }
-
-  @Override
   public Color getBackground() {
-    return g2d.getBackground();
+    return getG2d().getBackground();
   }
 
   @Override
-  public void setFont(Font font) {
-    g2d.setFont(font);
+  public void setBackground(Color c) {
+    getG2d().setBackground(c);
   }
 
   @Override
   public Font getFont() {
-    return g2d.getFont();
+    return getG2d().getFont();
+  }
+
+  @Override
+  public void setFont(Font font) {
+    getG2d().setFont(font);
   }
 
   @Override
   public FontMetrics getFontMetrics(Font font) {
-    return g2d.getFontMetrics(getFont());
+    return getG2d().getFontMetrics(getFont());
   }
 
   @Override

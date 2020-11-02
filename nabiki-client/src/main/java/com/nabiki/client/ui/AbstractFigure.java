@@ -97,6 +97,12 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
           @Override
           public void run() {
             synchronized (updated) {
+              tryUpdate();
+            }
+          }
+
+          private void tryUpdate() {
+            try {
               if (updated.get()) {
                 for (var fid : getStickFigureIDs()) {
                   update(fid);
@@ -106,6 +112,9 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
                 }
                 setUpdated(false);
               }
+            } catch (Throwable th) {
+              th.printStackTrace();
+              getLogger().warning("Update chart fails. " + th.getMessage());
             }
           }
         }, 500);
