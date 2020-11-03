@@ -237,6 +237,13 @@ public abstract class AbstractTrader implements Trader {
   }
 
   @Override
+  public Response<COrderAction> orderAction(String orderID) throws Exception {
+    var req = new CInputOrderAction();
+    req.OrderSysID = orderID;
+    return client.orderAction(req);
+  }
+
+  @Override
   public Response<CInvestorPosition> getPosition() throws Exception {
     return getPosition("", "");
   }

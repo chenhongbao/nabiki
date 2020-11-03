@@ -50,6 +50,8 @@ public interface Trader {
       String instrumentID, String exchangeID, double price, int volume,
       char direction, char offset) throws Exception;
 
+  Response<COrderAction> orderAction(String orderID) throws Exception;
+
   Response<CInvestorPosition> getPosition() throws Exception;
 
   Response<CInvestorPosition> getPosition(
