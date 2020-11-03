@@ -240,7 +240,13 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
 
   @Override
   public void update(int figureID) {
-    var ctrl = getFrame(figureID).getChartController();
+    var f = getFrame(figureID);
+    // If frame is not visible, its on resize/shown callback is not called. The
+    // figure doesn't have a image and graphics yet(null pointer).
+    if (!f.isVisible()) {
+      return;
+    }
+    var ctrl = f.getChartController();
     if (ctrl.getDataCount() > 0) {
       ctrl.update();
     }
