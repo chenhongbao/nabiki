@@ -61,12 +61,8 @@ public class TimerPositionSupervisor extends TimerTask implements PositionSuperv
   }
 
   void tellMarketClose() {
-    if (!isCompleted()) {
-      su.setState(PositionExecState.Canceled);
-      // If market closes but previous execution not completed, set null to force it
-      // complete. Its order state in server will be cleared in settlement.
-      su = null;
-    }
+    // Don't cancel because it interrupts normal execution, or the parked order that
+    // is scheduled to next day.
   }
 
   @Override
