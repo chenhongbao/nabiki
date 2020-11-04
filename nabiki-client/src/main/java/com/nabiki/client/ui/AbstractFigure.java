@@ -46,16 +46,6 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public abstract class AbstractFigure extends AbstractTrader implements Figure {
-  private void prepareStd() {
-    logger.addHandler(new UILoggingHandler(logDlg));
-    var out = logDlg.getOut();
-    out.setFile(new File("out.log"));
-    var err = logDlg.getErr();
-    err.setFile(new File("err.log"));
-    System.setOut(new UIPrintStream(out));
-    System.setErr(new UIPrintStream(err));
-  }
-
   private final Map<Integer, ChartMainFrame> stickFrames = new ConcurrentHashMap<>();
   private final Map<Integer, ChartMainFrame> barFrames = new ConcurrentHashMap<>();
   private final LogDialog logDlg = new LogDialog();
@@ -66,29 +56,18 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     prepareTimer();
   }
 
-  void setUpdated(boolean b) {
-    updated.set(b);
+  private void prepareStd() {
+    logger.addHandler(new UILoggingHandler(logDlg));
+    var out = logDlg.getOut();
+    out.setFile(new File("out.log"));
+    var err = logDlg.getErr();
+    err.setFile(new File("err.log"));
+    System.setOut(new UIPrintStream(out));
+    System.setErr(new UIPrintStream(err));
   }
 
-  static class UILoggingHandler extends Handler {
-    private final UIPrinter printer;
-
-    UILoggingHandler(UIPrinter printer) {
-      this.printer = printer;
-    }
-
-    @Override
-    public void publish(LogRecord record) {
-      printer.writeLog(record);
-    }
-
-    @Override
-    public void flush() {
-    }
-
-    @Override
-    public void close() throws SecurityException {
-    }
+  void setUpdated(boolean b) {
+    updated.set(b);
   }
 
   private void prepareTimer() {
@@ -96,25 +75,25 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
         new TimerTask() {
           @Override
           public void run() {
-            synchronized (updated) {
-              tryUpdate();
-            }
+            EventQueue.invokeLater(this::tryUpdate);
           }
 
           private void tryUpdate() {
-            try {
-              if (updated.get()) {
-                for (var fid : getStickFigureIDs()) {
-                  update(fid);
+            synchronized (updated) {
+              try {
+                if (updated.get()) {
+                  for (var fid : getStickFigureIDs()) {
+                    update(fid);
+                  }
+                  for (var fid : getBarFigureIDs()) {
+                    update(fid);
+                  }
+                  setUpdated(false);
                 }
-                for (var fid : getBarFigureIDs()) {
-                  update(fid);
-                }
-                setUpdated(false);
+              } catch (Throwable th) {
+                th.printStackTrace();
+                getLogger().warning("Update chart fails. " + th.getMessage());
               }
-            } catch (Throwable th) {
-              th.printStackTrace();
-              getLogger().warning("Update chart fails. " + th.getMessage());
             }
           }
         }, 500);
@@ -267,5 +246,26 @@ public abstract class AbstractFigure extends AbstractTrader implements Figure {
     var frame = getFrame(figureID);
     frame.setVisible(false);
     frame.dispose();
+  }
+
+  static class UILoggingHandler extends Handler {
+    private final UIPrinter printer;
+
+    UILoggingHandler(UIPrinter printer) {
+      this.printer = printer;
+    }
+
+    @Override
+    public void publish(LogRecord record) {
+      printer.writeLog(record);
+    }
+
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void close() throws SecurityException {
+    }
   }
 }
