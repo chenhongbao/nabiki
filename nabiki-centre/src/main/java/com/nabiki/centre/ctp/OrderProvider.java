@@ -65,13 +65,10 @@ public class OrderProvider {
 
   // Offset for order ref, try to avoid duplication.
   private final Integer orderRefOffset;
-
-  private boolean isConfirmed = false, isConnected = false, qryInstrLast = false;
-  private CRspUserLogin rspLogin;
-
   // Wait and signaling.
   private final Signal stateSignal = new Signal(), qryLastInstrSignal = new Signal();
-
+  private boolean isConfirmed = false, isConnected = false, qryInstrLast = false;
+  private CRspUserLogin rspLogin;
   // Query instrument info.
   private QueryTask qryTask;
   private Thread qryDaemon;
@@ -224,7 +221,7 @@ public class OrderProvider {
       throw new IllegalStateException("trader duplicated init");
     }
     this.api = CThostFtdcTraderApi
-        .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
+            .CreateFtdcTraderApi(this.loginCfg.FlowDirectory);
     this.spi = new JniTraderSpi(this, global);
     for (var fa : this.loginCfg.FrontAddresses)
       this.api.RegisterFront(fa);
@@ -325,22 +322,16 @@ public class OrderProvider {
     // Check order ref only after it is time for sending requests.
     if (!isOrderRefUnique(input.OrderRef)) {
       global.getLogger().warning(
-          Utils.formatLog(
-              "duplicated order",
-              input.OrderRef,
-              null,
-              null));
-      doInsertError(
-          input,
-          ErrorCodes.DUPLICATE_ORDER_REF,
-          ErrorMessages.DUPLICATE_ORDER_REF);
+              Utils.formatLog("duplicated order", input.OrderRef, null, null));
+      doInsertError(input,
+                    ErrorCodes.DUPLICATE_ORDER_REF,
+                    ErrorMessages.DUPLICATE_ORDER_REF);
       return ErrorCodes.DUPLICATE_ORDER_REF;
     }
     if (!this.pendingReqs.offer(new PendingRequest(input, active))) {
-      doInsertError(
-          input,
-          ErrorCodes.NEED_RETRY,
-          ErrorMessages.NEED_RETRY);
+      doInsertError(input,
+                    ErrorCodes.NEED_RETRY,
+                    ErrorMessages.NEED_RETRY);
       return ErrorCodes.NEED_RETRY;
     } else {
       // Only after request is sent successfully, initialize rtn order.
@@ -370,7 +361,7 @@ public class OrderProvider {
     rsp.ErrorID = code;
     rsp.ErrorMsg = msg;
     this.global.getLogger().severe(Utils.formatLog(
-        "failed order insertion", input.OrderRef, msg, code));
+            "failed order insertion", input.OrderRef, msg, code));
     // Failed order results in canceling the order.
     cancelInputOrder(input, rsp);
     this.msgWriter.writeErr(input, rsp);
@@ -381,7 +372,7 @@ public class OrderProvider {
     rsp.ErrorID = code;
     rsp.ErrorMsg = msg;
     this.global.getLogger().warning(Utils.formatLog(
-        "failed action", action.OrderRef, msg, code));
+            "failed action", action.OrderRef, msg, code));
     this.msgWriter.writeErr(action, rsp);
   }
 
@@ -401,10 +392,9 @@ public class OrderProvider {
    */
   public synchronized int actionOrder(CInputOrderAction action, ActiveRequest active) {
     if (!this.pendingReqs.offer(new PendingRequest(action, active))) {
-      doInsertError(
-          action,
-          ErrorCodes.NEED_RETRY,
-          ErrorMessages.NEED_RETRY);
+      doInsertError(action,
+                    ErrorCodes.NEED_RETRY,
+                    ErrorMessages.NEED_RETRY);
       return ErrorCodes.NEED_RETRY;
     } else {
       return ErrorCodes.NONE;
@@ -429,12 +419,12 @@ public class OrderProvider {
     req.UserID = this.loginCfg.UserID;
     req.Password = this.loginCfg.Password;
     var r = this.api.ReqUserLogin(
-        JNI.toJni(req),
-        Utils.getIncrementID());
+            JNI.toJni(req),
+            Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-          Utils.formatLog("failed login request", null,
-              null, r));
+              Utils.formatLog("failed login request", null,
+                              null, r));
   }
 
   protected void doLogout() {
@@ -442,12 +432,12 @@ public class OrderProvider {
     req.BrokerID = this.loginCfg.BrokerID;
     req.UserID = this.loginCfg.UserID;
     var r = this.api.ReqUserLogout(
-        JNI.toJni(req),
-        Utils.getIncrementID());
+            JNI.toJni(req),
+            Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().warning(
-          Utils.formatLog("failed logout request", null,
-              null, r));
+              Utils.formatLog("failed logout request", null,
+                              null, r));
   }
 
   protected void doAuthentication() {
@@ -457,13 +447,22 @@ public class OrderProvider {
     req.BrokerID = this.loginCfg.BrokerID;
     req.UserID = this.loginCfg.UserID;
     req.UserProductInfo = this.loginCfg.UserProductInfo;
-    var r = this.api.ReqAuthenticate(
-        JNI.toJni(req),
-        Utils.getIncrementID());
-    if (r != 0)
-      this.global.getLogger().severe(
-          Utils.formatLog("failed authentication", null,
-              null, r));
+    var r = api.ReqAuthenticate(
+            JNI.toJni(req),
+            Utils.getIncrementID());
+    if (r != 0) {
+      global.getLogger().severe(Utils.formatLog("failed authentication",
+                                                null,
+                                                null,
+                                                r));
+    }
+    global.getLogger().info(
+            String.format("Send auth. %s/%s, AppID: %s, AuthCode: %s, %s",
+                          req.BrokerID,
+                          req.UserID,
+                          req.AppID,
+                          req.AuthCode,
+                          req.UserProductInfo));
   }
 
   protected void doSettlement() {
@@ -473,12 +472,12 @@ public class OrderProvider {
     req.InvestorID = this.loginCfg.UserID;
     req.CurrencyID = "CNY";
     var r = this.api.ReqSettlementInfoConfirm(
-        JNI.toJni(req),
-        Utils.getIncrementID());
+            JNI.toJni(req),
+            Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().severe(
-          Utils.formatLog("failed confirm settlement", null,
-              null, r));
+              Utils.formatLog("failed confirm settlement", null,
+                              null, r));
   }
 
   protected void doRspLogin(CRspUserLogin rsp) {
@@ -532,17 +531,13 @@ public class OrderProvider {
     var rtn0 = this.mapper.getRtnOrder(ref);
     if (rtn0 == null) {
       this.global.getLogger().warning(
-          Utils.formatLog(
-              "missing previous rtn order",
-              ref, null, null));
+              Utils.formatLog("missing previous rtn order", ref, null, null));
       return true;
     }
     if (rtn0.OrderStatus == OrderStatusType.ALL_TRADED
-        || rtn0.OrderStatus == OrderStatusType.CANCELED) {
+            || rtn0.OrderStatus == OrderStatusType.CANCELED) {
       this.global.getLogger().warning(
-          Utils.formatLog(
-              "no update to a completed order",
-              ref, null, null));
+              Utils.formatLog("no update to a completed order", ref, null, null));
       return true;
     } else
       return false;
@@ -555,8 +550,8 @@ public class OrderProvider {
     var active = this.mapper.getActiveRequest(rtn.OrderRef);
     if (active == null) {
       this.global.getLogger().warning(
-          Utils.formatLog("active request not found", rtn.OrderRef,
-              null, null));
+              Utils.formatLog("active request not found", rtn.OrderRef,
+                              null, null));
       return;
     }
     // Adjust IDs.
@@ -579,8 +574,8 @@ public class OrderProvider {
     } catch (Throwable th) {
       th.printStackTrace();
       this.global.getLogger().severe(
-          Utils.formatLog("failed update rtn order", rtn.OrderRef,
-              th.getMessage(), null));
+              Utils.formatLog("failed update rtn order", rtn.OrderRef,
+                              th.getMessage(), null));
     }
     // The codes below follow the doXXX method because the parameter's fields
     // were rewritten by the method, with local IDs.
@@ -596,8 +591,8 @@ public class OrderProvider {
     var active = this.mapper.getActiveRequest(trade.OrderRef);
     if (active == null) {
       this.global.getLogger().warning(
-          Utils.formatLog("active request not found", trade.OrderRef,
-              null, null));
+              Utils.formatLog("active request not found", trade.OrderRef,
+                              null, null));
       return;
     }
     // Adjust IDs.
@@ -610,8 +605,8 @@ public class OrderProvider {
     } catch (Throwable th) {
       th.printStackTrace();
       this.global.getLogger().severe(
-          Utils.formatLog("failed update rtn trade", trade.OrderRef,
-              th.getMessage(), null));
+              Utils.formatLog("failed update rtn trade", trade.OrderRef,
+                              th.getMessage(), null));
     }
     // The writing method must follow the doXXX method because the fields are
     // rewritten with local IDs.
@@ -627,12 +622,12 @@ public class OrderProvider {
     // Send qry.
     var req = new CQryInstrument();
     var r = this.api.ReqQryInstrument(
-        JNI.toJni(req),
-        Utils.getIncrementID());
+            JNI.toJni(req),
+            Utils.getIncrementID());
     if (r != 0)
       this.global.getLogger().warning(
-          Utils.formatLog("failed query instrument", null,
-              null, r));
+              Utils.formatLog("failed query instrument", null,
+                              null, r));
   }
 
   protected void cancelInputOrder(CInputOrder inputOrder, CRspInfo info) {
@@ -658,7 +653,7 @@ public class OrderProvider {
     // If the state is starting or stopping, remote disconnects, it is service not
     // not available or auto-disconnect after sending logout.
     if (getWorkingState() == WorkingState.STARTING
-        || getWorkingState() == WorkingState.STOPPING) {
+            || getWorkingState() == WorkingState.STOPPING) {
       setWorkingState(WorkingState.STOPPED);
     }
     // Don't change working state when it is started here
@@ -668,8 +663,8 @@ public class OrderProvider {
   public void whenErrRtnOrderAction(COrderAction orderAction,
                                     CRspInfo rspInfo) {
     this.global.getLogger().warning(
-        Utils.formatLog("failed action", orderAction.OrderRef,
-            rspInfo.ErrorMsg, rspInfo.ErrorID));
+            Utils.formatLog("failed action", orderAction.OrderRef,
+                            rspInfo.ErrorMsg, rspInfo.ErrorID));
     // Rewrite the local ID.
     var active = this.mapper.getActiveRequest(orderAction.OrderRef);
     if (active != null)
@@ -683,15 +678,22 @@ public class OrderProvider {
   }
 
   public void whenRspAuthenticate(
-      CRspAuthenticate rspAuthenticateField,
-      CRspInfo rspInfo, int requestId, boolean isLast) {
+          CRspAuthenticate rspAuthenticateField,
+          CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       doLogin();
       this.global.getLogger().info("trader authenticated");
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("failed authentication", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed authentication", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
+      global.getLogger().severe(
+              String.format("%s/%s, AppID: %s, AppType: %d, %s",
+                            rspAuthenticateField.BrokerID,
+                            rspAuthenticateField.UserID,
+                            rspAuthenticateField.AppID,
+                            rspAuthenticateField.AppType,
+                            rspAuthenticateField.UserProductInfo));
       this.msgWriter.writeErr(rspInfo);
       setWorkingState(WorkingState.STOPPED);
     }
@@ -701,8 +703,8 @@ public class OrderProvider {
                            boolean isLast) {
     this.msgWriter.writeErr(rspInfo);
     this.global.getLogger().severe(
-        Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
-            rspInfo.ErrorID));
+            Utils.formatLog("unknown error", null, rspInfo.ErrorMsg,
+                            rspInfo.ErrorID));
   }
 
   public void whenRspOrderAction(CInputOrderAction inputOrderAction,
@@ -715,8 +717,8 @@ public class OrderProvider {
                                  CRspInfo rspInfo, int requestId,
                                  boolean isLast) {
     this.global.getLogger().severe(
-        Utils.formatLog("failed order insertion", inputOrder.OrderRef,
-            rspInfo.ErrorMsg, rspInfo.ErrorID));
+            Utils.formatLog("failed order insertion", inputOrder.OrderRef,
+                            rspInfo.ErrorMsg, rspInfo.ErrorID));
     // Failed order results in canceling the order.
     // Set order status msg to error message.
     cancelInputOrder(inputOrder, rspInfo);
@@ -734,8 +736,8 @@ public class OrderProvider {
       }
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("failed instrument query", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed instrument query", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Don't signal qry task for instrument rsp because it doesn't qry instruments
@@ -777,14 +779,14 @@ public class OrderProvider {
   }
 
   public void whenRspQryInstrumentCommissionRate(
-      CInstrumentCommissionRate instrumentCommissionRate,
-      CRspInfo rspInfo, int requestID, boolean isLast) {
+          CInstrumentCommissionRate instrumentCommissionRate,
+          CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       setCommission(instrumentCommissionRate);
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("failed commission query", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed commission query", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Signal request rtn.
@@ -792,15 +794,15 @@ public class OrderProvider {
   }
 
   public void whenRspQryInstrumentMarginRate(
-      CInstrumentMarginRate instrumentMarginRate,
-      CRspInfo rspInfo, int requestID, boolean isLast) {
+          CInstrumentMarginRate instrumentMarginRate,
+          CRspInfo rspInfo, int requestID, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       this.msgWriter.writeInfo(instrumentMarginRate);
       GlobalConfig.setMarginConfig(instrumentMarginRate);
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("failed margin query", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed margin query", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
     // Signal request rtn.
@@ -808,8 +810,8 @@ public class OrderProvider {
   }
 
   public void whenRspSettlementInfoConfirm(
-      CSettlementInfoConfirm settlementInfoConfirm,
-      CRspInfo rspInfo, int requestId, boolean isLast) {
+          CSettlementInfoConfirm settlementInfoConfirm,
+          CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       setConfirmed(true);
       setWorkingState(WorkingState.STARTED);
@@ -819,8 +821,8 @@ public class OrderProvider {
       doQueryInstr();
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("failed settlement confirm", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed settlement confirm", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
       // Confirm settlement fails, logout.
       logout();
@@ -837,8 +839,8 @@ public class OrderProvider {
       GlobalConfig.setTradingDay(rspUserLogin.TradingDay);
     } else {
       this.global.getLogger().severe(
-          Utils.formatLog("trader failed login", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("trader failed login", null,
+                              rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
       setWorkingState(WorkingState.STOPPED);
     }
@@ -854,8 +856,7 @@ public class OrderProvider {
       this.stateSignal.signal();
     } else {
       this.global.getLogger().warning(
-          Utils.formatLog("failed logout", null,
-              rspInfo.ErrorMsg, rspInfo.ErrorID));
+              Utils.formatLog("failed logout", null, rspInfo.ErrorMsg, rspInfo.ErrorID));
       this.msgWriter.writeErr(rspInfo);
     }
   }

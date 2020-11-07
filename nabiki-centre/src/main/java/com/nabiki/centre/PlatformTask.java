@@ -40,35 +40,29 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 class PlatformTask extends TimerTask {
-  private final Platform main;
-  private final Global global;
-
-  private WorkingState workingState = WorkingState.STOPPED;
-  private UserState userState = UserState.SETTLED;
-
   public static final LocalTime[] whenStart = new LocalTime[]{
-      LocalTime.of(8, 30),
-      LocalTime.of(8, 35),
-      LocalTime.of(8, 40),
-      LocalTime.of(8, 45),
-      LocalTime.of(8, 50),
-      LocalTime.of(8, 55),
-      LocalTime.of(20, 30),
-      LocalTime.of(20, 35),
-      LocalTime.of(20, 40),
-      LocalTime.of(20, 45),
-      LocalTime.of(20, 50),
-      LocalTime.of(20, 55)
+          LocalTime.of(8, 5), LocalTime.of(8, 10), LocalTime.of(8, 15),
+          LocalTime.of(8, 20), LocalTime.of(8, 25), LocalTime.of(8, 30),
+          LocalTime.of(8, 35), LocalTime.of(8, 40), LocalTime.of(8, 45),
+          LocalTime.of(8, 50), LocalTime.of(8, 55),
+          LocalTime.of(20, 5), LocalTime.of(20, 10), LocalTime.of(20, 15),
+          LocalTime.of(20, 20), LocalTime.of(20, 25), LocalTime.of(20, 30),
+          LocalTime.of(20, 35), LocalTime.of(20, 40), LocalTime.of(20, 45),
+          LocalTime.of(20, 50), LocalTime.of(20, 55)
   };
   public static final LocalTime[] whenStop = new LocalTime[]{
-      // Remote server disconnects at around 2:33 am., so logout before
-      // remote server becomes unavailable.
-      // Stop at 31 minutes to avoid the small chance that prevents
-      // generating candles for 2:30.
-      LocalTime.of(2, 31),
-      // Wait enough time for settlement ticks sent by server.
-      LocalTime.of(15, 45)
+          // Remote server disconnects at around 2:33 am., so logout before
+          // remote server becomes unavailable.
+          // Stop at 31 minutes to avoid the small chance that prevents
+          // generating candles for 2:30.
+          LocalTime.of(2, 31),
+          // Wait enough time for settlement ticks sent by server.
+          LocalTime.of(15, 45)
   };
+  private final Platform main;
+  private final Global global;
+  private WorkingState workingState = WorkingState.STOPPED;
+  private UserState userState = UserState.SETTLED;
 
   PlatformTask(Platform main, Global global) {
     this.main = main;
@@ -120,7 +114,7 @@ class PlatformTask extends TimerTask {
     // No need to check work day because it depends on whether the platform
     // starts prior to being stopped.
     return Utils.equalsAny(now(), whenStop)
-        && getWorkingState() != WorkingState.STOPPED;
+            && getWorkingState() != WorkingState.STOPPED;
   }
 
   private void renew() {
@@ -161,7 +155,7 @@ class PlatformTask extends TimerTask {
       main.getOrder().login();
       // Wait query instruments completed.
       if (!main.getOrder()
-          .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
+              .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
         global.getLogger().info("query instrument timeout");
       } else {
         // Update subscription so at next reconnect it will subscribe the
@@ -195,8 +189,8 @@ class PlatformTask extends TimerTask {
       }
       main.getTick().login();
       r = main.getTick().waitWorkingState(
-          WorkingState.STARTED,
-          TimeUnit.MINUTES.toMillis(1));
+              WorkingState.STARTED,
+              TimeUnit.MINUTES.toMillis(1));
       if (!r) {
         global.getLogger().info("wait md login timeout");
       }
@@ -230,7 +224,7 @@ class PlatformTask extends TimerTask {
       startMd();
     // Check state.
     if (main.getOrder().getWorkingState() == WorkingState.STARTED
-        && main.getTick().getWorkingState() == WorkingState.STARTED) {
+            && main.getTick().getWorkingState() == WorkingState.STARTED) {
       setWorkingState(WorkingState.STARTED);
     } else {
       global.getLogger().warning("platform doesn't start");
@@ -245,8 +239,8 @@ class PlatformTask extends TimerTask {
       main.getOrder().logout();
       // Wait for logout.
       var r = main.getOrder().waitWorkingState(
-          WorkingState.STOPPED,
-          TimeUnit.MINUTES.toMillis(1));
+              WorkingState.STOPPED,
+              TimeUnit.MINUTES.toMillis(1));
       if (!r) {
         global.getLogger().severe("trader logout timeout");
       }
@@ -274,7 +268,7 @@ class PlatformTask extends TimerTask {
     // Change state.
     if (main.getOrder().getWorkingState() != WorkingState.STOPPED) {
       global.getLogger()
-          .warning("platform doesn't stop, wait for disconnect");
+              .warning("platform doesn't stop, wait for disconnect");
     }
     // Front is disconnected automatically after remote shutdown, so no
     // need to force all logout here.
@@ -286,7 +280,7 @@ class PlatformTask extends TimerTask {
     for (var entry : m.entrySet()) {
       var ms = entry.getValue().toMillis();
       global.getLogger().info(
-          "performance, " + entry.getKey() + ": " + ms + "ms");
+              "performance, " + entry.getKey() + ": " + ms + "ms");
     }
   }
 
