@@ -60,8 +60,6 @@ public class CandleProgress {
     synchronized (this.candle) {
       if (this.popped) {
         this.candle.InstrumentID = md.InstrumentID;
-        this.candle.ActionDay
-            = Utils.getDay(LocalDate.now(), "yyyyMMdd");
         this.candle.TradingDay = md.TradingDay;
         this.candle.OpenPrice
             = this.candle.HighestPrice
@@ -70,10 +68,8 @@ public class CandleProgress {
         this.popped = false;
       } else {
 
-        this.candle.HighestPrice = Math.max(this.candle.HighestPrice,
-            md.LastPrice);
-        this.candle.LowestPrice = Math.min(this.candle.LowestPrice,
-            md.LastPrice);
+        this.candle.HighestPrice = Math.max(this.candle.HighestPrice, md.LastPrice);
+        this.candle.LowestPrice = Math.min(this.candle.LowestPrice, md.LastPrice);
       }
       this.candle.Volume = md.Volume - this.lastVolume;
       this.candle.OpenInterest = md.OpenInterest;
@@ -99,8 +95,10 @@ public class CandleProgress {
             = this.candle.LowestPrice
             = this.lastClosePrice;
       }
-      if (this.candle.EndTime == null)
+      if (this.candle.EndTime == null) {
         this.candle.EndTime = "";
+      }
+      this.candle.ActionDay = Utils.getDay(LocalDate.now(), "yyyyMMdd");
       return copyCandle(this.candle);
     }
   }
