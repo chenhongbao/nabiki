@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -103,6 +103,17 @@ public class BarChart extends GridXY {
     }
   }
 
+  private int fitVisibleX(int pixel) {
+    var margin = getMargin();
+    var visible = getVisibleSize();
+    if (pixel < -margin[0])
+      return -margin[0];
+    else if (pixel > margin[0] + visible[0])
+      return margin[0] + visible[0];
+    else
+      return pixel;
+  }
+
   private void paintBar(int pixelX, int pixelBegin, int pixelEnd) {
     var w = getPaintWidth();
     var oldColor = getColor();
@@ -114,10 +125,11 @@ public class BarChart extends GridXY {
     else
       color = DefaultStyles.BAR_DOWN_COLOR;
     setColor(color);
+    var rx = fitVisibleX(pixelX - w / 2);
     fillVisibleRect(
-        pixelX - w / 2,
+        rx,
         Math.min(pixelBegin, pixelEnd),
-        w,
+        pixelX + w / 2 - rx,
         Math.abs(pixelBegin - pixelEnd));
     setColor(oldColor);
   }
