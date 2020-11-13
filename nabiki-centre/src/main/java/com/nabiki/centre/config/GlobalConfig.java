@@ -68,8 +68,9 @@ public class GlobalConfig {
   public static Global config() throws IOException {
     synchronized (GLOBAL) {
       // Clear old GLOBAL.
-      if (configLoaded.get())
+      if (configLoaded.get()) {
         clearConfig();
+      }
       loadConfig();
     }
     return GLOBAL;
@@ -187,6 +188,8 @@ public class GlobalConfig {
   private static void clearConfig() {
     GLOBAL.tradingHour.clear();
     GLOBAL.login.clear();
+    // Clear mark.
+    configLoaded.set(false);
   }
 
   private static void loadConfig() throws IOException {
