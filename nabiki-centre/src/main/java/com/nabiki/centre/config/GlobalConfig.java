@@ -186,6 +186,8 @@ public class GlobalConfig {
    clear them.
    */
   private static void clearConfig() {
+    // The trading hours and login information are set at init, the following
+    // re-config won't change the actually used values.
     GLOBAL.tradingHour.clear();
     GLOBAL.login.clear();
     // Clear mark.
