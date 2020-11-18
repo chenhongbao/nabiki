@@ -107,8 +107,17 @@ public class GlobalConfig {
         }
         m.put(i.InstrumentID, info);
       }
+      // Reset instrument information.
       GLOBAL.instrInfo.clear();
       GLOBAL.instrInfo.putAll(m);
+      // Reset products.
+      GLOBAL.products.clear();
+      for (var info : m.values()) {
+        var instr = info.Instrument;
+        GLOBAL.products
+                .computeIfAbsent(instr.ProductID, p -> new HashSet<>())
+                .add(instr.InstrumentID);
+      }
     }
   }
 
