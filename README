@@ -1,6 +1,6 @@
 Nabiki e-Trade Infrastructure, Release Version 1.2.0
 
-Date:   5:38 pm., Oct. 19th, 2020
+Date:   1:29 pm., Jan. 17th, 2021
 Author: Hongbao Chen <chenhongbao@outlook.com>
 
 This software is licensed under GNU AFFERO GENERAL PUBLIC LICENSE Version 3, and
@@ -24,3 +24,15 @@ do your trade on the platform.
 
 There's no tutorial currently. But if you need indeed, please contact the author via
 e-mail.
+
+Related Projects
+
+1. CPT4N - .NET Wrapper for CTP.
+
+The wrapper provides access to CTP API in C# or other .NET language. The project also
+includes a sample use case for the API.
+
+    https://github.com/chenhongbao/ctp4n
+
+The repository contains a pre-built binary or you can build your own with the swig script
+provided in source.
