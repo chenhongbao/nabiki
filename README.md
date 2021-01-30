@@ -6,9 +6,12 @@ Author: Hongbao Chen <chenhongbao@outlook.com>*
 
 ## SPONSORS
 Many thanks to the help of [JetBrains](https://www.jetbrains.com/) and its amazing products.
+<p>
 <a href="https://www.jetbrains.com/?from=nabiki">
-<img src="https://ftp.bmp.ovh/imgs/2021/01/5447e9b99abef1d5.png"/ width="100"/>
+<img src="https://ftp.bmp.ovh/imgs/2021/01/5447e9b99abef1d5.png" width="100"/>
 </a>
+</p>
+
 ## LICENSE
 This software is licensed under [GNU AFFERO GENERAL PUBLIC LICENSE Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html).
 
