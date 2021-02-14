@@ -52,6 +52,7 @@ public class CandleEngine extends TimerTask {
   private final MarketDataRouter router;
 
   private final AtomicBoolean working = new AtomicBoolean(false);
+  private final AtomicBoolean recvTick = new AtomicBoolean(false);
 
   public CandleEngine(MarketDataRouter router, Global cfg) {
     this.global = cfg;
@@ -73,6 +74,9 @@ public class CandleEngine extends TimerTask {
   public void setWorking(boolean working) {
     global.getLogger().info("candle engine working: " + working);
     this.working.set(working);
+    if (!working) {
+      recvTick.set(false);
+    }
   }
 
   /**
@@ -83,6 +87,11 @@ public class CandleEngine extends TimerTask {
    */
   public void addInstrument(String instrumentID) {
     acquireMapProduct(instrumentID).acquireInstrument(instrumentID);
+  }
+
+  public void clearProducts() {
+    instrProducts.clear();
+    products.clear();
   }
 
   public void setupDurations() {
@@ -102,8 +111,15 @@ public class CandleEngine extends TimerTask {
         i -> products.computeIfAbsent(Utils.getProductID(i), p -> new Product()));
   }
 
+  private void setTickRecv() {
+    if (!recvTick.get()) {
+      recvTick.set(true);
+    }
+  }
+
   public void update(CDepthMarketData md) {
     acquireMapProduct(md.InstrumentID).update(md);
+    setTickRecv();
   }
 
   private boolean checkNowOK(LocalTime now) {
@@ -113,8 +129,11 @@ public class CandleEngine extends TimerTask {
 
   @Override
   public void run() {
-    // Not working, don't generate candles.
-    if (!this.working.get()) {
+    // Not working or no tick recv, don't generate candles.
+    // Fix date: 2021-02-14
+    // In some cases, the broker front is up in holiday, but the market is not open.
+    // So we need to confirm here the market is open and trading.
+    if (!this.working.get() || !this.recvTick.get()) {
       return;
     }
     var now = LocalTime.now();

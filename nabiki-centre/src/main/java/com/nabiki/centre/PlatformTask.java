@@ -254,6 +254,10 @@ class PlatformTask extends TimerTask {
         if (getUserState() == UserState.RENEW) {
           settle();
           checkPerformance();
+          // Fix date: 2021-02-14
+          // Clear products at every settlement so the outdated instruments are
+          // cleared up in the candle engine.
+          main.getCandleEngine().clearProducts();
         }
       }
     }

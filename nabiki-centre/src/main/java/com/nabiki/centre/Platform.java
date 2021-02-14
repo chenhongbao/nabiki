@@ -53,6 +53,7 @@ public class Platform {
   private UserAuthManager authMgr;
   private ActiveUserManager userMgr;
   private ParkedRequestManager parkedReqMgr;
+  private CandleEngine candleEngine;
 
   private final MarketDataRouter router;
   private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
@@ -77,9 +78,13 @@ public class Platform {
     return userMgr;
   }
 
+  CandleEngine getCandleEngine() {
+    return candleEngine;
+  }
+
   private void providers() {
     // Prepare candle engine.
-    var candleEngine = new CandleEngine(
+    candleEngine = new CandleEngine(
         this.router,
         this.global);
     // Set order provider.
