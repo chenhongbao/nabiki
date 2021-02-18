@@ -114,6 +114,7 @@ public class CandleEngine extends TimerTask {
   private void setTickRecv() {
     if (!recvTick.get()) {
       recvTick.set(true);
+      this.global.getLogger().info("Received tick.");
     }
   }
 
