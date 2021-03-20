@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -74,9 +74,6 @@ public class CandleEngine extends TimerTask {
   public void setWorking(boolean working) {
     global.getLogger().info("candle engine working: " + working);
     this.working.set(working);
-    if (!working) {
-      recvTick.set(false);
-    }
   }
 
   /**
@@ -92,6 +89,7 @@ public class CandleEngine extends TimerTask {
   public void clearProducts() {
     instrProducts.clear();
     products.clear();
+    recvTick.set(false);
   }
 
   public void setupDurations() {
