@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -39,10 +39,27 @@ package com.nabiki.ta;
  * alpha = w / m
  * </code>
  */
-public class Sma extends Ema {
+public class Sma extends Series<Double> {
+  private static final double ZERO_DAY_SMA = 0.0D;
+
+  private final int w;
+  private final int m;
+
   public Sma(int days, int weight) {
-    super(1.0D * weight / days);
-    if (weight <= 0 || days <= weight)
+    if (weight <= 0 || days <= weight) {
       throw new InvalidValueException(String.format("(%d, %d)", days, weight));
+    }
+    w = weight;
+    m = days;
+  }
+
+  @Override
+  public boolean add(Double d) {
+    var prev = ZERO_DAY_SMA;
+    if (size() > 0) {
+      prev = get(size() - 1);
+    }
+    var t = (w * d + (m - w) * prev) / m;
+    return super.add(t);
   }
 }

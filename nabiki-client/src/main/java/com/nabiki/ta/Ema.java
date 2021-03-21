@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -36,22 +36,8 @@ package com.nabiki.ta;
  * Ema(n) = alpha x d + (1 - alpha) x Ema(n-1)
  * </code>
  */
-public class Ema extends Series<Double> {
-  private static final double ZERO_DAY_EMA = 0.0D;
-  private final double alpha;
-
-  public Ema(double alpha) {
-    if (alpha <= 0 || alpha >= 1)
-      throw new InvalidValueException(String.format("%f not in (0, 1)", alpha));
-    this.alpha = alpha;
-  }
-
-  @Override
-  public boolean add(Double d) {
-    var prev = ZERO_DAY_EMA;
-    if (size() > 0)
-      prev = get(size() - 1);
-    var t = alpha * d + (1 - alpha) * prev;
-    return super.add(t);
+public class Ema extends Sma {
+  public Ema(int days) {
+    super(days + 1, 2);
   }
 }
