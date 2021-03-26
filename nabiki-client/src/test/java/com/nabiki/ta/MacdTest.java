@@ -25,46 +25,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package com.nabiki.ta;
 
-/**
- * Simple Moving Average is computed with the following equation:<br/>
- * <code>
- * SMA of the n-th days, with a weight w to current input C and m inputs,
- * is equal to:<br/>
- * SMA(n) = (w x C + SMA(n-1) x (m - w)) / m<br/>
- * or<br/>
- * SMA(n) = alpha x C + SMA(n-1) x (1 - alpha)<br/>
- * alpha = w / m
- * </code>
- */
-public class Sma extends Series<Double> {
-  private static final double ZERO_DAY_SMA = 0.0D;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-  private final int w;
-  private final int m;
+import static org.junit.jupiter.api.Assertions.*;
 
-  public Sma(int days, int weight) {
-    if (weight <= 0 || days <= weight) {
-      throw new InvalidValueException(String.format("(%d, %d)", days, weight));
+@TestMethodOrder(OrderAnnotation.class)
+public class MacdTest {
+
+    private final Macd macd = new Macd();
+    private CandleLoader candles;
+
+    @Test
+    @Order(0)
+    public void loadCandles() {
+        assertFalse(candles.isEmpty());
     }
-    w = weight;
-    m = days;
-  }
 
-  @Override
-  public boolean add(Double d) {
-    var prev = ZERO_DAY_SMA;
-    var v = Double.NaN;
-    if (isEmpty()) {
-      v = d;
-    } else {
-      prev = get(size() - 1);
-      var weight = Math.min(w, size());
-      var many = Math.min(m, size());
-      v = (weight * d + (many - weight) * prev) / many;
+    @Test
+    @BeforeEach
+    public void loadCandle() {
+        Assertions.assertDoesNotThrow(() -> {
+            var stream = this.getClass().getResourceAsStream("/corn-day.txt");
+            candles = new CandleLoader(stream, "gb2312");
+        });
     }
-    return super.add(v);
-  }
+
+    @Test
+    @Order(1)
+    public void testMacd() {
+        assertDoesNotThrow(() -> {
+            candles.forEach(candle -> {
+                macd.add(candle.ClosePrice);
+            });
+        });
+        var last = macd.getTail();
+        assertEquals(-22.54D, last.getDif(), 0.005D);
+        assertEquals(-14.83D, last.getDea(), 0.005D);
+        assertEquals(-15.40D, last.getMacd(), 0.005D);
+    }
 }
