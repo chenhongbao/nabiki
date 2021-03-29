@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -32,14 +32,10 @@ import com.nabiki.commons.ctpobj.CCandle;
 import com.nabiki.commons.ctpobj.CDepthMarketData;
 import com.nabiki.commons.utils.Utils;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
 
 public class CandleProgress {
   private final CCandle candle = new CCandle();
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
   private int lastVolume = 0, lastVolumeUpdated = 0;
   private double lastClosePrice = 0.0D;
@@ -79,30 +75,30 @@ public class CandleProgress {
     this.lastVolumeUpdated = md.Volume;
   }
 
-  public CCandle peak(String tradingDay) {
+  public CCandle peak(String actionDay, String tradingDay) {
     synchronized (this.candle) {
       if (this.popped) {
         // Not updated since last pop.
         this.candle.UpdateTime
-            = Utils.getTime(LocalTime.now(), "HH:mm:ss");
+                = Utils.getTime(LocalTime.now(), "HH:mm:ss");
         this.candle.OpenPrice
-            = this.candle.ClosePrice
-            = this.candle.HighestPrice
-            = this.candle.LowestPrice
-            = this.lastClosePrice;
+                = this.candle.ClosePrice
+                = this.candle.HighestPrice
+                = this.candle.LowestPrice
+                = this.lastClosePrice;
       }
       if (this.candle.EndTime == null) {
         this.candle.EndTime = "";
       }
       this.candle.TradingDay = tradingDay;
-      this.candle.ActionDay  = Utils.getDay(LocalDate.now(), "yyyyMMdd");
+      this.candle.ActionDay = actionDay;
       return copyCandle(this.candle);
     }
   }
 
-  public CCandle pop(String tradingDay) {
-    var r = peak(tradingDay);
-    r.EndTime = getEndTime();
+  public CCandle pop(String actionDay, String tradingDay, String endTime) {
+    var r = peak(actionDay, tradingDay);
+    r.EndTime = endTime;
     this.lastVolume = this.lastVolumeUpdated;
     this.lastVolumeUpdated = 0;
     this.popped = true;
@@ -127,12 +123,5 @@ public class CandleProgress {
     return c;
   }
 
-  private String getEndTime() {
-    var nowSec = LocalTime.now().toSecondOfDay();
-    var roundMinute = Math.round(
-        1.0D * nowSec / TimeUnit.MINUTES.toSeconds(1));
-    return LocalTime.ofSecondOfDay(
-        roundMinute * TimeUnit.MINUTES.toSeconds(1))
-        .format(formatter);
-  }
+
 }

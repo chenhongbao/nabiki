@@ -34,7 +34,9 @@ import com.nabiki.commons.ctpobj.CDepthMarketData;
 import com.nabiki.commons.utils.Utils;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CandleEngine extends TimerTask {
   private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
-
+  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
   private final Global global;
   private final Map<String, Product> products = new ConcurrentHashMap<>();
   private final Map<String, Product> instrProducts = new ConcurrentHashMap<>();
@@ -145,24 +147,40 @@ public class CandleEngine extends TimerTask {
     if (!this.working.get() || !this.recvTick.get()) {
       return;
     }
+    tryScheduleCandle();
+  }
+
+  private void tryScheduleCandle() {
+    var lagMillis = lag.get().toMillis();
+    if (lagMillis >= MILLIS) {
+      global.getLogger().severe("Lag(" + lagMillis + "ms) is too big, can't work.");
+      // return;
+    }
     /*
      * 2021-03-29 Hongbao Chen
      * There is lag on the network between exchange and local. Need to wait for specified
      * lag to receive all the ticks for this period.
      */
-    Utils.scheduleOnce(new CandleTask(), lag.get().toMillis());
+    var actionDay = Utils.getDay(LocalDate.now(), "yyyyMMdd");
+    var task = new CandleTask(actionDay, LocalTime.now());
+    Utils.scheduleOnce(task, lagMillis);
   }
 
   class CandleTask extends TimerTask {
-    @Override
-    public void run() {
-      var now = LocalTime.now();
+    private final String ad;
+    private final LocalTime roundNow;
+
+    CandleTask(String actionDay, LocalTime now) {
+      ad = actionDay;
+      roundNow = getRoundTime(now, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
       // Check now time stamp is precisely at the point of one minute.
       if (!checkNowOK(now)) {
         global.getLogger().warning("timer not precise: " + now.toString());
       }
-      // Working now.
-      now = getRoundTime(now, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+    }
+
+    @Override
+    public void run() {
       var hours = global.getAllTradingHour();
       // Measure performance.
       var max = global.getPerformance().start("candle.run.max");
@@ -177,9 +195,9 @@ public class CandleEngine extends TimerTask {
           continue;
         }
         for (var du : global.getDurations()) {
-          if (h.contains(du, now))
+          if (h.contains(du, roundNow))
             try {
-              router.route(e.getValue().pop(du));
+              router.route(e.getValue().pop(du, ad, roundNow.format(formatter)));
             } catch (Throwable th) {
               th.printStackTrace();
               global.getLogger().severe(th.getMessage());
@@ -217,27 +235,27 @@ public class CandleEngine extends TimerTask {
       }
     }
 
-    public Set<CCandle> peak(Duration du) {
+    public Set<CCandle> peak(Duration du, String actionDay) {
       if (du == null) {
         throw new NullPointerException("duration null");
       }
       var r = new HashSet<CCandle>();
       synchronized (this.candles) {
         for (var c : this.candles.values()) {
-          r.add(c.peak(du, global.getTradingDay()));
+          r.add(c.peak(du, actionDay, global.getTradingDay()));
         }
       }
       return r;
     }
 
-    public Set<CCandle> pop(Duration du) {
+    public Set<CCandle> pop(Duration du, String actionDay, String endTime) {
       if (du == null) {
         throw new IllegalArgumentException("duration null");
       }
       var r = new HashSet<CCandle>();
       synchronized (this.candles) {
         for (var c : this.candles.values()) {
-          var candle = c.pop(du, global.getTradingDay());
+          var candle = c.pop(du, actionDay, global.getTradingDay(), endTime);
           r.add(candle);
         }
       }

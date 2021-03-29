@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -58,19 +58,19 @@ public class SingleCandle {
         d -> new CandleProgress(instrumentID, (int) d.dividedBy(minuteDuration)));
   }
 
-  CCandle peak(Duration du, String tradingDay) {
+  CCandle peak(Duration du, String actionDay, String tradingDay) {
     synchronized (progress) {
       if (progress.containsKey(du))
-        return progress.get(du).peak(tradingDay);
+        return progress.get(du).peak(actionDay, tradingDay);
       else
         throw new IllegalArgumentException("duration not found");
     }
   }
 
-  CCandle pop(Duration du, String tradingDay) {
+  CCandle pop(Duration du, String actionDay, String tradingDay, String endTime) {
     synchronized (progress) {
       if (progress.containsKey(du))
-        return progress.get(du).pop(tradingDay);
+        return progress.get(du).pop(actionDay, tradingDay, endTime);
       else
         throw new IllegalArgumentException("duration not found");
     }
