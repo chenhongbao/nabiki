@@ -42,6 +42,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CandleEngine extends TimerTask {
   private final static long MILLIS = TimeUnit.MINUTES.toMillis(1);
@@ -53,6 +54,7 @@ public class CandleEngine extends TimerTask {
 
   private final AtomicBoolean working = new AtomicBoolean(false);
   private final AtomicBoolean recvTick = new AtomicBoolean(false);
+  private final AtomicReference<Duration> lag = new AtomicReference<>(Duration.ZERO);
 
   public CandleEngine(MarketDataRouter router, Global cfg) {
     this.global = cfg;
@@ -118,7 +120,15 @@ public class CandleEngine extends TimerTask {
 
   public void update(CDepthMarketData md) {
     acquireMapProduct(md.InstrumentID).update(md);
+    setLag(md);
     setTickRecv();
+  }
+
+  private void setLag(CDepthMarketData md) {
+    var end = LocalTime.now();
+    var start = Utils.parseTime(md.UpdateTime, null)
+                     .plus(Duration.ofMillis(md.UpdateMillisec));
+    lag.set(Utils.between(start, end));
   }
 
   private boolean checkNowOK(LocalTime now) {
@@ -135,39 +145,51 @@ public class CandleEngine extends TimerTask {
     if (!this.working.get() || !this.recvTick.get()) {
       return;
     }
-    var now = LocalTime.now();
-    // Check now time stamp is precisely at the point of one minute.
-    if (!checkNowOK(now)) {
-      global.getLogger().warning("timer not precise: " + now.toString());
-    }
-    // Working now.
-    now = getRoundTime(now, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
-    var hours = this.global.getAllTradingHour();
-    // Measure performance.
-    var max = global.getPerformance().start("candle.run.max");
-    var cur = global.getPerformance().start("candle.run.cur");
-    // Generate candles.
-    for (var e : products.entrySet()) {
-      var h = hours.get(e.getKey());
-      if (h == null) {
-        this.global.getLogger().warning(
-            Utils.formatLog("trading hour global null", e.getKey(),
-                null, null));
-        continue;
+    /*
+     * 2021-03-29 Hongbao Chen
+     * There is lag on the network between exchange and local. Need to wait for specified
+     * lag to receive all the ticks for this period.
+     */
+    Utils.scheduleOnce(new CandleTask(), lag.get().toMillis());
+  }
+
+  class CandleTask extends TimerTask {
+    @Override
+    public void run() {
+      var now = LocalTime.now();
+      // Check now time stamp is precisely at the point of one minute.
+      if (!checkNowOK(now)) {
+        global.getLogger().warning("timer not precise: " + now.toString());
       }
-      for (var du : global.getDurations()) {
-        if (h.contains(du, now))
-          try {
-            router.route(e.getValue().pop(du));
-          } catch (Throwable th) {
-            th.printStackTrace();
-            global.getLogger().severe(th.getMessage());
-          }
+      // Working now.
+      now = getRoundTime(now, (int) TimeUnit.MILLISECONDS.toSeconds(MILLIS));
+      var hours = global.getAllTradingHour();
+      // Measure performance.
+      var max = global.getPerformance().start("candle.run.max");
+      var cur = global.getPerformance().start("candle.run.cur");
+      // Generate candles.
+      for (var e : products.entrySet()) {
+        var h = hours.get(e.getKey());
+        if (h == null) {
+          global.getLogger().warning(
+                  Utils.formatLog("trading hour global null", e.getKey(),
+                                  null, null));
+          continue;
+        }
+        for (var du : global.getDurations()) {
+          if (h.contains(du, now))
+            try {
+              router.route(e.getValue().pop(du));
+            } catch (Throwable th) {
+              th.printStackTrace();
+              global.getLogger().severe(th.getMessage());
+            }
+        }
       }
+      // End measurement.
+      max.endWithMax();
+      cur.end();
     }
-    // End measurement.
-    max.endWithMax();
-    cur.end();
   }
 
   class Product {
