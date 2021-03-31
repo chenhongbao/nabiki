@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -80,8 +80,9 @@ public class JniMdSpi extends CThostFtdcMdSpi {
   public void OnRspUserLogin(CThostFtdcRspUserLoginField pRspUserLogin, CThostFtdcRspInfoField pRspInfo, int nRequestID, boolean bIsLast) {
     try {
       Objects.requireNonNull(pRspUserLogin, "rsp login null");
-      if (pRspInfo == null)
+      if (pRspInfo == null) {
         pRspInfo = new CThostFtdcRspInfoField();
+      }
       this.provider.whenRspUserLogin(JNI.toLocal(pRspUserLogin), JNI.toLocal(pRspInfo), nRequestID, bIsLast);
     } catch (Throwable th) {
       th.printStackTrace();
