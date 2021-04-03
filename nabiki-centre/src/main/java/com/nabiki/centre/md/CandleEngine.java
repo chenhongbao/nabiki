@@ -153,8 +153,14 @@ public class CandleEngine extends TimerTask {
   private void tryScheduleCandle() {
     var lagMillis = lag.get().toMillis();
     if (lagMillis >= MILLIS) {
-      global.getLogger().severe("Lag(" + lagMillis + "ms) is too big, can't work.");
-      // return;
+      global.getLogger().severe("Lag(" + lagMillis + "ms) is too big.");
+      /*
+       * 2012-04-03 Hongbao Chen
+       * The lag is too big, for instance more than 24 hours, then the candle is generated
+       * into the next day. It may be caused by an unexpected error in incoming ticks.
+       * The is totally unacceptable. So when the lag is too big, set it to a default value.
+       */
+      lagMillis = 1000;
     }
     /*
      * 2021-03-29 Hongbao Chen
