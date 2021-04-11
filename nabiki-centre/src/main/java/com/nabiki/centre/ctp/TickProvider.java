@@ -123,6 +123,8 @@ public class TickProvider {
       global.getLogger().info("md login: " + login);
     }
     isLogin = login;
+    // Set candle working state.
+    engine.setWorking(login);
   }
 
   private void setConnected(boolean connected) {
@@ -321,8 +323,6 @@ public class TickProvider {
     if (rspInfo.ErrorID == 0) {
       setLogin(true);
       setWorkingState(WorkingState.STARTED);
-      // Set candle working state.
-      this.engine.setWorking(true);
       // Signal login state changed.
       this.stateSignal.signal();
       updateActionDay();

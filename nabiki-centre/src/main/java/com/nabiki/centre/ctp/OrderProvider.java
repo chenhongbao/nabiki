@@ -270,8 +270,6 @@ public class OrderProvider {
       throw new IllegalStateException("repeated logout");
     }
     setWorkingState(WorkingState.STOPPING);
-    // Set candle working state.
-    this.candleEngine.setWorking(false);
     doLogout();
   }
 
