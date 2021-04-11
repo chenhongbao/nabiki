@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -84,18 +84,11 @@ public class Platform {
 
   private void providers() {
     // Prepare candle engine.
-    candleEngine = new CandleEngine(
-        this.router,
-        this.global);
+    candleEngine = new CandleEngine(router, global);
     // Set order provider.
-    this.orderProvider = new OrderProvider(
-        candleEngine,
-        this.global);
+    orderProvider = new OrderProvider(global);
     // Set tick provider.
-    this.tickProvider = new TickProvider(
-        this.router,
-        candleEngine,
-        this.global);
+    tickProvider = new TickProvider(router, candleEngine, global);
   }
 
   private void server() throws IOException {

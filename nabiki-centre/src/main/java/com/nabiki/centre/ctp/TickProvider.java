@@ -123,8 +123,6 @@ public class TickProvider {
       global.getLogger().info("md login: " + login);
     }
     isLogin = login;
-    // Set candle working state.
-    engine.setWorking(login);
   }
 
   private void setConnected(boolean connected) {

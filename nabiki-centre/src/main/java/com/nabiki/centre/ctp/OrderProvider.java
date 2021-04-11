@@ -32,7 +32,6 @@ import com.nabiki.centre.config.Global;
 import com.nabiki.centre.config.GlobalConfig;
 import com.nabiki.centre.config.UncaughtWriter;
 import com.nabiki.centre.config.plain.LoginConfig;
-import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.utils.Signal;
@@ -56,7 +55,6 @@ public class OrderProvider {
   private final OrderMapper mapper = new OrderMapper();
   private final AtomicInteger orderRef = new AtomicInteger(0);
   private final Global global;
-  private final CandleEngine candleEngine;
   private final LoginConfig loginCfg;
   private final ReqRspWriter msgWriter;
   private final Set<String> instrumentIDs = new HashSet<>();
@@ -83,9 +81,8 @@ public class OrderProvider {
   private CThostFtdcTraderApi api;
   private JniTraderSpi spi;
 
-  public OrderProvider(CandleEngine cdl, Global glb) {
+  public OrderProvider(Global glb) {
     global = glb;
-    candleEngine = cdl;
     loginCfg = global.getLoginConfigs().get("trader");
     msgWriter = new ReqRspWriter(mapper, global);
     pendingReqs = new LinkedBlockingDeque<>();

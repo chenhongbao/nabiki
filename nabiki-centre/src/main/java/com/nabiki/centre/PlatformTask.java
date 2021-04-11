@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020. Hongbao Chen <chenhongbao@outlook.com>
+ * Copyright (c) 2020-2021. Hongbao Chen <chenhongbao@outlook.com>
  *
  * Licensed under the  GNU Affero General Public License v3.0 and you may not use
  * this file except in compliance with the  License. You may obtain a copy of the
@@ -153,9 +153,14 @@ class PlatformTask extends TimerTask {
         return;
       }
       main.getOrder().login();
+      /*
+       * 2021-04-11 Chen Hongbao
+       * Set candle engine working, right after trader login.
+       */
+      main.getCandleEngine().setWorking(true);
       // Wait query instruments completed.
       if (!main.getOrder()
-              .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
+               .waitLastInstrument(TimeUnit.MINUTES.toMillis(1))) {
         global.getLogger().info("query instrument timeout");
       } else {
         // Update subscription so at next reconnect it will subscribe the
@@ -237,6 +242,12 @@ class PlatformTask extends TimerTask {
       // Users should wait reconnect and then login to reuse the api. So here
       // just logout, don't disconnect.
       main.getOrder().logout();
+      /*
+       * 2021-04-11 Chen Hongbao
+       * Set candle engine not working, right after trader logout. Set the state
+       * explicitly in platform task runner to avoid bug.
+       */
+      main.getCandleEngine().setWorking(false);
       // Wait for logout.
       var r = main.getOrder().waitWorkingState(
               WorkingState.STOPPED,
