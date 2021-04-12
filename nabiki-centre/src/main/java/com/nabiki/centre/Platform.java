@@ -86,7 +86,7 @@ public class Platform {
     // Prepare candle engine.
     candleEngine = new CandleEngine(router, global);
     // Set order provider.
-    orderProvider = new OrderProvider(global);
+    orderProvider = new OrderProvider(global, candleEngine);
     // Set tick provider.
     tickProvider = new TickProvider(router, candleEngine, global);
   }

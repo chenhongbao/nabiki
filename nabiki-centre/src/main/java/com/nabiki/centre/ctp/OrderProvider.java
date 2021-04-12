@@ -32,6 +32,7 @@ import com.nabiki.centre.config.Global;
 import com.nabiki.centre.config.GlobalConfig;
 import com.nabiki.centre.config.UncaughtWriter;
 import com.nabiki.centre.config.plain.LoginConfig;
+import com.nabiki.centre.md.CandleEngine;
 import com.nabiki.centre.user.core.ActiveRequest;
 import com.nabiki.commons.ctpobj.*;
 import com.nabiki.commons.utils.Signal;
@@ -60,6 +61,7 @@ public class OrderProvider {
   private final Set<String> instrumentIDs = new HashSet<>();
   private final Map<String, CInstrument> activeInstruments = new ConcurrentHashMap<>();
   private final BlockingDeque<PendingRequest> pendingReqs;
+  private final CandleEngine egn;
 
   // Offset for order ref, try to avoid duplication.
   private final Integer orderRefOffset;
@@ -81,8 +83,9 @@ public class OrderProvider {
   private CThostFtdcTraderApi api;
   private JniTraderSpi spi;
 
-  public OrderProvider(Global glb) {
+  public OrderProvider(Global glb, CandleEngine engine) {
     global = glb;
+    egn = engine;
     loginCfg = global.getLoginConfigs().get("trader");
     msgWriter = new ReqRspWriter(mapper, global);
     pendingReqs = new LinkedBlockingDeque<>();
@@ -266,6 +269,11 @@ public class OrderProvider {
     if (!isConfirmed()) {
       throw new IllegalStateException("repeated logout");
     }
+    /*
+     * 2021-04-12 Chen Hongbao
+     * Set candle engine not working, right after trader logout.
+     */
+    egn.setWorking(false);
     setWorkingState(WorkingState.STOPPING);
     doLogout();
   }
@@ -809,6 +817,11 @@ public class OrderProvider {
           CRspInfo rspInfo, int requestId, boolean isLast) {
     if (rspInfo.ErrorID == 0) {
       setConfirmed(true);
+      /*
+       * 2021-04-12 Chen Hongbao
+       * Set candle engine working, right after trader confirms settlement.
+       */
+      egn.setWorking(true);
       setWorkingState(WorkingState.STARTED);
       // Query instruments.
       doQueryInstr();
