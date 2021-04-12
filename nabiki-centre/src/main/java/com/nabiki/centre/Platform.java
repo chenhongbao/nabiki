@@ -205,7 +205,7 @@ public class Platform {
     System.out.println("--log-server    Logging server inet address specified in normal text format like");
     System.out.println("                9039 or 127.0.0.1:9039");
     System.out.println("--start-now     true if the system is initiated right after this command, otherwise");
-    System.out.println("                it starts at specified time.");
+    System.out.println("                it starts at internal specified time.");
   }
 
   public static void main(String[] args) {
